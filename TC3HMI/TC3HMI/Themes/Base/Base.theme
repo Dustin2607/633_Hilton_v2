@@ -1,0 +1,38 @@
+{
+  "controlTypeValues": {},
+  "controlClassValues": {
+    "Navigation_Toggle": {
+      "attributes": {
+        "BorderRadius": {
+          "topLeft": 5.0,
+          "topRight": 5.0,
+          "bottomLeft": 5.0,
+          "bottomRight": 5.0,
+          "topLeftUnit": "px",
+          "topRightUnit": "px",
+          "bottomLeftUnit": "px",
+          "bottomRightUnit": "px"
+        },
+        "TextColor": {
+          "color": "rgba(255, 255, 255, 1)"
+        },
+        "BackgroundColor": {
+          "color": "rgba(0, 0, 0, 1)"
+        },
+        "TextFontSize": 13.0
+      },
+      "themedResources": {}
+    },
+    "NumericInputUnitsProcess": {
+      "attributes": {
+        "ValueFontSize": 15.0
+      },
+      "themedResources": {}
+    },
+    "TextblockProcess": {
+      "attributes": {},
+      "themedResources": {}
+    }
+  },
+  "$schema": "./../../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.752.0/runtimes/native1.12-tchmi/Schema/ThemeDescription.Schema.json"
+}
