@@ -1,0 +1,202 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="Gr01Persistent" Id="{f5b2b8b6-7a66-4284-9ff0-5fe3bf1ff1fe}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM Gr01Persistent
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable								:BOOL;						(* Enable Gr01Persistent *)
+END_VAR
+VAR PERSISTENT
+	(* Enummerations *)
+
+	(* Variables *)
+	rOverride							:REAL;											(* Override 0 - 100 [%]  *)
+	udnCounterTotal						:UDINT;											(* Total counter *)
+
+	lrAxisSawBowTipDistance				:LREAL;											(* Tip distance axis saw bow [mm] *)
+	lrAxisSawBowOriginShiftPos			:LREAL;											(* Origin shift position axis saw bow [mm] *)
+	lrAxisSawBowHomePos				:LREAL;											(* Home position axis saw bow [mm] *)
+	lrAxisSawBowSoftLimitMax				:LREAL;											(* Software limit maximum axis saw bow [mm] *)
+	lrAxisSawBowSoftLimitMin				:LREAL;											(* Software limit minimum axis saw bow [mm] *)
+	lrAxisSawBowNoRefVelo				:LREAL;											(* No reference velocity axis saw bow [%] *)
+	lrAxisSawBowManualVelo				:LREAL;											(* Manual velocity axis saw bow [%] *)
+	lrAxisSawBowHomeVelo				:LREAL;											(* Home velocity axis saw bow [%] *)
+	lrAxisSawBowAutoVelo					:LREAL;											(* Auto velocity axis saw bow [%] *)
+
+	lrAxisAngleTipDistance				:LREAL;											(* Tip distance axis angle [mm] *)
+	lrAxisAngleOriginShiftPos				:LREAL;											(* Origin shift position axis angle [mm] *)
+	lrAxisAngleHomePos					:LREAL;											(* Home position axis angle [mm] *)
+	lrAxisAngleSoftLimitMax				:LREAL;											(* Software limit maximum axis angle [mm] *)
+	lrAxisAngleSoftLimitMin					:LREAL;											(* Software limit minimum axis angle [mm] *)
+	lrAxisAngleNoRefVelo					:LREAL;											(* No reference velocity axis angle [mm/s] *)
+	lrAxisAngleManualVelo					:LREAL;											(* Manual velocity axis angle [mm/s] *)
+	lrAxisAngleHomeVelo					:LREAL;											(* Home velocity axis angle [mm/s] *)
+	lrAxisAngleAutoVelo					:LREAL;											(* Auto velocity axis angle [mm/s] *)
+
+	rSawbandManualSpeed				:REAL;											(* Manual speed sawband [upm] *)
+	rSawbandAutoSpeed					:REAL;											(* Auto speed sawband [upm] *)
+	rSawingOverride						:REAL;											(* Sawing override 0 - 100 [%]  *)
+	rPipeDiameter						:REAL;											(* Pipe diameter [mm] *)
+	lrActSawingAngle						:LREAL;											(* Actual angle of sawing [mm] *)
+	lrSafetyDistance						:LREAL;											(* Safety distance [mm] *)
+	lrSafeDistSawBandToPipe				:LREAL;											(* Safety distance sawband to pipe[mm] *)
+	lrSawBandThickness					:LREAL;											(* Sawband thickness [mm] *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	bFirstTime							:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	bFirstTime := FALSE;
+	RETURN;
+END_IF;
+
+IF NOT bFirstTime
+THEN
+	A_SetPerVar();
+
+	bFirstTime := TRUE;
+END_IF;
+
+A_GetPerVar();
+
+]]></ST>
+    </Implementation>
+    <Action Name="A_GetPerVar" Id="{79ed8603-4719-4774-a796-3baccf07f14f}">
+      <Implementation>
+        <ST><![CDATA[
+bgGr01WritePersistent := rOverride <> stgGr01HMI.stHMITOPLC.rOverride
+					OR udnCounterTotal <> stgGr01HMI.stPLCTOHMI.udnCounterTotal
+					OR lrAxisSawBowTipDistance <> stgGr01HMI.stHMITOPLC.lrAxisSawBowTipDistance
+					OR lrAxisSawBowOriginShiftPos <> stgGr01HMI.stHMITOPLC.lrAxisSawBowOriginShiftPos
+					OR lrAxisSawBowHomePos <> stgGr01HMI.stHMITOPLC.lrAxisSawBowHomePos
+					OR lrAxisSawBowSoftLimitMax <> stgGr01HMI.stHMITOPLC.lrAxisSawBowSoftLimitMax
+					OR lrAxisSawBowSoftLimitMin <> stgGr01HMI.stHMITOPLC.lrAxisSawBowSoftLimitMin
+					OR lrAxisSawBowNoRefVelo <> stgGr01HMI.stHMITOPLC.lrAxisSawBowNoRefVelo
+					OR lrAxisSawBowManualVelo <> stgGr01HMI.stHMITOPLC.lrAxisSawBowManualVelo
+					OR lrAxisSawBowHomeVelo <> stgGr01HMI.stHMITOPLC.lrAxisSawBowHomeVelo
+					OR lrAxisSawBowAutoVelo <> stgGr01HMI.stHMITOPLC.lrAxisSawBowAutoVelo
+
+					OR lrAxisAngleTipDistance <> stgGr01HMI.stHMITOPLC.lrAxisAngleTipDistance
+					OR lrAxisAngleOriginShiftPos <> stgGr01HMI.stHMITOPLC.lrAxisAngleOriginShiftPos
+					OR lrAxisAngleHomePos <> stgGr01HMI.stHMITOPLC.lrAxisAngleHomePos
+					OR lrAxisAngleSoftLimitMax <> stgGr01HMI.stHMITOPLC.lrAxisAngleSoftLimitMax
+					OR lrAxisAngleSoftLimitMin <> stgGr01HMI.stHMITOPLC.lrAxisAngleSoftLimitMin
+					OR lrAxisAngleNoRefVelo <> stgGr01HMI.stHMITOPLC.lrAxisAngleNoRefVelo
+					OR lrAxisAngleManualVelo <> stgGr01HMI.stHMITOPLC.lrAxisAngleManualVelo
+					OR lrAxisAngleHomeVelo <> stgGr01HMI.stHMITOPLC.lrAxisAngleHomeVelo
+					OR lrAxisAngleAutoVelo <> stgGr01HMI.stHMITOPLC.lrAxisAngleAutoVelo
+
+					OR rSawbandManualSpeed <> stgGr01HMI.stHMITOPLC.rSawbandManualSpeed
+					OR rSawbandAutoSpeed <> stgGr01HMI.stHMITOPLC.rSawbandAutoSpeed
+					OR rSawingOverride <> stgGr01HMI.stHMITOPLC.rSawingOverride
+					OR rPipeDiameter <> stgGr01HMI.stHMITOPLC.rPipeDiameter
+					OR lrActSawingAngle <> stgGr01HMI.stHMITOPLC.lrActSawingAngle
+					OR lrSafetyDistance <> stgGr01HMI.stHMITOPLC.lrSafetyDistance
+					OR lrSafeDistSawBandToPipe <> stgGr01HMI.stHMITOPLC.lrSafeDistSawBandToPipe
+					OR lrSawBandThickness <> stgGr01HMI.stHMITOPLC.lrSawBandThickness;
+
+rOverride := stgGr01HMI.stHMITOPLC.rOverride;
+udnCounterTotal := stgGr01HMI.stPLCTOHMI.udnCounterTotal;
+
+lrAxisSawBowTipDistance := stgGr01HMI.stHMITOPLC.lrAxisSawBowTipDistance;
+lrAxisSawBowOriginShiftPos := stgGr01HMI.stHMITOPLC.lrAxisSawBowOriginShiftPos;
+lrAxisSawBowHomePos := stgGr01HMI.stHMITOPLC.lrAxisSawBowHomePos;
+lrAxisSawBowSoftLimitMax := stgGr01HMI.stHMITOPLC.lrAxisSawBowSoftLimitMax;
+lrAxisSawBowSoftLimitMin := stgGr01HMI.stHMITOPLC.lrAxisSawBowSoftLimitMin;
+lrAxisSawBowNoRefVelo := stgGr01HMI.stHMITOPLC.lrAxisSawBowNoRefVelo;
+lrAxisSawBowManualVelo := stgGr01HMI.stHMITOPLC.lrAxisSawBowManualVelo;
+lrAxisSawBowHomeVelo := stgGr01HMI.stHMITOPLC.lrAxisSawBowHomeVelo;
+lrAxisSawBowAutoVelo := stgGr01HMI.stHMITOPLC.lrAxisSawBowAutoVelo;;
+
+lrAxisAngleTipDistance := stgGr01HMI.stHMITOPLC.lrAxisAngleTipDistance;
+lrAxisAngleOriginShiftPos := stgGr01HMI.stHMITOPLC.lrAxisAngleOriginShiftPos;
+lrAxisAngleHomePos := stgGr01HMI.stHMITOPLC.lrAxisAngleHomePos;
+lrAxisAngleSoftLimitMax := stgGr01HMI.stHMITOPLC.lrAxisAngleSoftLimitMax;
+lrAxisAngleSoftLimitMin := stgGr01HMI.stHMITOPLC.lrAxisAngleSoftLimitMin;
+lrAxisAngleNoRefVelo := stgGr01HMI.stHMITOPLC.lrAxisAngleNoRefVelo;
+lrAxisAngleManualVelo := stgGr01HMI.stHMITOPLC.lrAxisAngleManualVelo;
+lrAxisAngleHomeVelo := stgGr01HMI.stHMITOPLC.lrAxisAngleHomeVelo;
+lrAxisAngleAutoVelo := stgGr01HMI.stHMITOPLC.lrAxisAngleAutoVelo;;
+
+rSawbandManualSpeed := stgGr01HMI.stHMITOPLC.rSawbandManualSpeed;
+rSawbandAutoSpeed := stgGr01HMI.stHMITOPLC.rSawbandAutoSpeed;
+rSawingOverride := stgGr01HMI.stHMITOPLC.rSawingOverride;
+rPipeDiameter := stgGr01HMI.stHMITOPLC.rPipeDiameter;
+lrActSawingAngle := stgGr01HMI.stHMITOPLC.lrActSawingAngle;
+lrSafetyDistance := stgGr01HMI.stHMITOPLC.lrSafetyDistance;
+lrSafeDistSawBandToPipe := stgGr01HMI.stHMITOPLC.lrSafeDistSawBandToPipe;
+lrSawBandThickness := stgGr01HMI.stHMITOPLC.lrSawBandThickness;
+
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_SetPerVar" Id="{64b43faf-2e51-4fb3-97b7-acee049ad7a0}">
+      <Implementation>
+        <ST><![CDATA[
+stgGr01HMI.stHMITOPLC.rOverride := rOverride;
+stgGr01HMI.stPLCTOHMI.udnCounterTotal := udnCounterTotal;
+
+stgGr01HMI.stHMITOPLC.lrAxisSawBowTipDistance := lrAxisSawBowTipDistance;
+stgGr01HMI.stHMITOPLC.lrAxisSawBowOriginShiftPos := lrAxisSawBowOriginShiftPos;
+stgGr01HMI.stHMITOPLC.lrAxisSawBowHomePos := lrAxisSawBowHomePos;
+stgGr01HMI.stHMITOPLC.lrAxisSawBowSoftLimitMax := lrAxisSawBowSoftLimitMax;
+stgGr01HMI.stHMITOPLC.lrAxisSawBowSoftLimitMin := lrAxisSawBowSoftLimitMin;
+stgGr01HMI.stHMITOPLC.lrAxisSawBowNoRefVelo := lrAxisSawBowNoRefVelo;
+stgGr01HMI.stHMITOPLC.lrAxisSawBowManualVelo := lrAxisSawBowManualVelo;
+stgGr01HMI.stHMITOPLC.lrAxisSawBowHomeVelo := lrAxisSawBowHomeVelo;
+stgGr01HMI.stHMITOPLC.lrAxisSawBowAutoVelo := lrAxisSawBowAutoVelo;
+
+stgGr01HMI.stHMITOPLC.lrAxisAngleTipDistance := lrAxisAngleTipDistance;
+stgGr01HMI.stHMITOPLC.lrAxisAngleOriginShiftPos := lrAxisAngleOriginShiftPos;
+stgGr01HMI.stHMITOPLC.lrAxisAngleHomePos := lrAxisAngleHomePos;
+stgGr01HMI.stHMITOPLC.lrAxisAngleSoftLimitMax := lrAxisAngleSoftLimitMax;
+stgGr01HMI.stHMITOPLC.lrAxisAngleSoftLimitMin := lrAxisAngleSoftLimitMin;
+stgGr01HMI.stHMITOPLC.lrAxisAngleNoRefVelo := lrAxisAngleNoRefVelo;
+stgGr01HMI.stHMITOPLC.lrAxisAngleManualVelo := lrAxisAngleManualVelo;
+stgGr01HMI.stHMITOPLC.lrAxisAngleHomeVelo := lrAxisAngleHomeVelo;
+stgGr01HMI.stHMITOPLC.lrAxisAngleAutoVelo := lrAxisAngleAutoVelo;
+
+stgGr01HMI.stHMITOPLC.rSawbandManualSpeed := rSawbandManualSpeed;
+stgGr01HMI.stHMITOPLC.rSawbandAutoSpeed := rSawbandAutoSpeed;
+stgGr01HMI.stHMITOPLC.rSawingOverride := rSawingOverride;
+stgGr01HMI.stHMITOPLC.rPipeDiameter := rPipeDiameter;
+stgGr01HMI.stHMITOPLC.lrActSawingAngle := lrActSawingAngle;
+stgGr01HMI.stHMITOPLC.lrSafetyDistance := lrSafetyDistance;
+stgGr01HMI.stHMITOPLC.lrSafeDistSawBandToPipe := lrSafeDistSawBandToPipe;
+stgGr01HMI.stHMITOPLC.lrSawBandThickness := lrSawBandThickness;
+
+
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="Gr01Persistent">
+      <LineId Id="60" Count="15" />
+    </LineIds>
+    <LineIds Name="Gr01Persistent.A_GetPerVar">
+      <LineId Id="0" Count="65" />
+    </LineIds>
+    <LineIds Name="Gr01Persistent.A_SetPerVar">
+      <LineId Id="0" Count="35" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

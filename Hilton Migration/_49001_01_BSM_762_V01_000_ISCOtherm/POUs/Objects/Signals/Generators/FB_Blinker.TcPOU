@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Blinker" Id="{2411071c-4e30-4fe6-ab3d-5f16b086462d}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Blinker
+(*
+
+Frequency division
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			14.11.2012
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+
+VAR_INPUT
+	tPeriod				:TIME := T#250MS;				(* Blink period *)
+	bReset				:BOOL;						(* Reset *)
+END_VAR
+VAR_OUTPUT
+	stBlinker				:ST_Blinker;
+END_VAR
+VAR
+	byInc				:BYTE;
+	rtTriger				:R_TRIG;
+	ton1					:TON;
+	ton2					:TON;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF bReset
+THEN
+	byInc := 0;
+
+	ton1(IN := FALSE);
+	ton2(IN := FALSE);
+
+	stBlinker.Q0 := 0;
+	stBlinker.Q1 := 0;
+	stBlinker.Q2 := 0;
+	stBlinker.Q3 := 0;
+	stBlinker.Q4 := 0;
+	stBlinker.Q5 := 0;
+	stBlinker.Q6 := 0;
+	stBlinker.Q7 := 0;
+	
+	RETURN;	
+END_IF
+
+ton1(IN := NOT ton2.Q, PT:= tPeriod/2);
+ton2(IN := ton1.Q, PT := tPeriod/2);
+
+rtTriger(CLK := ton1.Q);
+IF rtTriger.Q THEN
+	byInc := byInc + 1;
+END_IF;
+
+stBlinker.Q0 := byInc.0;
+stBlinker.Q1 := byInc.1;
+stBlinker.Q2 := byInc.2;
+stBlinker.Q3 := byInc.3;
+stBlinker.Q4 := byInc.4;
+stBlinker.Q5 := byInc.5;
+stBlinker.Q6 := byInc.6;
+stBlinker.Q7 := byInc.7;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Blinker">
+      <LineId Id="28" Count="34" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_BECKHOFFDRIVE_REF" Id="{cbc143a1-5ac6-418f-9b18-417f94979db0}">
+    <Declaration><![CDATA[TYPE ST_BECKHOFFDRIVE_REF : FB_BECKHOFFDRIVE_REF;
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

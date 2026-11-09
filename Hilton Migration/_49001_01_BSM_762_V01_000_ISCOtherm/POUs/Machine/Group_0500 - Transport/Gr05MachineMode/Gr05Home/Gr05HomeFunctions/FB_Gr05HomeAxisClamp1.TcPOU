@@ -1,0 +1,397 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Gr05HomeAxisClamp1" Id="{f16bae0d-34d3-4607-ac53-e6b123527a5f}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Gr05HomeAxisClamp1
+(*
+
+The function block used to referenc axis saw bow.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			01.12.2016
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Enable FB signal *)
+	bExecute					:BOOL;						(* Procedure execute *)
+	bReleaseNextStep			:BOOL;						(* Procedure release next step *)
+	bFirstTime					:BOOL;
+	lrHomePosition				:LREAL;
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bDone						:BOOL;						(* Program done *)
+	bBusy						:BOOL;						(* Program busy *)
+	bError						:BOOL;						(* Program error *)
+	udnErrorNo					:UDINT;						(* Error number *)
+
+	bErrorByReference			:BOOL; 						(* Error: Timeout by referece run / Fehler:  Timeout bei Refrenzfahrt *)
+	bErrorByPipeEndNoDetected 	:BOOL;						(* Error: Timeout by referece run / Fehler:  Timeout bei Refrenzfahrt *)
+	bErrorByPipeCollision			:BOOL; 						(* Error: Pipe collision / Fehler:   *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+	etHomeAxis					:ET_Gr05HomeAxisClamp1;				(* Home mode enum variable *)
+
+	(* Variables *)
+	lrClamp1Pos					:LREAL;
+	bLastPipePresent				:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtExecute						:R_TRIG;
+	tonWatchdog					:TON;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+	bDone := FALSE;					(* Program done *)
+	bBusy := FALSE;                                  	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;                                 		(* Error number *)
+
+	bFirstTime := FALSE;
+	RETURN;
+END_IF;
+
+IF NOT bFirstTime
+THEN
+	bDone := FALSE;                                	(* Program done *)
+	bBusy := FALSE;                                 	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;                                 		(* Error number *)
+
+	bErrorByReference := FALSE;
+	tonWatchdog(IN := FALSE);
+
+	etHomeAxis := ET_Gr05HomeAxisClamp1_eWaitExecute;       			(* Next step *)
+
+	bFirstTime := TRUE;
+END_IF;
+
+rtExecute(CLK := bExecute);
+
+CASE etHomeAxis OF
+
+	ET_Gr05HomeAxisClamp1_eWaitExecute:
+		bBusy := FALSE;                                     		(* Program not busy *)
+		bError := FALSE;                                    		(* Program not error *)
+
+		IF rtExecute.Q
+		THEN
+			bDone := FALSE;                                 	(* Program done, in position *)
+			bBusy := TRUE;                                  	(* Program busy *)
+
+			etHomeAxis := ET_Gr05HomeAxisClamp1_eWaitAxisStatus;		(* Next step *)
+		END_IF;
+
+	ET_Gr05HomeAxisClamp1_eWaitAxisStatus:
+		IF Gr05Control.fbAxisClamp1.bCtrlEnabled
+		THEN
+			etHomeAxis := ET_Gr05HomeAxisClamp1_eMoveStop;         		(* Next step *)
+		END_IF;
+
+	ET_Gr05HomeAxisClamp1_eMoveStop:
+		Gr05Control.fbAxisClamp1.bExeStop := TRUE;
+		Gr05Control.fbAxisClamp1.lrAutoVelocity := 0.0;
+
+		IF Gr05Control.fbAxisClamp1.fbMoveAuto.fbStop.bBusy
+		THEN
+			etHomeAxis := ET_Gr05HomeAxisClamp1_eWFMoveStop;              (* Next step *)
+		END_IF;
+
+	ET_Gr05HomeAxisClamp1_eWFMoveStop:
+		IF Gr05Control.fbAxisClamp1.fbMoveAuto.bStopped
+		     AND bReleaseNextStep
+		THEN
+			Gr05Control.fbAxisClamp1.bExeStop := FALSE;
+		
+			etHomeAxis := ET_Gr05HomeAxisClamp1_eAxisReset;              (* Next step *)
+		END_IF;
+
+	ET_Gr05HomeAxisClamp1_eAxisReset:
+		Gr05Control.fbAxisClamp1.bExeReset := TRUE;
+		Gr05Control.fbAxisClamp1.lrAutoVelocity := 0.0;
+
+		IF Gr05Control.fbAxisClamp1.fbController.fbReset.bBusy
+		THEN
+			etHomeAxis := ET_Gr05HomeAxisClamp1_eWfAxisReset;              (* Next step *)
+		END_IF;
+
+	ET_Gr05HomeAxisClamp1_eWfAxisReset:
+		IF Gr05Control.fbAxisClamp1.fbController.bReseted
+		     AND bReleaseNextStep
+		THEN
+			Gr05Control.fbAxisClamp1.bExeReset := FALSE;
+
+			bLastPipePresent := binGr05PipeEndEdge;
+
+			etHomeAxis := ET_Gr05HomeAxisClamp1_eAxisRef;         		(* Next step *)
+
+		END_IF;
+
+	ET_Gr05HomeAxisClamp1_eAxisRef:
+		IF NOT Gr05Control.fbAxisClamp1.bReferenced
+		     OR etgGr00MachineState = ET_MachineState_eHomeRefExe
+		THEN
+			Gr05Control.fbAxisClamp1.bExeHome := TRUE;
+
+			IF Gr05Control.fbAxisClamp1.fbMoveAuto.fbHome.bBusy
+			THEN
+				etHomeAxis := ET_Gr05HomeAxisClamp1_eWfAxisRef;              (* Next step *)
+
+			ELSIF Gr05Control.fbAxisClamp1.fbMoveAuto.fbHome.bError
+			THEN
+				Gr05Control.fbAxisClamp1.bExeHome := FALSE;
+	
+				etHomeAxis := ET_Gr05HomeAxisClamp1_eError;         					(* Next step *)
+
+			END_IF;
+
+		ELSE
+			etHomeAxis := ET_Gr05HomeAxisClamp1_eAxisMoveHomePos;              (* Next step *)
+		END_IF;
+
+	ET_Gr05HomeAxisClamp1_eWfAxisRef:
+		tonWatchdog(
+			IN := TRUE,
+			PT:= tgGr01MaxRefTime
+		);
+
+		IF tonWatchdog.Q
+		THEN
+			tonWatchdog(IN := FALSE);
+			bErrorByReference := TRUE;
+			Gr05Control.fbAxisClamp1.bExeHome := FALSE;
+
+			etHomeAxis := ET_Gr05HomeAxisClamp1_eWfErrorByReference;         					(* Next step *)
+
+		ELSIF Gr05Control.fbAxisClamp1.fbMoveAuto.bInReference
+		              AND bReleaseNextStep
+		THEN
+			tonWatchdog(IN := FALSE);
+			Gr05Control.fbAxisClamp1.bExeHome := FALSE;
+
+			etHomeAxis := ET_Gr05HomeAxisClamp1_eAxisMoveHomePos;              (* Next step *)
+
+		ELSIF bLastPipePresent
+			    XOR bgGr05PipeEndPresent
+		THEN
+			bErrorByPipeCollision := TRUE;
+			Gr05Control.fbAxisClamp1.bExeHome := FALSE;
+
+			etHomeAxis := ET_Gr05HomeAxisClamp1_eWfErrorByPipeCollision;		(* Next step *)
+
+		ELSIF Gr05Control.fbAxisClamp1.fbMoveAuto.fbHome.bError
+		THEN
+			tonWatchdog(IN := FALSE);
+			Gr05Control.fbAxisClamp1.bExeHome := FALSE;
+
+			etHomeAxis := ET_Gr05HomeAxisClamp1_eError;         					(* Next step *)
+
+		END_IF;
+
+	ET_Gr05HomeAxisClamp1_eWfErrorByReference:
+		IF stgGr05Alarm.stHome.arbError[0].bActive
+		THEN
+			bErrorByReference := FALSE;
+			udnErrorNo := 1;
+			etHomeAxis := ET_Gr05HomeAxisClamp1_eError;         					(* Next step *)
+		END_IF
+
+	ET_Gr05HomeAxisClamp1_eWfErrorByPipeCollision:
+		IF stgGr05Alarm.stHome.arbError[1].bActive
+		THEN
+			bErrorByPipeCollision := FALSE;
+			udnErrorNo := 2;
+			etHomeAxis := ET_Gr05HomeAxisClamp1_eError;         					(* Next step *)
+		END_IF
+
+	ET_Gr05HomeAxisClamp1_eAxisMoveHomePos:
+		Gr05Control.fbAxisClamp1.bExeMoveAbs := TRUE;
+		Gr05Control.fbAxisClamp1.lrTargetPosition := lrHomePosition;
+		Gr05Control.fbAxisClamp1.lrAutoVelocity := stgGr05HMI.stHMITOPLC.arlrAxisClampHomeVelo[1];
+
+		IF Gr05Control.fbAxisClamp1.fbMoveAuto.fbMoveAbs.bBusy
+		THEN
+			etHomeAxis := ET_Gr05HomeAxisClamp1_eAxisInHomePos;              (* Next step *)
+
+		ELSIF Gr05Control.fbAxisClamp1.fbMoveAuto.fbMoveAbs.bError
+		THEN
+			Gr05Control.fbAxisClamp1.bExeMoveAbs := FALSE;
+
+			etHomeAxis := ET_Gr05HomeAxisClamp1_eError;         					(* Next step *)
+
+		END_IF;
+
+	ET_Gr05HomeAxisClamp1_eAxisInHomePos:
+		IF Gr05Control.fbAxisClamp1.fbMoveAuto.bInPosition
+		     AND bReleaseNextStep
+		THEN
+			Gr05Control.fbAxisClamp1.bExeMoveAbs := FALSE;
+
+			etHomeAxis := ET_Gr05HomeAxisClamp1_eDone;              (* Next step *)
+
+		ELSIF bLastPipePresent
+			   AND NOT binGr05PipeEndEdge
+			   AND bReleaseNextStep
+		THEN
+			Gr05Control.fbAxisClamp1.bExeMoveAbs := FALSE;
+
+			lrClamp1Pos := Gr05Control.fbAxisClamp1.lrActPosition;
+
+			etHomeAxis := ET_Gr05HomeAxisClamp1_eMoveStop2;         					(* Next step *)
+
+		ELSIF NOT bLastPipePresent
+			   AND binGr05PipeEndEdge
+			   AND bReleaseNextStep
+		THEN
+			Gr05Control.fbAxisClamp1.bExeMoveAbs := FALSE;
+
+			bErrorByPipeCollision := TRUE;
+			lrClamp1Pos := Gr05Control.fbAxisClamp1.lrActPosition;
+
+			etHomeAxis := ET_Gr05HomeAxisClamp1_eWfErrorByPipeCollision;		(* Next step *)
+
+		ELSIF Gr05Control.fbAxisClamp1.fbMoveAuto.fbMoveAbs.bError
+		THEN
+			Gr05Control.fbAxisClamp1.bExeMoveAbs := FALSE;
+
+			etHomeAxis := ET_Gr05HomeAxisClamp1_eError;         					(* Next step *)
+
+		END_IF;
+
+	ET_Gr05HomeAxisClamp1_eMoveStop2:
+		Gr05Control.fbAxisClamp1.bExeStop := TRUE;
+		Gr05Control.fbAxisClamp1.lrAutoVelocity := 0.0;
+
+		IF Gr05Control.fbAxisClamp1.fbMoveAuto.fbStop.bBusy
+		THEN
+			etHomeAxis := ET_Gr05HomeAxisClamp1_eWFMoveStop2;              (* Next step *)
+		END_IF;
+
+	ET_Gr05HomeAxisClamp1_eWFMoveStop2:
+		IF Gr05Control.fbAxisClamp1.fbMoveAuto.bStopped
+		     AND bReleaseNextStep
+		THEN
+			Gr05Control.fbAxisClamp1.bExeStop := FALSE;
+
+			etHomeAxis := ET_Gr05HomeAxisClamp1_eAxisMovePipeEndVelo;              (* Next step *)
+		END_IF;
+
+	ET_Gr05HomeAxisClamp1_eAxisMovePipeEndVelo:
+		Gr05Control.fbAxisClamp1.bExeMoveVelo := TRUE;
+		Gr05Control.fbAxisClamp1.lrAutoVelocity := -stgGr05HMI.stHMITOPLC.arlrAxisClampAutoVelo[1] / 10;
+
+		IF Gr05Control.fbAxisClamp1.fbMoveAuto.fbMoveVelo.bBusy
+		THEN
+			etHomeAxis := ET_Gr05HomeAxisClamp1_eWfAxisInPipeEndVelo;              (* Next step *)
+
+		ELSIF Gr05Control.fbAxisClamp1.fbMoveAuto.fbMoveVelo.bError
+		THEN
+			Gr05Control.fbAxisClamp1.bExeMoveVelo := FALSE;
+
+			etHomeAxis := ET_Gr05HomeAxisClamp1_eError;         					(* Next step *)
+
+		END_IF;
+
+	ET_Gr05HomeAxisClamp1_eWfAxisInPipeEndVelo:
+		IF Gr05Control.fbAxisClamp1.fbMoveAuto.bInVelocity
+		     AND bReleaseNextStep
+		THEN
+			Gr05Control.fbAxisClamp1.bExeMoveVelo := FALSE;
+
+			etHomeAxis := ET_Gr05HomeAxisClamp1_eMoveStop3;              (* Next step *)
+
+		ELSIF Gr05Control.fbAxisClamp1.fbMoveAuto.fbMoveVelo.bError
+		THEN
+			Gr05Control.fbAxisClamp1.bExeMoveVelo := FALSE;
+
+			etHomeAxis := ET_Gr05HomeAxisClamp1_eError;         					(* Next step *)
+
+		END_IF;
+
+	ET_Gr05HomeAxisClamp1_eMoveStop3:
+		IF binGr05PipeEndEdge
+		THEN
+			Gr05Control.fbAxisClamp1.bExeStop := TRUE;
+			Gr05Control.fbAxisClamp1.lrAutoVelocity := 0.0;
+		END_IF
+
+		IF Gr05Control.fbAxisClamp1.fbMoveAuto.fbStop.bBusy
+		THEN
+			etHomeAxis := ET_Gr05HomeAxisClamp1_eWFMoveStop3;              (* Next step *)
+
+		ELSIF Gr05Control.fbAxisClamp1.lrActPosition <= lrClamp1Pos - lrgGr05SearchDistPipeEnd
+			    OR Gr05Control.fbAxisClamp1.bHardLimitMinExceeded
+			    OR Gr05Control.fbAxisClamp1.bSoftLimitMinExceeded
+		THEN
+			bErrorByPipeEndNoDetected := TRUE;
+
+			Gr05Control.fbAxisClamp1.bExeStop := FALSE;
+
+			etHomeAxis := ET_Gr05HomeAxisClamp1_eWfErrorByPipeEndNoDetected;         					(* Next step *)
+
+		END_IF;
+
+	ET_Gr05HomeAxisClamp1_eWfErrorByPipeEndNoDetected:
+		IF stgGr05Alarm.stHome.arbError[2].bActive
+		THEN
+			bErrorByPipeEndNoDetected := FALSE;
+			udnErrorNo := 3;
+			etHomeAxis := ET_Gr05HomeAxisClamp1_eError;         					(* Next step *)
+		END_IF
+
+	ET_Gr05HomeAxisClamp1_eWFMoveStop3:
+		IF Gr05Control.fbAxisClamp1.fbMoveAuto.bStopped
+		     AND bReleaseNextStep
+		THEN
+			Gr05Control.fbAxisClamp1.bExeStop := FALSE;
+
+			etHomeAxis := ET_Gr05HomeAxisClamp1_eDone;              (* Next step *)
+		END_IF;
+
+	ET_Gr05HomeAxisClamp1_eDone:
+		bDone := TRUE;                                     		(* Program done, in position *)
+		bBusy := FALSE;                                     		(* Program not busy *)
+
+		etHomeAxis := ET_Gr05HomeAxisClamp1_eNoExecute;            	(* Next step *)
+
+	ET_Gr05HomeAxisClamp1_eError:
+		bDone := FALSE;                                     		(* Program done, in position *)
+		bError := TRUE;                                     		(* Program error *)
+		bBusy := FALSE;                                     		(* Program not busy *)
+
+		etHomeAxis := ET_Gr05HomeAxisClamp1_eNoExecute;           	(* Next step *)
+	
+	 ET_Gr05HomeAxisClamp1_eNoExecute:
+		IF NOT bExecute
+		THEN
+			bDone := FALSE;                                 	(* Program done *)
+			bBusy := FALSE;                                		(* Program not busy *)
+			bError := FALSE;                                		(* Program not error *)
+		
+			etHomeAxis := ET_Gr05HomeAxisClamp1_eWaitExecute;       (* Next step *)
+		
+		END_IF;
+        
+END_CASE;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Gr05HomeAxisClamp1">
+      <LineId Id="53" Count="333" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

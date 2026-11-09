@@ -1,0 +1,259 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_STOEBERSI6_CIA402_MoveRelative" Id="{35188483-8802-457a-a7e0-97cc2030ebc0}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_STOEBERSI6_CIA402_MoveRelative
+(*
+
+The function block used to starts positioning to an absolute target position. 
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			22.09.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bExecute					:BOOL;			(* Execut the function block *)
+	lrPosition						:LREAL;			(* Absolute target position *)
+	lrVelocity						:LREAL;			(* Value of velocity *)
+	lrAcceleration					:LREAL;			(* Value of the acceleration (always positive) *)
+	lrDeceleration				:LREAL;			(* Value of deceleration (always positive) *)
+	lrJerk						:LREAL;			(* Value of the jerk (always positive). *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bDone						:BOOL;			(* Program done *)
+	bCmdAborted				:BOOL;			(* Command aborted *)
+	bBusy						:BOOL;			(* Program busy *)
+	bError						:BOOL;			(* Error *)
+	udnErrorNo					:UDINT;			(* Error number *)
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	Axis							:ST_AXIS_REF;
+END_VAR
+VAR
+	(* Enummerations *)
+	etMC_States					:ET_MC_States := ET_MC_States_eInit;
+
+	(* Variables *)
+	nWatchdog					:INT;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtExecute						:R_TRIG;
+	rtAborted						:R_TRIG;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+rtExecute(CLK := bExecute);
+rtAborted(CLK := NOT Axis.stNcToPlc.stCIA402.bSwitchedOn);
+
+IF rtAborted.Q                                             									(* Aborted *)
+THEN
+	etMC_States := ET_MC_States_eAbort;                   					 (* Next step *)
+
+ELSIF rtExecute.Q
+	    AND NOT bCmdAborted
+THEN
+	etMC_States := ET_MC_States_eInit;                      						(* Next step *)
+
+END_IF;
+
+IF Axis.stNcToPlc.stCIA402.bEnabled				(* Enabled *)
+    AND Axis.stNcToPlc.stCIA402.bConstantVelocity
+    AND Axis.stNcToPlc.stCIA402.etModesOfOperation = ET_ModesOfOperation_ProfilePosition						(* Activated profile position mode *)
+THEN
+	Axis.stPlcToNc.stCIA402.stPositionMode.udnVelocity := LREAL_TO_UDINT(lrVelocity * EXPT(10,Axis.stNcToPlc.stCIA402.snDecimalDigits)			(* Value of velocity *)
+																       * (Axis.stPlcToNc.stCIA402.nOverride/100.0));							(* Override *)
+END_IF;
+
+CASE etMC_States OF
+
+	ET_MC_States_eInit:
+		bCmdAborted := FALSE;			(* Command not aborted *)
+		bBusy := FALSE;                                     	(* Program not busy *)
+		bError := FALSE;                         		(* Program not error *)
+		udnErrorNo := 0;                         		(* Error number *)
+
+		IF rtExecute.Q
+		     AND NOT Axis.bLockPDO
+		THEN
+			nWatchdog := 0;
+			bDone := FALSE;                          		(* Target position is not reached *)
+			bBusy := TRUE;                                  	(* Program busy *)
+
+			Axis.bLockPDO := TRUE;
+
+			IF Axis.stNcToPlc.stCIA402.bSwitchedOn						(* Switched on *)
+			     AND Axis.stNcToPlc.stCIA402.bReferenced          				(* Axis in reference *)
+			THEN
+				Axis.stPlcToNc.stCIA402.stPositionMode.bNewSetpoint := FALSE;
+
+				IF Axis.stNcToPlc.stCIA402.bEnabled
+				THEN
+					IF Axis.stNcToPlc.stCIA402.etModesOfOperation <> ET_ModesOfOperation_ProfilePosition						(* Activated profile positon mode *)
+					THEN
+						Axis.stPlcToNc.stCIA402.bEnableOperation := TRUE;
+						Axis.stPlcToNc.stCIA402.bHalt := TRUE;
+
+						etMC_States := ET_MC_States_eReset;             (* Next step *)
+	
+					ELSE
+						Axis.stPlcToNc.stCIA402.bEnableOperation := TRUE;
+
+						etMC_States := ET_MC_States_eRunning;		(* Next step *)
+
+					END_IF
+				ELSE
+					etMC_States := ET_MC_States_eReset;             (* Next step *)
+
+				END_IF;
+
+			ELSIF Axis.stNcToPlc.stCIA402.bError					(* Error *)
+			THEN
+				udnErrorNo := 1;                     (* Error number *)
+
+				etMC_States := ET_MC_States_eError;             (* Next step *)
+
+			ELSE
+				udnErrorNo := 2;                     (* Error number *)
+
+				etMC_States := ET_MC_States_eError;             (* Next step *)
+
+			END_IF;
+		END_IF;
+
+	ET_MC_States_eReset:
+		nWatchdog := nWatchdog + 1;
+
+		IF Axis.stNcToPlc.stCIA402.bNotMoving         				(* Axis sillstand *)
+		THEN
+			Axis.stPlcToNc.stCIA402.etModesOfOperation := ET_ModesOfOperation_ProfilePosition;					(* Activates profile position mode *)
+
+			nWatchdog := 0;
+
+			etMC_States := ET_MC_States_eRunning;			(* Next step *)
+
+		ELSIF Axis.stNcToPlc.stCIA402.bError					(* Error *)
+			   OR nWatchdog > 1500
+		THEN
+			Axis.stPlcToNc.stCIA402.bEnableOperation := FALSE;
+			Axis.stPlcToNc.stCIA402.bHalt := FALSE;
+
+			udnErrorNo := 3;                     (* Error number *)
+
+			etMC_States := ET_MC_States_eError;             (* Next step *)
+		END_IF;
+
+	ET_MC_States_eRunning:
+		nWatchdog := nWatchdog + 1;
+
+		IF Axis.stNcToPlc.stCIA402.etModesOfOperation = ET_ModesOfOperation_ProfilePosition						(* Activated profile position mode *)
+		THEN
+			Axis.stPlcToNc.stCIA402.bEnableOperation := TRUE;
+			Axis.stPlcToNc.stCIA402.bHalt := FALSE;
+
+			Axis.stPlcToNc.stCIA402.stPositionMode.bAbsRel := TRUE;																										(* 0 = Target position is an absolute position; 1 = Target position is a distance relative *)
+			Axis.stPlcToNc.stCIA402.stPositionMode.dnTargetPosition  := LREAL_TO_DINT(lrPosition * EXPT(10,Axis.stNcToPlc.stCIA402.snDecimalDigits));								(* Value of position *)
+			Axis.stPlcToNc.stCIA402.stPositionMode.udnVelocity := LREAL_TO_UDINT(lrVelocity * EXPT(10,Axis.stNcToPlc.stCIA402.snDecimalDigits)									(* Value of velocity *)
+																		       * (Axis.stPlcToNc.stCIA402.nOverride/100.0));													(* Override *)
+			Axis.stPlcToNc.stCIA402.stPositionMode.udnAcceleration := LREAL_TO_UDINT(ABS(lrAcceleration) * EXPT(10,Axis.stNcToPlc.stCIA402.snDecimalDigits));           				(* Value of the acceleration (always positive) *)
+			Axis.stPlcToNc.stCIA402.stPositionMode.udnDeceleration:= LREAL_TO_UDINT(ABS(lrDeceleration) * EXPT(10,Axis.stNcToPlc.stCIA402.snDecimalDigits));           				(* Value of the deceleration (always positive) *)
+			Axis.stPlcToNc.stCIA402.stPositionMode.udnJerk:= LREAL_TO_UDINT(ABS(lrJerk) * EXPT(10,Axis.stNcToPlc.stCIA402.snDecimalDigits));           								(* Value of the deceleration (always positive) *)
+
+			nWatchdog := 0;
+
+			etMC_States := ET_MC_States_eWaiting;           (* Next step *)
+
+		ELSIF Axis.stNcToPlc.stCIA402.bError					(* Error *)
+			   OR nWatchdog > 1500
+		THEN
+			Axis.stPlcToNc.stCIA402.bEnableOperation := FALSE;
+			Axis.stPlcToNc.stCIA402.stPositionMode.bNewSetpoint := FALSE;
+			Axis.stPlcToNc.stCIA402.bHalt := FALSE;
+
+			udnErrorNo := 4;                     (* Error number *)
+
+			etMC_States := ET_MC_States_eError;             (* Next step *)
+		END_IF;
+
+	ET_MC_States_eWaiting:
+		Axis.stPlcToNc.stCIA402.stPositionMode.bNewSetpoint := Axis.stNcToPlc.stCIA402.bEnabled;
+
+		IF Axis.stNcToPlc.stCIA402.bEnabled				(* Enabled *)
+		     AND Axis.stNcToPlc.stCIA402.stPositionMode.bSetpointAck
+		     AND Axis.stNcToPlc.stCIA402.stPositionMode.bPositionReached
+		     AND Axis.stNcToPlc.stCIA402.bPLCOpenDone      		(* Command done *)
+		THEN
+			Axis.stPlcToNc.stCIA402.bEnableOperation := FALSE;
+			Axis.stPlcToNc.stCIA402.stPositionMode.bNewSetpoint := FALSE;
+
+			etMC_States := ET_MC_States_eDone;              (* Next step *)
+
+		ELSIF Axis.stNcToPlc.stCIA402.bError					(* Error *)
+		THEN
+			Axis.stPlcToNc.stCIA402.bEnableOperation := FALSE;
+			Axis.stPlcToNc.stCIA402.stPositionMode.bNewSetpoint := FALSE;
+			Axis.stPlcToNc.stCIA402.bHalt := FALSE;
+
+			udnErrorNo := 5;                     (* Error number *)
+
+			etMC_States := ET_MC_States_eError;             (* Next step *)
+		END_IF;
+
+	ET_MC_States_eAbort:
+		bCmdAborted := TRUE;			(* Command aborted *)
+		bDone := FALSE;                          		(* Target position is not reached *)
+
+		Axis.stPlcToNc.stCIA402.stPositionMode.bNewSetpoint := FALSE;
+		Axis.stPlcToNc.stCIA402.bEnableOperation := FALSE;
+		Axis.stPlcToNc.stCIA402.bHalt := FALSE;
+
+		 etMC_States := ET_MC_States_eNotExecute;        (* Next step *)
+
+	ET_MC_States_eDone:
+		nWatchdog := 0;
+		bDone := TRUE;                          		(* Target position reached *)
+		bBusy := FALSE;                                      	(* Program not busy *)
+
+		etMC_States := ET_MC_States_eNotExecute;            (* Next step *)
+
+	ET_MC_States_eError:
+		nWatchdog := 0;
+		bDone := FALSE;                          	(* Target position is not reached *)
+	         bError := TRUE;				(* Program error  *)
+	         bBusy := FALSE;				(* Program not busy *)
+
+		etMC_States := ET_MC_States_eNotExecute;            (* Next step *)
+
+	ET_MC_States_eNotExecute:
+		IF NOT bExecute
+		THEN
+			nWatchdog := 0;
+			Axis.bLockPDO := FALSE;
+
+			bDone := FALSE;                      (* Target position is not reached *)
+			bCmdAborted := FALSE;	(* Command not aborted *)
+			bBusy := FALSE;                       (* Program not busy *)
+			bError := FALSE;                       (* Program not error *)
+			udnErrorNo := 0;                        (* Error number *)
+
+			etMC_States := ET_MC_States_eInit;              (* Next step *)
+
+		END_IF;
+END_CASE;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_STOEBERSI6_CIA402_MoveRelative">
+      <LineId Id="51" Count="197" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

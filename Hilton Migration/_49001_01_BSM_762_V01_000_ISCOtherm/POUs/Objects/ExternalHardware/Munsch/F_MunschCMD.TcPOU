@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_MunschCMD" Id="{24785f04-ea7e-498e-86d2-1a7a403af274}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_MunschCMD : STRING							(* Command to Munsch extruder *)
+VAR_INPUT
+	stMunschCmd			:ST_MUNSCH_CMD_Data;
+END_VAR
+VAR
+	usnBaseMaterialTemp		:USINT := 160;					(* Base material temperature 160 °C *)
+	usnBaseAirTemp			:USINT := 160;					(* Base air temperature 160 °C *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+CASE stMunschCmd.etCommand OF
+
+	ET_MUNSCH_CMD_NOCMD:						F_MunschCMD := 'NoCmd';
+	ET_MUNSCH_CMD_STARTHEAT:					F_MunschCMD := 'H1';
+	ET_MUNSCH_CMD_STOPHEAT:					F_MunschCMD := 'H0';
+	ET_MUNSCH_CMD_REQHEATSTATUS:			F_MunschCMD := 'h?';
+	ET_MUNSCH_CMD_STARTEXTRUDER:			F_MunschCMD := 'R1';
+	ET_MUNSCH_CMD_STOPEXTRUDER:				F_MunschCMD := 'R0';
+	ET_MUNSCH_CMD_REQEXTRUDERSTATUS:		F_MunschCMD := 'r?';
+	ET_MUNSCH_CMD_SETMATERIALTEMP:			F_MunschCMD := CONCAT('M', CHR(INT_TO_BYTE(MIN(MAX(stMunschCmd.nMaterialTemp - usnBaseMaterialTemp, 0), 240))));
+	ET_MUNSCH_CMD_REQMATERIALREFTEMP:		F_MunschCMD := 'm?';
+	ET_MUNSCH_CMD_REQMATERIALACTTEMP:		F_MunschCMD := 'n?';
+	ET_MUNSCH_CMD_SETAIRTEMP:					F_MunschCMD := CONCAT('A', CHR(INT_TO_BYTE(MIN(MAX(stMunschCmd.nAirTemp - usnBaseAirTemp, 0), 240))));
+	ET_MUNSCH_CMD_REQAIRREFTEMP:				F_MunschCMD := 'a?';
+	ET_MUNSCH_CMD_REQAIRACTTEMP:				F_MunschCMD := 'b?';
+	ET_MUNSCH_CMD_REQSTATUS:					F_MunschCMD := 's?';
+ELSE
+	F_MunschCMD := 'NoCmd';
+END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="F_MunschCMD">
+      <LineId Id="8" Count="19" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

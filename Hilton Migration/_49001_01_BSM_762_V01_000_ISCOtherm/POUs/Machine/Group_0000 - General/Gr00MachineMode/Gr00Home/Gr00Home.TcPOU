@@ -1,0 +1,121 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="Gr00Home" Id="{5c2522d3-964b-4903-b6ed-f457f697d2f7}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM Gr00Home
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable					:BOOL;						(* Enable Gr00Home *)
+	bExecute				:BOOL;						(* Home execute *)
+
+	(* Instances *)
+	fbInit						:FB_Gr00HomeInit;
+	fbProcedure				:FB_Gr00HomeProcedure;
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtExecute					:R_TRIG;
+
+	fbAlarm					:FB_Gr00HomeAlarm;
+
+END_VAR
+VAR CONSTANT
+	nFatalErrorMaxIdx				:INT := 0;						(* Maximal index of  using alarms *)
+	nErrorMaxIdx					:INT := 0;						(* Maximal index of  using alarms *)
+	nWarningMaxIdx				:INT := 0;						(* Maximal index of  using alarms *)
+	nMessageMaxIdx				:INT := 0;						(* Maximal index of  using alarms *)
+	nHintMaxIdx					:INT := 0;						(* Maximal index of  using alarms *)
+
+	dnFatalErrorBaseIdentNo		:DINT := 03000;				(* Fatal error identification number *)
+	dnErrorBaseIdentNo			:DINT := 03100;				(* Error identification number *)
+	dnWarningBaseIdentNo		:DINT := 03200;				(* Warning identification number *)
+	dnMessageBaseIdentNo		:DINT := 03300;				(* Message identification number *)
+	dnHintBaseIdentNo			:DINT := 03400;				(* Hint identification number *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	RETURN;
+END_IF;
+
+(* Check home execute *)
+bExecute := etgGr00MachineState = ET_MachineState_eHomeRefExe
+		      OR etgGr00MachineState = ET_MachineState_eHomeExe;
+
+rtExecute(CLK := bExecute);                   
+
+IF rtExecute.Q
+THEN
+	fbInit.bFirstTime := FALSE;
+	A_Init();
+END_IF;
+
+A_Procedure();
+A_Alarm();
+
+]]></ST>
+    </Implementation>
+    <Action Name="A_Alarm" Id="{1ea6b778-9874-4754-87db-6526503c9c77}">
+      <Implementation>
+        <ST><![CDATA[
+(* Collect and execute input alarms *)
+fbAlarm.stAlarmIn.arbError[0].bActive := fbProcedure.bErrorByProgramVerification;
+fbAlarm.stAlarmIn.arbError[0].dnCode := dnErrorBaseIdentNo + 0;
+
+fbAlarm(
+	etMachineMode := etgGr00MachineMode,
+	etMachineState := etgGr00MachineState,
+	bNoEStop := bgGr00NoEmergencyStop,
+	bConfirmAlarm := bgGr00ConfirmAlarm,
+	dtDateTime := stgGr00DateTime.dtDateTime,
+	nFatalErrorMaxIdx := nFatalErrorMaxIdx,
+	nErrorMaxIdx := nErrorMaxIdx,
+	nWarningMaxIdx := nWarningMaxIdx,
+	nMessageMaxIdx := nMessageMaxIdx,
+	nHintMaxIdx := nHintMaxIdx,
+	bMoveInterrupted := bgGr00MoveInterrupted,
+	bHomeCompleted := bgGr00HomeCompleted,
+	stAlarmOut => stgGr00Alarm.stHome
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Init" Id="{b7245eca-8ce4-4698-860c-d232020376a9}">
+      <Implementation>
+        <ST><![CDATA[
+(* Initializing variables *)
+fbInit();]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Procedure" Id="{9fec207b-2d67-4d32-9dcf-0fcf2642d203}">
+      <Implementation>
+        <ST><![CDATA[
+(* Execute home procedure *)
+fbProcedure(
+	bEnable := etgGr00MachineMode = ET_MachineMode_eHome,
+	bExecute := rtExecute.Q,
+	bReleaseNextStep := etgGr00MachineState = ET_MachineState_eHomeRefExe
+		      	     		      OR etgGr00MachineState = ET_MachineState_eHomeExe
+);]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="Gr00Home">
+      <LineId Id="38" Count="20" />
+    </LineIds>
+    <LineIds Name="Gr00Home.A_Alarm">
+      <LineId Id="0" Count="19" />
+    </LineIds>
+    <LineIds Name="Gr00Home.A_Init">
+      <LineId Id="0" Count="2" />
+    </LineIds>
+    <LineIds Name="Gr00Home.A_Procedure">
+      <LineId Id="0" Count="7" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

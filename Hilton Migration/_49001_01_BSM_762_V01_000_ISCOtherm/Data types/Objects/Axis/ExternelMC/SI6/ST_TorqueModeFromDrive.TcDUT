@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_TorqueModeFromDrive" Id="{4800e165-87eb-4a9d-bfc6-8bc4ef34b7cf}">
+    <Declaration><![CDATA[TYPE ST_TorqueModeFromDrive :
+STRUCT
+	bTorqueReached				:BOOL;			(* Set force / set torque reached; difference in the amount of effective set force / set torque and actual force / actual torque greater than torque / force window, data source: A558, A564, G900  *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,99 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Gr01AutoInit" Id="{ac7b88c1-863e-4a04-9bd8-63cf41150177}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Gr01AutoInit
+(*
+
+The function block used to initialize automatic mode.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			28.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bFirstTime					:BOOL;
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	nIdx			:INT;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+(* Initializing variables *)
+IF NOT bFirstTime
+THEN
+
+	(* Initialise axis saw bow *)
+	Gr01Control.fbAxisSawBow.bExeSetPos := FALSE;						(* Execute set  position *)
+	Gr01Control.fbAxisSawBow.bExeHome := FALSE;						(* Execute home *)
+	Gr01Control.fbAxisSawBow.bExeMoveAbs := FALSE;					(* Execute move absolut *)
+	Gr01Control.fbAxisSawBow.bExeMoveRel := FALSE;					(* Execute move relative *)
+	Gr01Control.fbAxisSawBow.bExeMoveAdd := FALSE;					(* Execute move additive *)
+	Gr01Control.fbAxisSawBow.bExeMoveSuper := FALSE;					(* Execute move superimposed *)
+	Gr01Control.fbAxisSawBow.bExeMoveVelo := FALSE;					(* Execute move velo *)
+	Gr01Control.fbAxisSawBow.bExeGearIn := FALSE;						(* Execute gear in *)
+	Gr01Control.fbAxisSawBow.bExeGearOut := FALSE;						(* Execute gear out *)
+	Gr01Control.fbAxisSawBow.bExeStop := FALSE;						(* Execute move stop *)
+	Gr01Control.fbAxisSawBow.bExeReset := FALSE;						(* Execute auto reset *)
+	Gr01Control.fbAxisSawBow.bExtOverrideEn := FALSE;					(* Execute extern override *)
+
+	(* Initialise axis angle *)
+	Gr01Control.fbAxisAngle.bExeHome := FALSE;							(* Execute home *)
+	Gr01Control.fbAxisAngle.bExeMoveAbs := FALSE;						(* Execute move absolut *)
+	Gr01Control.fbAxisAngle.bExeMoveVelo := FALSE;						(* Execute move velo *)
+	Gr01Control.fbAxisAngle.bExeStop := FALSE;							(* Execute move stop *)
+	Gr01Control.fbAxisAngle.bExeReset := FALSE;							(* Execute auto reset *)
+	Gr01Control.fbAxisAngle.bExtOverrideEn := FALSE;						(* Execute extern override *)
+
+	(* Initialise sawband *)
+	Gr01Control.fbSawband.bExeMoveVelo := FALSE;						(* Execute move velo *)
+	Gr01Control.fbSawband.bExeStop := FALSE;							(* Execute move stop *)
+	Gr01Control.fbSawband.bExeReset := FALSE;							(* Execute auto reset *)
+
+	(* Auto procedure *)
+	Gr01Auto.fbProcedure.bEnable := FALSE;								(* Start init process *)
+	Gr01Auto.fbProcedure.bExecute := FALSE;
+	Gr01Auto.fbProcedure();
+
+	(* Auto functions *)
+
+	(* Auto *)
+	bgGr01SawingAck := FALSE;
+	bgGr01AngleAck := FALSE;
+	bgGr01TransportReq := FALSE;
+
+	bgGr01AutoCompleted := FALSE;
+	bgGr01MoveInterrupted := FALSE;
+
+	bFirstTime := TRUE;
+END_IF;
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Gr01AutoInit">
+      <LineId Id="39" Count="49" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

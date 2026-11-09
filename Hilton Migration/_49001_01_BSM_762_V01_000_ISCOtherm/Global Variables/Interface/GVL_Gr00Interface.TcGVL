@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <GVL Name="GVL_Gr00Interface" Id="{2a65ac13-537e-4991-b02e-aae4f6873f31}">
+    <Declaration><![CDATA[{attribute 'Tc2GvlVarNames'}
+VAR_GLOBAL
+	(* Periphery *)
+	Periphery					:ST_PERIPHERY_REF;
+END_VAR
+]]></Declaration>
+  </GVL>
+</TcPlcObject>

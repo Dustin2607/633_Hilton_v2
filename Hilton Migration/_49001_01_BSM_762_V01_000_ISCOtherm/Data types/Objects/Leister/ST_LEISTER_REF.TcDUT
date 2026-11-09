@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_LEISTER_REF" Id="{320e87b3-3cbd-4d48-abe6-f7b6d787c635}">
+    <Declaration><![CDATA[TYPE ST_LEISTER_REF : FB_LEISTER_EXTRUDER_REF;
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_EL3351ChannelDiagnosis" Id="{9e12eb98-e2c5-4fed-a698-3d7935d66dad}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_EL3351ChannelDiagnosis
+VAR_INPUT
+	stBridgeState					:ST_EL3351ChannelState;				(* AI bridge state *)
+	stSupplyState					:ST_EL3351ChannelState;				(* AI supply state *)
+END_VAR
+VAR_OUTPUT
+	bBridgeChannelOK			:BOOL;
+	bSupplyChannelOK			:BOOL;
+END_VAR
+VAR
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+(* General Channel Status *)
+IF stBridgeState.bUnderrange= 0
+    AND stBridgeState.bOverrangerange= 0
+    AND stBridgeState.bError= 0
+    AND stBridgeState.bState= 0
+THEN
+	bBridgeChannelOK:= TRUE;
+ELSE
+	bBridgeChannelOK:= FALSE;
+END_IF
+
+IF stSupplyState.bUnderrange= 0
+     AND stSupplyState.bOverrangerange= 0
+     AND stSupplyState.bError= 0
+     AND stSupplyState.bState= 0
+THEN
+	bSupplyChannelOK:= TRUE;
+ELSE
+	bSupplyChannelOK:= FALSE;
+END_IF
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_EL3351ChannelDiagnosis">
+      <LineId Id="12" Count="21" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

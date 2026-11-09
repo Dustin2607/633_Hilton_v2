@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_Gr00Home" Id="{46e2fadf-11c0-43c1-a596-51d471b2260d}">
+    <Declaration><![CDATA[TYPE ET_Gr00Home :
+(
+	ET_Gr00Home_eWaitExecute := 0,
+	ET_Gr00Home_eReference,
+	ET_Gr00Home_eReadPrg,
+	ET_Gr00Home_eWfReadPrg,
+	ET_Gr00Home_eProgramVerification,
+	ET_Gr00Home_eWfErrorByProgramVerification,
+	ET_Gr00Home_eDone := 197,
+	ET_Gr00Home_eError := 198,
+	ET_Gr00Home_eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

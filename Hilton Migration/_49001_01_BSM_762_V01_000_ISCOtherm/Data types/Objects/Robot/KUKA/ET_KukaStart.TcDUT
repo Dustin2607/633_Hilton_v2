@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_KukaStart" Id="{92a2a61e-2aab-49d1-a0e7-c84a741e95b4}">
+    <Declaration><![CDATA[TYPE ET_KukaStart :
+(
+	ET_KukaStart_eWaitExecute := 0,
+	ET_KukaStart_eExtStart,
+	ET_KukaStart_eWfInHome,
+	ET_KukaStart_eWfPgNoReq,
+	ET_KukaStart_ePgNoParity,
+	ET_KukaStart_ePgNoValid,
+	ET_KukaStart_eWfProgFinish,
+	ET_KukaStart_eDone := 197,
+	ET_KukaStart_eError := 198,
+	ET_KukaStart_eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

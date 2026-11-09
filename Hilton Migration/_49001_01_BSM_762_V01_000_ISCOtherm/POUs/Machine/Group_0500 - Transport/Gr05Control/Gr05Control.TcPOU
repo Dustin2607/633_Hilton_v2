@@ -1,0 +1,572 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="Gr05Control" Id="{09aeebb3-f585-4ef2-bf90-334d5e8296c7}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM Gr05Control
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Enable Gr05Control *)
+
+	(* Instances *)
+	fbAxisClamp1					:FB_Gr05AxisClamp;
+
+	arfbCylinderClamp				:ARRAY[1..ungGr05ClampMaxNo] OF FB_Gr05CylinderClamp;
+	fbCylinderPos				:FB_Gr05CylinderPos;
+
+	fbSlide						:FB_Gr05Slide;
+	fbRemovalBand				:FB_Gr05RemovalBand;
+
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	unClampIdx					:UINT;						(* Clamp index *)
+	unCylinderPosIdx				:UINT;						(* Position cylinder index *)
+
+	arlrAxisClampLastPos			:ARRAY[1..ungGr05ClampMaxNo] OF LREAL;
+
+	bAllAxisCtrlEnabled			:BOOL;						(* All axis have controller enabled *)
+	bAllAxisStandStill				:BOOL;						(* All axis stand still *)
+	bAllAxisNotMoving			:BOOL;						(* All axis not moving *)
+	bAllAxisReferenced			:BOOL;						(* All axis referenced *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbAlarm						:FB_Gr05Alarm;
+	fbSafety						:FB_Gr05Safety;
+	fbSignals					:FB_Gr05Signals;
+	fbUtility						:FB_Gr05Utility;
+	rtBtnStart						:R_TRIG;
+	tonSlideMoveToWork			:TON;
+	tpTransportBand				:TP;
+END_VAR
+VAR CONSTANT
+	nFatalErrorMaxIdx				:INT := 0;						(* Maximal index of  using alarms *)
+	nErrorMaxIdx					:INT := 23;					(* Maximal index of  using alarms *)
+	nWarningMaxIdx				:INT := 0;						(* Maximal index of  using alarms *)
+	nMessageMaxIdx				:INT := 3;						(* Maximal index of  using alarms *)
+	nHintMaxIdx					:INT := 0;						(* Maximal index of  using alarms *)
+
+	dnFatalErrorBaseIdentNo		:DINT := 51000;				(* Fatal error identification number *)
+	dnErrorBaseIdentNo			:DINT := 51100;				(* Error identification number *)
+	dnWarningBaseIdentNo		:DINT := 51200;				(* Warning identification number *)
+	dnMessageBaseIdentNo		:DINT := 51300;				(* Message identification number *)
+	dnHintBaseIdentNo			:DINT := 51400;				(* Hint identification number *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	RETURN;
+END_IF;
+
+A_Utility();
+A_Safety();
+A_Transport();
+A_Signals();
+A_Alarm();]]></ST>
+    </Implementation>
+    <Action Name="A_Alarm" Id="{410625d5-6127-49d4-9961-db5f26b5b3ca}">
+      <Implementation>
+        <ST><![CDATA[
+(* Collect and execute input alarms *)
+fbAlarm.stAlarmIn.arbError[0].bActive := NOT binGr05LightCurtainOK
+                                                		      AND (Gr05Home.fbProcedure.bBusy
+                                                      				OR Gr05Auto.fbProcedure.bBusy);
+fbAlarm.stAlarmIn.arbError[0].dnCode := dnErrorBaseIdentNo + 0;
+
+fbAlarm.stAlarmIn.arbError[1].bActive := FALSE;(*(bgGr05PipeEndPresent
+						       OR (bgGr05PipeBeginPresent AND Gr05Home.fbProcedure.bDone))
+			                                   AND ((etgGr00MachineMode = ET_MachineMode_eHome
+			                                                 AND (etgGr00MachineState = ET_MachineState_eHomeExe
+			                                                      	     OR etgGr00MachineState = ET_MachineState_eHomeRefExe)))*);
+fbAlarm.stAlarmIn.arbError[1].dnCode := dnErrorBaseIdentNo + 1;
+
+fbAlarm.stAlarmIn.arbError[2].bActive := FALSE;
+fbAlarm.stAlarmIn.arbError[2].dnCode := dnErrorBaseIdentNo + 2;
+
+fbAlarm.stAlarmIn.arbError[3].bActive := FALSE;
+fbAlarm.stAlarmIn.arbError[3].dnCode := dnErrorBaseIdentNo + 3;
+
+fbAlarm.stAlarmIn.arbError[4].bActive := fbAxisClamp1.bErrorTerminal;
+fbAlarm.stAlarmIn.arbError[4].dnCode := dnErrorBaseIdentNo + 4;
+
+fbAlarm.stAlarmIn.arbError[5].bActive := fbAxisClamp1.fbController.bErrorInit;
+fbAlarm.stAlarmIn.arbError[5].dnCode := dnErrorBaseIdentNo + 5;
+
+fbAlarm.stAlarmIn.arbError[6].bActive := fbAxisClamp1.bErrorCtrlEnabled;
+fbAlarm.stAlarmIn.arbError[6].dnCode := dnErrorBaseIdentNo + 6;
+
+fbAlarm.stAlarmIn.arbError[7].bActive := fbAxisClamp1.fbController.bError OR fbAxisClamp1.fbMoveManual.bError OR fbAxisClamp1.fbMoveAuto.bError;
+fbAlarm.stAlarmIn.arbError[7].dnCode := dnErrorBaseIdentNo + 7;
+
+fbAlarm.stAlarmIn.arbError[8].bActive := arfbCylinderClamp[1].bErrorOpen;
+fbAlarm.stAlarmIn.arbError[8].dnCode := dnErrorBaseIdentNo + 8;
+
+fbAlarm.stAlarmIn.arbError[9].bActive := arfbCylinderClamp[1].bErrorClose;
+fbAlarm.stAlarmIn.arbError[9].dnCode := dnErrorBaseIdentNo + 9;
+
+fbAlarm.stAlarmIn.arbError[10].bActive := arfbCylinderClamp[2].bErrorOpen;
+fbAlarm.stAlarmIn.arbError[10].dnCode := dnErrorBaseIdentNo + 10;
+
+fbAlarm.stAlarmIn.arbError[11].bActive := arfbCylinderClamp[2].bErrorClose;
+fbAlarm.stAlarmIn.arbError[11].dnCode := dnErrorBaseIdentNo + 11;
+
+fbAlarm.stAlarmIn.arbError[12].bActive := fbSlide.bErrorMoveToBase;
+fbAlarm.stAlarmIn.arbError[12].dnCode := dnErrorBaseIdentNo + 12;
+
+fbAlarm.stAlarmIn.arbError[13].bActive := fbSlide.bErrorMoveToWork;
+fbAlarm.stAlarmIn.arbError[13].dnCode := dnErrorBaseIdentNo + 13;
+
+fbAlarm.stAlarmIn.arbError[14].bActive := fbRemovalBand.bErrorMoveToPlus;
+fbAlarm.stAlarmIn.arbError[14].dnCode := dnErrorBaseIdentNo + 14;
+
+fbAlarm.stAlarmIn.arbError[15].bActive := fbRemovalBand.bErrorMoveToMinus;
+fbAlarm.stAlarmIn.arbError[15].dnCode := dnErrorBaseIdentNo + 15;
+
+fbAlarm.stAlarmIn.arbError[16].bActive := fbRemovalBand.fbMotor.bError
+						         AND fbRemovalBand.fbMotor.udnErrorNo = 8;
+fbAlarm.stAlarmIn.arbError[16].dnCode := dnErrorBaseIdentNo + 16;
+
+fbAlarm.stAlarmIn.arbError[17].bActive := fbCylinderPos.arbErrorMoveToBase[1];
+fbAlarm.stAlarmIn.arbError[17].dnCode := dnErrorBaseIdentNo + 17;
+
+fbAlarm.stAlarmIn.arbError[18].bActive := fbCylinderPos.arbErrorMoveToWork[1];
+fbAlarm.stAlarmIn.arbError[18].dnCode := dnErrorBaseIdentNo + 18;
+
+fbAlarm.stAlarmIn.arbError[19].bActive := fbCylinderPos.arbErrorMoveToBase[2];
+fbAlarm.stAlarmIn.arbError[19].dnCode := dnErrorBaseIdentNo + 19;
+
+fbAlarm.stAlarmIn.arbError[20].bActive := fbCylinderPos.arbErrorMoveToWork[2];
+fbAlarm.stAlarmIn.arbError[20].dnCode := dnErrorBaseIdentNo + 20;
+
+fbAlarm.stAlarmIn.arbError[21].bActive := fbCylinderPos.arbErrorMoveToBase[3];
+fbAlarm.stAlarmIn.arbError[21].dnCode := dnErrorBaseIdentNo + 21;
+
+fbAlarm.stAlarmIn.arbError[22].bActive := fbCylinderPos.arbErrorMoveToWork[3];
+fbAlarm.stAlarmIn.arbError[22].dnCode := dnErrorBaseIdentNo + 22;
+
+fbAlarm.stAlarmIn.arbWarning[0].bActive := FALSE;
+fbAlarm.stAlarmIn.arbWarning[0].dnCode := dnWarningBaseIdentNo + 0;
+
+fbAlarm.stAlarmIn.arbMessage[0].bActive := NOT binGr05LightCurtainOK
+							      AND NOT fbAlarm.stAlarmIn.arbError[0].bActive
+							      AND NOT fbAlarm.stAlarmOut.arbError[0].bActive;
+fbAlarm.stAlarmIn.arbMessage[0].dnCode := dnMessageBaseIdentNo + 0;
+
+fbAlarm.stAlarmIn.arbMessage[1].bActive := FALSE;(*bgGr05PipeEndPresent
+							       AND NOT fbAlarm.stAlarmIn.arbError[1]
+							       AND etgGr00MachineMode = ET_MachineMode_eHome*);
+fbAlarm.stAlarmIn.arbMessage[1].dnCode := dnMessageBaseIdentNo + 1;
+
+fbAlarm.stAlarmIn.arbMessage[2].bActive := NOT bgGr05PipeEndPresent
+							      AND NOT bgGr00MachineRunning
+							      AND NOT Gr05Auto.fbAlarm.stAlarmIn.arbError[0].bActive
+							      AND NOT Gr05Auto.fbAlarm.stAlarmIn.arbError[1].bActive
+							      AND NOT Gr05Auto.fbAlarm.stAlarmIn.arbError[2].bActive
+							      AND NOT Gr05Home.fbAlarm.stAlarmOut.arbError[1].bActive
+							      AND NOT Gr05Home.fbAlarm.stAlarmOut.arbError[2].bActive;
+fbAlarm.stAlarmIn.arbMessage[2].dnCode := dnMessageBaseIdentNo + 2;
+
+fbAlarm.stAlarmIn.arbMessage[3].bActive := stgGr05HMI.stPLCTOHMI.arlrAxisClampActPos[2] >= ABS(99999.0);
+fbAlarm.stAlarmIn.arbMessage[3].dnCode := dnMessageBaseIdentNo + 3;
+
+
+(* Execute utility *)
+fbAlarm(
+	etMachineMode := etgGr00MachineMode,
+	etMachineState := etgGr00MachineState,
+	bNoEStop := bgGr00NoEmergencyStop,
+	bConfirmAlarm := bgGr00ConfirmAlarm,
+	dtDateTime := stgGr00DateTime.dtDateTime,
+	nFatalErrorMaxIdx := nFatalErrorMaxIdx,
+	nErrorMaxIdx := nErrorMaxIdx,
+	nWarningMaxIdx := nWarningMaxIdx,
+	nMessageMaxIdx := nMessageMaxIdx,
+	nHintMaxIdx := nHintMaxIdx,
+	bMoveInterrupted := bgGr05MoveInterrupted,
+	bHomeCompleted := bgGr05HomeCompleted,
+	stAlarmOut => stgGr05Alarm.stControl
+);
+
+
+
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Safety" Id="{b6e06db7-8d5b-49ac-a29e-cb39a6231ac3}">
+      <Implementation>
+        <ST><![CDATA[
+(* Execute safety *)
+fbSafety(
+	bLightCurtain := binGr05LightCurtainOK,
+	bConfirmLightCurtain := (bgGr00ConfirmAlarm
+			                            OR etgGr00MachineMode = ET_MachineMode_eManual
+			                            OR etgGr00MachineMode = ET_MachineMode_eHome
+			                            OR etgGr00MachineMode = ET_MachineMode_eAutomatic
+			                            OR stgGr00HMI.stHMITOPLC.bSafetyInterlockOff)
+					         AND NOT stgGr05Alarm.stControl.arbError[0].bActive,
+	tLightCurtainDelay := tgGr05LightCurtainDelay,
+	bLightCurtainOK => bgGr05LightCurtainOK,
+	bConfirmedLightCurtain => boutGr05ConfLightCurtain
+);
+
+bgGr05SafetyActive := fbAxisClamp1.bSafetyLock;]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Signals" Id="{6265b167-7fb1-4774-bb7d-42eb4f914145}">
+      <Implementation>
+        <ST><![CDATA[
+(* Execute signals *)
+fbSignals(
+	etMachineMode := etgGr00MachineMode,
+	etMachineState := etgGr00MachineState,
+	bMachineRunning := bgGr00MachineRunning,
+	bExecutedProcess := fbUtility.bExeProcess,
+	stBlinker := stgGr00Blinker,
+	bBulbBtnStart => boutGr05BulbBtnStart,
+	bBulbBtnStop => boutGr05BulbBtnStop
+);
+
+(* Detect all axis controller enabled *)
+bAllAxisCtrlEnabled := F_ChkAllAxisEnabled(
+	bEnable := TRUE,
+	bEnabledAxis1 := Gr05Control.fbAxisClamp1.bCtrlEnabled,
+	bEnabledAxis2 := TRUE,
+	bEnabledAxis3 := TRUE,
+	bEnabledAxis4 := TRUE,
+	bEnabledAxis5 := TRUE,
+	bEnabledAxis6 := TRUE,
+	bEnabledAxis7 := TRUE,
+	bEnabledAxis8 := TRUE,
+	bEnabledAxis9 := TRUE,
+	bEnabledAxis10 := TRUE
+);
+
+(* Detect all axis stand still *)
+bAllAxisStandStill := F_ChkAllAxisStandStill(
+	bEnable := TRUE,
+	bAxis1StandStill := igGr05AxisClamp1.stAxisStatus.bStandStill,
+	bAxis2StandStill := TRUE,
+	bAxis3StandStill := TRUE,
+	bAxis4StandStill := TRUE,
+	bAxis5StandStill := TRUE,
+	bAxis6StandStill := TRUE,
+	bAxis7StandStill := TRUE,
+	bAxis8StandStill := TRUE,
+	bAxis9StandStill := TRUE,
+	bAxis10StandStill := TRUE,
+);
+
+(* Detect all axis not moving *)
+bAllAxisNotMoving := F_ChkAllAxisNotMoving(
+	bEnable := TRUE,
+	bAxis1NotMoving := igGr05AxisClamp1.stNcToPlc.stBaseDevice.stCommandPositioning.bNotMoving
+					   AND igGr05AxisClamp1.stNcToPlc.stBaseDevice.stCommandPositioning.dnActVelocity = 0,
+	bAxis2NotMoving := TRUE,
+	bAxis3NotMoving := TRUE,
+	bAxis4NotMoving := TRUE,
+	bAxis5NotMoving := TRUE,
+	bAxis6NotMoving := TRUE,
+	bAxis7NotMoving := TRUE,
+	bAxis8NotMoving := TRUE,
+	bAxis9NotMoving := TRUE,
+	bAxis10NotMoving := TRUE
+);
+
+(* Detect all axis referenced *)
+bAllAxisReferenced := F_ChkAllAxisReferenced(
+	bEnable := TRUE,
+	bReferencedAxis1 := Gr05Control.fbAxisClamp1.bReferenced,
+	bReferencedAxis2 := TRUE,
+	bReferencedAxis3 := TRUE,
+	bReferencedAxis4 := TRUE,
+	bReferencedAxis5 := TRUE,
+	bReferencedAxis6 := TRUE,
+	bReferencedAxis7 := TRUE,
+	bReferencedAxis8 := TRUE,
+	bReferencedAxis9 := TRUE,
+	bReferencedAxis10 := TRUE
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Transport" Id="{3cc8b9c9-c9be-448a-aa3e-98c8808577d4}">
+      <Implementation>
+        <ST><![CDATA[
+(* Enable axis clamp *)
+IF bgGr00ModeManual
+	AND stgGr05HMI.stPLCTOHMI.arlrAxisClampActPos[2] < ABS(99999.0)
+	THEN
+		stgGr05HMI.stHMITOPLC.arlrAxisClampSoftLimitMin[1] := stgGr05HMI.stPLCTOHMI.arlrAxisClampActPos[2]
+														+ lrgGr05CylinderPosOriginShiftPos
+													   	+ lrgGr05Clamp2Width - 0.5 ;
+	ELSE
+		stgGr05HMI.stHMITOPLC.arlrAxisClampSoftLimitMin[1] := lrgGr05CylinderPosOriginShiftPos
+												    		+ lrgGr05Clamp2Width - 0.5  ;
+END_IF
+
+lrgGr05SafetyDistance := SEL(Gr01Persistent.rPipeDiameter > 400 , 0.0 ,200.0);
+
+stgGr05HMI.stHMITOPLC.arlrAxisClampNoRefVelo[1] := 10;
+
+fbAxisClamp1(
+	bEnable := TRUE,
+	etMachineMode := etgGr00MachineMode,
+	etMachineState := etgGr00MachineState,
+	bNoEStop := bgGr00NoEmergencyStop,
+	bPowerSupplyOn := bgGr00PowerSupplyOk,
+	bSafetyOK := bgGr05LightCurtainOK
+			        AND bgGr00AllDoorsClosedLocked,
+	bMachineStandstill := bgGr00MachineStandstill,
+	bCtrlInterrupt := FALSE,
+	bMoveRelease := TRUE,
+	bMoveInterrupt := FALSE,
+	bSignalReference := NOT binGr05AxisClamp1LimitMax,
+	bHWSignalLimitMax := NOT binGr05AxisClamp1LimitMax,
+	bHWSignalLimitMin := NOT binGr05AxisClamp1LimitMin,
+	lrSoftLimitMax := SEL(bgGr00ModeAutomatic, stgGr05HMI.stHMITOPLC.arlrAxisClampSoftLimitMax[1], stgGr05HMI.stHMITOPLC.arlrAxisClampSoftLimitMax[1] + 0.5),
+	lrSoftLimitMin := SEL(bgGr00ModeAutomatic, stgGr05HMI.stHMITOPLC.arlrAxisClampSoftLimitMin[1], stgGr05HMI.stHMITOPLC.arlrAxisClampSoftLimitMin[1] - 0.5),
+	bTipPlus := stgGr05HMI.stHMITOPLC.arbBtnAxisClampPlus[1],
+	bTipMinus := stgGr05HMI.stHMITOPLC.arbBtnAxisClampMinus[1],
+	lrTipDistance:= 0,
+	bPlusRelease := TRUE,
+	bMinusRelease := TRUE, (*stgGr00HMI.stHMITOPLC.bSafetyInterlockOff*)
+	lrManualVelocity := stgGr05HMI.stHMITOPLC.arlrAxisClampManualVelo[1],
+	lrVelocityNoRef := stgGr05HMI.stHMITOPLC.arlrAxisClampNoRefVelo[1],
+	bVelocityLimitEn := FALSE,
+	lrAcceleration := 100.0,
+	lrDeceleration := 100.0,
+	lrJerk := 100.0,
+	bEngineTorqueLimitEn := FALSE,
+	lrEngineTorque := 200.0,
+	bWithAbsoluteEncoder := FALSE,
+	lrOriginShift := stgGr05HMI.stHMITOPLC.arlrAxisClampOriginShiftPos[1],
+	dnRatioNumerator := 1,
+	udnRatioDenominator := 1,
+	bVeloForceCtrlEn := FALSE,
+	lrOverride := fbUtility.rActOverride,
+	lrExtOverride := 100.0,
+	bConfirmAlarm := bgGr00ConfirmAlarm,
+	tControllerOff := tgGr05ControllerOff,
+	tAdsTimeOut := DEFAULT_ADS_TIMEOUT,
+	bHomeCompleted := bgGr05HomeCompleted,
+	Drive := igGr05DriveClamp1,
+	Axis := igGr05AxisClamp1,
+	lrActPosition => stgGr05HMI.stPLCTOHMI.arlrAxisClampActPos[1],
+	lrActVelocity => stgGr05HMI.stPLCTOHMI.arlrAxisClampActVelo[1],
+	lrActForce => stgGr05HMI.stPLCTOHMI.arlrAxisClampActForce[1]
+);
+
+(* Control open/close clamp cylinder *)
+FOR unClampIdx :=1 TO ungGr05ClampMaxNo
+DO
+	arfbCylinderClamp[unClampIdx](
+		etMachineMode := etgGr00MachineMode,
+		etMachineState := etgGr00MachineState,
+		bAirPressureOK := bgGr00AirPressureOK,
+		bSafetyOK := bgGr05LightCurtainOK
+				        AND bgGr00AllDoorsClosedLocked,
+		bOpened := arbinGr05ClampOpened[unClampIdx],
+		bClosed := arbinGr05ClampClosed[unClampIdx],
+		bHandOpen := stgGr05HMI.stHMITOPLC.arbBtnClampOpen[unClampIdx],
+		bHandClose := stgGr05HMI.stHMITOPLC.arbBtnClampClose[unClampIdx],
+		bOpenRelease := TRUE,
+		bCloseRelease := TRUE,
+		bControlOff := NOT bgGr00NoEmergencyStop,
+		bConfirmAlarm := bgGr00ConfirmAlarm,
+		tTimeOut := t#15s,
+		bHomeCompleted := bgGr05HomeCompleted,
+		bOpen => arboutGr05ClampOpen[unClampIdx],
+		bClose => arboutGr05ClampClose[unClampIdx]
+	);
+
+END_FOR
+
+(* Control position cylinder *)
+stgGr05HMI.stHMITOPLC.bCylinderPosActive := TRUE;
+
+fbCylinderPos(
+	bEnable := stgGr05HMI.stHMITOPLC.bCylinderPosActive,
+	etMachineMode := etgGr00MachineMode,
+	etMachineState := etgGr00MachineState,
+	bNoEStop := bgGr00NoEmergencyStop,
+	bSafetyOK := bgGr05LightCurtainOK
+			        AND bgGr00AllDoorsClosedLocked,
+	bAirPressureOK := bgGr00AirPressureOK,
+	lrPosOffset := lrgGr05CylinderPosOffset,
+	lrOriginShiftPos := lrgGr05CylinderPosOriginShiftPos,
+	etDirection := etgGr05CylinderPosDirection,
+	usnCodingType := usngGr05CylinderPosCodingType,
+	bControlOff := FALSE,
+	bConfirmAlarm := bgGr00ConfirmAlarm,
+	tTimeOut := t#10s,
+	bHomeCompleted := bgGr05HomeCompleted,
+	lrActPosition => stgGr05HMI.stPLCTOHMI.arlrAxisClampActPos[2]
+ );
+
+IF NOT stgGr05HMI.stHMITOPLC.bCylinderPosActive
+     AND arlrAxisClampLastPos[2] <> stgGr05HMI.stPLCTOHMI.arlrAxisClampActPos[2]
+THEN
+	bgGr05HomeCompleted := FALSE;
+	arlrAxisClampLastPos[2] := stgGr05HMI.stPLCTOHMI.arlrAxisClampActPos[2];
+END_IF
+
+FOR unCylinderPosIdx := 1 TO ungGr05CylinderPosMaxNo
+DO
+	fbCylinderPos.arbHandMoveToBase[unCylinderPosIdx] := stgGr05HMI.stHMITOPLC.arbBtnCylinderPosClose[unCylinderPosIdx];
+	fbCylinderPos.arbHandMoveToWork[unCylinderPosIdx] := stgGr05HMI.stHMITOPLC.arbBtnCylinderPosOpen[unCylinderPosIdx];
+	fbCylinderPos.arbInBase[unCylinderPosIdx] := arbinGr05CylinderPosClosed[unCylinderPosIdx];
+	fbCylinderPos.arbInWork[unCylinderPosIdx] := arbinGr05CylinderPosOpened[unCylinderPosIdx];
+	fbCylinderPos.arbMoveToBaseRelease[unCylinderPosIdx] := TRUE;
+	fbCylinderPos.arbMoveToWorkRelease[unCylinderPosIdx] := TRUE;
+	arboutGr05CylinderPosOpen[unCylinderPosIdx] := fbCylinderPos.arbMoveToWork[unCylinderPosIdx];
+	arboutGr05CylinderPosClose[unCylinderPosIdx] := fbCylinderPos.arbMoveToBase[unCylinderPosIdx];
+END_FOR
+
+(* Control slide cylinder *)
+tonSlideMoveToWork(
+	IN := fbSlide.bAutoMoveToWork
+		AND fbSlide.fbCylinder.bEndWork,
+	PT := tgGr05SlideWaitInWork
+);
+
+IF bgGr00ModeAutomatic
+     AND bgGr00MachineRunning
+     AND tonSlideMoveToWork.Q
+THEN
+	fbSlide.bAutoMoveToBase := TRUE;
+	fbSlide.bAutoMoveToWork := FALSE;
+END_IF
+
+stgGr05HMI.stHMITOPLC.bSlideActive := FALSE;
+
+fbSlide(
+	bEnable := stgGr05HMI.stHMITOPLC.bSlideActive,
+	etMachineMode := etgGr00MachineMode,
+	etMachineState := etgGr00MachineState,
+	bAirPressureOK := bgGr00AirPressureOK,
+	bSafetyOK := bgGr05LightCurtainOK
+			        AND bgGr00AllDoorsClosedLocked,
+	bInBase := binGr05SlideTop,
+	bInWork := binGr05SlideBottom,
+	bMoveToBaseRelease := TRUE,
+	bMoveToWorkRelease := TRUE,
+	bHandMoveToBase := stgGr05HMI.stHMITOPLC.bBtnSlideUp,
+	bHandMoveToWork := stgGr05HMI.stHMITOPLC.bBtnSlideDown,
+	bControlOff := NOT bgGr00NoEmergencyStop,
+	bConfirmAlarm := bgGr00ConfirmAlarm,
+	tTimeOut := t#6s,
+	bHomeCompleted := bgGr05HomeCompleted,
+	bMoveToBase => boutGr05SlideUp,
+	bMoveToWork => boutGr05SlideDown
+);
+
+(* Control removal band *)
+tpTransportBand(IN := Gr05Home.bExecute, PT := t#5s);
+
+fbRemovalBand.arbAutoMoveToMinus[1] := binGr05PushBtnRemovalBandStart
+									    OR tpTransportBand.Q
+									    OR (fbAxisClamp1.lrActVelocity < 0.0 AND NOT fbAxisClamp1.bNotMoving);
+
+IF NOT bgGr00MachineRunning
+THEN
+	fbRemovalBand.arbAutoMoveToMinus[2] := FALSE;
+END_IF
+
+fbRemovalBand(
+	etMachineMode := etgGr00MachineMode,
+	etMachineMode := etgGr00MachineMode,
+	etMachineState := etgGr00MachineState,
+	bNoEStop := bgGr00NoEmergencyStop,
+	bPowerSupplyOn := bgGr00PowerSupplyOk
+					   AND NOT binGr05RemovalBandNOK,
+	bSafetyOK := bgGr05LightCurtainOK
+			        AND bgGr00AllDoorsClosedLocked,
+	bInPlusLimit := binGr05RemovalBandInPlus,
+	bInMinusLimit := binGr05RemovalBandInMinus,
+	bMoveToPlusRelease := NOT binGr05RemovalBandNOK,
+	bMoveToMinusRelease := NOT binGr05RemovalBandNOK,
+	bHandMoveToPlus := stgGr05HMI.stHMITOPLC.bBtnRemovalBandToPlus,
+	bHandMoveToMinus := binGr05PushBtnRemovalBandStart
+					        OR stgGr05HMI.stHMITOPLC.bBtnRemovalBandToMinus
+					        OR (fbAxisClamp1.lrActVelocity < 0.0 AND NOT fbAxisClamp1.bNotMoving),
+	bAutoMoveToPlus := FALSE,
+	bConfirmAlarm := bgGr00ConfirmAlarm,
+	tTimeOut := t#6s,
+	bHomeCompleted := bgGr05HomeCompleted,
+	bMoveToPlus => boutGr05RemovalBandToPlus,
+	bMoveToMinus => boutGr05RemovalBandToMinus
+);
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Utility" Id="{d68c54ab-115d-492f-9a43-ebd7f5a12826}">
+      <Implementation>
+        <ST><![CDATA[
+(* Execute utility *)
+rtBtnStart(CLK := binGr00PushBtnStart OR stgGr00HMI.stHMITOPLC.bBtnStart);
+
+fbUtility(
+	etMachineMode := etgGr00MachineMode,
+	etMachineState := etgGr00MachineState,
+	bStartProcess := (*stgGr05HMI.stHMITOPLC.bBtnStart*)
+					rtBtnStart.Q
+					AND etgGr00MachineState = ET_MachineState_eAutoExe,
+	bStopProcess := (*stgGr05HMI.stHMITOPLC.bBtnStop*)
+				       etgGr00MachineState <> ET_MachineState_eAutoExe,
+	bSteppingProcess := stgGr05HMI.stHMITOPLC.bBtnSteppingProcess,
+	bAutoCompleted := bgGr00AutoCompleted
+					  AND bgGr01AutoCompleted
+					  AND bgGr05AutoCompleted
+					  AND bgGr05AutoCompleted
+					  AND bgGr00MachineStandstill
+					  AND etgGr00MachineState <> ET_MachineState_eAutoExe,
+	bHomeCompleted := bgGr05HomeCompleted,
+	bExeCounter := bgGr05AutoCompleted,
+	bStartTime :=  fbUtility.bStartProcess,
+	bStopTime := bgGr05AutoCompleted
+				OR fbUtility.bStopProcess,
+	bLifetimeOn := FALSE,
+	bResetLifetimeAll := FALSE,
+	bResetLifetime := stgGr05HMI.stHMITOPLC.bResetLifetime,
+	sLifetimeFilePath := sgGr05LifetimeFilePath,
+	sLifetimeFileName := sgGr05LifetimeFileName,
+	bPipeEndEdgeIdentify := binGr05PipeEndEdge,
+	bPipeBeginEdgeIdentify := binGr05PipeBeginEdge,
+	rGlobalOverride := rgGr00Override,
+	rLocalOverride := stgGr05HMI.stHMITOPLC.rOverride,
+	lrLifetimeAll => stgGr05HMI.stPLCTOHMI.lrLifetime,
+	lrLifetimeAfterReset => stgGr05HMI.stPLCTOHMI.lrLifetimeAfterReset,
+	lrLifetimeAfterTrunOn => stgGr05HMI.stPLCTOHMI.lrLifetimeAfterTurnOn,
+	udnCounterTotal := stgGr05HMI.stPLCTOHMI.udnCounterTotal,
+	tAdsTimeOut := DEFAULT_ADS_TIMEOUT,
+	bExeProcess => bgGr05StartProcess,
+	bPipeEndPresent => bgGr05PipeEndPresent,
+	bPipeBeginPresent => bgGr05PipeBeginPresent
+);]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="Gr05Control">
+      <LineId Id="55" Count="9" />
+    </LineIds>
+    <LineIds Name="Gr05Control.A_Alarm">
+      <LineId Id="0" Count="124" />
+    </LineIds>
+    <LineIds Name="Gr05Control.A_Safety">
+      <LineId Id="0" Count="15" />
+    </LineIds>
+    <LineIds Name="Gr05Control.A_Signals">
+      <LineId Id="0" Count="71" />
+    </LineIds>
+    <LineIds Name="Gr05Control.A_Transport">
+      <LineId Id="0" Count="206" />
+    </LineIds>
+    <LineIds Name="Gr05Control.A_Utility">
+      <LineId Id="0" Count="41" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

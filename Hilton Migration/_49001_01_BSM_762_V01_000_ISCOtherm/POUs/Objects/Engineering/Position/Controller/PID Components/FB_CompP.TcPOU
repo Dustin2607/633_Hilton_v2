@@ -1,0 +1,88 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_CompP" Id="{82aeb3b7-b5b6-4d04-8886-e5ac4235ad3b}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_CompP
+(*
+Function block used to calculate proportional typ.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			03.06.2014
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+
+VAR_INPUT
+	(* Enummerations *)
+
+	(* Variables *)
+	bEnable								:BOOL := TRUE;					(* Enable FB *)
+	lrInSignal								:LREAL;							(* Input signal *)
+	lrProportionalValue					:LREAL := 1.0;						(* Proportional value in *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR
+VAR_OUTPUT
+	(* Enummerations *)
+
+	(* Variables *)
+	lrOutSignal							:LREAL;							(* Output signal *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	bFirstTime							:BOOL;							(* First cycle *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+ 	lrOutSignal := lrInSignal;
+
+	bFirstTime := FALSE;
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+	bFirstTime := TRUE;
+END_IF
+
+A_CalcProportional();
+]]></ST>
+    </Implementation>
+    <Action Name="A_CalcProportional" Id="{cc8cbdba-04b9-477b-a91a-39e0931f5d7d}">
+      <Implementation>
+        <ST><![CDATA[
+lrOutSignal := lrProportionalValue * lrInSignal;]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_CompP">
+      <LineId Id="54" Count="14" />
+    </LineIds>
+    <LineIds Name="FB_CompP.A_CalcProportional">
+      <LineId Id="0" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

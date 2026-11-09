@@ -1,0 +1,153 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_VFD_AxisController" Id="{58adc0ff-dbfd-40cb-a6cb-36549d4a7151}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_VFD_AxisController
+(*
+
+The function block used to control drive.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			14.06.2018
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Signal FB enable *)
+	etMachineMode				:ET_MachineMode;			(* Machine mode *)
+	etMachineState				:ET_MachineState;			(* Machine state *)
+	bRegulatorOn				:BOOL;						(* Enable the controller stage *)
+	bReset						:BOOL;						(* Signal reset *)
+	bExeReset					:BOOL;						(* Execute auto reset *)
+	lrOverride					:LREAL;						(* Override 100% percent *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bStatus						:BOOL;						(* Feedback *)
+	bStatusDelay					:BOOL;						(* Feedback delay *)
+	lrActVelo						:LREAL;						(* Actual velocity *)
+	bNotMoving					:BOOL;						(* Status of moving *)
+	bError						:BOOL;						(* Controller error *)
+	bErrorInit						:BOOL;						(* Controller initialization error *)
+	udnErrorNo					:UDINT;						(* Error number *)
+END_VAR
+VAR_IN_OUT
+	Axis							:ST_VFD_AXIS_REF;			(* The AXIS_REF data type  is an interface between the PLC and the NC and contains axis information *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	tStatusDelay					:TIME := t#1s;					(* Status delay time *)
+	tRegulatorOffDelay			:TIME := t#50ms;				(* Regulator off delay time *)
+
+	bFirstTime					:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbPower						:FB_VFD_Power;			(* The function block is used to enable for an drive *)
+	tonStatusDelay				:TON;					(* Delay controller enabled status *)
+	fbReset						:FB_VFD_Reset;			(* An drive reset is carried out with the function block *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable							(* Signal FB enable *)
+THEN
+	bStatus := FALSE;						(* Feedback *)
+	bStatusDelay := FALSE;				(* Feedback *)
+	bError := FALSE;						(* Controller error *)
+	udnErrorNo := 0;						(* Error number *)
+
+	bNotMoving := TRUE;
+	lrActVelo := 0;
+
+	bFirstTime := FALSE;
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+
+	bFirstTime := TRUE;
+END_IF;
+
+A_Power();
+A_Reset();
+A_Error();
+
+(* Status not moving *)
+bNotMoving := Axis.bNotMoving;					(* Drive standstill *)
+
+(* Actual velocity *)
+lrActVelo := INT_TO_LREAL(Axis.nCurrentMotorSpeed) * (24000.0/32767.0);
+lrActVelo := F_LRealRound(lrReal := lrActVelo, usiPrecision := 2);
+
+
+
+
+
+
+               
+]]></ST>
+    </Implementation>
+    <Action Name="A_Error" Id="{3a2c9b34-1060-4fc7-b0a6-c18c921f476a}">
+      <Implementation>
+        <ST><![CDATA[
+bError := fbReset.bError
+	         OR fbPower.bError;
+
+bErrorInit := FALSE;]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Power" Id="{1ba0ea60-18b6-40d7-bb7f-e60812dbe520}">
+      <Implementation>
+        <ST><![CDATA[
+fbPower(
+	bEnable := TRUE,
+	bRegulatorOn := bRegulatorOn,
+	lrOverride := lrOverride,
+	Axis := Axis,
+	bStatus => bStatus
+);
+
+tonStatusDelay(
+	IN := fbPower.bStatus,
+	PT := SEL(etMachineMode = ET_MachineMode_eManual, tStatusDelay, t#0ms),
+	Q => bStatusDelay
+);
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Reset" Id="{523ac7bf-844f-41d3-b83f-801f67488d5b}">
+      <Implementation>
+        <ST><![CDATA[
+fbReset(
+	bExecute := bReset
+	            	     XOR bExeReset,
+	Axis := Axis
+);]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_VFD_AxisController">
+      <LineId Id="56" Count="38" />
+    </LineIds>
+    <LineIds Name="FB_VFD_AxisController.A_Error">
+      <LineId Id="0" Count="4" />
+    </LineIds>
+    <LineIds Name="FB_VFD_AxisController.A_Power">
+      <LineId Id="0" Count="15" />
+    </LineIds>
+    <LineIds Name="FB_VFD_AxisController.A_Reset">
+      <LineId Id="0" Count="5" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

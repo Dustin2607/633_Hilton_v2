@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="Gr05HMI" Id="{02ff0388-7cbf-4ffa-9195-44ee5c3081b3}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM Gr05HMI
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable					:BOOL;						(* Enable Gr05HMI *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	rOverride							:REAL;						(* Override 0 - 100 % *)
+	lrManualVelo							:LREAL;						(* Manual velocity *)
+	lrHomeVelo							:LREAL;						(* Home velocity *)
+	lrAutoVelo							:LREAL;						(* Auto velocity *)
+	udnCounterTotal						:UDINT;						(* Total counter *)
+
+	lrOriginShiftPosAxisHE					:LREAL;											(* Origin shift position axis heating element [mm] *)
+	lrHomePosAxisHE					:LREAL;											(* Home position axis heating element [mm] *)
+	lrAxisHESoftLimitMax					:LREAL;											(* Software limit maximum axis heating element [mm] *)
+	lrAxisHESoftLimitMin					:LREAL;											(* Software limit minimum axis heating element [mm] *)
+	arunIRHSSetpoint						:ARRAY[1..nZONES_MAX_NO] OF LREAL;			(* IRHS setpoint *)
+	arunPreHeatTime						:ARRAY[0..3] OF UINT;								(* PreHeat time [s] *)
+	arunPreHeatPower					:ARRAY[0..3] OF UINT;								(* PreHeat power [%] *)
+	arlrPreHeatTemp						:ARRAY[0..3] OF LREAL;							(* PreHeat temperatur [°] *)
+	lrAxisHEPreHeatPos					:LREAL;											(* Heating element pre position [mm] *)
+	lrShuttleBackForthDistance				:LREAL;											(* Shuttle distance between heating elemnt back and forth [mm] *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	RETURN;
+END_IF;
+
+A_GetHMIVar();
+A_SetHMIVar();]]></ST>
+    </Implementation>
+    <Action Name="A_GetHMIVar" Id="{688b757f-6bdd-43ea-a5fa-b66e8c3e8e8f}">
+      <Implementation>
+        <ST><![CDATA[
+(* Collect hmi signals *)
+;]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_SetHMIVar" Id="{dcfe5e35-36e3-43ba-92d4-872a5abaf106}">
+      <Implementation>
+        <ST><![CDATA[
+(* Collect hmi signals *)
+stgGr05HMI.stPLCTOHMI.bHomeCompleted := bgGr05HomeCompleted;
+stgGr05HMI.stPLCTOHMI.wBtnStartStatus.0 := bgGr05StartProcess;
+stgGr05HMI.stPLCTOHMI.wBtnStopStatus.0 := NOT bgGr05StartProcess;
+stgGr05HMI.stPLCTOHMI.wBtnStepProcStatus := 0;
+stgGr05HMI.stPLCTOHMI.wAxisClampStatus.0 := NOT binGr05AxisClamp1LimitMin;
+stgGr05HMI.stPLCTOHMI.wAxisClampStatus.1 := NOT binGr05AxisClamp1LimitMax;
+stgGr05HMI.stPLCTOHMI.wSlideStatus.0 := binGr05SlideTop;
+stgGr05HMI.stPLCTOHMI.wSlideStatus.1 := binGr05SlideBottom;
+stgGr05HMI.stPLCTOHMI.wRemovalBandStatus.0 := NOT binGr05RemovalBandInMinus;
+stgGr05HMI.stPLCTOHMI.wRemovalBandStatus.1 := NOT binGr05RemovalBandInPlus;
+stgGr05HMI.stPLCTOHMI.arwClampStatus[1].0 := arbinGr05ClampOpened[1];
+stgGr05HMI.stPLCTOHMI.arwClampStatus[1].1 := arbinGr05ClampClosed[1];
+stgGr05HMI.stPLCTOHMI.arwClampStatus[2].0 := arbinGr05ClampOpened[2];
+stgGr05HMI.stPLCTOHMI.arwClampStatus[2].1 := arbinGr05ClampClosed[2];
+stgGr05HMI.stPLCTOHMI.arwCylinderPosStatus[1].0 := arbinGr05CylinderPosOpened[1];
+stgGr05HMI.stPLCTOHMI.arwCylinderPosStatus[1].1 := arbinGr05CylinderPosClosed[1];
+stgGr05HMI.stPLCTOHMI.arwCylinderPosStatus[2].0 := arbinGr05CylinderPosOpened[2];
+stgGr05HMI.stPLCTOHMI.arwCylinderPosStatus[2].1 := arbinGr05CylinderPosClosed[2];
+stgGr05HMI.stPLCTOHMI.arwCylinderPosStatus[3].0 := arbinGr05CylinderPosOpened[3];
+stgGr05HMI.stPLCTOHMI.arwCylinderPosStatus[3].1 := arbinGr05CylinderPosClosed[3];
+stgGr05HMI.stPLCTOHMI.unSawingStep := Gr05Auto.fbProcedure.unProcessCounter;]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="Gr05HMI">
+      <LineId Id="33" Count="6" />
+    </LineIds>
+    <LineIds Name="Gr05HMI.A_GetHMIVar">
+      <LineId Id="0" Count="2" />
+    </LineIds>
+    <LineIds Name="Gr05HMI.A_SetHMIVar">
+      <LineId Id="0" Count="22" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

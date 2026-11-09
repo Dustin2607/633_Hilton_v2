@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_EL3356ChannelCtrl" Id="{3f428282-8038-4565-9e5e-671712aa3675}">
+    <Declaration><![CDATA[TYPE ST_EL3356ChannelCtrl :
+STRUCT
+	bStartCalibration			:BOOL;			(* Ctrl start calibration *)
+	bDisableCalibration		:BOOL;			(* Ctrl disable calibration *)
+	bInputFreeze				:BOOL;			(* Ctrl input freeze *)
+	bTare					:BOOL;			(* Ctrl tare *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

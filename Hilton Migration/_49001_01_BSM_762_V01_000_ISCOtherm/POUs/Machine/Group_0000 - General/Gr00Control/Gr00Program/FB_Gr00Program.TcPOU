@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Gr00Program" Id="{526c364b-09ef-47a4-a5f8-68c6d63ea8f6}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Gr00Program
+(*
+
+The function block used to control general utility of the machine.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			28.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bRead				:BOOL;						(* Read process parameters from file *)
+	sPath				:STRING;					(* Program path e.g. '\Hard Disk\Riex\Recipe\'*)
+	sName				:STRING;					(* Program name e.g. 'default' *)
+	sSuffix				:STRING;					(* Program suffix e.g. 'prg' *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbRead				:FB_LoadFromFile;			(* Load program *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+A_Program();
+
+]]></ST>
+    </Implementation>
+    <Action Name="A_Program" Id="{35ab6348-699d-4304-833d-80e60f4d611f}">
+      <Implementation>
+        <ST><![CDATA[
+fbRead(
+	bEnable := TRUE,
+	bExecute := bRead,
+	byConfig := 4,
+	sFilePath := sPath,
+	sFileName := sName,
+	sFileSuffix := sSuffix,
+	sSep := ';',
+	sEndLine:= '$N',
+	sComment := '*',
+	tTimeout := t#500ms
+);
+
+stgGr00HMI.stPLCTOHMI.sPrgFilePath := fbRead.sPathName;]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_Gr00Program">
+      <LineId Id="41" Count="3" />
+    </LineIds>
+    <LineIds Name="FB_Gr00Program.A_Program">
+      <LineId Id="0" Count="14" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,172 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_ItpReadRParams" Id="{364baa5c-0831-4c61-8048-8a0465f1a0c7}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ItpReadRParams
+(*
+
+The function block used to read the NC R-parameters.
+Readen parameters are R100 to R499. 
+Parameter 0-99 are free to use in the NC-programm.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			23.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;			(* Signal FB enable *)
+	bExecute					:BOOL; 			(* Execute the programm *)
+	sNciToPlc					:NciChannelToPlc;
+	tTimeOut						:TIME := T#5s;	(* TimeOut *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	arlrReadRParams100_499		:ARRAY[100..499] OF LREAL;	(* Parameters to read *)
+	bDone						:BOOL;			(* Command done *)
+	bBusy						:BOOL;			(* Command busy *)
+	bError						:BOOL;			(* Command error  *)
+	udnErrorNo					:UDINT;			(* Error number *)
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+	etItpReadRParams			:ET_ItpReadRParams;
+
+	(* Variables *)
+
+	bFirstTime					:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbItpReadRParamsEx			:ItpReadRParamsEx;					(* Read parameters *)
+
+END_VAR
+VAR CONSTANT
+	unSTART_IDX					:UINT := 100;						(* Start parameter to read *)
+	unAMOUNT_NO					:UINT := 400;						(* Amount of parameters to read *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+	bDone := FALSE;					(* Program done *)
+	bBusy := FALSE;                                  	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;					(* Error number *)
+	sErrorMsg := ''; 					(* Error message *)
+	
+	bFirstTime := FALSE;
+	RETURN;
+END_IF;
+
+IF NOT bFirstTime
+THEN
+	bDone := FALSE;                                 	(* Program done *)
+	bBusy := FALSE;                                  	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;					(* Error number *)
+	sErrorMsg := ''; 					(* Error message *)
+
+	fbItpReadRParamsEx(
+		bExecute := FALSE,
+		sNciToPlc := sNciToPlc
+	);
+
+	etItpReadRParams := ET_ItpReadRParams_eWaitExecute;       				(* Next step *)
+	
+	bFirstTime := TRUE;
+END_IF;
+
+CASE etItpReadRParams OF
+        
+	ET_ItpReadRParams_eWaitExecute:
+		bBusy := FALSE;                                     		(* Program not busy *)
+		bError := FALSE;                                    		(* Program not error *)
+
+		IF bExecute
+		THEN
+			bDone := FALSE;                                 	(* Program done, in position *)
+			bBusy := TRUE;                                  	(* Program busy *)
+			udnErrorNo := 0;					(* Error number *)
+			sErrorMsg := ''; 					(* Error message *)
+	           
+			etItpReadRParams := ET_ItpReadRParams_eReadRParams;         		(* Next step *)
+		END_IF;
+
+	ET_ItpReadRParams_eReadRParams:
+
+		fbItpReadRParamsEx(				(* Read R-parameters *)
+			bExecute := TRUE,
+			pAddr := ADR(arlrReadRParams100_499),
+			nIndex := unSTART_IDX,
+			nCount := unAMOUNT_NO,
+			tTimeOut := tTimeOut,
+			sNciToPlc := sNciToPlc
+		 );
+
+		IF NOT fbItpReadRParamsEx.bBusy
+		     AND NOT fbItpReadRParamsEx.bErr
+		THEN
+			fbItpReadRParamsEx(
+				bExecute := FALSE,
+				sNciToPlc := sNciToPlc
+			);
+
+			etItpReadRParams := ET_ItpReadRParams_eDone;            			(* Next step *)
+
+		ELSIF fbItpReadRParamsEx.bErr
+		THEN
+			udnErrorNo := fbItpReadRParamsEx.nErrId;						(* Set error number *)
+
+			fbItpReadRParamsEx(
+				bExecute := FALSE,
+				sNciToPlc := sNciToPlc
+			);
+
+			etItpReadRParams := ET_ItpReadRParams_eError;            			(* Next step *)
+
+		END_IF
+
+	ET_ItpReadRParams_eDone:
+		bDone := TRUE;                                      		(* Program done, in position *)
+		bBusy := FALSE;                                     		(* Program not busy *)
+	
+		etItpReadRParams := ET_ItpReadRParams_eNoExecute;            		(* Next step *)
+	
+	ET_ItpReadRParams_eError:
+		bDone := FALSE;                                    	 	(* Program done, in position *)
+		bError := TRUE;                                     		(* Program error *)
+		bBusy := FALSE;                                     		(* Program not busy *)
+
+		etItpReadRParams := ET_ItpReadRParams_eNoExecute;            		(* Next step *)
+	
+	ET_ItpReadRParams_eNoExecute:
+		IF NOT bExecute
+		THEN
+			bDone := FALSE;                                 	(* Program done *)
+			bBusy := FALSE;                                 	(* Program not busy *)
+			bError := FALSE;                                		(* Program not error *)
+
+			etItpReadRParams := ET_ItpReadRParams_eWaitExecute;       		(* Next step *)
+	
+		END_IF;
+        
+END_CASE;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ItpReadRParams">
+      <LineId Id="56" Count="105" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

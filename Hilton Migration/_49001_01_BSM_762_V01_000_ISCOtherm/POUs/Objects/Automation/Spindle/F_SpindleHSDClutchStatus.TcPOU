@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_SpindleHSDClutchStatus" Id="{919d2e1c-63a8-4b53-bb46-6c497f6fd12a}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_SpindleHSDClutchStatus : BYTE
+(*
+
+The function used to get clutch status.
+.0 - Clutch is closed without tool
+.1 - Clutch is closed with tool
+.2 - Tool is wrong closed in clutch
+.3 -  Clutch open and with tool
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			04.08.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	nClutchStatus 						:INT;						(* AIx.x Status of bit clutch / Spannzange status *)
+END_VAR
+VAR
+	(* Variables *)
+	fbScaling						:FB_Scaling;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+fbScaling(
+	bEnable := TRUE,
+	lrInput := INT_TO_LREAL(nClutchStatus),
+	lrXLowLimit := 0,
+	lrXUpperLimit := 32767,
+	lrYLowLimit := 0,
+	lrYUpperLimit := 10,
+	usiPrecision := 2
+);
+
+F_SpindleHSDClutchStatus := 16#0;
+
+IF fbScaling.lrOutputPV >= 5.3
+     AND fbScaling.lrOutputPV <= 7.0
+THEN
+	F_SpindleHSDClutchStatus.0 := TRUE;			(* Clutch is closed without tool *)
+
+ELSIF fbScaling.lrOutputPV >= 3.8
+     	    AND fbScaling.lrOutputPV < 5.3
+THEN
+	F_SpindleHSDClutchStatus.1 := TRUE;			(* Clutch is closed with tool *)
+
+ELSIF fbScaling.lrOutputPV >= 1.4
+     	    AND fbScaling.lrOutputPV < 3.8
+THEN
+	F_SpindleHSDClutchStatus.2 := TRUE;			(* Tool is wrong closed in clutch *)
+
+ELSIF fbScaling.lrOutputPV >= 1.0
+     	    AND fbScaling.lrOutputPV < 1.4
+THEN
+	F_SpindleHSDClutchStatus.3 := TRUE;			(* Clutch without tool *)
+
+END_IF
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="F_SpindleHSDClutchStatus">
+      <LineId Id="26" Count="36" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

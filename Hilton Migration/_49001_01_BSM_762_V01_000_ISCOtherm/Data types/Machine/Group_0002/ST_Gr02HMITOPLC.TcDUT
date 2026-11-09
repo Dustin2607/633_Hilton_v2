@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_Gr02HMITOPLC" Id="{63b7107c-1361-4a68-8cf6-75083bdfe3d4}">
+    <Declaration><![CDATA[TYPE ST_Gr02HMITOPLC :
+STRUCT
+	bBtnStart								:BOOL; 											(* Button start *)
+	bBtnStop								:BOOL; 											(* Button stop *)
+	bBtnSteppingProcess					:BOOL; 											(* Stepping process *)
+	rOverride							:REAL;											(* Override 0 - 100 [%]  *)
+	bResetLifetime						:BOOL;											(* Reset life time *)
+         bResetCounterUser			   		:BOOL;											(* Reset counter user *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

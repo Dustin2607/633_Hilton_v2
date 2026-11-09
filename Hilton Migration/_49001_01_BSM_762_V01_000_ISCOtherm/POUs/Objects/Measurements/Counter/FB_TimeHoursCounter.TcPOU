@@ -1,0 +1,270 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_TimeHoursCounter" Id="{120cd474-1a65-4ca0-b631-3697f5147506}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_TimeHoursCounter
+(*
+
+Function block to read and write elapsed time in/from file.
+If sFileName or sFilePath  or sFileSuffix is empty then save function is diabled and generate error.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			17.03.2014
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+
+VAR_INPUT
+	(* Variables *)
+	bEnable							:BOOL;							(* Enable FB *)
+	sAmsNetId 						:STRING := ''; 						(* Ams Net ID of file to read/write *)
+	bCount							:BOOL; 							(* If true then count time else save current time *)
+	bSave							:BOOL;							(* Save current hours counter *)
+	bReset							:BOOL; 							(* Reset counter *)
+	bDeleteAll						:BOOL; 							(* Delete all counters since beginning *)
+	sFilePath						:STRING := 'C:\TwinCAT\Plc\';		(* File path *)
+	sFileName						:STRING := 'default';				(* File name *)
+	tSaveIntervall						:TIME := t#3m;						(* Intervall to save counter hours. If equal 0 then intervall is off *)
+	tTimeout							:TIME := t#3s;						(* ADS timeout *)
+END_VAR
+VAR_OUTPUT
+	(* Variables *)
+	lrAllOverHours					:LREAL; 							(* All over counter hours *)
+	lrAfterResetHours					:LREAL; 							(* Counter hours since last reset *)
+	lrNoRetainHours					:LREAL; 							(* No retain counter hours *)
+	bError							:BOOL;							(* Program error *)
+	udnErrNo						:UDINT;							(* Error number *)
+END_VAR
+VAR
+	(* Enummerations *)
+	etRWStep						:(eReadHours, eChkRead, eWFWrite, eWriteHours, eChkWrite, eError );
+
+	(* Variables *)
+	bFirstTime						:BOOL;
+	arlrCycleTimeAsHour				:ARRAY[0..2] OF LREAL;			(* Current cycle time as hours *)
+	stRetainHours					:ST_TimeHoursCounter;
+
+	(* Instances *)
+	ftCount							:F_TRIG;
+	rtSave							:R_TRIG;
+	rtReset							:R_TRIG;
+	rtDeleteAll						:R_TRIG;
+
+	fbFileHandler						:FB_FileHandlerBinary;				(* File handler *)
+	fbGetSystemTime					:GETSYSTEMTIME;				(* Detects System time *)
+	tonWriteIntervall					:TON;							(* Timer for Save intervall control *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable				(* Enable FB *)
+THEN
+	fbFileHandler(
+		bEnable := FALSE,
+		bExecute := FALSE,
+		bFileRead := FALSE,
+		bFileWrite := FALSE
+	);
+
+	bFirstTime := FALSE;
+	bError := FALSE;			(* Program error *)
+	udnErrNo := 0;				(* Error number *)
+
+	RETURN;
+END_IF
+
+
+IF NOT bFirstTime
+THEN
+	(* Produce the file directory name *)
+	fbFileHandler.sFilePath := sFilePath;
+	fbFileHandler.sFileName := sFileName;
+	fbFileHandler.sFileSuffix := 'thc';
+
+	(* Get cycle time as hours *)
+	A_GetCycleTime();
+
+	tonWriteIntervall(
+		IN := FALSE,
+		PT:= tSaveIntervall
+	);
+
+	etRWStep := eReadHours;
+
+	RETURN;
+END_IF
+
+
+(* Read / Write all over hours *)
+CASE etRWStep OF
+
+	eReadHours:
+		fbFileHandler.bExecute := TRUE;
+		fbFileHandler.bFileRead := TRUE;
+		fbFileHandler.bFileWrite := FALSE;
+
+		IF fbFileHandler.bBusy
+		THEN
+			etRWStep := eChkRead;
+
+		END_IF
+
+	eChkRead:
+		IF NOT fbFileHandler.bBusy
+		THEN
+			IF  fbFileHandler.bError
+			THEN
+				fbFileHandler.bExecute := FALSE;
+				fbFileHandler.bFileRead := FALSE;
+				fbFileHandler.bFileWrite := FALSE;
+
+				etRWStep := eWFWrite;				(* Next step *)
+
+			ELSE
+				fbFileHandler.bExecute := FALSE;
+				fbFileHandler.bFileRead := FALSE;
+				fbFileHandler.bFileWrite := FALSE;
+
+				etRWStep := eWFWrite;				(* Next step *)
+
+			END_IF
+		END_IF
+
+	eWFWrite:
+		ftCount(
+			CLK :=  bCount AND NOT bReset AND NOT bDeleteAll
+		);
+
+		rtSave(
+			CLK := bSave AND NOT bReset AND NOT bDeleteAll
+		);
+
+
+		tonWriteIntervall(IN := tSaveIntervall > t#0s);
+
+		IF ftCount.Q
+		     OR rtSave.Q
+		     OR tonWriteIntervall.Q
+		THEN
+			tonWriteIntervall(IN := FALSE);
+
+			etRWStep := eWriteHours;								(* Next step *)
+
+		END_IF
+
+	eWriteHours:
+		fbFileHandler.bExecute := TRUE;
+		fbFileHandler.bFileRead := FALSE;
+		fbFileHandler.bFileWrite := TRUE;
+
+		IF fbFileHandler.bBusy
+		THEN
+			etRWStep := eChkWrite;								(* Next step *)
+
+		END_IF
+
+	eChkWrite:
+		IF NOT fbFileHandler.bBusy
+		THEN
+			IF  fbFileHandler.bError
+			THEN
+				etRWStep := eError;								(* Next step *)
+
+			ELSE
+				fbFileHandler.bExecute := FALSE;
+				fbFileHandler.bFileRead := FALSE;
+				fbFileHandler.bFileWrite := FALSE;
+
+				etRWStep := eWFWrite;							(* Next step *)
+
+			END_IF
+		END_IF
+
+	eError:
+		fbFileHandler.bExecute := FALSE;
+		fbFileHandler.bFileRead := FALSE;
+		fbFileHandler.bFileWrite := FALSE;
+
+END_CASE
+
+
+(* Counting hours *)
+IF bCount
+    AND NOT fbFileHandler.bFileRead
+THEN
+	stRetainHours.lrAllOverHours := stRetainHours.lrAllOverHours + arlrCycleTimeAsHour[0];
+	stRetainHours.lrAfterResetHours := stRetainHours.lrAfterResetHours + arlrCycleTimeAsHour[0];
+	lrNoRetainHours := lrNoRetainHours + arlrCycleTimeAsHour[0];
+END_IF
+
+
+(* Write / read  file *)
+fbFileHandler(
+	bEnable := TRUE,
+	dwDataBuffer := ADR(stRetainHours),
+	udnDataBufLen := SIZEOF(stRetainHours),
+	tTimeout := tTimeout,
+	bError => bError,
+	udnErrNo => udnErrNo
+);
+
+rtReset(
+	CLK := NOT bSave AND bReset
+);
+IF rtReset.Q
+THEN
+	stRetainHours.lrAfterResetHours := 0;
+	lrNoRetainHours := 0;
+END_IF
+
+rtDeleteAll(
+	CLK := NOT bSave AND bDeleteAll
+);
+IF rtDeleteAll.Q
+THEN
+	stRetainHours.lrAllOverHours := 0;
+	stRetainHours.lrAfterResetHours := 0;
+	lrNoRetainHours := 0;
+END_IF
+
+(* Counter hours mapping *)
+lrAllOverHours := stRetainHours.lrAllOverHours;
+lrAfterResetHours := stRetainHours.lrAfterResetHours;
+]]></ST>
+    </Implementation>
+    <Action Name="A_GetCycleTime" Id="{21cedbfa-c71b-43b4-9bdf-c8085f6c6233}">
+      <Implementation>
+        <ST><![CDATA[
+(* Calculate system time *)
+fbGetSystemTime;
+arlrCycleTimeAsHour[0] := UINT64_TO_LREAL(IN := ULARGE_INTEGER(dwHighPart := fbGetSystemTime.timeHiDW, dwLowPart := fbGetSystemTime.timeLoDW))
+									/ 10				(* Calculate into mycro seconds *)
+									/ 1000			(* Calculate into millis econds *)
+									/ 1000			(* Calculate into seconds *)
+									/ 60				(* Calculate into minutes *)
+									/ 60;				(* Calculate into hours *)
+
+
+arlrCycleTimeAsHour[2] := arlrCycleTimeAsHour[1];
+arlrCycleTimeAsHour[1] := arlrCycleTimeAsHour[0];
+
+IF arlrCycleTimeAsHour[2] > 0
+THEN
+	arlrCycleTimeAsHour[0] := ABS(arlrCycleTimeAsHour[2] - arlrCycleTimeAsHour[1]);
+	arlrCycleTimeAsHour[1] := 0;
+	arlrCycleTimeAsHour[2] := 0;
+
+	bFirstTime := TRUE;
+END_IF]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_TimeHoursCounter">
+      <LineId Id="57" Count="173" />
+    </LineIds>
+    <LineIds Name="FB_TimeHoursCounter.A_GetCycleTime">
+      <LineId Id="0" Count="21" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_BECKHOFFDRIVE_REF" Id="{73655d98-7033-4df1-889a-0e1f1abc64a6}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_BECKHOFFDRIVE_REF
+VAR_INPUT
+	stTerminalState			AT %I*:ST_TerminalState;
+	stBECKHOFFToPlc		AT %I*:ST_BECKHOFFDRIVETOPLC;
+	stPlcToBECKHOFF		AT %Q*:ST_PLCTOBECKHOFFDRIVE;
+END_VAR
+VAR_OUTPUT
+
+END_VAR
+VAR_IN_OUT
+
+END_VAR
+VAR
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_BECKHOFFDRIVE_REF">
+      <LineId Id="15" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_VelocityModeFromDrive" Id="{55767a0f-b4ff-4d70-9361-5b7c549ee4de}">
+    <Declaration><![CDATA[TYPE ST_VelocityModeFromDrive :
+STRUCT
+	bVelocityReached			:BOOL;			(* set velocity reached; data source: I85; prerequisite: halt inactive = A515, bit 8 = 0
+												    Velocity is zero; data source: I199; prerequisite: halt inactive = A515, bit 8 = 1 *)
+	bVelocityZero				:BOOL;			(* Velocity is zero; data source I199 *)
+	bMaxSlippageError			:BOOL;			(* Difference in the amount of the effective set and actual velocity greater than velocity window, data source: I426, I88, C40 *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

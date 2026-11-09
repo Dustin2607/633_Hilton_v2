@@ -1,0 +1,195 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_STOEBERSDS_AxisMoveManual" Id="{681289b9-0dc9-4c8c-be52-3ab1e2e9eca5}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_STOEBERSDS_AxisMoveManual
+(*
+
+The function block used to manual control of axis.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			22.09.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Signal FB enable *)
+	etMachineMode				:ET_MachineMode;			(* Machine mode *)
+	etMachineState				:ET_MachineState;			(* Machine state *)
+	bCtrlEnabled					:BOOL;						(* Controller enabled *)
+	bReset						:BOOL;						(* Reset *)
+	bMovePlus					:BOOL;						(* Move in plus direction *)
+	bMoveMinus					:BOOL;						(* Move in minus direction *)
+	bLimitMax					:BOOL;						(* Limit max *)
+	bLimitMin					:BOOL;						(* Limit min *)
+	bPlusRelease				:BOOL;						(* Plus move release *)
+	bMinusRelease				:BOOL;						(* Minus move release *)
+	lrVelocity						:LREAL;						(* Target velocity *)
+	tControllerOff					:TIME := t#60s;				(* Time to switch controller off *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bMoving						:BOOL;						(* Axis moving *)
+	bControllerOff					:BOOL;						(* Switch controller off *)
+	bBusy						:BOOL;						(* Program busy *)
+	bError						:BOOL;						(* Program error *)
+	udnErrorNo					:UDINT;						(* Error number *)
+END_VAR
+VAR_IN_OUT
+	bHomeCompleted				:BOOL;						(* Home completed *)
+	Axis							:ST_AXIS_REF;					(* The AXIS_REF data type  is an interface between the PLC and the NC and contains axis information *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	bFirstTime					:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbJog						:FB_STOEBERSDS_Jog;					(* The function block is used to manual control an axis *)
+	fbTipPlus					:FB_SignalWatchdog;
+	fbTipMinus					:FB_SignalWatchdog;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable							(* Signal FB enable *)
+THEN
+	fbJog(
+		bEnable := FALSE,
+		bJogForward := FALSE,
+		bJogBackwards := FALSE,
+		Axis := Axis,
+		bActive => bMoving				(* Axis moving *)
+	);
+
+	fbTipPlus(
+		bEnable := FALSE,
+		tWatchdog := tControllerOff
+	);
+
+	fbTipMinus(
+		bEnable := FALSE,
+		tWatchdog := tControllerOff
+	);
+
+	bControllerOff := FALSE;
+
+	bFirstTime := FALSE;
+
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+
+	bFirstTime := TRUE;
+END_IF
+
+IF bReset
+     AND bError
+THEN
+	fbJog(
+		bEnable := FALSE,
+		bJogForward := FALSE,
+		bJogBackwards := FALSE,
+		Axis := Axis,
+		bActive => bMoving				(* Axis moving *)
+	);
+
+END_IF;
+
+A_SetLimits();
+
+IF bCtrlEnabled
+    AND etMachineMode = ET_MachineMode_eManual
+THEN
+
+	IF NOT bMovePlus
+	     AND NOT bMoveMinus
+	THEN
+		fbJog.bJogForward := FALSE;
+		fbJog.bJogBackwards := FALSE;
+
+	ELSIF bMovePlus
+	             AND NOT bMoveMinus
+	THEN
+		fbJog.bJogForward := bPlusRelease
+						       AND NOT bLimitMax;
+		fbJog.bJogBackwards := FALSE;
+	
+	ELSIF NOT bMovePlus
+	     	    AND bMoveMinus
+	THEN
+		fbJog.bJogForward := FALSE;
+		fbJog.bJogBackwards := bMinusRelease
+							    AND NOT bLimitMin;
+	
+	END_IF;
+
+	fbJog(
+		bEnable := TRUE,
+		lrVelocity := lrVelocity,
+		Axis := Axis,
+		bActive => bMoving
+	);
+
+ELSE
+	fbJog(
+		bEnable := FALSE,
+		bJogForward := FALSE,
+		bJogBackwards := FALSE,
+		Axis := Axis,
+		bActive => bMoving				(* Axis moving *)
+	);
+
+END_IF
+
+fbTipPlus(
+	bEnable := etMachineMode = ET_MachineMode_eManual,
+	bIn := bMovePlus
+		  AND bPlusRelease
+		  AND NOT bLimitMax,
+	tWatchdog := tControllerOff
+);
+
+fbTipMinus(
+	bEnable := etMachineMode = ET_MachineMode_eManual,
+	bIn := bMoveMinus
+		  AND bMinusRelease
+		  AND NOT bLimitMin,
+	tWatchdog := tControllerOff
+);
+
+
+bControllerOff := NOT (fbTipPlus.bOut
+			    	       OR fbTipMinus.bOut)
+			    AND etMachineMode = ET_MachineMode_eManual;
+
+IF bMoving
+THEN
+	bHomeCompleted := FALSE;
+END_IF;
+
+bError := fbJog.bError;]]></ST>
+    </Implementation>
+    <Action Name="A_SetLimits" Id="{b7343ee1-9cbe-4fab-ae87-9a34fb0a77d1}">
+      <Implementation>
+        <ST><![CDATA[;]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_STOEBERSDS_AxisMoveManual">
+      <LineId Id="57" Count="119" />
+    </LineIds>
+    <LineIds Name="FB_STOEBERSDS_AxisMoveManual.A_SetLimits">
+      <LineId Id="0" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

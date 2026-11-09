@@ -1,0 +1,136 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_CalcContour" Id="{4dd77b7f-f6c4-469a-89e8-2cb8eb5b7e25}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_CalcContour : LREAL
+(*
+
+The function used to calculate a contour of half circle dependent on angle of inclination axis and radius circle
+Calculated position of axis is on output mapped.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			01.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx				Initials				comment
+19.11.2015		1.01				ES					ET_ContourType_eEllipse
+23.11.2015		1.02				ES					Square: also depending on angle(lrActAngle),
+													lrVerticalOffset: guiding collision point is higher than act. position.
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	etContourType					:ET_ContourType;
+	lrActPos							:LREAL;						(* Current position of axis *)
+	lrActAngle						:LREAL;						(* Current angle, cutting angle *)
+	(*lrActVelo							:LREAL;						(* Current speed of axis *)*)
+	lrVerticalOffset					:LREAL;						(* vertical offset collision contour *)
+	lrStartMaxPos						:LREAL;						(* Contour start maximal position *)
+	lrEndMinPos						:LREAL;						(* Contour end minimal position  *)
+	lrSafetyDistance					:LREAL;						(* Safety distance *)
+	lrTableHeight						:LREAL;						(* Table height, if need guidings go to table width *)
+	lrTableWidth						:LREAL;						(* table width *)
+	lrActVeloExt						:LREAL;						(* Current velo of axis *)
+END_VAR
+VAR
+	(* Variables *)
+	lrActPosCache					:LREAL;						(* intern position of axis *)
+	lrRadius							:LREAL;						(* Radius *)
+	lrMiddlePos						:LREAL;						(* Middle position *)
+	lrAlfa							:LREAL;						(* Angle of inclination *)
+	lrDelta							:LREAL;						(* Distance z = f(x)*)
+	lrCosAlfa							:LREAL;						(* Cosine of alfa *)
+	lrAngleFactor						:LREAL;						(* Sawbow angle factor, ellipse *)
+	lrStartMaxPosCache 				:LREAL;
+	lrEndMinPosCache 				:LREAL;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[lrStartMaxPosCache := lrStartMaxPos + ABS(lrSafetyDistance) + 50.0;
+lrEndMinPosCache := lrEndMinPos - ABS(lrSafetyDistance) + 50.0;
+
+lrActPosCache := lrActPos - lrVerticalOffset;
+
+CASE etContourType OF
+
+	ET_ContourType_eNone:
+		F_CalcContour := lrActPosCache;
+
+	ET_ContourType_eCircle, ET_ContourType_eEllipse:
+		lrRadius := ABS(lrStartMaxPosCache - lrEndMinPos) / 2;
+		lrMiddlePos := lrEndMinPosCache + lrRadius;										(* Middle position *)
+
+		IF (lrActPosCache <= lrStartMaxPosCache)
+		     AND (lrActPosCache >= lrEndMinPosCache)
+		     AND lrRadius > 0.0
+		THEN
+			lrAlfa := ASIN(ABS(lrActPosCache - lrMiddlePos) /  lrRadius);				(* Angle of inclination *)
+			lrCosAlfa := COS(lrAlfa);												(* Cosine of alfa *)
+			lrDelta := lrCosAlfa * lrRadius;								(* Distance z = f(x)*)
+
+			F_CalcContour := lrDelta;
+
+		ELSE
+			F_CalcContour := 0.0;
+		END_IF
+
+		IF lrActPos <= lrTableHeight
+			OR lrActPos < lrMiddlePos
+		THEN
+			F_CalcContour := MAX(F_CalcContour, lrTableWidth / 2 + lrSafetyDistance);
+		END_IF
+
+		IF ((lrActVeloExt>0.0)
+			AND (lrActPosCache < lrMiddlePos))
+			OR ((lrActVeloExt=0.0)
+			AND lrActPos < lrTableHeight)
+		THEN
+			F_CalcContour := MAX(lrRadius, lrTableWidth / 2 + lrSafetyDistance);
+		END_IF
+
+		IF etContourType = ET_ContourType_eEllipse
+		THEN
+			lrAngleFactor := 1 /  COS( MIN(ABS(lrActAngle), 89.9) / 180.0*PI);
+			F_CalcContour := F_CalcContour * lrAngleFactor;
+		END_IF
+
+	ET_ContourType_eSquare:
+		lrRadius := ABS(lrStartMaxPosCache - lrEndMinPos) / 2;
+		lrMiddlePos := lrEndMinPosCache + lrRadius;										(* Middle position *)
+
+		IF (lrActPosCache <= lrStartMaxPosCache)
+		     AND (lrActPosCache >= lrEndMinPosCache)
+		     AND lrRadius > 0.0
+		THEN
+			lrDelta := lrRadius;													(* Distance z = f(x)*)
+
+			F_CalcContour := lrDelta;
+
+		ELSE
+			F_CalcContour := 0.0;
+		END_IF
+
+		IF lrActPos <= lrTableHeight
+		THEN
+			F_CalcContour := MAX(F_CalcContour, lrTableWidth / 2 + lrSafetyDistance / 2);
+		END_IF
+
+		lrAngleFactor := 1 /  COS( MIN(ABS(lrActAngle), 89.9) / 180.0*PI);
+		F_CalcContour := F_CalcContour * lrAngleFactor;
+
+ELSE
+	F_CalcContour := 0.0;
+
+END_CASE;
+
+
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="F_CalcContour">
+      <LineId Id="45" Count="80" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

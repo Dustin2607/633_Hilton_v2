@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_Gr00Auto" Id="{b8ace07d-3404-4d72-ae3a-6abc6b5d41f8}">
+    <Declaration><![CDATA[TYPE ET_Gr00Auto :
+(
+	ET_Gr00Auto_eWaitExecute := 0,
+	ET_Gr00Auto_eAutomatic,
+	ET_Gr00Auto_eInterrupted := 196,
+	ET_Gr00Auto_eDone := 197,
+	ET_Gr00Auto_eError := 198,
+	ET_Gr00Auto_eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

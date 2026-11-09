@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_TouchProbeRenishawCtrl" Id="{9f151925-d0be-43ec-9050-95ff60082163}">
+    <Declaration><![CDATA[TYPE ST_TouchProbeRenishawCtrl :
+STRUCT
+	bMachineStartInputP1				:BOOL;			(* Machine start input [P1] *)
+	bMachineStartInputP2				:BOOL;			(* Machine start input [P2] *)
+	bMachineStartInputP3				:BOOL;			(* Machine start input [P3] *)
+	bMachineStartInputP4				:BOOL;			(* Machine start input [P4] *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_SignalHandlingEdge" Id="{5c5c6581-0bda-4689-9b48-2eea88e014f0}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_SignalHandlingEdge
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable					:BOOL;						(* Enable FB signal *)
+	bIn						:BOOL;						(* Input signal *)
+	tDelay					:TIME := t#0s;					(* Delay *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bOut					:BOOL;						(* Delayed signal *)
+	bRisingEdge				:BOOL;						(* Rising edge *)
+	bFallingEdge				:BOOL;						(* Falling edge *)
+	bRisingEdgeDelay		:BOOL;						(* Rising edge delay *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtREdge					:R_TRIG;						(* Timer to delay *)
+	rtREdgeDelay			:R_TRIG;						(* Timer to delay *)
+	ftFEdge					:F_TRIG;						(* Timer to delay *)
+	fbSignalHandlingDelay		:FB_SignalHandlingDelay;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	fbSignalHandlingDelay(
+		bEnable := FALSE,
+		bIn := bIn,
+		bOut => bOut
+	);
+
+	rtREdge(CLK := FALSE);		(* Check rising edge *)
+	ftFEdge(CLK := FALSE);		(* Check rising edge *)
+	bRisingEdge := FALSE;
+	bFallingEdge := FALSE;
+
+	rtREdgeDelay(CLK := FALSE);		(* Check rising edge *)
+	bRisingEdgeDelay := FALSE;
+    RETURN;
+END_IF;
+
+fbSignalHandlingDelay(
+	bEnable := TRUE,
+	bIn := bIn,
+	tDelay := tDelay,
+	bOut => bOut
+);
+
+rtREdge(CLK := bIn);            			 (* Check rising edge *)
+bRisingEdge := rtREdge.Q;
+
+rtREdgeDelay(CLK := bOut);            			 (* Check rising edge *)
+bRisingEdgeDelay := rtREdgeDelay.Q;
+
+ftFEdge(CLK := bIn);            			 (* Check rising edge *)
+bFallingEdge := ftFEdge.Q;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_SignalHandlingEdge">
+      <LineId Id="30" Count="32" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

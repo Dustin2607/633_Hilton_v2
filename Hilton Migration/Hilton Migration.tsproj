@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<TcSmProject xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4024.68">
+	<Project ProjectGUID="{8546310E-61A9-44FB-A4FE-FF0603998963}" Target64Bit="true" ShowHideConfigurations="#x346">
+		<System>
+			<Tasks>
+				<Task Id="3" Priority="1" CycleTime="100000" AmsPort="350" AdtTasks="true">
+					<Name>PLC_TASK</Name>
+				</Task>
+			</Tasks>
+		</System>
+		<Plc>
+			<Project GUID="{4AE76A25-A5E9-47BF-9F28-0249A5E26F26}" Name="_49001_01_BSM_762_V01_000_ISCOtherm" PrjFilePath="_49001_01_BSM_762_V01_000_ISCOtherm\_49001_01_BSM_762_V01_000_ISCOtherm.plcproj" TmcFilePath="_49001_01_BSM_762_V01_000_ISCOtherm\_49001_01_BSM_762_V01_000_ISCOtherm.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2">
+					<Name>_49001_01_BSM_762_V01_000_ISCOtherm Instance</Name>
+					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
+					<Contexts>
+						<Context>
+							<Id>1</Id>
+							<Name>Default</Name>
+						</Context>
+					</Contexts>
+				</Instance>
+			</Project>
+		</Plc>
+	</Project>
+</TcSmProject>

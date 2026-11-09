@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_STOEBERSI6SC6CIA402TOPLC" Id="{67f97473-66c0-4ba6-b72c-ce9b9c2c3bd5}">
+    <Declaration><![CDATA[(* Communikation structure from drive to plc *)
+
+TYPE ST_STOEBERSI6SC6CIA402TOPLC :
+STRUCT
+	wA516Statusword						:WORD;
+	snA542ModesOfOperationDisplay		:SINT;
+	snDummy1							:SINT;
+	dnA545PositionActualValue				:DINT;
+	dnA553VelocityActualValue 			:DINT;
+	nA564TorqueActualValue 				:INT;
+	nDummy1							:INT;
+	dnA632FollowingErrorActualeValue		:DINT;
+	dnA620AdditionalPositionActualValue	:DINT;
+	snI89PLCOpenState					:SINT;
+	snI90PLCOpenErrStopCause			:SINT;
+	wA67UserStatusword 					:WORD;
+	dwA636DigitalInputs					:DWORD;
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

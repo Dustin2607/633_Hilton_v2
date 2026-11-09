@@ -1,0 +1,139 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="Gr05Persistent" Id="{78f4e388-2de3-48c7-932b-e2897719aec9}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM Gr05Persistent
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable								:BOOL;						(* Enable Gr05Persistent *)
+END_VAR
+VAR PERSISTENT
+	(* Enummerations *)
+
+	(* Variables *)
+	rOverride							:REAL;						(* Override 0 - 100 % *)
+	udnCounterTotal						:UDINT;						(* Total counter *)
+
+	bSlideActive							:BOOL;											(* Slide active *)
+	bCylinderPosActive					:BOOL;											(* Position cylinder active *)
+	arlrAxisClampTipDistance				:ARRAY[1..ungGr05ClampMaxNo] OF LREAL;			(* Tip distance axis clamp [mm] *)
+	arlrAxisClampOriginShiftPos				:ARRAY[1..ungGr05ClampMaxNo] OF LREAL;			(* Origin shift position axis clamp [mm] *)
+	arlrAxisClampHomePos				:ARRAY[1..ungGr05ClampMaxNo] OF LREAL;			(* Home position axis clamp [mm] *)
+	arlrAxisClampSoftLimitMax				:ARRAY[1..ungGr05ClampMaxNo] OF LREAL;			(* Software limit maximum axis clamp [mm] *)
+	arlrAxisClampSoftLimitMin				:ARRAY[1..ungGr05ClampMaxNo] OF LREAL;			(* Software limit minimum axis clamp [mm] *)
+	arlrAxisClampNoRefVelo				:ARRAY[1..ungGr05ClampMaxNo] OF LREAL;			(* No reference velocity axis clamp [mm/s] *)
+	arlrAxisClampManualVelo				:ARRAY[1..ungGr05ClampMaxNo] OF LREAL;			(* Manual velocity axis clamp [mm/s] *)
+	arlrAxisClampHomeVelo				:ARRAY[1..ungGr05ClampMaxNo] OF LREAL;			(* Home velocity axis clamp [mm/s] *)
+	arlrAxisClampAutoVelo					:ARRAY[1..ungGr05ClampMaxNo] OF LREAL;			(* Auto velocity axis clamp [mm/s] *)
+	lrActSawingLength						:LREAL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	bFirstTime							:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	bFirstTime := FALSE;
+	RETURN;
+END_IF;
+
+IF NOT bFirstTime
+THEN
+	A_SetPerVar();
+
+	bFirstTime := TRUE;
+END_IF;
+
+A_GetPerVar();]]></ST>
+    </Implementation>
+    <Action Name="A_GetPerVar" Id="{9a0bff2c-692b-453e-9369-6bf779379bb2}">
+      <Implementation>
+        <ST><![CDATA[
+bgGr05WritePersistent := rOverride <> stgGr05HMI.stHMITOPLC.rOverride
+					OR udnCounterTotal <> stgGr05HMI.stPLCTOHMI.udnCounterTotal
+					OR bSlideActive <> stgGr05HMI.stHMITOPLC.bSlideActive
+					OR bCylinderPosActive <> stgGr05HMI.stHMITOPLC.bCylinderPosActive
+					OR MEMCMP(ADR(arlrAxisClampTipDistance), ADR(stgGr05HMI.stHMITOPLC.arlrAxisClampTipDistance), SIZEOF(stgGr05HMI.stHMITOPLC.arlrAxisClampTipDistance)) <> 0
+					OR MEMCMP(ADR(arlrAxisClampOriginShiftPos), ADR(stgGr05HMI.stHMITOPLC.arlrAxisClampOriginShiftPos), SIZEOF(stgGr05HMI.stHMITOPLC.arlrAxisClampOriginShiftPos)) <> 0
+					OR MEMCMP(ADR(arlrAxisClampHomePos), ADR(stgGr05HMI.stHMITOPLC.arlrAxisClampHomePos), SIZEOF(stgGr05HMI.stHMITOPLC.arlrAxisClampHomePos)) <> 0
+					OR MEMCMP(ADR(arlrAxisClampSoftLimitMax), ADR(stgGr05HMI.stHMITOPLC.arlrAxisClampSoftLimitMax), SIZEOF(stgGr05HMI.stHMITOPLC.arlrAxisClampSoftLimitMax)) <> 0
+					OR MEMCMP(ADR(arlrAxisClampSoftLimitMin), ADR(stgGr05HMI.stHMITOPLC.arlrAxisClampSoftLimitMin), SIZEOF(stgGr05HMI.stHMITOPLC.arlrAxisClampSoftLimitMin)) <> 0
+					OR MEMCMP(ADR(arlrAxisClampNoRefVelo), ADR(stgGr05HMI.stHMITOPLC.arlrAxisClampNoRefVelo), SIZEOF(stgGr05HMI.stHMITOPLC.arlrAxisClampNoRefVelo)) <> 0
+					OR MEMCMP(ADR(arlrAxisClampManualVelo), ADR(stgGr05HMI.stHMITOPLC.arlrAxisClampManualVelo), SIZEOF(stgGr05HMI.stHMITOPLC.arlrAxisClampManualVelo)) <> 0
+					OR MEMCMP(ADR(arlrAxisClampHomeVelo), ADR(stgGr05HMI.stHMITOPLC.arlrAxisClampHomeVelo), SIZEOF(stgGr05HMI.stHMITOPLC.arlrAxisClampHomeVelo)) <> 0
+					OR MEMCMP(ADR(arlrAxisClampAutoVelo), ADR(stgGr05HMI.stHMITOPLC.arlrAxisClampAutoVelo), SIZEOF(stgGr05HMI.stHMITOPLC.arlrAxisClampAutoVelo)) <> 0
+					OR lrActSawingLength <> stgGr05HMI.stHMITOPLC.lrActSawingLength;
+
+
+rOverride := stgGr05HMI.stHMITOPLC.rOverride;
+udnCounterTotal := stgGr05HMI.stPLCTOHMI.udnCounterTotal;
+
+bSlideActive := stgGr05HMI.stHMITOPLC.bSlideActive;
+bCylinderPosActive := stgGr05HMI.stHMITOPLC.bCylinderPosActive;
+
+MEMCPY(ADR(arlrAxisClampTipDistance), ADR(stgGr05HMI.stHMITOPLC.arlrAxisClampTipDistance), SIZEOF(stgGr05HMI.stHMITOPLC.arlrAxisClampTipDistance));
+MEMCPY(ADR(arlrAxisClampOriginShiftPos), ADR(stgGr05HMI.stHMITOPLC.arlrAxisClampOriginShiftPos), SIZEOF(stgGr05HMI.stHMITOPLC.arlrAxisClampOriginShiftPos));
+MEMCPY(ADR(arlrAxisClampHomePos), ADR(stgGr05HMI.stHMITOPLC.arlrAxisClampHomePos), SIZEOF(stgGr05HMI.stHMITOPLC.arlrAxisClampHomePos));
+MEMCPY(ADR(arlrAxisClampSoftLimitMax), ADR(stgGr05HMI.stHMITOPLC.arlrAxisClampSoftLimitMax), SIZEOF(stgGr05HMI.stHMITOPLC.arlrAxisClampSoftLimitMax));
+MEMCPY(ADR(arlrAxisClampSoftLimitMin), ADR(stgGr05HMI.stHMITOPLC.arlrAxisClampSoftLimitMin), SIZEOF(stgGr05HMI.stHMITOPLC.arlrAxisClampSoftLimitMin));
+MEMCPY(ADR(arlrAxisClampNoRefVelo), ADR(stgGr05HMI.stHMITOPLC.arlrAxisClampNoRefVelo), SIZEOF(stgGr05HMI.stHMITOPLC.arlrAxisClampNoRefVelo));
+MEMCPY(ADR(arlrAxisClampManualVelo), ADR(stgGr05HMI.stHMITOPLC.arlrAxisClampManualVelo), SIZEOF(stgGr05HMI.stHMITOPLC.arlrAxisClampManualVelo));
+MEMCPY(ADR(arlrAxisClampHomeVelo), ADR(stgGr05HMI.stHMITOPLC.arlrAxisClampHomeVelo), SIZEOF(stgGr05HMI.stHMITOPLC.arlrAxisClampHomeVelo));
+MEMCPY(ADR(arlrAxisClampAutoVelo), ADR(stgGr05HMI.stHMITOPLC.arlrAxisClampAutoVelo), SIZEOF(stgGr05HMI.stHMITOPLC.arlrAxisClampAutoVelo));
+
+lrActSawingLength := stgGr05HMI.stHMITOPLC.lrActSawingLength;
+
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_SetPerVar" Id="{f908488f-5819-472c-8913-1549fd921cde}">
+      <Implementation>
+        <ST><![CDATA[
+stgGr05HMI.stHMITOPLC.rOverride := rOverride;
+stgGr05HMI.stPLCTOHMI.udnCounterTotal := udnCounterTotal;
+
+stgGr05HMI.stHMITOPLC.bSlideActive := bSlideActive;
+stgGr05HMI.stHMITOPLC.bCylinderPosActive := bCylinderPosActive;
+
+MEMCPY(ADR(stgGr05HMI.stHMITOPLC.arlrAxisClampTipDistance), ADR(arlrAxisClampTipDistance), SIZEOF(arlrAxisClampTipDistance));
+MEMCPY(ADR(stgGr05HMI.stHMITOPLC.arlrAxisClampOriginShiftPos), ADR(arlrAxisClampOriginShiftPos), SIZEOF(arlrAxisClampOriginShiftPos));
+MEMCPY(ADR(stgGr05HMI.stHMITOPLC.arlrAxisClampHomePos), ADR(arlrAxisClampHomePos), SIZEOF(arlrAxisClampHomePos));
+MEMCPY(ADR(stgGr05HMI.stHMITOPLC.arlrAxisClampSoftLimitMax), ADR(arlrAxisClampSoftLimitMax), SIZEOF(arlrAxisClampSoftLimitMax));
+MEMCPY(ADR(stgGr05HMI.stHMITOPLC.arlrAxisClampSoftLimitMin), ADR(arlrAxisClampSoftLimitMin), SIZEOF(arlrAxisClampSoftLimitMin));
+MEMCPY(ADR(stgGr05HMI.stHMITOPLC.arlrAxisClampNoRefVelo), ADR(arlrAxisClampNoRefVelo), SIZEOF(arlrAxisClampNoRefVelo));
+MEMCPY(ADR(stgGr05HMI.stHMITOPLC.arlrAxisClampManualVelo), ADR(arlrAxisClampManualVelo), SIZEOF(arlrAxisClampManualVelo));
+MEMCPY(ADR(stgGr05HMI.stHMITOPLC.arlrAxisClampHomeVelo), ADR(arlrAxisClampHomeVelo), SIZEOF(arlrAxisClampHomeVelo));
+MEMCPY(ADR(stgGr05HMI.stHMITOPLC.arlrAxisClampAutoVelo), ADR(arlrAxisClampAutoVelo), SIZEOF(arlrAxisClampAutoVelo));
+
+stgGr05HMI.stHMITOPLC.lrActSawingLength := lrActSawingLength;
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="Gr05Persistent">
+      <LineId Id="44" Count="13" />
+    </LineIds>
+    <LineIds Name="Gr05Persistent.A_GetPerVar">
+      <LineId Id="0" Count="36" />
+    </LineIds>
+    <LineIds Name="Gr05Persistent.A_SetPerVar">
+      <LineId Id="0" Count="19" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

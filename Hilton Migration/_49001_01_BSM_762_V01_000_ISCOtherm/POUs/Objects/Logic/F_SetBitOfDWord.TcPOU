@@ -1,0 +1,84 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_SetBitOfDWord" Id="{8d983f88-a20e-44f0-9e36-ac4e0695ede9}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_SetBitOfDWord : DWORD
+VAR_INPUT
+	dwInput			:DWORD;
+	usnBitNr			:USINT;
+END_VAR
+VAR
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[F_SetBitOfDWord := dwInput;
+CASE usnBitNr OF
+	0:
+	F_SetBitOfDWord.0 := TRUE;
+	1:
+	F_SetBitOfDWord.1 := TRUE;
+	2:
+	F_SetBitOfDWord.2 := TRUE;
+	3:
+	F_SetBitOfDWord.3 := TRUE;
+	4:
+	F_SetBitOfDWord.4 := TRUE;
+	5:
+	F_SetBitOfDWord.5 := TRUE;
+	6:
+	F_SetBitOfDWord.6 := TRUE;
+	7:
+	F_SetBitOfDWord.7 := TRUE;
+	8:
+	F_SetBitOfDWord.8 := TRUE;
+	9:
+	F_SetBitOfDWord.9 := TRUE;
+	10:
+	F_SetBitOfDWord.10 := TRUE;
+	11:
+	F_SetBitOfDWord.11 := TRUE;
+	12:
+	F_SetBitOfDWord.12 := TRUE;
+	13:
+	F_SetBitOfDWord.13 := TRUE;
+	14:
+	F_SetBitOfDWord.14 := TRUE;
+	15:
+	F_SetBitOfDWord.15 := TRUE;
+	16:
+	F_SetBitOfDWord.16 := TRUE;
+	17:
+	F_SetBitOfDWord.17 := TRUE;
+	18:
+	F_SetBitOfDWord.18 := TRUE;
+	19:
+	F_SetBitOfDWord.19 := TRUE;
+	20:
+	F_SetBitOfDWord.20 := TRUE;
+	21:
+	F_SetBitOfDWord.21 := TRUE;
+	22:
+	F_SetBitOfDWord.22 := TRUE;
+	23:
+	F_SetBitOfDWord.23 := TRUE;
+	24:
+	F_SetBitOfDWord.24 := TRUE;
+	25:
+	F_SetBitOfDWord.25 := TRUE;
+	26:
+	F_SetBitOfDWord.26 := TRUE;
+	27:
+	F_SetBitOfDWord.27 := TRUE;
+	28:
+	F_SetBitOfDWord.28 := TRUE;
+	29:
+	F_SetBitOfDWord.29 := TRUE;
+	30:
+	F_SetBitOfDWord.30 := TRUE;
+	31:
+	F_SetBitOfDWord.31 := TRUE;
+END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="F_SetBitOfDWord">
+      <LineId Id="7" Count="66" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

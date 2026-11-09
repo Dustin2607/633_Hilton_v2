@@ -1,0 +1,20 @@
+# Visual Studio / TwinCAT
+.vs/
+*.suo
+*.user
+*.~u
+*.tclrs
+*.compileinfo
+*.tpy
+*.tmc~
+*.library
+*.project.~u
+_Boot/
+_CompileInfo/
+_Libraries/
+_ModuleInstall/
+_Deployment/
+LineIDs.dbg
+LineIDs.dbg.bak
+*.bak
+*.orig

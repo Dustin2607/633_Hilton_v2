@@ -1,0 +1,177 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_VFD_AxisMoveAuto" Id="{efc8ba1a-01ff-47eb-a5f0-2052d52b925d}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_VFD_AxisMoveAuto
+(*
+
+The function block used to auto control of axis.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			14.06.2018
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Signal FB enable *)
+	etMachineMode				:ET_MachineMode;			(* Machine mode *)
+	etMachineState				:ET_MachineState;			(* Machine state *)
+	bCtrlEnabled					:BOOL;						(* Controller enabled *)
+	bReset						:BOOL;						(* Reset *)
+	bExeMoveVelo				:BOOL;						(* Execute move velo *)
+	bExeStop					:BOOL;						(* Execute stop *)
+	lrVelocity						:LREAL;						(* Target velocity *)
+	lrSpeedLimitMax				:LREAL;						(* Maximal speed *)
+	tControllerOff					:TIME := t#60s;				(* Time to switch controller off *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bInVelocity					:BOOL;						(* Target velocity is reached *)
+	bStopped					:BOOL;						(* Target stopped *)
+	bControllerOff					:BOOL;						(* Switch controller off *)
+	bError						:BOOL;						(* Program error *)
+	udnErrorNo					:UDINT;						(* Error number *)
+END_VAR
+VAR_IN_OUT
+	bHomeCompleted				:BOOL;						(* Home completed *)
+	Axis							:ST_VFD_AXIS_REF;			(* The AXIS_REF data type  is an interface between the PLC and the NC and contains axis information *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	bFirstTime					:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbMoveVelo					:FB_VFD_MoveVelocity;
+	fbStop						:FB_VFD_Stop;
+	fbStateIdle					:FB_SignalWatchdog;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable								(* Signal FB enable *)
+THEN
+	(* The function block MoveVelocity starts a continuous movement with specified velocity and direction.  *)
+	fbMoveVelo(
+		bExecute := FALSE,
+		Axis := Axis,
+		bInVelocity => bInVelocity
+	 );
+
+	(* The function block Stop stops an axis with a defined braking ramp and blocks the axis for any motion commands.  *)
+	fbStop(
+		bExecute := FALSE,
+		Axis := Axis,
+		bDone => bStopped
+	);
+
+	fbStateIdle(
+		bEnable := FALSE,
+		tWatchdog := tControllerOff
+	);
+
+	bControllerOff := FALSE;
+
+	bFirstTime := FALSE;
+
+	RETURN;
+END_IF;
+
+IF NOT bFirstTime
+THEN
+
+	bFirstTime := TRUE;
+END_IF;
+
+IF bReset
+     AND bError
+THEN
+	(* The function block MoveVelocity starts a continuous movement with specified velocity and direction.  *)
+	fbMoveVelo(
+		bExecute := FALSE,
+		Axis := Axis,
+		bInVelocity => bInVelocity
+	 );
+
+	(* The function block Stop stops an axis with a defined braking ramp and blocks the axis for any motion commands.  *)
+	fbStop(
+		bExecute := FALSE,
+		Axis := Axis,
+		bDone => bStopped
+	);
+
+END_IF;
+
+IF bCtrlEnabled
+     AND (etMachineMode = ET_MachineMode_eAutomatic
+		OR etMachineMode = ET_MachineMode_eStepping
+		OR etMachineMode = ET_MachineMode_eHome)
+    AND etMachineState <> ET_MachineState_eIdle
+    AND etMachineState <> ET_MachineState_eUndefined
+THEN
+	(* The function block MoveVelocity starts a continuous movement with specified velocity and direction.  *)
+	fbMoveVelo(
+		bExecute := bExeMoveVelo,
+		lrVelocity	 := lrVelocity,
+		lrVelocityMax := lrSpeedLimitMax,
+		Axis := Axis,
+		bInVelocity => bInVelocity
+	 );
+
+ELSE
+	(* The function block MoveVelocity starts a continuous movement with specified velocity and direction.  *)
+	fbMoveVelo(
+		bExecute := FALSE,
+		Axis := Axis,
+		bInVelocity => bInVelocity
+	 );
+
+END_IF;
+
+fbStateIdle(
+	bEnable := etMachineMode = ET_MachineMode_eAutomatic
+			    OR etMachineMode = ET_MachineMode_eStepping
+		  	    OR etMachineMode = ET_MachineMode_eHome,
+	bIn := etMachineState <> ET_MachineState_eIdle
+		  AND etMachineState <> ET_MachineState_eUndefined,
+	tWatchdog := tControllerOff
+);
+
+bControllerOff := NOT fbStateIdle.bOut
+			    AND (etMachineMode = ET_MachineMode_eAutomatic
+				        OR etMachineMode = ET_MachineMode_eStepping
+				        OR etMachineMode = ET_MachineMode_eHome);
+
+(* The function block Stop stops an axis with a defined braking ramp and blocks the axis for any motion commands.  *)
+fbStop(
+	bExecute := bExeStop,
+	Axis := Axis,
+	bDone => bStopped
+);
+
+A_Error();]]></ST>
+    </Implementation>
+    <Action Name="A_Error" Id="{666c7e20-dd3a-48be-96b3-793bff7054dc}">
+      <Implementation>
+        <ST><![CDATA[
+bError := fbMoveVelo.bError
+	        OR fbStop.bError;]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_VFD_AxisMoveAuto">
+      <LineId Id="55" Count="101" />
+    </LineIds>
+    <LineIds Name="FB_VFD_AxisMoveAuto.A_Error">
+      <LineId Id="0" Count="2" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

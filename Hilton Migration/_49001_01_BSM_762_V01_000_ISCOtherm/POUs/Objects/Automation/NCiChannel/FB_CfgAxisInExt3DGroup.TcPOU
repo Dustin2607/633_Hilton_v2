@@ -1,0 +1,185 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_CfgAxisInExt3DGroup" Id="{5d9690a7-5f24-4171-a18a-dc7dab21d328}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_CfgAxisInExt3DGroup
+(*
+
+The function block used to detects if are axis in a group or if the group is occupied. 
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			23.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;			(* Signal FB enable *)
+	bExecute					:BOOL; 			(* Execute the programm *)
+	udnGrpId						:UDINT;			(* Id of the 3D Group *)
+	tTimeOut						:TIME := T#5s;	(* TimeOut *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bGrpOccupied				:BOOL;			(* Axis in group detected *)
+	bGrpEmpty					:BOOL;			(* Axis not in group detected *)
+	bDone						:BOOL;			(* Command done *)
+	bBusy						:BOOL;			(* Command busy *)
+	bError						:BOOL;			(* Command error  *)
+	udnErrorNo					:UDINT;			(* Error number *)
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+	etCfgAxisInExt3DGrp			:ET_CfgAxisInExt3DGroup;
+
+	(* Variables *)
+	stExt3dGrp 					:NCI_EXT3DGROUP;				(* Contains the Axis ID's *)
+
+	bFirstTime					:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbCfgReadExt3DAxisIds		:CfgReadExt3DAxisIds;				(* The block CfgReadExt3DAxisIds reads the axis configuration of the advanced 3D group. *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	bGrpOccupied := FALSE;			(* Axis in group detected *)
+	bGrpEmpty :=FALSE;				(* Axis not in group detected *)
+	bDone := FALSE;					(* Program done *)
+	bBusy := FALSE;                                  	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;					(* Error number *)
+	sErrorMsg := ''; 					(* Error message *)
+
+	bFirstTime := FALSE;
+	RETURN;
+END_IF;
+
+IF NOT bFirstTime
+THEN
+	bGrpOccupied := FALSE;			(* Axis in group detected *)
+	bGrpEmpty :=FALSE;				(* Axis not in group detected *)
+	bDone := FALSE;                                 	(* Program done *)
+	bBusy := FALSE;                                  	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;					(* Error number *)
+	sErrorMsg := ''; 					(* Error message *)
+
+	fbCfgReadExt3DAxisIds(
+		bExecute := FALSE,
+		stExt3dGroup := stExt3dGrp
+	);
+
+	etCfgAxisInExt3DGrp := ET_CfgAxisInExt3DGrp_eWaitExecute;       				(* Next step *)
+	
+	bFirstTime := TRUE;
+END_IF;
+
+CASE etCfgAxisInExt3DGrp OF
+        
+	ET_CfgAxisInExt3DGrp_eWaitExecute:
+		bBusy := FALSE;                                     		(* Program not busy *)
+		bError := FALSE;                                    		(* Program not error *)
+
+		IF bExecute
+		THEN
+			bDone := FALSE;                                 	(* Program done, in position *)
+			bBusy := TRUE;                                  	(* Program busy *)
+			udnErrorNo := 0;					(* Error number *)
+			sErrorMsg := ''; 					(* Error message *)
+	           
+			etCfgAxisInExt3DGrp := ET_CfgAxisInExt3DGrp_eReadExt3DAxisIds;         		(* Next step *)
+		END_IF;
+
+	ET_CfgAxisInExt3DGrp_eReadExt3DAxisIds:
+
+		fbCfgReadExt3DAxisIds(			(* Read axis ID's *)
+			bExecute := TRUE ,
+			nGroupId := udnGrpId,
+			tTimeOut := tTimeOut,
+			stExt3dGroup := stExt3dGrp
+		);
+
+		IF NOT fbCfgReadExt3DAxisIds.bBusy
+		     AND NOT fbCfgReadExt3DAxisIds.bErr
+		THEN
+			fbCfgReadExt3DAxisIds(
+				bExecute := FALSE,
+				stExt3dGroup := stExt3dGrp
+			);
+
+			bGrpEmpty :=	stExt3dGrp.nXAxisId = 0						(* Check if axis in Group *)
+						AND stExt3dGrp.nYAxisId = 0
+						AND stExt3dGrp.nZAxisId = 0
+						AND stExt3dGrp.nQ1AxisId =  0
+						AND stExt3dGrp.nQ2AxisId =  0
+						AND stExt3dGrp.nQ3AxisId =  0
+						AND stExt3dGrp.nQ4AxisId =  0
+						AND stExt3dGrp.nQ5AxisId =  0;
+			bGrpOccupied := NOT bGrpEmpty ;
+			
+			etCfgAxisInExt3DGrp := ET_CfgAxisInExt3DGrp_eDone;            			(* Next step *)
+
+		ELSIF fbCfgReadExt3DAxisIds.bErr
+		THEN
+			udnErrorNo := fbCfgReadExt3DAxisIds.nErrId;						(* Set error number *)
+
+			fbCfgReadExt3DAxisIds(
+				bExecute := FALSE,
+				stExt3dGroup := stExt3dGrp
+			);
+
+			etCfgAxisInExt3DGrp := ET_CfgAxisInExt3DGrp_eError;            			(* Next step *)
+		
+		END_IF
+
+	ET_CfgAxisInExt3DGrp_eDone:
+		bDone := TRUE;                                      		(* Program done, in position *)
+		bBusy := FALSE;                                     		(* Program not busy *)
+	
+		etCfgAxisInExt3DGrp := ET_CfgAxisInExt3DGrp_eNoExecute;            		(* Next step *)
+	
+	ET_CfgAxisInExt3DGrp_eError:
+		bDone := FALSE;                                    	 	(* Program done, in position *)
+		bError := TRUE;                                     		(* Program error *)
+		bBusy := FALSE;                                     		(* Program not busy *)
+
+		etCfgAxisInExt3DGrp := ET_CfgAxisInExt3DGrp_eNoExecute;            		(* Next step *)
+	
+	ET_CfgAxisInExt3DGrp_eNoExecute:
+		IF NOT bExecute
+		THEN
+			bDone := FALSE;                                 	(* Program done *)
+			bBusy := FALSE;                                 	(* Program not busy *)
+			bError := FALSE;                                		(* Program not error *)
+
+			etCfgAxisInExt3DGrp := ET_CfgAxisInExt3DGrp_eWaitExecute;       		(* Next step *)
+	
+		END_IF;
+        
+END_CASE;
+
+
+
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_CfgAxisInExt3DGroup">
+      <LineId Id="52" Count="122" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

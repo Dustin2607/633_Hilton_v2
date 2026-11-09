@@ -1,0 +1,144 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="Gr01Auto" Id="{1ef20326-26fd-4779-89af-30d5c6a73a8c}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM Gr01Auto
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable					:BOOL;						(* Enable Gr01Auto *)
+	bExecute				:BOOL;						(* Auto execute *)
+
+	(* Instances *)
+	fbInit						:FB_Gr01AutoInit;
+	fbProcedure				:FB_Gr01AutoProcedure;
+
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	nIdx			:INT;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtExecute					:R_TRIG;
+	fbAlarm					:FB_Gr01AutoAlarm;
+END_VAR
+VAR CONSTANT
+	nFatalErrorMaxIdx				:INT := 0;						(* Maximal index of  using alarms *)
+	nErrorMaxIdx					:INT := 1;						(* Maximal index of  using alarms *)
+	nWarningMaxIdx				:INT := 0;						(* Maximal index of  using alarms *)
+	nMessageMaxIdx				:INT := 0;						(* Maximal index of  using alarms *)
+	nHintMaxIdx					:INT := 0;						(* Maximal index of  using alarms *)
+
+	dnFatalErrorBaseIdentNo		:DINT := 12000;				(* Fatal error identification number *)
+	dnErrorBaseIdentNo			:DINT := 12100;				(* Error identification number *)
+	dnWarningBaseIdentNo		:DINT := 12200;				(* Warning identification number *)
+	dnMessageBaseIdentNo		:DINT := 12300;				(* Message identification number *)
+	dnHintBaseIdentNo			:DINT := 12400;				(* Hint identification number *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+    RETURN;
+END_IF;
+
+(* Check auto execute *)
+bExecute := bgGr00ModeAutomatic
+		     AND NOT fbInit.bFirstTime;
+
+rtExecute(CLK := bExecute);
+
+IF rtExecute.Q
+THEN
+	A_Init();
+END_IF;
+
+A_Procedure();
+A_Functions();
+A_Alarm();
+
+
+
+
+
+]]></ST>
+    </Implementation>
+    <Action Name="A_Alarm" Id="{eb9ff5f5-bb77-43bb-a37d-435323bf524b}">
+      <Implementation>
+        <ST><![CDATA[
+(* Collect and execute input alarms *)
+fbAlarm.stAlarmIn.arbError[0].bActive := fbProcedure.bErrorCollisionDetected;
+fbAlarm.stAlarmIn.arbError[0].dnCode := dnErrorBaseIdentNo + 0;
+
+fbAlarm(
+	etMachineMode := etgGr00MachineMode,
+	etMachineState := etgGr00MachineState,
+	bNoEStop := bgGr00NoEmergencyStop,
+	bConfirmAlarm := bgGr00ConfirmAlarm,
+	dtDateTime := stgGr00DateTime.dtDateTime,
+	nFatalErrorMaxIdx := nFatalErrorMaxIdx,
+	nErrorMaxIdx := nErrorMaxIdx,
+	nWarningMaxIdx := nWarningMaxIdx,
+	nMessageMaxIdx := nMessageMaxIdx,
+	nHintMaxIdx := nHintMaxIdx,
+	bMoveInterrupted := bgGr01MoveInterrupted,
+	bHomeCompleted := bgGr01HomeCompleted,
+	stAlarmOut => stgGr01Alarm.stAuto
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Functions" Id="{1aef6c04-a64a-476e-abc6-1bbde2765be1}">
+      <Implementation>
+        <ST><![CDATA[
+;
+
+
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Init" Id="{bd7f606e-16ff-4c60-83b4-442b5002ea29}">
+      <Implementation>
+        <ST><![CDATA[
+(* Initializing variables *)
+fbInit();]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Procedure" Id="{1715e856-328e-4476-8f96-181957eb6142}">
+      <Implementation>
+        <ST><![CDATA[
+(* Execute auto procedure *)
+fbProcedure(
+	bEnable := fbInit.bFirstTime,
+	bExecute := arbgGr01StartProcess[1]
+			     OR arbgGr01StartProcess[2]
+			     OR arbgGr01StartProcess[3],
+	bInterrupt := FALSE(*NOT bgGr01StartProcess*),
+	bReleaseNextStep := arbgGr01StartProcess[1]
+					       OR arbgGr01StartProcess[2]
+					       OR arbgGr01StartProcess[3],
+	bDone => bgGr01AutoCompleted,
+	bInterrupted => bgGr01MoveInterrupted
+);]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="Gr01Auto">
+      <LineId Id="38" Count="24" />
+    </LineIds>
+    <LineIds Name="Gr01Auto.A_Alarm">
+      <LineId Id="0" Count="19" />
+    </LineIds>
+    <LineIds Name="Gr01Auto.A_Functions">
+      <LineId Id="0" Count="5" />
+    </LineIds>
+    <LineIds Name="Gr01Auto.A_Init">
+      <LineId Id="0" Count="2" />
+    </LineIds>
+    <LineIds Name="Gr01Auto.A_Procedure">
+      <LineId Id="0" Count="13" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

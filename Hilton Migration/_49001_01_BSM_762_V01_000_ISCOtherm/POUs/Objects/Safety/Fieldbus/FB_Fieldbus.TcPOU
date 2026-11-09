@@ -1,0 +1,206 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Fieldbus" Id="{109a5e3a-3360-42ba-b1f6-b53dbdf744d5}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Fieldbus
+(*
+
+The function block used to control fieldbus.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			23.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable					:BOOL;						(* Enable FB signal *)
+	unMasterState			:UINT;						(* Master state of fieldbus *)
+														(* unFieldbus = 1 -> Sercos-Master:
+															0xE001 = Phase 0
+															0xE002 = Phase 1
+															0xE003 = Phase 2
+															0xE004 = Phase 3
+															0xE005 = Phase 4
+															0xE008 = Break
+															0xE011 = Phase switch 0 -> 1
+															0xE012 = Phase switch 1 -> 2
+															0xE013 = Phase switch 2 -> 3
+															0xE014 = Phase switch 3 -> 4
+					
+														  uiFieldbus = 2 -> EtherCat Master:
+															0x0001 = Link error
+															0x0002 = I/O locked after link error (I/O reset required)
+															0x0004 = Link error (redundancy adapter)
+															0x0008 = Missing one frame (redundancy mode)
+															0x0010 = Out of send resources (I/O reset required)
+															0x0020 = Watchdog triggered
+															0x0040 = Ethernet driver (miniport) not found
+															0x0080 = I/O reset active
+															0x0100 = At least one device in 'INIT' state
+															0x0200 = At least one device in 'PRE-OP' state
+															0x0400 = At least one device in 'SAFE-OP' state
+															0x0800 = At least one device indicates an error state
+															0x1000 = DC not in sync
+														*)
+	unSlaveState				:ARRAY[1..unSlaveNo] OF UINT;	(* State of slaves periphery / Status des Periphery
+														uiFieldbus = 2 -> EtherCat Master:
+															0x___1 = Slave in 'INIT' state
+															0x___2 = Slave in 'PREOP' state
+															0x___3 = Slave in 'BOOT' state
+															0x___4 = Slave in 'SAFEOP' state
+															0x___8 = Slave in 'OP' state
+															0x001_ = Slave signals error
+															0x002_ = Invalid vendorId, productCode... read
+															0x004_ = Initialization error occurred
+															0x008_ = Slave disabled
+															0x010_ = Slave not present
+															0x020_ = Slave signals link error
+															0x040_ = Slave signals missing link
+															0x080_ = Slave signals unexpected link
+															0x100_ = Communication port A
+															0x200_ = Communication port B
+															0x400_ = Communication port C
+															0x800_ = Communication port D
+													*)
+	tAdsTimeOut				:TIME := t#5s;				(* Timeout for ADS commando *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	sDeviceNetId				:T_AmsNetId ;			(* Fieldbus master ams net id*)
+	bInitReady				:BOOL;					(* Fieldbus master initialisation is complete*)
+	bBreak					:BOOL;					(* Fieldbus break *)
+	bError					:BOOL;					(* Error by no air pressure *)
+	udnErrorNo				:UDINT;
+	udnMessageNo			:UDINT;
+	sMsg					:STRING;
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	unSlaveCounter			:UINT;					(* Slave counter *)
+	bBreakMasterState		:BOOL;					(* Fieldbus master break *)
+	bBreakSlaveState			:BOOL;					(* Fieldbus slave break *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbGetDeviceNetId			:IOF_GetDeviceNetId; 		(* Get the device net id from the device ID *)
+	fbGetDeviceType			:IOF_GetDeviceType; 		(* Get the device type from the device ID *)
+END_VAR
+VAR CONSTANT
+	unSlaveNo				:UINT := 32;				(* Number of slaves in Fieldbus *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	fbGetDeviceNetId(START := FALSE);
+	fbGetDeviceType(START := FALSE);
+	bInitReady := FALSE;
+	bBreak := FALSE;
+	bError := FALSE;
+	udnErrorNo := 0;
+	udnMessageNo := 0;
+	sMsg := '';
+	RETURN;
+END_IF;
+
+(* Get the device net id from the device ID *)
+fbGetDeviceNetId(
+	NETID := '',
+	DEVICEID := 1,
+	START := TRUE,
+	TMOUT := tAdsTimeOut
+);
+
+(* Get the device type from the device ID *)
+fbGetDeviceType(
+	NETID := '',
+	DEVICEID := 1,
+	START := TRUE,
+	TMOUT := tAdsTimeOut
+);
+
+(* Get the device net id from the device ID *)
+IF NOT fbGetDeviceNetId.BUSY 											(* No error *)
+     AND NOT fbGetDeviceNetId.ERR
+THEN
+	sDeviceNetId := fbGetDeviceNetId.DeviceNetId;							(* Device net id *)
+
+	(* Get the device type from the device ID *)
+	IF NOT fbGetDeviceType.BUSY 										(* No error *)
+	     AND NOT fbGetDeviceType.ERR
+	THEN
+
+		CASE fbGetDeviceType.IODeviceType
+		OF
+			48: (* IODEVICETYPE_FC7500 	:= 48,  Beckhoff-SERCOS-PCI *)
+				bError := FALSE;
+				udnErrorNo := 0;											(* Error number *)
+				bInitReady := unMasterState = 16#E005; 						(* Actual Phase is 4 *)
+				bBreak := unMasterState = 16#E008;							(* Interrupt / Broke *)
+			94: (* IODEVICETYPE_EtherCAT := 94,  Beckhoff-EtherCAT-PCI *)
+				bError := FALSE;
+				udnErrorNo := 0;											(* Error number *)
+				bInitReady := unMasterState = 16#0000; 						(* Actual master state is OP *)
+
+				bBreakMasterState :=  unMasterState <> 16#0000;				(* Fieldbus master break *)
+
+				IF bInitReady
+				THEN
+					bBreakSlaveState := FALSE;							(* Fieldbus slave break *)
+
+					FOR unSlaveCounter :=1 TO unSlaveNo
+					DO
+						bBreakSlaveState := unSlaveState[unSlaveCounter] <> 16#0000
+										     AND unSlaveState[unSlaveCounter] <> 16#0008;
+
+						IF bBreakSlaveState
+						THEN
+							EXIT;
+						END_IF
+
+					END_FOR;
+				END_IF
+
+				bBreak := bBreakMasterState 								(* Interrupt / Broke *)
+						 OR bBreakSlaveState;
+
+		ELSE (* IDLE *)
+			bInitReady := FALSE;
+			bBreak := FALSE;
+			bError := TRUE;
+			udnErrorNo := 1;																			(* Error number *)
+			sMsg := CONCAT('Unidentified fieldbus:', DINT_TO_STRING(fbGetDeviceType.IODeviceType));		(* Description error *)
+		END_CASE;
+
+	ELSIF NOT fbGetDeviceType.BUSY
+		   AND fbGetDeviceType.ERR
+	THEN
+		bError := TRUE;
+		udnErrorNo := 2;																				(* Error number *)
+		sMsg := CONCAT('Fehler beim Lesen über ADS: ', UDINT_TO_STRING(fbGetDeviceType.ERRID));		(* Description error *)
+		fbGetDeviceType(START := FALSE);
+	END_IF;
+
+ELSIF NOT fbGetDeviceNetId.BUSY
+	    AND fbGetDeviceNetId.ERR
+THEN
+	bError := TRUE;
+	udnErrorNo := 3;																					(* Error number *)
+	sMsg := CONCAT('Fehler beim Lesen über ADS: ', UDINT_TO_STRING(fbGetDeviceNetId.ERRID));			(* Description error *)
+	fbGetDeviceNetId(START := FALSE);
+END_IF;
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Fieldbus">
+      <LineId Id="96" Count="99" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

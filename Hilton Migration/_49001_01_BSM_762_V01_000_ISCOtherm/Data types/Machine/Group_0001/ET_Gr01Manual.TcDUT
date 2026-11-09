@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_Gr01Manual" Id="{c970722c-cf57-427c-a272-59b01b49c2c7}">
+    <Declaration><![CDATA[TYPE ET_Gr01Manual :
+(
+	ET_Gr01Manual_eWaitExecute := 0,
+	ET_Gr01Manual_eSetPosAxis5,
+	ET_Gr01Manual_eWfSetPosAxis5,
+	ET_Gr01Manual_eCouplingAxis1_4,
+	ET_Gr01Manual_eWfCouplingAxis1_4,
+	ET_Gr01Manual_eDone := 197,
+	ET_Gr01Manual_eError := 198,
+	ET_Gr01Manual_eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

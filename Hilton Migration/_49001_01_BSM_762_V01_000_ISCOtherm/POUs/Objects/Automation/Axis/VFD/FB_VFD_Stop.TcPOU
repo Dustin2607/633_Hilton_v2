@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_VFD_Stop" Id="{ac269ca8-a650-4258-801e-79507e1b98e0}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_VFD_Stop
+(*
+
+The function block used to stop drive
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			14.06.2018
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bExecute					:BOOL;			(* Execut the function block *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bDone						:BOOL;			(* Program done. *)
+	bBusy						:BOOL;			(* Program busy *)
+	bError						:BOOL;			(* Error *)
+	udnErrorNo					:UDINT;			(* Error number *)
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	Axis							:ST_VFD_AXIS_REF;			(* The AXIS_REF data type  is an interface between the PLC and the NC and contains axis information *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtExecute						:R_TRIG;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+rtExecute(CLK := bExecute);                           (* Control enabled *)
+
+IF rtExecute.Q
+THEN
+	bBusy := TRUE;
+	Axis.bReverseStop := FALSE;			(* Halt *)
+	Axis.bForwardStop := FALSE;
+	Axis.nSetMotorSpeed := 0;
+
+ELSIF Axis.bNotMoving           (* Axis standstill *)
+THEN
+	bBusy := FALSE;
+END_IF;
+
+bDone := bExecute
+		AND NOT bBusy
+		AND Axis.bNotMoving;				(* Axis standstill *)]]></ST>
+    </Implementation>
+    <LineIds Name="FB_VFD_Stop">
+      <LineId Id="41" Count="17" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

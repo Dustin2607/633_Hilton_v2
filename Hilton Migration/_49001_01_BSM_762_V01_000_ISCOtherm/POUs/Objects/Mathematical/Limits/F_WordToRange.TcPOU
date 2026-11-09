@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_WordToRange" Id="{eff690ad-d198-4dfc-94cd-00264b5c1195}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_WordToRange : REAL
+VAR_INPUT
+	wWord 					:WORD;
+	rLowLimit 				:REAL;
+	rHighLimit 				:REAL;
+END_VAR
+VAR
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+F_WordToRange := (rHighLimit - rLowLimit) * WORD_TO_REAL(wWord) * 0.00001525902189669640 + rLowLimit;]]></ST>
+    </Implementation>
+    <LineIds Name="F_WordToRange">
+      <LineId Id="8" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

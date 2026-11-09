@@ -1,0 +1,470 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_LoadFromFile" Id="{92c9b246-f0b3-47af-8587-25b18397112b}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_LoadFromFile
+(*
+Function to make easier work with file. Below options to choose. 
+Chose option doasn't work with the others option. Allways is checking  only exist of file.
+ 
+00000000 - 0 - Only check exist of file.
+00000001 - 1 - Read line by line and save to array of string.
+00000010 - 2 - Read line by line. Save first signs to string and convert to array of bool.
+00000011 - 3 - Transfer  array form file to array of string on PLC - requirements:
+			- kind of columns separator (bySep) and sign end of line (byEndLine),
+			- amount of rows (usiMaxDimR) and columns (usiMaxDimR) to read.
+00000111 - 4 - Option 3 + get real only real from string if capital letters then error
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			18.11.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Enummerations *)
+
+	(* Variables *)
+	bEnable						:BOOL;									(* Enable FB *)
+	bExecute					:BOOL; 									(* Execute load data *)
+	byConfig 					:BYTE := 0;								(* Configuration byte
+																		    Options:  - 2#00000000 (default),
+																				    - 2#00000001 (actOption1),
+																			  	    - 2#00000010 (actOption2),
+																				    - 2#00000011 (actOption3),
+																				    - 2#00000111 (actOption4),
+																		*)
+	sFilePath					:STRING;								(* File path *)
+	sFileName					:STRING;								(* File name *)
+	sFileSuffix					:STRING := 'dat';							(* Suffix of file *)
+	sSep						:STRING := '$T'; 							(* Seperator sign for colums *)
+	sEndLine					:STRING := '$N'; 							(* End line sign for lines *)
+	sComment					:STRING := '!'; 							(* End line sign for lines *)
+	tTimeout						:TIME := T#1s;							(* TimeOut *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+
+	(* Instances *)
+
+END_VAR
+VAR_OUTPUT
+	(* Enummerations *)
+
+	(* Variables *)
+	arsData						:ARRAY [0..usnFileArrayMaxDimR] OF STRING [255];					(* Used with Option1 -  Array with read data from file in String[160] *)
+	arbDataBool					:ARRAY [0..usnFileArrayMaxDimR] OF BOOL;							(* Used with Option2 - Array with read data from file in Bool *)
+	arsDataDimRC				:ARRAY [0..usnFileArrayMaxDimR, 0..usnFileArrayMaxDimC ] OF STRING [20]; 		(* Used with Option3 - Matrix with read data from file in String[160] *)
+	arrDataDimRC				:ARRAY [0..usnFileArrayMaxDimR, 0..usnFileArrayMaxDimC ] OF REAL; 			(* Matrix with read data from file in real *)
+	bDone						:BOOL;													(* Program done *)
+	bBusy						:BOOL;													(* Program busy *)
+	bError						:BOOL;													(* Error *)
+	udnErrorNo					:UDINT;													(* Error number *)
+	sErrorMsg					:STRING; 												(* Error message *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+	etLoadFromFile				:ET_LoadFromFile;								(* Load from file enum variable *)
+
+	(* Variables *)
+	dwMode						:DWORD;										(* Contains the mode in which the file is to be opened *)
+	sPathName					:STRING;										(* Contains the path and filename for the file to be opened *)
+	hFileHandle					:UINT;											(* File handle *)
+	usnRowsCounter				:USINT; 											(* Counter of rows (lines) in a  file*)
+
+	sDataSign					:STRING[1];										(* Read first sign from line *)
+	sDataString					:STRING[usnFileArrayMaxDimR];							(* Created string of sign *)
+	arbyData					:ARRAY [0..usnFileArrayMaxDimR] OF BYTE;					(* String into array of byte *)
+	ptString 						:POINTER TO ARRAY[0..usnFileArrayMaxDimR] OF BYTE;		(* Pointer to sDataString *)
+
+	byDataSign					:BYTE;											(* Marker for sign form line *)
+	ptByte						:POINTER TO BYTE;								(* Pointer to arsData *)
+	usnColumnsCounter 			:USINT; 											(* Counter of colums *)
+
+	bFirstTime					:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	tonTimeout					:TON;
+
+	fbFileOpen					:FB_FileOpen;		(* Open file *)
+	fbFileGets					:FB_FileGets;			(* Read from file *)
+	fbFileClose					:FB_FileClose;		(* Close file *)
+
+	rtExecute						:R_TRIG;				(* Positive edge for start *)
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	bDone := FALSE;					(* Program done *)
+	bBusy := FALSE;                                  	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;                                 		(* Error number *)
+
+	bFirstTime := FALSE;
+	RETURN;
+END_IF;
+
+IF NOT bFirstTime
+THEN
+	bDone := FALSE;                                 	(* Program done *)
+	bBusy := FALSE;                                  	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;                                		(* Error number *)
+
+	etLoadFromFile := ET_LoadFromFile_eWaitExecute;       				(* Next step *)
+	
+	bFirstTime := TRUE;
+END_IF;
+
+sPathName := CONCAT(
+				sFilePath, CONCAT(
+							sFileName, CONCAT(
+										'.', sFileSuffix)));
+
+rtExecute(CLK:= bExecute);				(* Positive edge for start *)
+
+CASE etLoadFromFile OF
+        
+	ET_LoadFromFile_eWaitExecute:
+		bBusy := FALSE;                                     		(* Program not busy *)
+		bError := FALSE;                                    		(* Program not error *)
+
+		IF rtExecute.Q
+		THEN
+			bDone := FALSE;                                 	(* Program done, in position *)
+			bBusy := TRUE;                                  	(* Program busy *)
+			udnErrorNo := 0;
+			usnRowsCounter := 0;
+
+			fbFileOpen.bExecute := FALSE;			(* File open *)
+			fbFileClose.bExecute := FALSE;			(* File close *)
+			fbFileGets.bExecute := FALSE;			(* File read *)
+
+			dwMode := FOPEN_MODEREAD OR FOPEN_MODETEXT;
+
+			etLoadFromFile := ET_LoadFromFile_eFileName;         		(* Next step *)
+		END_IF;
+
+	ET_LoadFromFile_eFileName:
+		IF sFilePath <> ''
+		     AND sFileName <> ''
+		     AND sFileSuffix <> ''
+		     AND byConfig <> 0
+		THEN
+			etLoadFromFile := ET_LoadFromFile_eChkFileExist;            			(* Next step *)
+
+		ELSE
+			udnErrorNo := ET_LoadFromFile_eFileName;
+
+			etLoadFromFile := ET_LoadFromFile_eError;            			(* Next step *)
+
+		END_IF
+
+	ET_LoadFromFile_eChkFileExist:
+		etLoadFromFile := ET_LoadFromFile_eFileOpen;            			(* Next step *)
+
+	ET_LoadFromFile_eFileOpen:
+		fbFileOpen.bExecute := TRUE;
+
+		etLoadFromFile := ET_LoadFromFile_eChkFileOpen;            			(* Next step *)
+
+	ET_LoadFromFile_eChkFileOpen:
+		IF NOT fbFileOpen.bBusy
+		     AND NOT fbFileOpen.bError
+		THEN
+			fbFileOpen.bExecute := FALSE;
+			hFileHandle := fbFileOpen.hFile;
+
+			MEMSET(ADR(arsData), 0, SIZEOF(arsData));						(* Array reset *)
+			MEMSET(ADR(arbDataBool), 0, SIZEOF(arbDataBool));				(* Array reset *)
+			MEMSET(ADR(arsDataDimRC), 0, SIZEOF(arsDataDimRC)); 		(* Array reset *)
+			MEMSET(ADR(arrDataDimRC), 0, SIZEOF(arrDataDimRC)); 			(* Array reset *)
+
+			etLoadFromFile := ET_LoadFromFile_eReadData;            			(* Next step *)
+
+		ELSIF fbFileOpen.bError
+		THEN
+			fbFileOpen.bExecute := FALSE;
+			udnErrorNo := fbFileOpen.nErrId;
+
+			etLoadFromFile := ET_LoadFromFile_eError;            			(* Next step *)
+
+		END_IF
+
+	ET_LoadFromFile_eReadData:
+		fbFileGets.bExecute := TRUE;
+
+		etLoadFromFile := ET_LoadFromFile_eChkReadData;            			(* Next step *)
+
+	ET_LoadFromFile_eChkReadData:
+		IF NOT fbFileGets.bBusy
+		     AND NOT fbFileGets.bError
+		THEN
+			fbFileGets.bExecute := FALSE;
+
+			CASE byConfig OF
+				1:	A_Option1();				(* Call option 1 *)
+				2:	A_Option2();				(* Call option 2 *)
+				3..4:	A_Option3();				(* Call option 3,4 *)
+			END_CASE
+
+		ELSIF fbFileGets.bError
+		THEN
+			fbFileGets.bExecute := FALSE;
+			udnErrorNo := fbFileGets.nErrId;
+
+			etLoadFromFile := ET_LoadFromFile_eError;            			(* Next step *)
+
+		END_IF
+
+	ET_LoadFromFile_eFileClose:
+		fbFileClose.bExecute := TRUE;
+
+		etLoadFromFile := ET_LoadFromFile_eChkFileClose;            			(* Next step *)
+
+	ET_LoadFromFile_eChkFileClose:
+		IF NOT fbFileClose.bBusy
+		     AND NOT fbFileClose.bError
+		THEN
+			fbFileClose.bExecute := FALSE;
+
+			IF NOT bError
+			THEN
+				etLoadFromFile := ET_LoadFromFile_eDone;            			(* Next step *)
+			ELSE
+				etLoadFromFile := ET_LoadFromFile_eError;            			(* Next step *)
+			END_IF
+
+
+		ELSIF fbFileClose.bError
+		THEN
+			fbFileClose.bExecute := FALSE;
+			udnErrorNo := fbFileClose.nErrId;
+
+			etLoadFromFile := ET_LoadFromFile_eError;            			(* Next step *)
+
+		END_IF
+
+	ET_LoadFromFile_eDone:
+		bDone := TRUE;                                      		(* Program done, in position *)
+		bBusy := FALSE;                                     		(* Program not busy *)
+		bError := FALSE;
+		udnErrorNo := 0;
+	
+		etLoadFromFile := ET_LoadFromFile_eNoExecute;            		(* Next step *)
+
+	ET_LoadFromFile_eError:
+		IF NOT bError
+		     AND hFileHandle <> 0
+		THEN
+			bDone := FALSE;                                    	 	(* Program done, in position *)
+			bError := TRUE;                                     		(* Program error *)
+			bBusy := FALSE;                                     		(* Program not busy *)
+	
+			etLoadFromFile := ET_LoadFromFile_eFileClose;            		(* Next step *)
+
+		ELSE
+			bDone := FALSE;                                    	 	(* Program done, in position *)
+			bError := TRUE;                                     		(* Program error *)
+			bBusy := FALSE;                                     		(* Program not busy *)
+
+			etLoadFromFile := ET_LoadFromFile_eNoExecute;            		(* Next step *)
+		END_IF
+
+	ET_LoadFromFile_eNoExecute:
+		IF NOT bExecute
+		THEN
+			bDone := FALSE;                                 	(* Program done *)
+			bBusy := FALSE;                                 	(* Program not busy *)
+			bError := FALSE;                                		(* Program not error *)
+			udnErrorNo := 0;
+	
+			etLoadFromFile := ET_LoadFromFile_eWaitExecute;       		(* Next step *)
+	
+		END_IF;
+        
+END_CASE;
+
+fbFileOpen(
+	sNetId := '',
+	sPathName := sPathName,
+	nMode := dwMode,
+	ePath := PATH_GENERIC,
+	tTimeout := tTimeout
+);
+fbFileClose(
+	sNetId := '',
+	hFile := hFileHandle,
+	tTimeout := tTimeout
+);
+
+fbFileGets(
+	sNetId := '',
+	hFile :=  hFileHandle,
+	tTimeout := tTimeout
+);]]></ST>
+    </Implementation>
+    <Action Name="A_Option1" Id="{0caf812c-4e4c-49ba-8973-46e2faa5f91a}">
+      <Implementation>
+        <ST><![CDATA[(* Option 1:
+
+00000001 - 1 - Read line by line and save to array of string.
+
+*)
+(*****************************************************************************************************************************************************************************************************)
+
+arsData[usnRowsCounter] := fbFileGets.sLine;											(* Read line (255 chars) from file *)
+
+IF NOT fbFileGets.bEOF															(* Check received all data form file *)
+THEN
+	usnRowsCounter := usnRowsCounter + 1;
+	etLoadFromFile := ET_LoadFromFile_eReadData;  									(* Read next line form file *)
+
+ELSE
+	etLoadFromFile := ET_LoadFromFile_eFileClose;  									(* Close current file *)
+
+END_IF
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Option2" Id="{9eb8a3b4-f235-49fa-8fde-ed1fd374debe}">
+      <Implementation>
+        <ST><![CDATA[(* Option 2:
+
+00000010 - 2 - Read line by line. Save first signs to string and convert to array of bool.
+
+*)
+(*****************************************************************************************************************************************************************************************************)
+
+sDataSign := fbFileGets.sLine;														(* Read first sign from line *)
+sDataString := CONCAT(sDataString, sDataSign);										(* Created string of sign *)
+
+ptString := ADR(sDataString);														(* Take adress to pointer of byte *)
+arbyData :=  ptString^;																(* Take string into array of byte *)
+arbDataBool[usnRowsCounter] := BYTE_TO_BOOL(arbyData[usnRowsCounter] AND 16#01);	(* Move data to Array of Bool *)
+
+IF NOT fbFileGets.bEOF															(* Check received all data form file *)
+THEN
+	usnRowsCounter := usnRowsCounter + 1;
+	etLoadFromFile := ET_LoadFromFile_eReadData;  									(* Read next line form file *)
+
+ELSE
+	etLoadFromFile := ET_LoadFromFile_eFileClose;  									(* Close current file *)
+
+END_IF
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Option3" Id="{0ac79e62-ac85-444d-9357-2fd7604a8bf1}">
+      <Implementation>
+        <ST><![CDATA[(*Option 3:
+
+00000011 - 3 - Transfer  array form file to array of string on PLC - requirements:
+			- kind of columns separator (bySep) and sign end of line (byEndLine),
+			- amount of rows (usiMaxDimR) and columns (usiMaxDimR) to read.
+
+*)
+(*****************************************************************************************************************************************************************************************************)
+
+IF usnRowsCounter <= usnFileArrayMaxDimR 							(* Choose amount of rows from file *)
+    AND NOT fbFileGets.bEOF
+THEN
+	arsData[usnRowsCounter] := fbFileGets.sLine; 						(* Read line (255 chars) from file *)
+
+	ptByte := ADR(arsData[usnRowsCounter]);
+	byDataSign :=  ptByte^;
+
+	usnColumnsCounter := 0;
+	REPEAT
+
+		WHILE byDataSign <> F_ToASC(sSep) 			(* $T = HEX 09 *)   (* ; = HEX 3B *) (* EOF *)	(* Reaction for special sign in string*)
+			      AND  byDataSign <> F_ToASC(sEndLine)	(* $N = HEX 0A *)
+		DO
+			IF byDataSign = F_ToASC(sComment)
+			     OR byDataSign = F_ToASC('i')
+			THEN
+				EXIT;
+			END_IF
+
+			arsDataDimRC[usnRowsCounter , usnColumnsCounter] := CONCAT(arsDataDimRC[usnRowsCounter , usnColumnsCounter], F_ToCHR(byDataSign)); 	(* Read sign and create string*)
+
+			IF byConfig = 4
+			THEN
+				IF F_CheckStringIsReal(arsDataDimRC[usnRowsCounter , usnColumnsCounter])
+				THEN
+					arrDataDimRC[usnRowsCounter , usnColumnsCounter] :=  STRING_TO_REAL(arsDataDimRC[usnRowsCounter , usnColumnsCounter]);				(* Create real *)
+				ELSE
+					udnErrorNo := 31;
+
+					etLoadFromFile := ET_LoadFromFile_eError;            			(* Next step *)
+					RETURN;
+				END_IF
+			END_IF
+
+			ptByte := ptByte + 1;
+			byDataSign :=  ptByte^;
+
+		END_WHILE
+
+
+
+		IF byDataSign <> F_ToASC(sEndLine)					(* Check end of line *)
+		THEN
+			IF byDataSign = F_ToASC(sComment)
+			THEN
+				EXIT;
+			END_IF
+
+			usnColumnsCounter := usnColumnsCounter + 1;			(* Set next columns *)
+			ptByte := ptByte + 1;
+			byDataSign :=  ptByte^;
+
+		END_IF
+
+	UNTIL byDataSign  = F_ToASC(sEndLine)					(* End when founds the end line sign*)
+	END_REPEAT
+
+	IF byDataSign <> F_ToASC(sComment)
+	THEN
+		usnRowsCounter := usnRowsCounter + 1;
+	END_IF
+
+	etLoadFromFile := ET_LoadFromFile_eReadData;  									(* Read next line form file *)
+
+ELSE
+	etLoadFromFile := ET_LoadFromFile_eFileClose;  									(* Close current file *)
+
+END_IF]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_LoadFromFile">
+      <LineId Id="108" Count="209" />
+    </LineIds>
+    <LineIds Name="FB_LoadFromFile.A_Option1">
+      <LineId Id="0" Count="18" />
+    </LineIds>
+    <LineIds Name="FB_LoadFromFile.A_Option2">
+      <LineId Id="0" Count="23" />
+    </LineIds>
+    <LineIds Name="FB_LoadFromFile.A_Option3">
+      <LineId Id="0" Count="77" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

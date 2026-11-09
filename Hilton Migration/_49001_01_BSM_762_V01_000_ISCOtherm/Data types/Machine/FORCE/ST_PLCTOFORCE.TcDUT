@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_PLCTOFORCE" Id="{383702f3-e446-4c74-9dff-ef06483bc061}">
+    <Declaration><![CDATA[(* Communication structure from plc to drive *)
+
+TYPE ST_PLCTOFORCE :
+STRUCT
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_CommandPositioningFROMPLC" Id="{0115fed1-894f-4a23-a76a-ae6abbd43ca5}">
+    <Declaration><![CDATA[TYPE ST_CommandPositioningFROMPLC :
+STRUCT
+	(* Command Positioning *)
+	nOverride					:INT;			(* Value of override 16384 = 100 %. *)
+	nVeloFactor					:INT;			(* Value of the velocity 16384 = 100 %. *)
+	usnAccFactor					:USINT;			(* Value of the acceleration (always positive) 255 = 100% *)
+	usnDccFaktor					:USINT;			(* Value of the deceleration (always positive) 255 = 100% *)
+	usnJerkFaktor				:USINT;			(* Value of the jersk (always positive) 255 = 100% *)
+	dnTargetPosition				:DINT;			(* Value of target position *)
+	dnReferencePosition			:DINT;			(* Value which is loaded as the actual position in the reference point. *)
+	bTipEnable					:BOOL;			(* Activates tipping mode. *)
+	bTipPlus						:BOOL;			(* Tip mode in positive direction. *)
+	bTipMinus					:BOOL;			(* Tip mode in negative direction. *)
+
+	byPLCOpenCmd				:BYTE;			(* Global parameter for specification of the command to be executed via fieldbus. *)
+	bPLCOpenCmdExe			:BOOL;			(* With a rising edge, the command in Motion Command is executed. *)
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

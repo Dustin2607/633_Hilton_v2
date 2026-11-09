@@ -1,0 +1,179 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Gr00Signals" Id="{93e9cb4b-728c-46ec-a112-82e23c26882e}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Gr00Signals
+(*
+
+The function block used to control general signals of the machine.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			28.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	etMachineMode				:ET_MachineMode;			(* Machine mode *)
+	etMachineState				:ET_MachineState;			(* Machine state *)
+	bMachineRunning				:BOOL;						(* Machine running / Maschine lauft *)
+	stAlarm						:ST_Alarm;					(* Current status of alarms *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bBulbRed					:BOOL;						(* Signal column bulb "stop" or "error" / Signallampe "Stop" oder "Fehler" *)
+	bBulbYellow					:BOOL;						(* Signal column bulb "warning" or "message" / Signallampe "Warnung" oder "Message" *)
+	bBulbGreen					:BOOL;						(* Signal column bulb "automatic" / Signallampe "Automatik" *)
+	bBulbBtnStop					:BOOL;						(* Signal button bulb "stop" / Signallampe "Stop" *)
+	bBulbBtnHome				:BOOL;						(* Signal button bulb "home" / Signallampe "Grundstellung" *)
+	bBulbBtnStart					:BOOL;						(* Signal button bulb "start" / Signallampe "Start" *)
+	bHorn						:BOOL;						(* Signal horn / Signalhupe *)
+	stBlinker						:ST_Blinker;
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	nIdxHorn						:INT;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbBlinker						:FB_Blinker;
+	rtHorn						:R_TRIG;
+	tonDelay						:TON;
+
+END_VAR
+VAR CONSTANT
+	nHornRepeat					:INT := 3;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+A_Blinker();
+A_SignalColumn();
+A_SignalButton();
+A_Horn();]]></ST>
+    </Implementation>
+    <Action Name="A_Blinker" Id="{93baa827-366f-49a7-89a5-f4b7f00b3987}">
+      <Implementation>
+        <ST><![CDATA[
+(* Blinker frequency division *)
+fbBlinker(
+    stBlinker => stBlinker
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Horn" Id="{a124a8c4-bb1e-4a8c-8ff8-cc66e21757ab}">
+      <Implementation>
+        <ST><![CDATA[
+(* Signal horn / Signalhupe *)
+IF stBlinker.Q1
+     AND nIdxHorn < nHornRepeat
+THEN
+	bHorn := (stAlarm.bFatalError OR stAlarm.bError);
+
+ELSIF NOT stBlinker.Q1
+THEN
+	bHorn := FALSE;
+END_IF;
+
+rtHorn(CLK := bHorn);
+IF rtHorn.Q
+THEN
+	nIdxHorn := nIdxHorn + 1;
+END_IF;
+
+tonDelay(
+	IN := nIdxHorn >= nHornRepeat,
+	PT := t#60s
+);
+
+IF (tonDelay.Q
+    AND nHornRepeat > 0)
+    OR NOT (stAlarm.bFatalError OR stAlarm.bError)
+THEN
+	nIdxHorn := 0;
+END_IF;]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_SignalButton" Id="{654fef9c-3a15-4d52-a8c8-a963ecd799e9}">
+      <Implementation>
+        <ST><![CDATA[
+(* Signal button bulb "stop" / Signallampe "Stop" *)
+bBulbBtnStop := bBulbRed;
+
+(* Signal button bulb "home" / Signallampe "Grundstellung" *)
+bBulbBtnHome := (
+	(etMachineMode = ET_MachineMode_eHome
+	 AND NOT bMachineRunning)
+	OR
+	(etMachineMode = ET_MachineMode_eHome
+	 AND bMachineRunning
+	 AND stBlinker.Q1)
+);
+
+(* Signal button bulb "start" / Signallampe "Start" *)
+bBulbBtnStart := (
+	(etMachineMode = ET_MachineMode_eAutomatic
+	 AND bMachineRunning)
+	OR
+	(etMachineMode = ET_MachineMode_eHome
+	 AND bMachineRunning
+	 AND NOT stBlinker.Q1)
+);
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_SignalColumn" Id="{1fc3ff03-7830-4236-b892-817093a898d5}">
+      <Implementation>
+        <ST><![CDATA[
+(* Signal column bulb "stop" or "error" / Signallampe "Stop" oder "Fehler" *)
+bBulbRed := SEL(
+	stAlarm.bFatalError OR stAlarm.bError,
+	NOT bMachineRunning,
+	stBlinker.Q1
+);
+
+(* Signal column bulb "warning" or "message" / Signallampe "Warnung" oder "Message" *)
+bBulbYellow := (
+	NOT stBlinker.Q1
+	AND (stAlarm.bWarning OR stAlarm.bMessage)
+);
+
+(* Signal column bulb "automatic" / Signallampe "Automatik" *)
+bBulbGreen := (
+	(etMachineMode = ET_MachineMode_eAutomatic
+	 AND bMachineRunning)
+	OR
+	(etMachineMode = ET_MachineMode_eHome
+	 AND bMachineRunning
+	 AND stBlinker.Q1)
+);]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_Gr00Signals">
+      <LineId Id="55" Count="4" />
+    </LineIds>
+    <LineIds Name="FB_Gr00Signals.A_Blinker">
+      <LineId Id="0" Count="4" />
+    </LineIds>
+    <LineIds Name="FB_Gr00Signals.A_Horn">
+      <LineId Id="0" Count="28" />
+    </LineIds>
+    <LineIds Name="FB_Gr00Signals.A_SignalButton">
+      <LineId Id="0" Count="23" />
+    </LineIds>
+    <LineIds Name="FB_Gr00Signals.A_SignalColumn">
+      <LineId Id="0" Count="22" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_Traceability" Id="{ebc894ea-9715-4b98-a2dc-5a22e3e904aa}">
+    <Declaration><![CDATA[TYPE ST_Traceability :
+STRUCT
+	sDateTime				:STRING(15);
+	stSettings				:ST_TraceabilitySettings;
+	arstData					:ARRAY[1..udnTraceSampleMax,1..udnTraceDataMax] OF ST_TraceabilityData;
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

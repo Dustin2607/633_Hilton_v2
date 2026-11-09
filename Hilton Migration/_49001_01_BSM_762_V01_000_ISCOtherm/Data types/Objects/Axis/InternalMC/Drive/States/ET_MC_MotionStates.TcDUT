@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_MC_MotionStates" Id="{c48287d5-310f-4a0e-a1ec-83e10b4c4a20}">
+    <Declaration><![CDATA[(* State of the axis according to PLCopen state diagram *)
+
+TYPE ET_MC_MotionStates :
+(
+	ET_MC_MotionStates_eMSUndefined,
+	ET_MC_MotionStates_eMSDisabled,
+	ET_MC_MotionStates_eMSStandstill,
+	ET_MC_MotionStates_eMSErrorStop,
+	ET_MC_MotionStates_eMSStopping,
+	ET_MC_MotionStates_eMSHoming,
+	ET_MC_MotionStates_eMSDiscreteMotion,
+	ET_MC_MotionStates_eMSContinousMotion,
+	ET_MC_MotionStates_eMSSynchronizedMotion
+	
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

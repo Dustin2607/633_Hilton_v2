@@ -1,0 +1,531 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Motor" Id="{220f437e-1d35-42b6-b864-2074c95ffe45}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Motor
+(*
+Base class of motor.
+Motor controls with handshake.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			19.04.2013
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+22.04.2013		.01				PPA					Motor binary synchronization
+03.05.2013		.02				PPA					Condition monitoring
+30.10.2013		.03				PPA					Error diagnose off
+05.12.2016		.04				PPA					External alarm
+*)
+VAR_INPUT
+	bEnable					:BOOL;
+	bNoEmergencyStop		:BOOL;			(* Emergency stop / NotAus *)
+	bVoltageOK				:BOOL;			(* Voltage OK *)
+	bExtAlarm				:BOOL;			(* External alarm *)
+	bReset					:BOOL;
+	bAutoHand				:BOOL;			(* Auto := TRUE, Hand := FALSE *)
+	bHandPlus				:BOOL;
+	bHandMinus				:BOOL;
+	bAutoPlus				:BOOL;
+	bAutoMinus				:BOOL;
+	bAtPlusLimit				:BOOL;			(* At position limit plus *)
+	bAtMinusLimit				:BOOL;			(* At position limit minus *)
+	bPlusRelease			:BOOL;			(* Plus position release *)
+	bMinusRelease			:BOOL;			(* Minus position release *)
+	bSyncPlus				:BOOL;			(* Synchronization in plus direction *)
+	bSyncMinus				:BOOL;			(* Synchronization in minus direction *)
+	bSyncOn					:BOOL;			(* TRUE - synchronization*)
+	bControlOff				:BOOL;			(* TRUE - controle off *)
+	tControlOff				:TIME;			(* Time > 0 delay to control off *)
+	bMotorCtrlErrOff			:BOOL;			(* TRUE -  motor off if error *)
+	bErrorOff					:BOOL;			(* TRUE - error diagnose off *)
+	tSyncTimeOut			:TIME := T#2s;	(* Synchronization TimeOut *)
+	tConTimeOut				:TIME := T#500ms;	(* Condition TimeOut *)
+	tCtrlTimeOut				:TIME := T#10s;	(* Control TimeOut *)
+END_VAR
+VAR_OUTPUT
+	bMoveToPlus			:BOOL;			(* Move to plus direction *)
+  	bMoveToMinus			:BOOL;			(* Move to minus direction *)
+	bLimitPlus				:BOOL;			(* Limit switch plus reached *)
+  	bLimitMinus				:BOOL;			(* Limit switch minus reached *)
+	bError					:BOOL;
+	udnErrorNo				:UDINT;			(* Error number *)
+	sErrorMsg				:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	bHomeCompleted				:BOOL;			(* Home completed *)
+END_VAR
+VAR
+  	tonCtrlWatchDog			:TON;
+  	tonConWatchDog			:TON;
+  	tonSyncWatchDog		:TON;
+	tonControlOff				:TON;
+	tonHandPlus				:TON;			(* Delay signal hand plus *)
+	tonHandMinus			:TON;			(* Delay signal hand minus *)
+
+	rtHandPlus				:R_TRIG;
+	rtHandMinus				:R_TRIG;
+	rtAutoPlus				:R_TRIG;
+	rtAutoMinus				:R_TRIG;
+
+	rtAutoHand				:R_TRIG;
+	ftAutoHand				:F_TRIG;
+
+	bTargetPlus				:BOOL;
+	bTargetMinus				:BOOL;
+
+	bFirstTime				:BOOL;
+
+END_VAR
+VAR CONSTANT
+	tPressDelay 				:TIME := t#200ms;			(* Delay hand signals *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	bMoveToPlus := FALSE;			(* Move to plus direction *)
+  	bMoveToMinus := FALSE;			(* Move to minus direction *)
+	bLimitPlus := FALSE;				(* Limit switch plus reached *)
+  	bLimitMinus := FALSE;				(* Limit switch minus reached *)
+	bTargetPlus := FALSE;
+	bTargetMinus := FALSE;
+	bError := FALSE;
+	udnErrorNo := 0;					(* Error number *)
+	sErrorMsg := ''; 					(* Error message *)
+	tonCtrlWatchDog(IN := FALSE);
+	tonConWatchDog(IN := FALSE);
+	tonSyncWatchDog(IN := FALSE);
+	tonControlOff(IN := FALSE);
+	bFirstTime := FALSE;
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+	bMoveToPlus := FALSE;			(* Move to plus direction *)
+  	bMoveToMinus := FALSE;			(* Move to minus direction *)
+	bLimitPlus := FALSE;				(* Limit switch plus reached *)
+  	bLimitMinus := FALSE;				(* Limit switch minus reached *)
+	bTargetPlus := FALSE;
+	bTargetMinus := FALSE;
+	bFirstTime := TRUE;
+	RETURN;
+END_IF
+
+IF NOT bNoEmergencyStop
+THEN
+	bMoveToPlus := FALSE;			(* Move to plus direction *)
+  	bMoveToMinus := FALSE;			(* Move to minus direction *)
+	bLimitPlus := FALSE;				(* Limit switch plus reached *)
+  	bLimitMinus := FALSE;				(* Limit switch minus reached *)
+	bTargetPlus := FALSE;
+	bTargetMinus := FALSE;
+	tonCtrlWatchDog(IN := FALSE);
+	tonSyncWatchDog(IN := FALSE);
+	tonControlOff(IN := FALSE);
+	RETURN;
+END_IF
+
+(* Check inputs  *)
+tonHandPlus(IN := bHandPlus AND NOT bHandMinus, PT := tPressDelay);
+tonHandMinus(IN := bHandMinus AND NOT bHandPlus, PT := tPressDelay);
+
+rtHandPlus(CLK := tonHandPlus.Q);
+rtHandMinus(CLK:= tonHandMinus.Q);
+
+rtAutoPlus(CLK:= bAutoPlus AND bPlusRelease);
+rtAutoMinus(CLK:= bAutoMinus AND bMinusRelease);
+
+
+rtAutoHand(CLK := bAutoHand);
+ftAutoHand(CLK := bAutoHand);
+
+IF rtAutoHand.Q
+    OR ftAutoHand.Q
+THEN
+	bMoveToPlus := FALSE;			(* Move to plus direction *)
+  	bMoveToMinus := FALSE;			(* Move to minus direction *)
+	bTargetPlus := FALSE;
+	bTargetMinus := FALSE;
+END_IF
+
+
+(* Check operating mode *)
+IF bAutoHand					(* Automatic *)
+THEN
+	IF rtAutoPlus.Q
+	     AND NOT bAtPlusLimit					(* No at position limit plus *)
+	     AND NOT bError
+	THEN
+		bTargetPlus := TRUE;
+		bTargetMinus := FALSE;
+
+		tonControlOff(IN := FALSE);
+
+	ELSIF bMoveToPlus
+		    AND bAtPlusLimit					(* At position limit plus *)
+		    AND NOT bAtMinusLimit				(* No at position limit minus *)
+	THEN
+		bTargetPlus := FALSE;
+		bMoveToPlus := FALSE;				(* Move to plus direction *)
+
+	END_IF
+
+	IF rtAutoMinus.Q
+	     AND NOT bAtMinusLimit					(* No at position limit minus *)
+ 	     AND NOT bError
+	THEN
+		bTargetPlus := FALSE;
+		bTargetMinus := TRUE;
+
+		tonControlOff(IN := FALSE);
+
+	ELSIF bMoveToMinus
+		    AND NOT bAtPlusLimit				(* No at position limit plus *)
+		    AND bAtMinusLimit					(* At position limit minus *)
+	THEN
+		bTargetMinus := FALSE;
+		bMoveToMinus := FALSE;				(* Move to minus direction *)
+
+	END_IF
+
+ELSE						(* Manual *)
+
+	IF NOT bTargetPlus
+	THEN
+		IF rtHandPlus.Q
+		    AND bPlusRelease
+		THEN
+			bTargetPlus := TRUE;
+			bTargetMinus := FALSE;
+
+			IF bError
+			THEN
+				bReset  := TRUE;					(*  Error reset *)
+			END_IF
+
+		END_IF
+
+	ELSE
+		IF NOT bHandPlus
+		     OR bAtPlusLimit
+		THEN
+			bTargetPlus := FALSE;
+			bMoveToPlus := FALSE;			(* Move to plus direction *)
+		END_IF
+
+	END_IF
+
+	IF NOT bTargetMinus
+	THEN
+		IF rtHandMinus.Q
+		    AND bMinusRelease
+		THEN
+			bTargetPlus := FALSE;
+			bTargetMinus := TRUE;
+
+			IF bError
+			THEN
+				bReset  := TRUE;					(*  Error reset *)
+			END_IF
+
+		END_IF
+
+	ELSE
+		IF NOT bHandMinus
+		     OR bAtMinusLimit
+		THEN
+			bTargetMinus := FALSE;
+			bMoveToMinus := FALSE;			(* Move to minus direction *)
+		END_IF
+
+	END_IF
+
+END_IF
+
+IF NOT bAutoHand
+    AND (bMoveToPlus
+         	       OR bMoveToMinus)
+THEN
+	bHomeCompleted := FALSE;
+END_IF;
+
+(* Set outputs move to Plus position  *)
+IF bPlusRelease								(* Start movement *)
+THEN
+	IF  bTargetPlus
+	     AND NOT bMoveToPlus
+	THEN
+		bMoveToPlus := TRUE;				(* Move to plus direction *)
+		bMoveToMinus := FALSE;
+		tonCtrlWatchDog(IN := FALSE);
+		tonConWatchDog(IN := FALSE);
+		tonSyncWatchDog(IN := FALSE);
+	END_IF
+
+ELSE
+	IF bTargetPlus							(* Stop movement *)
+	     AND  bMoveToPlus
+	THEN
+		bMoveToPlus := FALSE;
+
+		IF NOT bAutoHand					(* In manual only continue movement *)
+		THEN
+			bTargetPlus := FALSE;
+		END_IF
+
+	END_IF
+END_IF
+
+(* Set outputs move to Minus position  *)
+IF bMinusRelease								(* Start movment *)
+THEN
+	IF  bTargetMinus
+	     AND NOT bMoveToMinus
+	THEN
+		bMoveToPlus := FALSE;
+		bMoveToMinus := TRUE;				(* Move to minus direction *)
+		tonCtrlWatchDog(IN := FALSE);
+		tonConWatchDog(IN := FALSE);
+		tonSyncWatchDog(IN := FALSE);
+	END_IF
+
+ELSE
+	IF bTargetMinus							(* Stop movment *)
+	     AND  bMoveToMinus
+	THEN
+		bMoveToMinus := FALSE;
+
+		IF NOT bAutoHand					(* In manual only continue movement *)
+		THEN
+			bTargetMinus := FALSE;
+		END_IF
+
+	END_IF
+END_IF
+
+
+(* Error reset *)
+IF bReset
+     AND bError
+THEN
+	udnErrorNo := 0;					(* Error number *)
+	sErrorMsg := ''; 					(* Error message *)
+	tonCtrlWatchDog(IN := FALSE);
+	tonConWatchDog(IN := FALSE);
+	tonSyncWatchDog(IN := FALSE);
+END_IF;
+
+(* Timer starts when motor is reached plus and minus *)
+tonCtrlWatchDog(IN := NOT bErrorOff
+				       AND(
+					(bMoveToMinus AND NOT bAtMinusLimit)
+					OR (bMoveToPlus AND NOT bAtPlusLimit)
+				   	OR (NOT bAtPlusLimit AND NOT bAtMinusLimit)
+				   	OR (bAtPlusLimit AND bAtMinusLimit)),
+			       PT := tCtrlTimeOut);
+
+(* Error if motor does not reach plus or minus limit *)
+IF tonCtrlWatchDog.Q
+    AND bAutoHand					(* In automatic *)
+    AND NOT bError
+THEN
+	IF bMoveToMinus
+	THEN
+		IF NOT bAtMinusLimit AND NOT bAtPlusLimit
+		THEN
+			udnErrorNo := 1; 								(* Set error number *)
+			sErrorMsg := 'Minus limit not reached';
+		ELSIF NOT bAtMinusLimit AND bAtPlusLimit
+		THEN
+			udnErrorNo := 2; 								(* Set error number *)
+			sErrorMsg := 'Not move in minus limit';
+		ELSIF bAtMinusLimit AND bAtPlusLimit
+		THEN
+			udnErrorNo := 5; 									(* Set error number *)
+			sErrorMsg := 'Both position reached';
+		END_IF
+	ELSIF bMoveToPlus
+	THEN
+		IF NOT bAtMinusLimit AND NOT bAtPlusLimit
+		THEN
+			udnErrorNo := 3; 								(* Set error number *)
+			sErrorMsg := 'Plus limit not reached';
+		ELSIF bAtMinusLimit AND NOT bAtPlusLimit
+		THEN
+			udnErrorNo := 4; 								(* Set error number *)
+			sErrorMsg := 'Not move in plus limit';
+		ELSIF bAtMinusLimit AND bAtPlusLimit
+		THEN
+			udnErrorNo := 5; 									(* Set error number *)
+			sErrorMsg := 'Both position reached';
+		END_IF
+	ELSIF bAtMinusLimit AND bAtPlusLimit
+	THEN
+		udnErrorNo := 5; 									(* Set error number *)
+		sErrorMsg := 'Both position reached';
+	END_IF
+END_IF
+
+(* Voltage is nok / Spannung nOk *)
+IF NOT bVoltageOK
+THEN
+	IF bMoveToPlus
+	     OR bMoveToMinus
+	THEN
+		bMoveToPlus := FALSE;			(* Move to plus direction *)
+	  	bMoveToMinus := FALSE;			(* Move to minus direction *)
+		bTargetPlus := FALSE;
+		bTargetMinus := FALSE;
+
+		udnErrorNo := 8; 									(* Set error number *)
+		sErrorMsg := 'No voltage at motor.';
+	END_IF
+
+END_IF
+
+(* Synchronization is nok / Synchronization nOk *)
+tonSyncWatchDog(IN := (bMoveToMinus AND NOT bSyncMinus)
+					  OR (NOT bMoveToMinus AND bSyncMinus)
+				   	  OR (bMoveToPlus AND NOT bSyncPlus)
+				  	  OR (NOT bMoveToPlus AND bSyncPlus),
+				 PT := tSyncTimeOut);
+
+(* Error if motor not sync plus or minus *)
+IF bSyncOn
+    AND tonSyncWatchDog.Q
+    AND NOT bError
+THEN
+	IF bMoveToMinus
+	THEN
+		IF NOT bSyncMinus
+		THEN
+			udnErrorNo := 10; 									(* Set error number *)
+			sErrorMsg := 'Synchronization minus reached';
+		END_IF
+	ELSIF bMoveToPlus
+	THEN
+		IF NOT bSyncPlus
+		THEN
+			udnErrorNo := 11; 									(* Set error number *)
+			sErrorMsg := 'Synchronization plus reached';
+		END_IF
+	ELSE
+		IF bSyncMinus
+		THEN
+			udnErrorNo := 12; 									(* Set error number *)
+			sErrorMsg := 'Synchronization minus err';
+		ELSIF bSyncPlus
+		THEN
+			udnErrorNo := 13; 									(* Set error number *)
+			sErrorMsg := 'Synchronization plus err';
+		END_IF
+	END_IF
+
+	bMoveToPlus := FALSE;			(* Move to plus direction *)
+  	bMoveToMinus := FALSE;			(* Move to minus direction *)
+	bTargetPlus := FALSE;
+	bTargetMinus := FALSE;
+
+END_IF
+
+(* Check condition *)
+tonConWatchDog(IN := (bMoveToMinus AND NOT bAtMinusLimit AND bAtPlusLimit)
+					OR (bMoveToPlus AND bAtMinusLimit AND NOT bAtPlusLimit),
+				PT := tConTimeOut);
+
+IF tonConWatchDog.Q
+    AND NOT bError
+THEN
+	IF bMoveToMinus
+	    AND NOT bAtMinusLimit
+	    AND bAtPlusLimit
+	THEN
+		udnErrorNo := 16; 									(* Set error number *)
+		sErrorMsg := 'Direction minus not free.';
+
+	ELSIF bMoveToPlus
+		    AND bAtMinusLimit
+		    AND NOT bAtPlusLimit
+	THEN
+		udnErrorNo := 17; 									(* Set error number *)
+		sErrorMsg := 'Direction plus not free.';
+	END_IF
+
+	bMoveToPlus := FALSE;
+	bMoveToMinus := FALSE;
+	bTargetPlus := FALSE;
+	bTargetMinus := FALSE;
+
+END_IF
+
+IF bExtAlarm
+THEN
+	udnErrorNo := 20; 									(* Set error number *)
+	sErrorMsg := 'External alarm.';
+END_IF
+
+bError := udnErrorNo <> 0;
+
+
+(* End plus position reached  *)
+bLimitPlus := bAtPlusLimit
+		       AND NOT bAtMinusLimit
+		       AND NOT bError;
+
+(* End minus position reached  *)
+bLimitMinus := NOT bAtPlusLimit
+		          AND bAtMinusLimit
+		          AND NOT bError;
+
+(* Motor off if error *)
+IF bError
+     AND (bMoveToPlus OR bMoveToMinus)
+     AND bMotorCtrlErrOff
+THEN
+	bMoveToPlus := FALSE;			(* Move to plus direction *)
+  	bMoveToMinus := FALSE;			(* Move to minus direction *)
+	bTargetPlus := FALSE;
+	bTargetMinus := FALSE;
+END_IF
+
+(* Check control off *)
+IF bControlOff
+   AND tControlOff > t#0ms
+THEN
+	tonControlOff(
+		IN := bMoveToPlus OR bMoveToMinus
+			OR bTargetPlus OR bTargetMinus,
+		PT := tControlOff
+	);
+
+	IF tonControlOff.Q
+	THEN
+		bMoveToPlus := FALSE;
+		bMoveToMinus := FALSE;
+		bTargetPlus := FALSE;
+		bTargetMinus := FALSE;
+	END_IF;
+    
+ELSE
+	tonControlOff(IN := FALSE);
+
+	IF bControlOff
+	    AND (
+			bMoveToPlus OR bMoveToMinus
+			OR bTargetPlus OR bTargetMinus
+		      )
+	THEN
+		bMoveToPlus := FALSE;
+		bMoveToMinus := FALSE;
+		bTargetPlus := FALSE;
+		bTargetMinus := FALSE;
+	END_IF;
+END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Motor">
+      <LineId Id="80" Count="440" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

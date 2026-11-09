@@ -1,0 +1,187 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_HydraulicCylinder" Id="{15caa737-9e0d-4db2-9110-a36ce89f328a}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_HydraulicCylinder
+(*
+
+The function block used to control clamping cylinder.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			24.10.2016
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	etMachineMode				:ET_MachineMode;			(* Machine mode *)
+	etMachineState				:ET_MachineState;			(* Machine state *)
+	bAirPressureOK				:BOOL;						(* Air pressure OK *)
+	bInBase						:BOOL;						(* In base position *)
+	bInWork						:BOOL;						(* In work position *)
+	bMoveToBaseRelease		:BOOL;						(* Release move to base *)
+	bMoveToWorkRelease		:BOOL;						(* Release move to work *)
+	bHandMoveToBase			:BOOL;						(* Hand move to base *)
+	bHandMoveToWork			:BOOL;						(* Hand move to work *)
+	bAutoMoveToBase			:BOOL;						(* Auto move to base *)
+	bAutoMoveToWork			:BOOL;						(* Auto move to work *)
+	bControlOff					:BOOL;						(* TRUE - controle off *)
+	bConfirmAlarm				:BOOL;						(* Confirm alarm *)
+	tPumpOff						:TIME;						(* Pump delay off time *)
+	tPressureOn					:TIME;						(* Pressure delay on time *)
+	tPressureOff					:TIME;						(* Pressure delay off time *)
+	tTimeOut						:TIME := t#6s;					(* TimeOut *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bPumpOn					:BOOL;						(* Pump on *)
+	bPressureOn					:BOOL;						(* Pressure on *)
+	bMoveToBase				:BOOL;						(* Move to base *)
+	bMoveToWork				:BOOL;						(* Move to work *)
+	bErrorMoveToBase			:BOOL;						(* Error move to base *)
+	bErrorMoveToWork			:BOOL;						(* Error move to work *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	bHomeCompleted				:BOOL;						(* Home completed *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbCylinder					:FB_Cylinder;
+	fbCylinderAtBasePos			:FB_SignalHandlingDelay;
+	fbCylinderAtWorkPos			:FB_SignalHandlingDelay;
+	fbCylinderBaseRelease		:FB_SignalHandlingDelay;
+	fbCylinderWorkRelease		:FB_SignalHandlingDelay;
+	fbCylinderPumpOff				:FB_SignalWatchdog;
+	fbCylinderPressureOn			:FB_SignalHandlingDelay;
+	fbCylinderPressureOff			:FB_SignalWatchdog;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+(* Control clamp cylinder *)
+
+fbCylinderAtBasePos(
+	bEnable := TRUE,
+	bIn := bInBase,
+	tDelay := t#0ms
+);
+
+fbCylinderAtWorkPos(
+	bEnable := TRUE,
+	bIn := bInWork,
+	tDelay := t#0ms
+);
+
+fbCylinderBaseRelease(
+	bEnable := TRUE,
+	bIn := bMoveToBaseRelease,
+	tDelay :=t#0ms
+);
+
+fbCylinderWorkRelease(
+	bEnable := TRUE,
+	bIn := bMoveToWorkRelease,
+	tDelay := t#0ms
+);
+
+fbCylinder(
+	bEnable := TRUE,
+	bAirPressure := bAirPressureOK,
+	bReset := bConfirmAlarm,
+	bAutoHand := etMachineMode = ET_MachineMode_eHome
+			         OR etMachineMode = ET_MachineMode_eStepping
+			         OR etMachineMode = ET_MachineMode_eAutomatic,
+	bHandBase := bHandMoveToBase,
+	bHandWork := bHandMoveToWork,
+	bAutoBase := bAutoMoveToBase,
+	bAutoWork := bAutoMoveToWork,
+	bAtBasePos := fbCylinderAtBasePos.bOut,
+	bAtWorkPos := fbCylinderAtWorkPos.bOut,
+	bBaseRelease := fbCylinderBaseRelease.bOut,
+	bWorkRelease := fbCylinderWorkRelease.bOut,
+	bControlStateOn := etMachineMode = ET_MachineMode_eManual,
+	bControlOff := bControlOff,
+	bValveOff := FALSE,
+	bValveErrOff := TRUE,
+	bErrorOff := FALSE,
+	tTimeOut := tTimeOut,
+	bHomeCompleted := bHomeCompleted,
+	bMoveToBase => ,
+	bMoveToWork =>
+);
+
+(* Cylinder pump on/off *)
+fbCylinderPumpOff(
+	bEnable := TRUE,
+	bIn := fbCylinder.bMoveToBase
+		  OR fbCylinder.bMoveToWork,
+	tWatchdog := tPumpOff
+);
+
+IF etMachineMode = ET_MachineMode_eManual
+THEN
+	bPumpOn := fbCylinderPumpOff.bOut;
+ELSE
+	IF fbCylinderPumpOff.bOut
+	THEN
+		bPumpOn := TRUE;
+	END_IF
+END_IF
+
+(* Cylinder pressure on/off *)
+fbCylinderPressureOn(
+	bEnable := TRUE,
+	bIn := bPumpOn
+		  AND (fbCylinder.bMoveToBase AND NOT fbCylinder.bAtBasePos)
+			     OR (fbCylinder.bMoveToWork AND NOT fbCylinder.bAtWorkPos),
+	tDelay := tPressureOn
+);
+
+fbCylinderPressureOff(
+	bEnable := bPumpOn,
+	bIn := (fbCylinder.bMoveToBase AND fbCylinder.bAtBasePos)
+		   OR (fbCylinder.bMoveToWork AND  fbCylinder.bAtWorkPos),
+	tWatchdog := tPressureOff
+);
+
+bPressureOn := fbCylinderPressureOff.bOut
+			    AND fbCylinderPressureOn.bOut;
+
+bMoveToBase := bPressureOn AND fbCylinder.bMoveToBase;
+bMoveToWork := bPressureOn AND fbCylinder.bMoveToWork;
+
+A_Alarm();]]></ST>
+    </Implementation>
+    <Action Name="A_Alarm" Id="{f1987627-bb47-4b9e-9e66-ad7f8a5158b8}">
+      <Implementation>
+        <ST><![CDATA[
+bErrorMoveToWork := fbCylinder.bError
+					AND (fbCylinder.udnErrorNo = 1
+					     OR fbCylinder.udnErrorNo = 2
+					     OR fbCylinder.udnErrorNo = 5);
+
+bErrorMoveToBase := fbCylinder.bError
+					 AND (fbCylinder.udnErrorNo = 3
+					       OR fbCylinder.udnErrorNo = 4
+					       OR fbCylinder.udnErrorNo = 5);]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_HydraulicCylinder">
+      <LineId Id="66" Count="93" />
+    </LineIds>
+    <LineIds Name="FB_HydraulicCylinder.A_Alarm">
+      <LineId Id="0" Count="9" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

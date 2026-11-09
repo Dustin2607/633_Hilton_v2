@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_PreHeat" Id="{5df5b58c-32ae-4f93-b303-3cc7ef2c54c2}">
+    <Declaration><![CDATA[TYPE ST_PreHeat :
+STRUCT
+	lrPreHeatForce						:LREAL;											(* PreHeat force [N] *)
+	unPreHeatRamp						:UINT;											(* PreHeat ramp [s] *)
+	unPreHeatTime						:UINT;											(* PreHeat time [s] *)
+	lrVeloForceCtrlKp						:LREAL;											(* Velocity - force controller proportional band Kp *)
+	lrVeloForceCtrlTi						:LREAL;											(* Velocity - force controller integral Ti *)
+	lrVeloForcePreCtrlVelo					:LREAL;											(* Feedforward velocity precontrol wieghting =  0..1 *)
+	lrVeloForceCtrlLimit					:LREAL;											(* Velocity - force controller limit  *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

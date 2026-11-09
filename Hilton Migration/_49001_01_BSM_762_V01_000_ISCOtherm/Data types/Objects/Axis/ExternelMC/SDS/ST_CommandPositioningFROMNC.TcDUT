@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_CommandPositioningFROMNC" Id="{ffe7f979-dfeb-4f2b-8b71-eeaf86dae0f0}">
+    <Declaration><![CDATA[TYPE ST_CommandPositioningFROMNC :
+STRUCT
+	(* Command Positioning *)
+	bConstantVelocity				:BOOL;			(* Constant speed reached. *)
+	bHomed						:BOOL;			(* Axis is referenced. *)
+	bPositionReached			:BOOL;			(* Window around target position reached for the first time. *)
+	bPositionWinReached			:BOOL;			(* Actual position is located in the position window. *)
+	bNotMoving					:BOOL;			(* Axis is logically stationary. *)
+	bDenied						:BOOL;			(* Indicates that the command denied .*)
+	bCoupled 					:BOOL;			(* Axis coupling state *)
+	dnActPosition					:DINT;			(* Value of current (actual) position *)
+	dnActVelocity					:DINT;			(* Value of current (actual) velocity *)
+	nActEngineTorque			:INT;			(* Indication of the current motor torque in Nm *)
+	rDecimalDigits 				:REAL;			(* Number of positions after the decimal point for indication and entry of position reference values, speeds, accelerations *)
+	udnScalingDenom				:UDINT := 1;	  	(* Effective distance per rev. Denominator [INC] *)
+	lrScalingNum					:LREAL;			(* Effective distance per rev. Numerator [technical units]: The factor indicates the distance per one increment of position control.*)
+	bLimitMaxExceeded			:BOOL;			(* Position limit switch maximum is exceeded *)
+	bLimitMinExceeded			:BOOL;			(* Position limit switch minimum is exceeded *)
+
+	byPLCOpenState				:BYTE;			(* Supplies information on the reaction of the axis during operation on a fieldbus. *)
+	bPLCOpenStandstill			:BOOL;			(* PLCopen state Standstill. *)
+	bPLCOpenCmdAborted		:BOOL;			(* Positioning command denied/aborted. TRUE means that the last positioning job was aborted. *)
+	bPLCOpenCmdDone			:BOOL;			(* TRUE means that the command was executed successfully. *)
+	byPLCOpenErrorCode			:BYTE;			(* When the PLCOpen state is ErrorStop. *)
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

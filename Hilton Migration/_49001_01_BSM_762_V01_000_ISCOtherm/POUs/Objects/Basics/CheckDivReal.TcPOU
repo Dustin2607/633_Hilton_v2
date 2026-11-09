@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="CheckDivReal" Id="{e6d67e03-deaa-4fab-abbf-fb647249295e}" SpecialFunc="CheckDivReal32">
+    <Declaration><![CDATA[FUNCTION CheckDivReal : REAL
+VAR_INPUT
+	divisor: REAL;
+END_VAR
+VAR_EXTERNAL
+	fbCheckDivRealInfo: FB_CheckDivRealInfo;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*This function checks if a division by zero is performed*)
+
+fbCheckDivRealInfo(
+	rDivisor			:= divisor,
+	sLogMessage	=> ,
+	rReturnDivReal 	=> CheckDivReal);]]></ST>
+    </Implementation>
+    <LineIds Name="CheckDivReal">
+      <LineId Id="7" Count="5" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_AXIS_REF_V2" Id="{b0bd0b5e-8b91-441e-badd-4ff09eda0c1b}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_AXIS_REF_V2
+(*
+Base class of cyclic drive interface.
+FB_AXIS_REF_V2 is an interface between the PLC and the NC.
+
+Constructor: 	Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			26.05.2014
+Version:		1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+
+VAR_INPUT
+	stAxisCtrl						:ST_AxisCtrl;
+	stAxisStates					:ST_AxisStates;
+	stTippingMode				:ST_TippingMode;
+	stScaling						:ST_Scaling;
+	stPosition					:ST_Position;
+	stLimitSwitches				:ST_LimitSwitches;
+	stDynamics					:ST_Dynamics;
+	stDriveConfig					:ST_DriveConfig;
+END_VAR
+VAR_OUTPUT
+	dwDriveId					:DWORD;
+	sDriveName 					:STRING(31);
+END_VAR
+VAR
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_AXIS_REF_V2">
+      <LineId Id="31" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

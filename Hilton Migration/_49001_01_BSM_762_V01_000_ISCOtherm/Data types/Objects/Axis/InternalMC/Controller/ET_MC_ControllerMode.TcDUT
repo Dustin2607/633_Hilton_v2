@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_MC_ControllerMode" Id="{dbe08c0f-cb10-44fd-9f5e-1d40fadfe6dd}">
+    <Declaration><![CDATA[TYPE ET_MC_ControllerMode :
+(
+	ET_MC_ControllerMode_eCMUndefined,
+	ET_MC_ControllerMode_eCMTorque,
+	ET_MC_ControllerMode_eCMVelocity,
+	ET_MC_ControllerMode_eCMPosition,
+	ET_MC_ControllerMode_eCMCurrent
+	
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

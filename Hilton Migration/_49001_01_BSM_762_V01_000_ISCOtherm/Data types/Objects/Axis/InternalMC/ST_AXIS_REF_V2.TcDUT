@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_AXIS_REF_V2" Id="{cf33dfb0-9f61-4e9d-8fd1-47c8d83797da}">
+    <Declaration><![CDATA[TYPE ST_AXIS_REF_V2 : FB_AXIS_REF_V2;
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

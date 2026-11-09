@@ -1,0 +1,245 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Sawband" Id="{9e9cf1f9-08f0-4fca-b9e1-65b07a2ea6fc}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Sawband
+(*
+
+The function block used to control the saw.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			04.11.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable					:BOOL;						(* Enable FB signal *)
+	bNoEStop				:BOOL;						(* No ermergency Stop / Keine Notaus *)
+	bAirPressure				:BOOL;						(* Signal air pressure *)
+	bAutoHand				:BOOL;						(* Auto := TRUE, Hand := FALSE *)
+	bHandStart				:BOOL;						(* Sawband hand start *)
+	bHandStop				:BOOL;						(* Sawband hand stop *)
+	bAutoStart				:BOOL;						(* Sawband auto start *)
+	bAutoStop				:BOOL;						(* Sawband auto stop *)
+	bSawbandAir				:BOOL;						(* Sawband air on *)
+	bSawbandCtrlOK			:BOOL;						(* Sawband controller ok *)
+	bSawbandNOK			:BOOL;						(* Sawband error *)
+	udnIncEnc				:UDINT;						(* Value of encoder increment *)
+	udnScalingDenom			:UDINT := 1;	  				(* Denominator for the conversion factor at the conversion of bus data to technical units [INC] *)
+	lrScalingNum				:LREAL := 1.0;  				(* Numerator for the conversion factor at the conversion of bus data to technical units [technical units] *)
+	lrTaskCycle				:LREAL := 0.002;				(* Cycle time of the task [sec], 0.002[s] => 2ms *)
+	lrSawbandRefVelo		:LREAL := 1.0;					(* Referenc velocity of sawband [technical units/s]*)
+	tSawbandCtrlOnDelay		:TIME := t#3s;					(* Sawband on delay *)
+	tSawbandAirOffDelay		:TIME := t#10s;				(* Sawband air off delay *)
+	tSawbandReadyDelay		:TIME := t#5s;					(* Sawband ready delay *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bSawbandReady			:BOOL;						(* Sawband ready *)
+	bSawbandCtrlOn			:BOOL;						(* Sawband controller on *)
+	bSawbandAirOn			:BOOL;						(* Sawband air on*)
+	bNotMoving				:BOOL;						(* Axis not moving *)
+	lrActPosition				:LREAL;						(* Actual position [mm] *)
+	lrActVelocity				:LREAL;						(* Actual velocity [mm/s] *)
+	bError					:BOOL;						(* Error *)
+	udnErrorNo				:UDINT;
+	udnMessageNo			:UDINT;
+	sMsg					:STRING;
+END_VAR
+VAR_IN_OUT
+
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	stEncoderConfig				:ST_EncoderConfig;			(* Encoder configuration *)
+	stAxis						:ST_AXIS_REF_V2;			(* The AXIS_REF data type  is an interface between the PLC and the NC and contains axis information *)
+	bFirstTime					:BOOL;						(* First cycle *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtHandStart				:R_TRIG;
+	rtHandStop				:R_TRIG;
+	rtAutoStart				:R_TRIG;
+	rtAutoStop				:R_TRIG;
+	tonSawbandCtrlOnDelay	:TON;						(* Timer to delay *)
+	tofSawbandAirOffDelay		:TOF;						(* Timer to delay *)
+	tonSawbandReadyDelay  	:TON;						(* Timer to delay *)
+
+	fbPositionEncoder			:FB_PositionEncoder;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	bSawbandCtrlOn := FALSE;
+	bSawbandAirOn := FALSE;
+	bError := FALSE;
+	udnErrorNo := 0;
+	udnMessageNo := 0;
+	sMsg := '';
+	tonSawbandCtrlOnDelay(IN := FALSE,
+					       	    PT := tSawbandCtrlOnDelay);
+	tofSawbandAirOffDelay(IN := FALSE,
+	            			 	 PT := tSawbandAirOffDelay);
+	tonSawbandReadyDelay(IN := FALSE,
+					       		PT := tSawbandReadyDelay);
+	bFirstTime := FALSE;
+    RETURN;
+END_IF;
+
+IF NOT bFirstTime
+THEN
+	bError := FALSE;
+	udnErrorNo := 0;
+	udnMessageNo := 0;
+	sMsg := '';
+	tonSawbandCtrlOnDelay(IN := FALSE,
+					       	    PT := tSawbandCtrlOnDelay);
+	tofSawbandAirOffDelay(IN := FALSE,
+	            			 	 PT := tSawbandAirOffDelay);
+	tonSawbandReadyDelay(IN := FALSE,
+					       		PT := tSawbandReadyDelay);
+	bFirstTime := TRUE;
+END_IF;
+
+(* Start / Stop sawband *)
+rtHandStart(CLK := bHandStart);
+rtHandStop(CLK := bHandStop);
+rtAutoStart(CLK := bAutoStart);
+rtAutoStop(CLK := bAutoStop);
+
+IF rtHandStop.Q
+     OR rtAutoStop.Q
+     OR NOT bNoEStop
+     OR bSawbandNOK
+THEN
+	tofSawbandAirOffDelay.IN := FALSE;;
+	tonSawbandCtrlOnDelay.IN := FALSE;
+
+ELSIF SEL(bAutoHand, rtHandStart.Q, rtAutoStart.Q)
+	    AND bNoEStop
+	    AND bAirPressure
+	    AND NOT bSawbandNOK
+THEN
+	tofSawbandAirOffDelay.IN := TRUE;;
+	tonSawbandCtrlOnDelay.IN := TRUE;
+
+END_IF
+
+(* Sawband air stop after delay *)
+tofSawbandAirOffDelay(
+         PT := tSawbandAirOffDelay
+);
+
+bSawbandAirOn := tofSawbandAirOffDelay.Q
+				OR ( NOT bAutoHand
+					AND bSawbandAir);
+
+(* Sawband controller on after delay *)
+tonSawbandCtrlOnDelay(
+         PT := tSawbandCtrlOnDelay
+);
+
+bSawbandCtrlOn := tonSawbandCtrlOnDelay.Q;
+
+(* Sawband ready after delay *)
+tonSawbandReadyDelay(
+	IN := bSawbandCtrlOn,
+	PT := tSawbandReadyDelay
+);
+
+A_PositionDynamics();
+A_Alarm();
+
+bSawbandReady := bSawbandCtrlOK
+				   AND NOT bSawbandNOK
+				   AND NOT bNotMoving
+				   AND NOT bError
+				   AND lrActVelocity >= lrSawbandRefVelo
+				   AND tonSawbandReadyDelay.Q;
+
+
+
+
+
+
+
+]]></ST>
+    </Implementation>
+    <Action Name="A_Alarm" Id="{0810619a-5fe9-4993-87a8-53aa7afc30a4}">
+      <Implementation>
+        <ST><![CDATA[
+(* Check error *)
+IF bSawbandNOK
+THEN
+	udnErrorNo := 1;
+	udnMessageNo := 0;
+	sMsg := 'Sawband nok signal';
+
+ELSIF (NOT bSawbandCtrlOK
+	    	      OR bNotMoving)
+	   AND tonSawbandReadyDelay.Q
+THEN
+	udnErrorNo := 2;
+	udnMessageNo := 0;
+	sMsg := 'Sawband not ready';
+
+ELSE
+	udnErrorNo := 0;
+	udnMessageNo := 0;
+	sMsg := '';
+
+END_IF
+
+bError := udnErrorNo > 0;]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_PositionDynamics" Id="{3e398856-5147-496b-b772-039b2140a1cc}">
+      <Implementation>
+        <ST><![CDATA[
+(* Position encoding *)
+stEncoderConfig.etScalingMethod := ET_ScalingMethod_eSMLinear;
+stAxis.stScaling.etScalingMethod := ET_ScalingMethod_eSMLinear;
+stAxis.stScaling.lrTaskCycle := lrTaskCycle;
+stAxis.stScaling.udnScalingDenom := udnScalingDenom; (* inc *)
+stAxis.stScaling.lrScalingNum := lrScalingNum; (* mm *)
+
+fbPositionEncoder(
+	bEnable := TRUE,
+	dwEncCurrentValue := udnIncEnc,
+	stEncCfg := stEncoderConfig,
+	pAxis := ADR(stAxis)
+);
+
+lrActPosition := fbPositionEncoder.pAxis^.stPosition.lrActPos / 1000 (* m *);
+lrActVelocity := fbPositionEncoder.pAxis^.stDynamics.lrActVelo * 60 (* mm/min *);
+
+bNotMoving := FALSE;
+
+IF lrActVelocity = 0.0
+THEN
+	bNotMoving := TRUE;
+END_IF
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_Sawband">
+      <LineId Id="75" Count="95" />
+    </LineIds>
+    <LineIds Name="FB_Sawband.A_Alarm">
+      <LineId Id="0" Count="23" />
+    </LineIds>
+    <LineIds Name="FB_Sawband.A_PositionDynamics">
+      <LineId Id="0" Count="25" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

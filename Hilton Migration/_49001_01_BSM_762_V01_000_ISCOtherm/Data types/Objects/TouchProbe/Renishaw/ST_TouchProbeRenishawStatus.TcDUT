@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_TouchProbeRenishawStatus" Id="{1e71fcd9-3937-453b-a835-93c4283a5fcc}">
+    <Declaration><![CDATA[TYPE ST_TouchProbeRenishawStatus :
+STRUCT
+	bProbeStatus1					:BOOL;			(* Probe status 1 *)
+	bLowBattery						:BOOL;			(* Low battery  *)
+	bError							:BOOL;			(* Error  *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

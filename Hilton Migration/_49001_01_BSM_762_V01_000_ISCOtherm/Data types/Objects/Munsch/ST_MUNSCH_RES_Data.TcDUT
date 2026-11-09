@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_MUNSCH_RES_Data" Id="{6d4dd2f0-0e39-4c89-82c8-45dd7ce10456}">
+    <Declaration><![CDATA[TYPE ST_MUNSCH_RES_Data :
+STRUCT
+	nMaterialRefTemp			:INT := 0;				(* Material referenc temperatur. unsMaterialTemp is the temperature in °C added to 160 °C. The range is 0 (160 °C) to 240 (400 °C) *)
+	nMaterialActTemp				:INT := 0;				(* Material referenc temperatur. unsMaterialTemp is the temperature in °C added to 160 °C. The range is 0 (160 °C) to 240 (400 °C) *)
+	nAirRefTemp					:INT := 0;				(* Air current temperatur. unsAirTemp is the temperature in °C added to 160 °C. The range is 0 (160 °C) to 240 (400 °C) *)
+	nAirActTemp					:INT := 0;				(* Air current temperatur. unsAirTemp is the temperature in °C added to 160 °C. The range is 0 (160 °C) to 240 (400 °C) *)
+	etResponse					:ET_MUNSCH_RES;
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_PositionModeFromPLC" Id="{a4c1828d-5be0-48ea-a2e9-55993b18c09e}">
+    <Declaration><![CDATA[TYPE ST_PositionModeFromPLC :
+STRUCT
+	(* Command Positioning *)
+	dnTargetPosition					:DINT;			(* Target position of the Profile position operating mode and set position of the Cyclic synchronous position operating mode. *)
+	bNewSetpoint					:BOOL;			(* New setpoint (apply the new target position and start the movement) 0, 1 = inactive; 0 -> 1 = active *)
+	bChangeSetImmediately			:BOOL;			(* 0 = apply new target position with bit 4 if no movement is active (prerequisite: I199 = 1: Active); 1 = apply new target position always with bit 4; a movement that is still active is interrupted *)
+	bAbsRel							:BOOL;			(* Absolute target position/relative distance; 0 = Target position is an absolute position; 1 = Target position is a distance relative to the last target position A567 (prerequisite: A621 = X to X00 bin) or 1 = Target position is a distance relative to the current actual position A545 (prerequisite: A621 = X to X10 bin) *)
+	udnVelocity						:UDINT;			(* Velocity for profile. *)
+	udnAcceleration					:UDINT;			(* Acceleration for profile. *)
+	udnDeceleration					:UDINT;			(* Deceleration for profile. *)
+	udnJerk							:UDINT;			(* Jerk  for profile. *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

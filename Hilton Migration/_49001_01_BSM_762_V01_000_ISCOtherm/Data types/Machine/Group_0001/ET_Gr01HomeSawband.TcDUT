@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_Gr01HomeSawband" Id="{1432004e-8d57-4f3f-afb8-80dfd53c0d63}">
+    <Declaration><![CDATA[TYPE ET_Gr01HomeSawband :
+(
+	ET_Gr01HomeSawband_eWaitExecute := 0,
+	ET_Gr01HomeSawband_eStop,
+	ET_Gr01HomeSawband_eWFStop,
+	ET_Gr01HomeSawband_eReset,
+	ET_Gr01HomeSawband_eWfReset,
+	ET_Gr01HomeSawband_eDone := 197,
+	ET_Gr01HomeSawband_eError := 198,
+	ET_Gr01HomeSawband_eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

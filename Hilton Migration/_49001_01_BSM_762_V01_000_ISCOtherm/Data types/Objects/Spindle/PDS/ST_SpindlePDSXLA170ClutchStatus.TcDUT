@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_SpindlePDSXLA170ClutchStatus" Id="{90311893-ef9b-4fbc-90dc-9881916a362b}">
+    <Declaration><![CDATA[TYPE ST_SpindlePDSXLA170ClutchStatus :
+STRUCT
+	bRotatingS1					:BOOL;						(* Spindle rotating S1 *)
+	bToolNotClampedS2			:BOOL;						(* Tool not clamped S2 *)
+	bToolPresentS3				:BOOL;						(* Tool present S3 *)
+	bClutchInBaseS4				:BOOL;						(* Clutch in base position S4 *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_Gr05Manual" Id="{1371c67d-cf85-4d0d-8548-2b81b7d6da69}">
+    <Declaration><![CDATA[TYPE ET_Gr05Manual :
+(
+	ET_Gr05Manual_eWaitExecute := 0,
+	ET_Gr05Manual_eDone := 197,
+	ET_Gr05Manual_eError := 198,
+	ET_Gr05Manual_eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

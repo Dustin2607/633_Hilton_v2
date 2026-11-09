@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_Gr05HMITOPLC" Id="{76248074-4039-4519-8822-599bbf8052f9}">
+    <Declaration><![CDATA[TYPE ST_Gr05HMITOPLC :
+STRUCT
+	bBtnStart								:BOOL; 											(* Button start *)
+	bBtnStop								:BOOL; 											(* Button stop *)
+	bBtnSteppingProcess					:BOOL; 											(* Stepping process *)
+	rOverride							:REAL;											(* Override 0 - 100 [%]  *)
+	bResetLifetime						:BOOL;											(* Reset life time *)
+         bResetCounterUser			   		:BOOL;											(* Reset counter user *)
+	arbBtnAxisClampPlus					:ARRAY[1..ungGr05ClampMaxNo] OF BOOL;			(* Button move axis clamp plus *)
+	arbBtnAxisClampMinus					:ARRAY[1..ungGr05ClampMaxNo] OF BOOL;			(* Button move axis clamp minus *)
+	arbBtnClampOpen						:ARRAY[1..ungGr05ClampMaxNo] OF BOOL;			(* Clamp open *)
+	arbBtnClampClose					:ARRAY[1..ungGr05ClampMaxNo] OF BOOL;			(* Clamp close *)
+	arbBtnCylinderPosOpen				:ARRAY[1..ungGr05CylinderPosMaxNo] OF BOOL;		(* Position cylinder open *)
+	arbBtnCylinderPosClose				:ARRAY[1..ungGr05CylinderPosMaxNo] OF BOOL;		(* Position cylinder close *)
+	bBtnSlideUp							:BOOL;											(* Button slide up *)
+	bBtnSlideDown						:BOOL;											(* Button slide down *)
+	bBtnRemovalBandToPlus				:BOOL;											(* Button move removal band into plus direction *)
+	bBtnRemovalBandToMinus				:BOOL;											(* Button move removal band into minus direction *)
+	bSlideActive							:BOOL;											(* Slide active *)
+	bCylinderPosActive					:BOOL;											(* Position cylinder active *)
+	arlrAxisClampTipDistance				:ARRAY[1..ungGr05ClampMaxNo] OF LREAL;			(* Tip distance axis clamp [mm] *)
+	arlrAxisClampOriginShiftPos				:ARRAY[1..ungGr05ClampMaxNo] OF LREAL;			(* Origin shift position axis clamp [mm] *)
+	arlrAxisClampHomePos				:ARRAY[1..ungGr05ClampMaxNo] OF LREAL;			(* Home position axis clamp [mm] *)
+	arlrAxisClampSoftLimitMax				:ARRAY[1..ungGr05ClampMaxNo] OF LREAL;			(* Software limit maximum axis clamp [mm] *)
+	arlrAxisClampSoftLimitMin				:ARRAY[1..ungGr05ClampMaxNo] OF LREAL;			(* Software limit minimum axis clamp [mm] *)
+	arlrAxisClampNoRefVelo				:ARRAY[1..ungGr05ClampMaxNo] OF LREAL;			(* No reference velocity axis clamp [%] *)
+	arlrAxisClampManualVelo				:ARRAY[1..ungGr05ClampMaxNo] OF LREAL;			(* Manual velocity axis clamp [%] *)
+	arlrAxisClampHomeVelo				:ARRAY[1..ungGr05ClampMaxNo] OF LREAL;			(* Home velocity axis clamp [%] *)
+	arlrAxisClampAutoVelo					:ARRAY[1..ungGr05ClampMaxNo] OF LREAL;			(* Auto velocity axis clamp [%] *)
+	lrActSawingLength						:LREAL;											(* Actual sawing length [mm] *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

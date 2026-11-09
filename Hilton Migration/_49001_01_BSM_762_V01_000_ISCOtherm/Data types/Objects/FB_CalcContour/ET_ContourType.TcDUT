@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_ContourType" Id="{588b1e4c-16af-4b72-aa73-331749ceef89}">
+    <Declaration><![CDATA[TYPE ET_ContourType :
+(
+	ET_ContourType_eNone := 0,
+	ET_ContourType_eCircle := 1,
+	ET_ContourType_eEllipse := 2,
+	ET_ContourType_eSquare := 3
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

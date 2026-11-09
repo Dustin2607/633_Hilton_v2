@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_PLCTOSTOEBER" Id="{3909534b-f021-4381-8870-761b6b47bc1c}">
+    <Declaration><![CDATA[(* Communikation structure from plc to nc *)
+
+TYPE ST_PLCTOSTOEBER :
+STRUCT
+	dnI34ReferencePosition				:DINT;
+	dnI213TargetPosition					:DINT;
+	nI230Override							:INT;
+	nI215VeloFaktor						:INT;
+	nD230NReferenceValueRelative		:INT;
+	nC230TorqueLimit						:INT;
+	wI210PosiControlWord					:WORD;
+	wDummy1							:WORD;
+	usnI216AccFaktor						:USINT;
+	usnI217DccFaktor						:USINT;
+	byA180DeviceControlByte				:BYTE;
+	byI211MotionCommandByte			:BYTE;
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

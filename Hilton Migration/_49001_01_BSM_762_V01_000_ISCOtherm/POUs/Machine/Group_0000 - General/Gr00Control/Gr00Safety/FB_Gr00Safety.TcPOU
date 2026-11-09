@@ -1,0 +1,260 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Gr00Safety" Id="{a8f949b4-ece9-45c2-9c35-e4c91a20ebcd}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Gr00Safety
+(*
+
+The function block used to control genaeral safety of the machine.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			28.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	etMachineMode				:ET_MachineMode;			(* Machine mode *)
+	etMachineState				:ET_MachineState;			(* Machine state *)
+	bNoEStop					:BOOL;						(* No ermergency Stop / Keine Notaus *)
+	bConfirmEStop				:BOOL;						(* Confirm no ermergency stop *)
+	bMachineRunning				:BOOL;						(* Machine running / Maschine lauft *)
+	arbPowerSupplyOn				:ARRAY [1..5] OF BOOL;		(* Power supply on / Leitung eingeschaltet *)
+	bLightCurtain					:BOOL;						(* Light curtain ok / Freigabe Lichtschranke i.o *)
+	bConfirmLightCurtain			:BOOL;						(* Confirm light Curtain input signal *)
+	bAirPressure					:BOOL;						(* Air Pressure is available / Luftdruck ist vorhanden *)
+	arbDoorsClosed				:ARRAY [1..5] OF BOOL;		(* Doors closed *)
+	bDoorsClosed				:BOOL;						(* All doors closed *)
+	bDoorsLocked				:BOOL;						(* All doors locked *)
+	bDoorsLock					:BOOL;						(* All doors lock *)
+	bTemperatur					:BOOL;						(* Temperatur *)
+	stFieldbusStatus				:ST_FieldbusStatus;			(* Fieldbus status *)
+	tFieldbusMasterStartUp		:TIME := T#30s;				(* Maximal start time for the fieldbus master *)
+	tAirPressureOnDelay			:TIME := t#2s;					(* Delay air pressur on *)
+	tAirPresentDelay				:TIME := t#2s;					(* Delay air pressur present *)
+	tAirPressureBuildUp			:TIME := t#20s;				(* Max time to building up the air pressure  / Maximale Zeit zum erreichen des Solldrucks *)
+	tLightCurtainDelay				:TIME := t#1s;					(* After time light Curtain safe *)
+	tTempErrorDelay				:TIME := t#5m;					(* Max delay time until the message turns to an error *)
+	tPowerSupplyOn				:TIME := t#2s;					(* Timeout power supply on *)
+	tPowerSupplyOff				:TIME := t#1s;					(* Timeout power supply off *)
+	tAdsTimeOut 					:TIME := t#2s;					(* Timout for ads commands / maximale zeit für die ausführung der ADS-Kommandos *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bNoEmergencyStop			:BOOL;						(* No ermergency Stop / Keine Notaus *)
+	bConfirmedEStop				:BOOL;						(* Confirmed emergency stop signal *)
+	bFieldbusMasterOK			:BOOL;						(* Fieldbus master running *)
+	bFieldbusBrake				:BOOL;						(* Fieldbus brake *)
+	bAirPressureOK				:BOOL;						(* Air Pressure is available / Luftdruck ist vorhanden *)
+	bAirPressureOn				:BOOL;						(* Air Pressure on / Luftdruck ein *)
+	bPowerSupplyOk				:BOOL;						(* Power supply on / Leitung eingeschaltet *)
+	bLightCurtainOK				:BOOL;						(* Light curtain ok / Freigabe Lichtschranke i.o *)
+	bConfirmedLightCurtain			:BOOL;						(* Confirmed light Curtain signal *)
+	bTemperaturOK				:BOOL;						(* Temperatur OK *)
+	bAllDoorsLock				:BOOL;						(* All Doors lock / All Türen verriegeln *)
+	bAllDoorsClosed				:BOOL;						(* All Doors closed / Alle Türen geschlossen *)
+	bAllDoorsClosedLocked		:BOOL;						(* All Doors closed and locked / Alle Türen geschlossen und verrigelt *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	bFieldbusInit					:BOOL;						(* Fieldbus initialised *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbFieldbus					:FB_Fieldbus_v2;
+	fbNoEmergencyStop			:FB_NoEmergencyStop;
+	fbAirPressure					:FB_AirPressure;
+	fbPowerSupply				:FB_PowerSupply;
+	fbLightCurtain					:FB_LightCurtain;
+	fbTemperatur					:FB_Temperature;
+	fbDoorClosed				:ARRAY [1..5] OF FB_SignalWatchdog;
+
+	tonFieldbusStartUp			:TON;
+	fbFieldbusBreakWatchdog		:FB_SignalWatchdog;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+A_Fieldbus();
+A_EStop();
+A_AirPressure();
+A_PowerSupply();
+A_LightCurtain();
+A_Doors();
+A_Temperatur();
+
+
+
+]]></ST>
+    </Implementation>
+    <Action Name="A_AirPressure" Id="{f975b342-89dd-4090-aba6-a6fc536ec824}">
+      <Implementation>
+        <ST><![CDATA[
+(* Air pressure controle *)
+fbAirPressure(
+	bEnable := TRUE,
+	bIn := bAirPressure,
+	bNoEStop := bNoEStop
+			        AND bLightCurtainOK
+			        AND bAllDoorsClosedLocked,
+	tAirOnDelay := tAirPressureOnDelay,
+	tAirPresentDelay := tAirPresentDelay,
+	tTimeOut := tAirPressureBuildUp,
+	bOut => bAirPressureOK,
+	bAirOn => bAirPressureOn
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Doors" Id="{96e3b3a7-3324-41a8-942d-bfc273cd7fea}">
+      <Implementation>
+        <ST><![CDATA[
+(* Doors control *)
+fbDoorClosed[1](
+	bEnable := TRUE,
+	bIn := arbDoorsClosed[1],
+	tWatchdog := t#3s
+);
+
+bAllDoorsLock := bDoorsLock
+			       OR bMachineRunning;
+bAllDoorsClosed := bDoorsClosed;
+bAllDoorsClosedLocked := bDoorsClosed
+						AND bDoorsLocked;]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_EStop" Id="{555b48f3-b4d4-461e-a9e8-b8541f443022}">
+      <Implementation>
+        <ST><![CDATA[
+(* Emergency stop controle *)
+fbNoEmergencyStop(
+	bEnable := TRUE,
+	bIn := bNoEStop,
+	bInConf := bConfirmEStop,
+	bOut => bNoEmergencyStop,
+	bOutConf => bConfirmedEStop
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Fieldbus" Id="{871a833b-dd2a-4846-80de-990e9c0421d2}">
+      <Implementation>
+        <ST><![CDATA[
+(* Fieldbus controle *)
+fbFieldbus(
+	bEnable := TRUE,
+	wFrmXWcState := stFieldbusStatus.wFrmXWcState,
+	nMasterDeviceId := stFieldbusStatus.nMasterDeviceId,
+	nMasterSlaveCount := stFieldbusStatus.nMasterSlaveCount,
+	nMasterSlaveCountCfg := stFieldbusStatus.nMasterSlaveCountCfg,
+	nMasterDevState := stFieldbusStatus.nMasterDevState,
+	arrMasterNetId := stFieldbusStatus.arrMasterNetId,
+	tTimeOut := tAdsTimeOut
+);
+
+IF fbFieldbus.bInit
+    AND fbFieldbus.bDone
+THEN
+	IF fbFieldbus.bFieldbusOK
+	     AND fbFieldbus.bFrameWcStateOK
+	THEN
+		bFieldbusInit := TRUE;
+	END_IF;
+END_IF
+
+tonFieldbusStartUp(
+	IN := NOT bFieldbusInit,
+	PT := tFieldbusMasterStartUp
+);
+
+bFieldbusMasterOK := SEL(bFieldbusInit,
+			   	        	        NOT tonFieldbusStartUp.Q,
+			   	        	        NOT fbFieldbus.bMasterDevStateError);
+
+bFieldbusBrake := bFieldbusInit
+				AND NOT fbFieldbus.bMasterDevStateError
+				AND (fbFieldbus.bFrameWcStateError
+		  			  OR fbFieldbus.bSlaveCountError);
+
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_LightCurtain" Id="{d5ea98b1-dca6-4a1d-9fd4-b37c9324c1f4}">
+      <Implementation>
+        <ST><![CDATA[
+(* Light Curtain control *)
+fbLightCurtain(
+	bEnable := TRUE,
+	bIn := bLightCurtain,
+	bInConf := bConfirmLightCurtain,
+	tTimeOut := tLightCurtainDelay,
+	bOut => bLightCurtainOK,
+	bOutConf => bConfirmedLightCurtain
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_PowerSupply" Id="{ca80f03b-efb0-48c5-b030-a60789dabd45}">
+      <Implementation>
+        <ST><![CDATA[
+(* Power supply control *)
+fbPowerSupply(
+	bEnable := TRUE,
+	bIn := arbPowerSupplyOn[1]
+		AND arbPowerSupplyOn[2]
+		AND arbPowerSupplyOn[3]
+		AND arbPowerSupplyOn[4]
+		AND arbPowerSupplyOn[5],
+	bNoEStop := bNoEStop,
+	tPowerSupplyOn := tPowerSupplyOn,
+	tPowerSupplyOff := tPowerSupplyOff,
+	bOut => bPowerSupplyOk
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Temperatur" Id="{7fa5d12d-ba52-4a8b-a04e-08d6b1aa1ed9}">
+      <Implementation>
+        <ST><![CDATA[
+fbTemperatur(
+	bEnable := TRUE,
+	bIn := bTemperatur,
+	tTimeOut := tTempErrorDelay,
+	bOut => bTemperaturOK,
+ );]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_Gr00Safety">
+      <LineId Id="83" Count="11" />
+    </LineIds>
+    <LineIds Name="FB_Gr00Safety.A_AirPressure">
+      <LineId Id="0" Count="13" />
+    </LineIds>
+    <LineIds Name="FB_Gr00Safety.A_Doors">
+      <LineId Id="0" Count="12" />
+    </LineIds>
+    <LineIds Name="FB_Gr00Safety.A_EStop">
+      <LineId Id="0" Count="8" />
+    </LineIds>
+    <LineIds Name="FB_Gr00Safety.A_Fieldbus">
+      <LineId Id="0" Count="38" />
+    </LineIds>
+    <LineIds Name="FB_Gr00Safety.A_LightCurtain">
+      <LineId Id="0" Count="9" />
+    </LineIds>
+    <LineIds Name="FB_Gr00Safety.A_PowerSupply">
+      <LineId Id="0" Count="13" />
+    </LineIds>
+    <LineIds Name="FB_Gr00Safety.A_Temperatur">
+      <LineId Id="0" Count="6" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

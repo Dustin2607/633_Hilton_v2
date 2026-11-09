@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_VFD_AXIS_REF" Id="{fe227ecc-d6ef-4708-be5c-79c87731157c}">
+    <Declaration><![CDATA[TYPE ST_VFD_AXIS_REF : FB_VFD_Axis_REF;
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

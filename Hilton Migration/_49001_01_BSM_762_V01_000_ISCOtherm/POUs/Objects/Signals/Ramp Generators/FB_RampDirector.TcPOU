@@ -1,0 +1,217 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_RampDirector" Id="{feb8f594-d622-4050-9093-5fcfa1ae433e}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_RampDirector
+(*
+
+Frequency division
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			14.11.2012
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+
+VAR_INPUT
+	bEnable						:BOOL;						(* Function block enable *)
+	bExecute					:BOOL;						(* Execut the function block *)
+	bDirection					:BOOL;						(* Rising = 1, Falling = 0 *)
+	bSet						:BOOL;						(* Set output to 65535 *)
+	bReset						:BOOL;						(* Reset output to 0 *)
+	tRiseTime					:TIME;						(* Rise time of ramp *)
+	tFallTime					:TIME;						(* Fall time of ramp *)
+	rHighLimit					:REAL;						(* High limit of ramp *)
+	rLowLimit						:REAL;						(* Low limit of ramp *)
+	rNoLimit						:REAL;						(* No limit value active if rise and fall time no active *)
+END_VAR
+VAR_OUTPUT
+	wRVOut						:WORD;						(* Ramp value, 100% = 65535 *)
+	rPVOut						:REAL;						(* Judgment Value *)
+	nPVOut						:INT;						(* Judgment Value *)
+	bLowLevel					:BOOL;						(* Low level reached *)
+	bHighLevel					:BOOL;						(* High level reached *)
+	bDone						:BOOL;						(* Program done *)
+	bBusy 						:BOOL;						(* Program busy *)
+	bError 						:BOOL;						(* Program error *)
+END_VAR
+VAR
+	fbRampGen					:FB_RMP_W;					(* Ramp generator *)
+
+	rCacheLowLimit				:REAL;
+	rCacheHighLimit				:REAL;
+
+	rtExecute						:R_TRIG;
+	etRampGenerator				:ET_RampGenerator;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+	bDone := FALSE;                                     (* Program done *)
+	bBusy := FALSE;                                     (* Program not busy *)
+	bError := FALSE;                                    (* Program not error *)
+	
+	rtExecute(CLK := FALSE);
+
+	fbRampGen(
+		bEnable := FALSE,
+		bReset := bReset,
+		bSet := bSet,
+		wRVOut => wRVOut
+	);
+
+	RETURN;
+END_IF;
+
+rtExecute(CLK := bExecute);
+
+IF rtExecute.Q
+THEN
+	fbRampGen(
+		bEnable := FALSE,
+		bDirection := bDirection,
+		bSet := FALSE,
+		bReset := FALSE,
+		tRampTime := T#0ms
+	);
+	
+	etRampGenerator := ET_RampGenerator_eWaitExecute;						(* Next step *)
+
+END_IF
+
+(* Reset ramp *)
+IF (tFallTime = t#0s
+    AND tRiseTime <> t#0s
+    AND bExecute
+    AND NOT bDirection)
+    OR bReset
+THEN
+	fbRampGen.bReset := TRUE;
+	wRVOut := fbRampGen.wRVOut;
+ELSE
+	fbRampGen.bReset := FALSE;
+END_IF;
+
+(* Set ramp *)
+IF (tRiseTime = t#0s
+    AND tFallTime <> t#0s
+    AND bExecute
+    AND bDirection)
+    OR bSet
+THEN
+	fbRampGen.bSet := TRUE;
+ELSE
+	fbRampGen.bSet := FALSE;
+END_IF;
+
+(* Call ramp generator *)
+fbRampGen(
+	bDirection := bDirection,
+	tRampTime := SEL(bDirection, tFallTime, tRiseTime),
+	bLowLevel => bLowLevel,
+	bHighLevel => bHighLevel
+);
+
+IF fbRampGen.bReset
+    OR fbRampGen.bSet
+THEN
+	wRVOut := fbRampGen.wRVOut;
+END_IF;
+
+CASE etRampGenerator OF
+        
+	ET_RampGenerator_eWaitExecute:
+		bDone := FALSE;                                     (* Program done *)
+		bBusy := FALSE;                                     (* Program not  busy *)
+		bError := FALSE;                                    (* Program not error *)
+
+		fbRampGen.bEnable := FALSE;
+		
+		IF rtExecute.Q
+		THEN
+			bDone := FALSE;                                     (* Program done *)
+			bBusy := TRUE;                                 	 	(* Program not busy *)
+
+			IF tRiseTime = t#0s
+    			     AND tFallTime = t#0s
+			THEN
+				fbRampGen.bEnable := FALSE;
+
+				rCacheLowLimit := rNoLimit;
+				rCacheHighLimit := rNoLimit;
+
+				etRampGenerator := ET_RampGenerator_eDone;         (* Next step *)
+			ELSE
+				fbRampGen.bEnable := TRUE;
+
+				rCacheLowLimit := rLowLimit;
+				rCacheHighLimit := rHighLimit;
+
+				etRampGenerator := ET_RampGenerator_eRunning;           (* Next step *)
+			END_IF
+		END_IF
+
+	ET_RampGenerator_eRunning:
+		IF fbRampGen.bBusy
+		THEN
+			wRVOut := fbRampGen.wRVOut;
+		
+			etRampGenerator := ET_RampGenerator_eWaiting;           (* Next step *)
+		END_IF
+        
+	ET_RampGenerator_eWaiting:
+		IF fbRampGen.bBusy
+		THEN
+			wRVOut := fbRampGen.wRVOut;
+		ELSE
+			fbRampGen.bEnable := FALSE;
+		
+			etRampGenerator := ET_RampGenerator_eDone;         (* Next step *)
+		END_IF		
+
+	ET_RampGenerator_eDone:
+		bDone := TRUE;                                      (* Program done *)
+		bBusy := FALSE;                                     (* Program not busy *)
+		
+		etRampGenerator := ET_RampGenerator_eNotExecute;            (* Next step *)
+        
+	ET_RampGenerator_eError:
+		bDone := FALSE;                                     (* Program done *)
+		bBusy := FALSE;                                     (* Program not busy *)
+		bError := TRUE;                                     (* Program error *)
+		
+		etRampGenerator := ET_RampGenerator_eNotExecute;            (* Next step *)
+        
+	ET_RampGenerator_eNotExecute:
+	IF NOT bExecute
+	THEN
+		bDone := FALSE;                                     (* Program done *)
+		bBusy := FALSE;                                     (* Program not busy *)
+		bError := FALSE;                                    (* Program not error *)
+
+		wRVOut := fbRampGen.wRVOut;
+	
+		etRampGenerator := ET_RampGenerator_eWaitExecute;               (* Next step *)
+
+	END_IF;
+END_CASE;
+
+rPVOut := F_WordToRange(
+			wWord := wRVOut,
+			rLowLimit := rCacheLowLimit,
+			rHighLimit := rCacheHighLimit
+		);
+
+nPVOut := REAL_TO_INT(rPVOut);
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_RampDirector">
+      <LineId Id="46" Count="160" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

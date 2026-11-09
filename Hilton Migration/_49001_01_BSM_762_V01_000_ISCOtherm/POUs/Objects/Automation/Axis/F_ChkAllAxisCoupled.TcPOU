@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_ChkAllAxisCoupled" Id="{bac0e679-8fcb-4af9-a8ff-71287fbef811}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_ChkAllAxisCoupled : BOOL
+(*
+
+The function used to detect if all axis are coupled.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			23.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;					(* Signal FB enable *)
+	bAxis1Coupled				:BOOL;					(* Axis coupled *)
+	bAxis2Coupled				:BOOL;					(* Axis coupled *)
+	bAxis3Coupled				:BOOL;					(* Axis coupled *)
+	bAxis4Coupled				:BOOL;					(* Axis coupled *)
+	bAxis5Coupled				:BOOL;					(* Axis coupled *)
+	bAxis6Coupled				:BOOL;					(* Axis coupled *)
+	bAxis7Coupled				:BOOL;					(* Axis coupled *)
+	bAxis8Coupled				:BOOL;					(* Axis coupled *)
+	bAxis9Coupled				:BOOL;					(* Axis coupled *)
+	bAxis10Coupled				:BOOL;					(* Axis coupled *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable							(* Signal FB enable *)
+THEN
+	F_ChkAllAxisCoupled := FALSE;
+
+	RETURN;
+END_IF
+
+F_ChkAllAxisCoupled := bAxis1Coupled
+					   AND bAxis2Coupled
+					   AND bAxis3Coupled
+					   AND bAxis4Coupled
+					   AND bAxis5Coupled
+					   AND bAxis6Coupled
+					   AND bAxis7Coupled
+					   AND bAxis8Coupled
+					   AND bAxis9Coupled
+					   AND bAxis10Coupled;]]></ST>
+    </Implementation>
+    <LineIds Name="F_ChkAllAxisCoupled">
+      <LineId Id="40" Count="17" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

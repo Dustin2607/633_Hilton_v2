@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_LeisterHeater" Id="{9da66d20-fce8-46bb-abf7-ed545bbcad83}">
+    <Declaration><![CDATA[TYPE ET_LeisterHeater :
+(
+	ET_LeisterHeater_eWaitExecute := 0,
+	ET_LeisterHeater_eStartHeater,
+	ET_LeisterHeater_eStopHeater,
+	ET_LeisterHeater_eDone := 197,
+	ET_LeisterHeater_eError := 198,
+	ET_LeisterHeater_eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

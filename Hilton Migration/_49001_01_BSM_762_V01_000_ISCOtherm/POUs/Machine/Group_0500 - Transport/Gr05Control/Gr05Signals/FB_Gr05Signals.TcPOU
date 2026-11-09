@@ -1,0 +1,74 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Gr05Signals" Id="{758b6e08-1ae5-4960-a75d-0d6801c6ad39}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Gr05Signals
+(*
+
+The function block used to control general signals of the machine.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			28.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	etMachineMode				:ET_MachineMode;			(* Machine mode *)
+	etMachineState				:ET_MachineState;			(* Machine state *)
+	bMachineRunning				:BOOL;						(* Machine running / Maschine lauft *)
+	bExecutedProcess			:BOOL;						(* Process executed *)
+	stBlinker						:ST_Blinker;
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bBulbBtnStop					:BOOL;						(* Signal button bulb "stop" / Signallampe "Stop" *)
+	bBulbBtnStart					:BOOL;						(* Signal button bulb "start" / Signallampe "Start" *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbSpindleHeadPresent			:FB_SignalHandlingDelay;
+	fbFurrowingHeadPresent		:FB_SignalHandlingDelay;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+A_SignalButton();
+
+(*boutGr05PipeBeginEdge := binGr05PipeBeginEdge;*)]]></ST>
+    </Implementation>
+    <Action Name="A_SignalButton" Id="{6ece0528-9be9-4165-a44f-33906f7a7941}">
+      <Implementation>
+        <ST><![CDATA[
+(* Signal button bulb "stop" / Signallampe "Stop" *)
+bBulbBtnStop := NOT bExecutedProcess;
+
+
+(* Signal button bulb "start" / Signallampe "Start" *)
+bBulbBtnStart := SEL(bExecutedProcess,
+                           		     bMachineRunning AND stBlinker.Q1,
+                           		     bMachineRunning);]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_Gr05Signals">
+      <LineId Id="44" Count="3" />
+    </LineIds>
+    <LineIds Name="FB_Gr05Signals.A_SignalButton">
+      <LineId Id="0" Count="8" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

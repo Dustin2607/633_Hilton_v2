@@ -1,0 +1,202 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_OnOff_MoveVelocity" Id="{95b32a4a-0004-4ad7-88d7-934adcc361f2}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_OnOff_MoveVelocity
+(*
+
+The function block used to starts a continuous movement with specified velocity and direction. 
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			22.09.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bExecute					:BOOL;			(* Execut the function block *)
+	lrVelocity						:LREAL;			(* Value of velocity *)
+	etMC_Direction				:ET_MC_Direction;(* Direction *)
+	(* Interfaces *)
+	pAxis						:POINTER TO ST_AXIS_REF_V2;
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bMoveToPlus				:BOOL;			(* Move to plus *)
+	bMoveToMinus				:BOOL;			(* Move to minus *)
+	bInVelocity					:BOOL;			(* Target velocity is reached *)
+	bCmdAborted				:BOOL;			(* Command aborted *)
+	bBusy						:BOOL;			(* Program busy *)
+	bError						:BOOL;			(* Error *)
+	udnErrorNo					:UDINT;			(* Error number *)
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+	etMC_States					:ET_MC_States := ET_MC_States_eInit;
+
+	(* Variables *)
+	lrProcessErr					:LREAL;			(* Process error, e(t) = SP - PV *)
+	nWatchdog					:INT;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtExecute						:R_TRIG;
+	rtAborted						:R_TRIG;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+rtExecute(CLK := bExecute);
+
+rtAborted(CLK := NOT pAxis^.stAxisStates.bOperational);
+IF rtAborted.Q                                              (* Aborted *)
+THEN
+	etMC_States := ET_MC_States_eAbort;                     (* Next step *)
+
+ELSIF rtExecute.Q
+	    AND NOT bCmdAborted
+THEN
+	etMC_States := ET_MC_States_eInit;                                   (* Next step *)
+
+	IF pAxis^.stAxisStates.bQuickStop               (* Halt *)
+	THEN
+		udnErrorNo := 2;                                    (* Error number *)
+
+		etMC_States := ET_MC_States_eError;                              (* Next step *)
+	END_IF;
+END_IF;
+
+CASE etMC_States OF
+
+	ET_MC_States_eInit:
+		bCmdAborted := FALSE;			(* Command not aborted *)
+		bBusy := FALSE;                                    	(* Program not busy *)
+		bError := FALSE;                         		(* Program not error *)
+		udnErrorNo := 0;                         		(* Error number *)
+		
+		IF rtExecute.Q
+		     AND NOT pAxis^.stAxisStates.bHasJob
+		THEN
+			nWatchdog := 0;
+			bInVelocity := FALSE;			(* Program done, in velocity *)
+			bBusy := TRUE;				(* Program busy *)
+
+			IF pAxis^.stAxisStates.bOperational   			(* Control enabled *)
+			THEN
+				pAxis^.stAxisStates.bHasJob := TRUE;
+
+				etMC_States := ET_MC_States_eReset;			(* Next step *)
+			ELSE
+				udnErrorNo := 4;                     (* Error number *)
+				
+				etMC_States := ET_MC_States_eError;			(* Next step *)
+
+			END_IF;
+		END_IF;
+
+	ET_MC_States_eReset:
+		nWatchdog := nWatchdog + 1;
+		IF nWatchdog > 150
+		THEN
+			etMC_States := ET_MC_States_eError;             (* Next step *)
+		END_IF;
+
+		bMoveToPlus := FALSE;
+		bMoveToMinus := FALSE;
+
+		nWatchdog := 0;
+
+		etMC_States := ET_MC_States_eRunning;			(* Next step *)
+
+	ET_MC_States_eRunning:
+		pAxis^.stDynamics.lrSetVelo := lrVelocity;
+
+		etMC_States := ET_MC_States_eWaiting;			(* Next step *)
+
+	ET_MC_States_eWaiting:
+		bMoveToPlus := pAxis^.stDynamics.lrSetVelo > 0.0;
+		bMoveToMinus := pAxis^.stDynamics.lrSetVelo < 0.0;
+
+		IF pAxis^.stDynamics.lrActVelo <> 0.0
+		     OR pAxis^.stDynamics.lrSetVelo = 0.0
+		THEN
+
+			etMC_States := ET_MC_States_eDone;			(* Next step *)
+
+		ELSIF pAxis^.stAxisStates.bError           (* Error *)
+		THEN
+			udnErrorNo := 2;                                    (* Error number *)
+		
+			etMC_States := ET_MC_States_eError;                              (* Next step *)
+
+		END_IF
+
+	ET_MC_States_eAbort:
+		bMoveToPlus := FALSE;
+		bMoveToMinus := FALSE;
+		bCmdAborted := TRUE;			(* Command aborted *)
+		bInVelocity := FALSE;					(* Program done, in velocity *)
+
+		 etMC_States := ET_MC_States_eNotExecute;			(* Next step *)
+
+	ET_MC_States_eDone:
+		nWatchdog := 0;
+		bInVelocity := TRUE;		(* Program done, in velocity *)
+		bBusy := FALSE;			(* Program not busy *)
+
+		etMC_States := ET_MC_States_eNotExecute;            (* Next step *)
+
+	ET_MC_States_eError:
+		bMoveToPlus := FALSE;
+		bMoveToMinus := FALSE;
+		nWatchdog := 0;
+		bInVelocity := FALSE;		(* Program done, in velocity *)
+		bError := TRUE;			(* Program error *)   
+		bBusy := FALSE;			(* Program not busy *)
+
+        		etMC_States := ET_MC_States_eNotExecute;			(*Next step *)
+
+	ET_MC_States_eNotExecute:
+		IF NOT bExecute
+		THEN
+			pAxis^.stAxisStates.bHasJob := FALSE;
+			nWatchdog := 0;
+			bInVelocity := FALSE;				(* Program done, in velocity *)
+			bCmdAborted := FALSE;			(* Command not aborted *)
+			bBusy := FALSE;                                 	(* Program not busy *)
+			bError := FALSE;                     			(* Program not error *)
+			udnErrorNo := 0;                     			(* Error number *)
+
+			etMC_States := ET_MC_States_eInit;			(* Next step *)
+
+		END_IF;
+END_CASE;
+
+IF pAxis^.stAxisCtrl.bQuickStop               (* Halt *)
+THEN
+	etMC_States := ET_MC_States_eAbort;                                  (* Next step *)
+END_IF;
+
+IF pAxis^.stAxisStates.bError
+     AND pAxis^.stAxisCtrl.bFaultReset
+THEN
+	bMoveToPlus := FALSE;
+	bMoveToMinus := FALSE;
+	pAxis^.stAxisStates.bHasJob := FALSE;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_OnOff_MoveVelocity">
+      <LineId Id="53" Count="138" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_ToolStorage" Id="{97e46ec9-17fa-4b9e-bfbf-45afb55ac00e}">
+    <Declaration><![CDATA[TYPE ET_ToolStorage :
+(
+	ET_ToolStorage_eWaitExecute := 0,
+	ET_ToolStorage_eGetNewToolNest,
+	ET_ToolStorage_eGetOldToolNest,
+	ET_ToolStorage_eChkToolPlace,
+	ET_ToolStorage_eChkToolPickUp,
+	ET_ToolStorage_eDone := 197,
+	ET_ToolStorage_eError := 198,
+	ET_ToolStorage_eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

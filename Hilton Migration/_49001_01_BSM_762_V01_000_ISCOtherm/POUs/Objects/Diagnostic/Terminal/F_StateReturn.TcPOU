@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_StateReturn" Id="{6866d4eb-b9cb-498e-9683-d0d8d2e6568b}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_StateReturn : STRING
+VAR_INPUT
+	state: UINT;
+END_VAR
+VAR
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*This Function returns the State of the Device. Either one of the States INIT, PREOP, OP, BOOTSTRAP or SAFE-OP is returned.
+FB_Diagnosis.stState is given the Value of this Function. *)
+
+IF state.0 AND NOT state.1 THEN
+	F_StateReturn:= 'Slave in INIT state';
+END_IF
+IF state.1 AND NOT state.0 THEN
+	F_StateReturn:= 'Slave in PREOP state';
+END_IF
+IF state.0 AND state.1 THEN
+	F_StateReturn:= 'Slave in BOOTSTRAP state';
+END_IF
+IF state.2 THEN
+	F_StateReturn:= 'Slave in SAFEOP state';
+END_IF
+IF state.3 THEN
+	F_StateReturn:= 'Slave in OP state';
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="F_StateReturn">
+      <LineId Id="6" Count="17" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

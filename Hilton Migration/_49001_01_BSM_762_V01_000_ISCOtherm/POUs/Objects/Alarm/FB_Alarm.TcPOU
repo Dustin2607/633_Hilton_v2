@@ -1,0 +1,189 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Alarm" Id="{7f401a33-4b84-4f70-b952-d8323b917547}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Alarm
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable					:BOOL;						(* Enable FB signal *)
+	bNoEStop				:BOOL;						(* Emergency stop *)
+	bReset					:BOOL;						(* Reset *)
+	dtDateTime 				:DATE_AND_TIME;				(* Actual date and time *)
+	nFatalErrorMaxIdx			:INT;						(* Maximal index of  using alarms *)
+	nErrorMaxIdx				:INT;						(* Maximal index of  using alarms *)
+	nWarningMaxIdx			:INT;						(* Maximal index of  using alarms *)
+	nMessageMaxIdx			:INT;						(* Maximal index of  using alarms *)
+	nHintMaxIdx				:INT;						(* Maximal index of  using alarms *)
+	stAlarmIn					:ST_AlarmIn;					(* Alarm input *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	stAlarmOut				:ST_AlarmOut;				(* Alarm output *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	arfbFatalError				:ARRAY[0..nALARM_MAX_NO] OF FB_FatalError;
+	arfbError					:ARRAY[0..nALARM_MAX_NO] OF FB_Error;
+	arfbWarning				:ARRAY[0..nALARM_MAX_NO] OF FB_Warning;
+	arfbMessage				:ARRAY[0..nALARM_MAX_NO] OF FB_Message;
+	arfbHint					:ARRAY[0..nALARM_MAX_NO] OF FB_Hint;
+
+	nInc						:INT;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtNoEStop				:R_TRIG;
+	tonNoEStopDelay			:TON;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+    RETURN;
+END_IF;
+
+IF dtDateTime = DT#1970-01-01-00:00
+THEN
+	RETURN;
+END_IF
+
+tonNoEStopDelay(
+	IN := bNoEStop, 
+	PT := T#1S
+);
+rtNoEStop(CLK := tonNoEStopDelay.Q);
+
+stAlarmOut.bFatalError := FALSE;
+stAlarmOut.bError := FALSE;
+stAlarmOut.bWarning := FALSE;
+stAlarmOut.bMessage := FALSE;
+stAlarmOut.bHint := FALSE;
+
+IF nFatalErrorMaxIdx > nALARM_MAX_NO
+THEN
+	nFatalErrorMaxIdx := nALARM_MAX_NO;
+END_IF
+FOR nInc := 0 TO nFatalErrorMaxIdx
+DO
+	(* ************************ FatalError ************************ *)
+	stAlarmIn.arbFatalError[nInc].enType := ET_AlarmType_eFatalError;
+	stAlarmIn.arbFatalError[nInc].dtDateTime := dtDateTime;
+	
+	arfbFatalError[nInc](
+		bEnable := TRUE,
+		stAlarmIn := stAlarmIn.arbFatalError[nInc]
+	);
+
+	stAlarmOut.arbFatalError[nInc].bActive := arfbFatalError[nInc].stAlarmOut.bActive;
+	stAlarmOut.arbFatalError[nInc].dtDateTime := arfbFatalError[nInc].stAlarmOut.dtDateTime;
+	stAlarmOut.arbFatalError[nInc].enType := arfbFatalError[nInc].stAlarmOut.enType;
+	stAlarmOut.arbFatalError[nInc].dnCode := arfbFatalError[nInc].stAlarmOut.dnCode;
+	
+	stAlarmOut.bFatalError := stAlarmOut.bFatalError OR (stAlarmOut.arbFatalError[nInc].bActive > 0);
+END_FOR
+
+IF nErrorMaxIdx > nALARM_MAX_NO
+THEN
+	nErrorMaxIdx := nALARM_MAX_NO;
+END_IF
+FOR nInc := 0 TO nErrorMaxIdx
+DO
+	(* ************************ Error ************************ *)
+	stAlarmIn.arbError[nInc].enType := ET_AlarmType_eError;
+	stAlarmIn.arbError[nInc].dtDateTime := dtDateTime;
+	
+	arfbError[nInc](
+		bEnable := TRUE,
+		bReset := bReset OR rtNoEStop.Q,
+		stAlarmIn := stAlarmIn.arbError[nInc]
+	);
+
+	stAlarmOut.arbError[nInc].bActive := arfbError[nInc].stAlarmOut.bActive;
+	stAlarmOut.arbError[nInc].dtDateTime := arfbError[nInc].stAlarmOut.dtDateTime;
+	stAlarmOut.arbError[nInc].enType := arfbError[nInc].stAlarmOut.enType;
+	stAlarmOut.arbError[nInc].dnCode := arfbError[nInc].stAlarmOut.dnCode;
+	
+	stAlarmOut.bError := stAlarmOut.bError OR (stAlarmOut.arbError[nInc].bActive > 0);
+END_FOR
+
+IF nWarningMaxIdx > nALARM_MAX_NO
+THEN
+	nWarningMaxIdx := nALARM_MAX_NO;
+END_IF
+FOR nInc := 0 TO nWarningMaxIdx
+DO
+	(* ************************ Warning ************************ *)
+	stAlarmIn.arbWarning[nInc].enType := ET_AlarmType_eWarning;
+	stAlarmIn.arbWarning[nInc].dtDateTime := dtDateTime;
+	
+	arfbWarning[nInc](
+		bEnable := TRUE,
+		bReset := bReset OR rtNoEStop.Q,
+		stAlarmIn := stAlarmIn.arbWarning[nInc]
+	);
+	
+	stAlarmOut.arbWarning[nInc].bActive := arfbWarning[nInc].stAlarmOut.bActive;
+	stAlarmOut.arbWarning[nInc].dtDateTime := arfbWarning[nInc].stAlarmOut.dtDateTime;
+	stAlarmOut.arbWarning[nInc].enType := arfbWarning[nInc].stAlarmOut.enType;
+	stAlarmOut.arbWarning[nInc].dnCode := arfbWarning[nInc].stAlarmOut.dnCode;
+	
+	stAlarmOut.bWarning := stAlarmOut.bWarning OR (stAlarmOut.arbWarning[nInc].bActive > 0);
+END_FOR
+
+IF nMessageMaxIdx > nALARM_MAX_NO
+THEN
+	nMessageMaxIdx := nALARM_MAX_NO;
+END_IF
+FOR nInc := 0 TO nMessageMaxIdx
+DO
+	(* ************************ Message ************************ *)
+	stAlarmIn.arbMessage[nInc].enType := ET_AlarmType_eMessage;
+	stAlarmIn.arbMessage[nInc].dtDateTime := dtDateTime;
+	
+	arfbMessage[nInc](
+		bEnable := TRUE,
+		stAlarmIn := stAlarmIn.arbMessage[nInc]
+	);
+	
+	stAlarmOut.arbMessage[nInc].bActive := arfbMessage[nInc].stAlarmOut.bActive;
+	stAlarmOut.arbMessage[nInc].dtDateTime := arfbMessage[nInc].stAlarmOut.dtDateTime;
+	stAlarmOut.arbMessage[nInc].enType := arfbMessage[nInc].stAlarmOut.enType;
+	stAlarmOut.arbMessage[nInc].dnCode := arfbMessage[nInc].stAlarmOut.dnCode;
+		
+	stAlarmOut.bMessage := stAlarmOut.bMessage OR (stAlarmOut.arbMessage[nInc].bActive > 0);
+END_FOR
+
+IF nHintMaxIdx > nALARM_MAX_NO
+THEN
+	nHintMaxIdx := nALARM_MAX_NO;
+END_IF
+FOR nInc := 0 TO nHintMaxIdx
+DO
+	(* ************************ Hint ************************ *)
+	stAlarmIn.arbMessage[nInc].enType := ET_AlarmType_eMessage;
+	stAlarmIn.arbMessage[nInc].dtDateTime := dtDateTime;
+	
+	arfbHint[nInc](
+		bEnable := TRUE,
+		stAlarmIn := stAlarmIn.arbHint[nInc]
+	);
+
+	stAlarmOut.arbHint[nInc].bActive := arfbHint[nInc].stAlarmOut.bActive;
+	stAlarmOut.arbHint[nInc].dtDateTime := arfbHint[nInc].stAlarmOut.dtDateTime;
+	stAlarmOut.arbHint[nInc].enType := arfbHint[nInc].stAlarmOut.enType;
+	stAlarmOut.arbHint[nInc].dnCode := arfbHint[nInc].stAlarmOut.dnCode;
+	
+	stAlarmOut.bHint := stAlarmOut.bHint OR (stAlarmOut.arbHint[nInc].bActive > 0);
+END_FOR
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Alarm">
+      <LineId Id="38" Count="140" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

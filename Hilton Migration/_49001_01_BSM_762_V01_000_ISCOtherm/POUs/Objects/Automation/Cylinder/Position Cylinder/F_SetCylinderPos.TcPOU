@@ -1,0 +1,118 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_SetCylinderPos" Id="{d2782e3b-1289-4988-a9cb-8c86453dd2f6}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_SetCylinderPos : WORD
+VAR_INPUT
+	lrRefPos			:LREAL;					(* Referenc position [mm] *)
+	lrPosOffset		:LREAL;					(* Position offset *)
+	lrOriginShiftPos	:LREAL;					(* Origin shift position *)
+	etDirection		:ET_MC_Direction;			(* Direction: -1 Negative, +1 Positive *)
+	usnCodingType	:USINT;
+END_VAR
+VAR
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+(* 00 - WORK_BASE *)
+IF lrRefPos * etDirection <= 0.0 * lrPosOffset + lrOriginShiftPos (*AND lrRefPos <= 0.01*)
+THEN
+	IF usnCodingType = 0
+	THEN
+		F_SetCylinderPos := 2#0000_0000_0000_0001;			(* Position 0 *)
+
+	ELSIF usnCodingType = 1
+	THEN
+		F_SetCylinderPos := 2#0000_0000_0001_0101;			(* Position 0 *)
+	END_IF
+
+ELSIF lrRefPos * etDirection > 0.0 * lrPosOffset + lrOriginShiftPos
+	    AND lrRefPos * etDirection <= 1.0 * lrPosOffset + lrOriginShiftPos
+THEN
+	IF usnCodingType = 0
+	THEN
+		F_SetCylinderPos := 2#0000_0000_0000_0010;			(* Position 100 *)
+
+	ELSIF usnCodingType = 1
+	THEN
+		F_SetCylinderPos := 2#0000_0000_0001_0110;			(* Position 100 *)
+	END_IF
+
+ELSIF lrRefPos * etDirection > 1.0 * lrPosOffset + lrOriginShiftPos
+	    AND lrRefPos * etDirection <= 2.0 * lrPosOffset + lrOriginShiftPos
+THEN
+	IF usnCodingType = 0
+	THEN
+		F_SetCylinderPos := 2#0000_0000_0000_0100;			(* Position 200 *)
+
+	ELSIF usnCodingType = 1
+	THEN
+		F_SetCylinderPos := 2#0000_0000_0001_1001;			(* Position 200 *)
+	END_IF
+
+ELSIF lrRefPos * etDirection > 2.0 * lrPosOffset + lrOriginShiftPos
+	    AND lrRefPos * etDirection <= 3.0 * lrPosOffset + lrOriginShiftPos
+THEN
+	IF usnCodingType = 0
+	THEN
+		F_SetCylinderPos := 2#0000_0000_0000_1000;			(* Position 300 *)
+
+	ELSIF usnCodingType = 1
+	THEN
+		F_SetCylinderPos := 2#0000_0000_0001_1010;			(* Position 300 *)
+	END_IF
+
+ELSIF lrRefPos * etDirection > 3.0 * lrPosOffset + lrOriginShiftPos
+	    AND lrRefPos * etDirection <= 4.0 * lrPosOffset + lrOriginShiftPos
+THEN
+	IF usnCodingType = 0
+	THEN
+		F_SetCylinderPos := 2#0000_0000_0001_0000;			(* Position 400 *)
+
+	ELSIF usnCodingType = 1
+	THEN
+		F_SetCylinderPos := 2#0000_0000_0010_0101;			(* Position 400 *)
+	END_IF
+
+ELSIF lrRefPos * etDirection > 4.0 * lrPosOffset + lrOriginShiftPos
+	    AND lrRefPos * etDirection <= 5.0 * lrPosOffset + lrOriginShiftPos
+THEN
+	IF usnCodingType = 0
+	THEN
+		F_SetCylinderPos := 2#0000_0000_0010_0000;			(* Position 500 *)
+
+	ELSIF usnCodingType = 1
+	THEN
+		F_SetCylinderPos := 2#0000_0000_0010_0110;			(* Position 500 *)
+	END_IF
+
+ELSIF lrRefPos * etDirection > 5.0 * lrPosOffset + lrOriginShiftPos
+	    AND lrRefPos * etDirection <= 6.0 * lrPosOffset  + lrOriginShiftPos
+THEN
+	IF usnCodingType = 0
+	THEN
+		F_SetCylinderPos := 2#0000_0000_0100_0000;			(* Position 600 *)
+
+	ELSIF usnCodingType = 1
+	THEN
+		F_SetCylinderPos := 2#0000_0000_0010_1001;			(* Position 600 *)
+	END_IF
+
+ELSIF lrRefPos * etDirection > 6.0 * lrPosOffset + lrOriginShiftPos (*AND lrRefPos <= 700.0*)
+THEN
+	IF usnCodingType = 0
+	THEN
+		F_SetCylinderPos := 2#0000_0000_1000_0000;			(* Position 700 *)
+
+	ELSIF usnCodingType = 1
+	THEN
+		F_SetCylinderPos := 2#0000_0000_0010_1010;			(* Position 700 *)
+	END_IF
+
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="F_SetCylinderPos">
+      <LineId Id="11" Count="96" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

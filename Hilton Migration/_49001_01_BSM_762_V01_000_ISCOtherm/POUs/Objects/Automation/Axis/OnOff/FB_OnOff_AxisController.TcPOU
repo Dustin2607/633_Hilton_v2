@@ -1,0 +1,219 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_OnOff_AxisController" Id="{ac173592-8c3a-4bc4-a687-58b65c6646a4}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_OnOff_AxisController
+(*
+
+The function block used to control axis.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			22.09.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Signal FB enable *)
+	sAmsNetId					:STRING;					(* Ams Net Id *)
+	etMachineMode				:ET_MachineMode;			(* Machine mode *)
+	etMachineState				:ET_MachineState;			(* Machine state *)
+	bRegulatorOn				:BOOL;						(* Enable the power stage *)
+	bReset						:BOOL;						(* Signal reset *)
+	bExeReset					:BOOL;						(* Execute auto reset *)
+	dwRawMotorEncoder			:DWORD;					(* The raw value of the motor encoder *)
+	bHWSignalLimitMax			:BOOL;						(* Signal position limit switch maximum *)
+	bHWSignalLimitMin			:BOOL;						(* Signal position limit switch minimum *)
+	lrSoftLimitMax					:LREAL; 						(* Position limit switch maximum *)
+	lrSoftLimitMin					:LREAL; 						(* Position limit switch minimum *)
+	tTimeOut 					:TIME := t#2s;					(* Timout for ads commands *)
+	stEncoderConfig				:ST_EncoderConfig;			(* Encoder configuration *)
+	pAxis						:POINTER TO ST_AXIS_REF_V2;				(* The AXIS_REF data type  is an interface between the PLC and the NC and contains axis information *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bStatus						:BOOL;						(* Feedback *)
+	bStatusDelay					:BOOL;						(* Feedback delay *)
+	bError						:BOOL;						(* Controller error *)
+	udnErrorNo					:UDINT;						(* Error number *)
+	lrActPos						:LREAL;						(* Actual position *)
+	lrActVelo						:LREAL;						(* Actual velocity *)
+	bNotMoving					:BOOL;						(* Status of moving *)
+	bHardLimitMaxExceeded		:BOOL;						(* Position limit switch maximum is exceeded *)
+	bHardLimitMinExceeded		:BOOL;						(* Position limit switch minimum is exceeded *)
+	bSoftLimitMaxExceeded		:BOOL;						(* Position limit switch maximum is exceeded *)
+	bSoftLimitMinExceeded		:BOOL;						(* Position limit switch minimum is exceeded *)
+END_VAR
+VAR_IN_OUT
+
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	tStatusDelay					:TIME := t#1s;					(* Status delay time *)
+	tRegulatorOffDelay			:TIME := t#50ms;				(* Regulator off delay time *)
+
+	bFirstTime					:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbPower						:FB_OnOff_Power;				(* The function block is used to enable for an axis *)
+	tonStatusDelay				:TON;						(* Delay controller enabled status *)
+	fbReset						:FB_OnOff_Reset;				(* An axis reset is carried out with the function block *)
+	fbPositionEncoder				:FB_PositionEncoder;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable							(* Signal FB enable *)
+THEN
+	bStatus := FALSE;						(* Feedback *)
+	bStatusDelay := FALSE;				(* Feedback *)
+	bError := FALSE;						(* Controller error *)
+	udnErrorNo := 0;						(* Error number *)
+
+	bFirstTime := FALSE;
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+
+	bFirstTime := TRUE;
+END_IF;
+
+A_MCPower();
+A_MCReset();
+A_PositionDynamics();
+A_GetLimits();
+A_SetLimits();
+A_Error();
+
+(* Actual position *)
+lrActPos := pAxis^.stPosition.lrActPos;
+lrActPos := F_LRealRound(lrReal := lrActPos, usiPrecision := 2);
+
+(* Actual velocity *)
+lrActVelo := pAxis^.stDynamics.lrActVelo;
+lrActVelo := F_LRealRound(lrReal := lrActVelo, usiPrecision := 2);
+
+(* Current engine torque *)
+(*nActEngineTorque := Axis.stNcToPlc.nActEngineTorque;*)
+
+(* Status not moving *)
+bNotMoving := NOT pAxis^.stAxisStates.bOperational                          		(* Control enabled *)
+			  OR pAxis^.stAxisStates.bNotMoving;					(* Axis standstill *)
+
+
+
+
+
+
+               
+]]></ST>
+    </Implementation>
+    <Action Name="A_Error" Id="{a5a65e2b-a320-4ef8-8061-bb12078a6246}">
+      <Implementation>
+        <ST><![CDATA[
+bError := fbReset.bError
+	         OR fbPower.bError;]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_GetLimits" Id="{48286e11-edb6-4280-b5cf-0377ac5acfb7}">
+      <Implementation>
+        <ST><![CDATA[
+(* Status hardware limit switch *)
+bHardLimitMaxExceeded := pAxis^.stLimitSwitches.bHWLimitMax;						(* Position limit switch maximum is exceeded *)
+bHardLimitMinExceeded := pAxis^.stLimitSwitches.bHWLimitMin;						(* Position limit switch minimum is exceeded *)
+
+(* Status software limit switch *)
+bSoftLimitMaxExceeded := lrActPos >= lrSoftLimitMax;			(* Position limit switch maximum is exceeded *)
+bSoftLimitMinExceeded := lrActPos <= lrSoftLimitMin;			(* Position limit switch minimum is exceeded *)
+
+
+pAxis^.stLimitSwitches.lrSWPosLimitMax := lrSoftLimitMax;
+pAxis^.stLimitSwitches.lrSWPosLimitMin := lrSoftLimitMin;
+pAxis^.stLimitSwitches.bSWLimitMaxActive := bSoftLimitMaxExceeded;
+pAxis^.stLimitSwitches.bSWLimitMinActive := bSoftLimitMinExceeded;
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_MCPower" Id="{6df54565-fa31-4af7-87bf-98367f06e7a0}">
+      <Implementation>
+        <ST><![CDATA[
+fbPower(
+	bEnable := TRUE,
+	bRegulatorOn := bRegulatorOn,
+	bEnablePositive := bHWSignalLimitMax,                         			(* HW limit switch maximum *)
+	bEnableNegative := bHWSignalLimitMin,                         			(* HW Limit switch minimum *)
+	pAxis := pAxis,
+	bStatus => bStatus
+);
+
+tonStatusDelay(
+	IN := fbPower.bStatus,
+	PT := SEL(etMachineMode = ET_MachineMode_eManual, tStatusDelay, t#0ms),
+	Q => bStatusDelay
+);
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_MCReset" Id="{79eee0a0-acc6-423b-8fc6-5c944eaef1d4}">
+      <Implementation>
+        <ST><![CDATA[
+fbReset(
+	bExecute := bReset
+	            	     XOR bExeReset,
+	pAxis := pAxis
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_PositionDynamics" Id="{80efc4ef-2b81-4718-8689-1ce243c27195}">
+      <Implementation>
+        <ST><![CDATA[
+(* Position encoding *)
+fbPositionEncoder(
+	bEnable := TRUE,
+	dwEncCurrentValue := dwRawMotorEncoder,
+	stEncCfg := stEncoderConfig,
+	pAxis := pAxis
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_SetLimits" Id="{0a674c97-674d-47cb-a9e4-12cd6c03a929}">
+      <Implementation>
+        <ST><![CDATA[
+;
+]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_OnOff_AxisController">
+      <LineId Id="68" Count="46" />
+    </LineIds>
+    <LineIds Name="FB_OnOff_AxisController.A_Error">
+      <LineId Id="0" Count="2" />
+    </LineIds>
+    <LineIds Name="FB_OnOff_AxisController.A_GetLimits">
+      <LineId Id="0" Count="14" />
+    </LineIds>
+    <LineIds Name="FB_OnOff_AxisController.A_MCPower">
+      <LineId Id="0" Count="16" />
+    </LineIds>
+    <LineIds Name="FB_OnOff_AxisController.A_MCReset">
+      <LineId Id="0" Count="5" />
+    </LineIds>
+    <LineIds Name="FB_OnOff_AxisController.A_PositionDynamics">
+      <LineId Id="0" Count="7" />
+    </LineIds>
+    <LineIds Name="FB_OnOff_AxisController.A_SetLimits">
+      <LineId Id="0" Count="2" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

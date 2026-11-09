@@ -1,0 +1,126 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="Gr01Manual" Id="{24ffcca4-aa47-4199-9c05-04d999fc5d6b}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM Gr01Manual
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable					:BOOL;						(* Enable Gr01Manual *)
+	bExecute				:BOOL;						(* Manual execute *)
+
+	(* Instances *)
+	fbInit						:FB_Gr01ManualInit;
+	fbProcedure				:FB_Gr01ManualProcedure;
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtExecute					:R_TRIG;
+
+	fbAlarm					:FB_Gr01ManualAlarm;
+END_VAR
+VAR CONSTANT
+	nFatalErrorMaxIdx				:INT := 0;						(* Maximal index of  using alarms *)
+	nErrorMaxIdx					:INT := 0;						(* Maximal index of  using alarms *)
+	nWarningMaxIdx				:INT := 0;						(* Maximal index of  using alarms *)
+	nMessageMaxIdx				:INT := 0;						(* Maximal index of  using alarms *)
+	nHintMaxIdx					:INT := 0;						(* Maximal index of  using alarms *)
+
+	dnFatalErrorBaseIdentNo		:DINT := 14000;				(* Fatal error identification number *)
+	dnErrorBaseIdentNo			:DINT := 14100;				(* Error identification number *)
+	dnWarningBaseIdentNo		:DINT := 14200;				(* Warning identification number *)
+	dnMessageBaseIdentNo		:DINT := 14300;				(* Message identification number *)
+	dnHintBaseIdentNo			:DINT := 14400;				(* Hint identification number *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	RETURN;
+END_IF;
+
+(* Check manual execute *)
+bExecute := etgGr00MachineMode = ET_MachineMode_eManual;
+
+rtExecute(CLK := bExecute);
+
+IF rtExecute.Q
+THEN
+	fbInit.bFirstTime := FALSE;
+	A_Init();
+END_IF;
+
+A_Procedure();
+A_Alarm();
+
+
+
+
+
+]]></ST>
+    </Implementation>
+    <Action Name="A_Alarm" Id="{069239e8-a590-4c0e-a14b-78824ce997e9}">
+      <Implementation>
+        <ST><![CDATA[
+(* Collect and execute input alarms *)
+fbAlarm.stAlarmIn.arbError[0].bActive := FALSE;
+fbAlarm.stAlarmIn.arbError[0].dnCode := dnErrorBaseIdentNo + 0;
+
+fbAlarm(
+	etMachineMode := etgGr00MachineMode,
+	etMachineState := etgGr00MachineState,
+	bNoEStop := bgGr00NoEmergencyStop,
+	bConfirmAlarm := bgGr00ConfirmAlarm,
+	dtDateTime := stgGr00DateTime.dtDateTime,
+	nFatalErrorMaxIdx := nFatalErrorMaxIdx,
+	nErrorMaxIdx := nErrorMaxIdx,
+	nWarningMaxIdx := nWarningMaxIdx,
+	nMessageMaxIdx := nMessageMaxIdx,
+	nHintMaxIdx := nHintMaxIdx,
+	bHomeCompleted := bgGr01HomeCompleted,
+	stAlarmOut => stgGr01Alarm.stManual
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Init" Id="{51bcfc4e-981e-4593-aab8-820301ea12d1}">
+      <Implementation>
+        <ST><![CDATA[
+(* Initializing variables *)
+fbInit();]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Procedure" Id="{e9a8ea41-8052-4bc6-b112-e273c43393c1}">
+      <Implementation>
+        <ST><![CDATA[
+(* Execute manual procedure *)
+fbProcedure(
+	bEnable := etgGr00MachineMode = ET_MachineMode_eManual,
+	bExecute := rtExecute.Q,
+	bReleaseNextStep := etgGr00MachineMode = ET_MachineMode_eManual
+);
+
+IF fbProcedure.bDone
+THEN
+	bgGr01ManualCompleted := TRUE;
+END_IF]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="Gr01Manual">
+      <LineId Id="37" Count="23" />
+    </LineIds>
+    <LineIds Name="Gr01Manual.A_Alarm">
+      <LineId Id="0" Count="18" />
+    </LineIds>
+    <LineIds Name="Gr01Manual.A_Init">
+      <LineId Id="0" Count="2" />
+    </LineIds>
+    <LineIds Name="Gr01Manual.A_Procedure">
+      <LineId Id="0" Count="11" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

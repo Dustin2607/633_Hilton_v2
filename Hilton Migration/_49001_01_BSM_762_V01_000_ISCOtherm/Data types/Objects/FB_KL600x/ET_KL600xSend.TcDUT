@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_KL600xSend" Id="{d90cf587-611a-41ad-a87b-37ab743b64c8}">
+    <Declaration><![CDATA[TYPE ET_KL600xSend :
+(
+	ET_KL600xSend_eInit := 0,
+	ET_KL600xSend_eSend,
+	ET_KL600xSend_eDone := 197,
+	ET_KL600xSend_eError := 198,
+	ET_KL600xSend_eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

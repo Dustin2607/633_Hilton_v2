@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_Blinker" Id="{98a5665a-ae59-47f3-8f6d-3c72a60445ff}">
+    <Declaration><![CDATA[TYPE ST_Blinker :
+STRUCT	
+	Q0					:BOOL; 						(* Divider output / 2 *)
+	Q1					:BOOL; 						(* Divider output / 4 *)
+	Q2					:BOOL; 						(* Divider output / 8 *)
+	Q3					:BOOL; 						(* Divider output / 16 *)
+	Q4					:BOOL; 						(* Divider output / 32 *)
+	Q5					:BOOL; 						(* Divider output / 64 *)
+	Q6					:BOOL; 						(* Divider output / 128 *)
+	Q7					:BOOL; 						(* Divider output / 256 *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

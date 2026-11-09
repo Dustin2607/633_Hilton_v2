@@ -1,0 +1,127 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Gr01ManualProcedure" Id="{964ffdfc-db54-4075-844e-1703615178de}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Gr01ManualProcedure
+(*
+
+The function block used to initialize manual mode.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			28.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Enable FB signal *)
+	bExecute					:BOOL;						(* Manual procedure execute *)
+	bReleaseNextStep			:BOOL;						(* Manual procedure release next step *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bDone						:BOOL;						(* Program done *)
+	bBusy						:BOOL;						(* Program busy *)
+	bError						:BOOL;						(* Program error *)
+	udnErrorNo					:UDINT;						(* Error number *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+	etGr01Manual					:ET_Gr01Manual;				(* Home mode enum variable *)
+
+	(* Variables *)
+	byBusyFlag					:BYTE;
+
+	bFirstTime					:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+	bDone := FALSE;					(* Program done *)
+	bBusy := FALSE;                                  	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;                                 		(* Error number *)
+
+	bFirstTime := FALSE;
+	RETURN;
+END_IF;
+
+IF NOT bFirstTime
+THEN
+	bDone := FALSE;                                	(* Program done *)
+	bBusy := FALSE;                                 	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;                                 		(* Error number *)
+
+	etGr01Manual := ET_Gr01Manual_eWaitExecute;       			(* Next step *)
+
+	bFirstTime := TRUE;
+END_IF;
+
+
+CASE etGr01Manual OF
+
+	ET_Gr01Manual_eWaitExecute:
+		bBusy := FALSE;                                     		(* Program not busy *)
+		bError := FALSE;                                    		(* Program not error *)
+
+		IF bExecute
+		THEN
+
+			bDone := FALSE;                                 	(* Program done, in position *)
+			bBusy := TRUE;                                  	(* Program busy *)
+
+			byBusyFlag := 0;
+
+			etGr01Manual := ET_Gr01Manual_eDone;		(* Next step *)
+
+		END_IF;
+
+	ET_Gr01Manual_eDone:
+		bDone := TRUE;                                     		(* Program done, in position *)
+		bBusy := FALSE;                                     		(* Program not busy *)
+	
+		etGr01Manual := ET_Gr01Manual_eNoExecute;            	(* Next step *)
+
+	ET_Gr01Manual_eError:
+		bDone := FALSE;                                     		(* Program done, in position *)
+		bError := TRUE;                                     		(* Program error *)    
+		bBusy := FALSE;                                     		(* Program not busy *)
+	
+		etGr01Manual := ET_Gr01Manual_eNoExecute;           	(* Next step *)
+
+	ET_Gr01Manual_eNoExecute:
+		IF NOT bExecute
+		THEN
+			bDone := FALSE;                                 	(* Program done *)
+			bBusy := FALSE;                                		(* Program not busy *)
+			bError := FALSE;                                		(* Program not error *)
+
+			etGr01Manual := ET_Gr01Manual_eWaitExecute;       (* Next step *)
+
+		END_IF;
+
+END_CASE;
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Gr01ManualProcedure">
+      <LineId Id="47" Count="69" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

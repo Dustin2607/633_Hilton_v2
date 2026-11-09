@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_MunschExtruderAir" Id="{01e8dd41-5b4b-4553-8f0c-a1129c02c5ae}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_MunschExtruderAir
+(*
+
+The function block used to control air pressure.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			04.11.2016
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable					:BOOL;						(* Enable FB signal *)
+	bIn						:BOOL;						(* Input signal *)
+	bExtruderAirOn			:BOOL;						(* Extruder air on *)
+	tAirOk					:TIME := t#5s;					(* Timer to delay output air ok *)
+	tAirOff					:TIME := t#5s;					(* Timer to delay output air off *)
+	tTimeOut					:TIME := t#5s;					(* Timeout *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bAirOk					:BOOL;						(* Air pressure ok *)
+	bAirOn					:BOOL;						(* Air pressure on *)
+	bError					:BOOL;						(* Error by no air pressure *)
+	udnErrorNo				:UDINT;
+	udnMessageNo			:UDINT;
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	tonDelayAirOk				:TON;						(* Timer to delay *)
+	tofDelayAirOff					:TOF;						(* Timer to delay *)
+	fbExtrudingAir					:FB_AirPressure;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+	fbExtrudingAir(
+		bEnable := FALSE
+	);
+
+	bAirOk := FALSE;
+	RETURN;
+END_IF
+
+fbExtrudingAir(
+	bEnable := bEnable,
+	bIn := bIn,
+	bNoEStop := bExtruderAirOn,
+	tTimeOut := tTimeOut,
+	bError => bError,
+	udnErrorNo => udnErrorNo,
+	udnMessageNo => udnMessageNo
+);
+
+tonDelayAirOk(
+	IN := fbExtrudingAir.bOut,
+	PT := tAirOk
+);
+
+bAirOk := tonDelayAirOk.Q;
+
+tofDelayAirOff(
+	IN := fbExtrudingAir.bAirOn,
+	PT := tAirOff
+);
+
+bAirOn := tofDelayAirOff.Q;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_MunschExtruderAir">
+      <LineId Id="45" Count="33" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

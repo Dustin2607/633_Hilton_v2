@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_PLCTOVFD" Id="{16d3e65d-2f17-4c21-b106-9ce8165e0562}">
+    <Declaration><![CDATA[TYPE ST_PLCTOVFD :
+STRUCT
+	bEnable							:BOOL;			(* Enable controller *)
+	bFaultReset						:BOOL;			(* Acknowledgment for faults of the device state machine. *)
+	bForwardStop					:BOOL;			(* Counterclockwise rotation moving. *)
+	bReverseStop					:BOOL;			(* Clockwise rotation moving. *)
+	bJog							:BOOL;			(* Jog command. *)
+	bExtError							:BOOL;			(* External error signal. *)
+	nSetMotorSpeed					:INT;			(* Relative speed reference value *)
+	bReserve1						:BOOL;			(* Reserve 1. *)
+	bReserve2						:BOOL;			(* Reserve 2. *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

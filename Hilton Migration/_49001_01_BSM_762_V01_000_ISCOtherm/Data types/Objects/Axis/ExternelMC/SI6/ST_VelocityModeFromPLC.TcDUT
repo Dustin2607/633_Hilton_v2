@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_VelocityModeFromPLC" Id="{d1bb1345-79bb-4665-9f03-389d29228f50}">
+    <Declaration><![CDATA[TYPE ST_VelocityModeFromPLC :
+STRUCT
+	(* Command velocity *)
+	dnTargetVelocity				:DINT;			(* Target velocity for Profile velocity operating mode. *)
+	udnAcceleration				:UDINT;			(* Acceleration for profile. *)
+	udnDeceleration				:UDINT;			(* Deceleration for profile. *)
+	udnJerk						:UDINT;			(* Jerk  for profile. *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

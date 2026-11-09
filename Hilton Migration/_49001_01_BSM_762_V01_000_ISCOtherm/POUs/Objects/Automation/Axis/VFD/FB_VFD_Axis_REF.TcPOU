@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_VFD_Axis_REF" Id="{55bb7b7b-5207-482d-b3f1-2950d37a69c9}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_VFD_Axis_REF
+VAR_INPUT
+	sAdsAddr						:STRING(23);		(* AmsNetId of the EtherCAT master device.*)
+	unSlaveAddr						:UINT;			(* Address of the slave device.*)
+
+	bEnabled						:BOOL;			(* The drive is enabled. *)
+	bOperational						:BOOL;			(* The drive is ready for operation. *)
+	bError							:BOOL;			(* The drive state is fault. *)
+	bNotMoving						:BOOL;			(* Motor not moving *)
+	bMotorSpeedReached				:BOOL;			(* Motor speed reached *)
+	nCurrentMotorSpeed				:INT;			(* Current motor speed *)
+
+	bEnable							:BOOL;			(* Enable controller *)
+	bFaultReset						:BOOL;			(* Acknowledgment for faults of the device state machine. *)
+	bForwardStop					:BOOL;			(* Counterclockwise rotation moving. *)
+	bReverseStop					:BOOL;			(* Clockwise rotation moving. *)
+	bJog							:BOOL;			(* Jog command. *)
+	bExtError							:BOOL;			(* External error signal. *)
+	nSetMotorSpeed					:INT;			(* Relative speed reference value *)
+	bReserve1						:BOOL;			(* Reserve 1. *)
+	bReserve2						:BOOL;			(* Reserve 2. *)
+
+	nOverride						:INT;			(* Override *)
+	bHasJob						:BOOL;			(* Job is busy *)
+END_VAR
+VAR_OUTPUT
+
+END_VAR
+VAR_IN_OUT
+
+END_VAR
+VAR
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_VFD_Axis_REF">
+      <LineId Id="34" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

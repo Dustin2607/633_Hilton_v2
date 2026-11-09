@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_TorqueModeFromPLC" Id="{92d3de5e-5210-4dfe-ae2f-b392a6ec4d45}">
+    <Declaration><![CDATA[TYPE ST_TorqueModeFromPLC :
+STRUCT
+	nTargetTorque 					:INT;			(* Set torque/force in the Profile torque operating mode *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

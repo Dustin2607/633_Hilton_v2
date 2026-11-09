@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_Alarm" Id="{d7e9f913-3f57-4fa3-98e4-0d1676b97c7b}">
+    <Declaration><![CDATA[TYPE ST_Alarm :
+STRUCT
+	bFatalError			:BOOL;				(* Fatal error in group / Fataler Fehler in der Gruppe *)
+	bError				:BOOL;				(* Error in group / Fehler in der Gruppe *)
+	bWarning			:BOOL;				(* Warning in group / Warnung  in der Gruppe *)
+	bMessage			:BOOL;				(* Message in group / Meldung in der Gruppe *)
+	bHint				:BOOL;				(* Hint in group / Hint in der Gruppe *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

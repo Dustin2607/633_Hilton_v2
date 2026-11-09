@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="Init" Id="{686a804b-e730-4808-9911-31ba1cd60631}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM Init
+VAR
+	bFirstTime					:BOOL; 				(* False = first run / True = not first run *)
+END_VAR
+VAR PERSISTENT
+	bFirstTimePersistent			:BOOL;				(* Persistente Daten initialisieren *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bFirstTime
+THEN
+	A_InitGr0000();
+	A_InitGr0100();
+	A_InitGr0200();
+	A_InitGr0500();
+
+	bFirstTime:= TRUE;
+END_IF
+
+IF NOT bFirstTimePersistent
+THEN
+
+	bFirstTimePersistent:= TRUE;
+END_IF]]></ST>
+    </Implementation>
+    <Action Name="A_InitGr0000" Id="{63a26e6c-4076-4d09-8cff-2202182e2987}">
+      <Implementation>
+        <ST><![CDATA[;]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_InitGr0100" Id="{2c5d6dff-d3bb-4929-83d0-4de6332805af}">
+      <Implementation>
+        <ST><![CDATA[;]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_InitGr0200" Id="{2e59a8af-7993-4673-973b-1fa912614abb}">
+      <Implementation>
+        <ST><![CDATA[;]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_InitGr0500" Id="{962e3661-f1b0-4ae8-aef7-cf49232dcb82}">
+      <Implementation>
+        <ST><![CDATA[;]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="Init">
+      <LineId Id="7" Count="15" />
+    </LineIds>
+    <LineIds Name="Init.A_InitGr0000">
+      <LineId Id="0" Count="0" />
+    </LineIds>
+    <LineIds Name="Init.A_InitGr0100">
+      <LineId Id="0" Count="0" />
+    </LineIds>
+    <LineIds Name="Init.A_InitGr0200">
+      <LineId Id="0" Count="0" />
+    </LineIds>
+    <LineIds Name="Init.A_InitGr0500">
+      <LineId Id="0" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

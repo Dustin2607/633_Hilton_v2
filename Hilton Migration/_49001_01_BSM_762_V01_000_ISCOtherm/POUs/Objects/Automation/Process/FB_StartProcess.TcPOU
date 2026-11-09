@@ -1,0 +1,80 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_StartProcess" Id="{ab052b28-da6b-4adf-a051-d4a4492731d8}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_StartProcess
+(*
+
+The function block used to control start process.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			27.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Enable FB signal *)
+	bStart						:BOOL;						(* Signal start *)
+	bStop						:BOOL;						(* Signal stop *)
+	bDone						:BOOL;						(* Signal done *)
+	bStepping					:BOOL;						(* Stepping active *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bStartProcess				:BOOL;						(* Start process *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	bHomeCompleted				:BOOL;			(* Home completed *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtStart						:R_TRIG;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	rtStart(CLK := FALSE);
+	bStartProcess := FALSE;
+	RETURN;
+END_IF;
+
+
+(* Start process with handshake *)
+rtStart(CLK:= bStart);
+
+IF (bDone
+      OR bStop
+      OR NOT bHomeCompleted)
+    AND bStartProcess
+THEN
+	bStartProcess := FALSE;
+
+ELSIF rtStart.Q
+             AND NOT bStartProcess
+THEN
+	IF bStepping
+	THEN
+		 bStartProcess := rtStart.Q;
+	ELSE
+		bStartProcess := TRUE;
+	END_IF;
+END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_StartProcess">
+      <LineId Id="42" Count="27" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

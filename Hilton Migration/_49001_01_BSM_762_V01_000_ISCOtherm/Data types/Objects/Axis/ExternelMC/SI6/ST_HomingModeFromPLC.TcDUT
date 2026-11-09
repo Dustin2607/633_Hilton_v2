@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_HomingModeFromPLC" Id="{e414b42d-881a-4d4e-bb1f-56e4687e5067}">
+    <Declaration><![CDATA[TYPE ST_HomingModeFromPLC :
+STRUCT
+	bHomingOperationStart			:BOOL;			(* Start referencing 0, 1 = inactive; 0 -> 1 = active *)
+	snHomingMethod					:SINT;			(* Set reference method for the Homing operating mode. *)
+	dnHomeOffset					:DINT;			(* Reference position of the axis in the Homing operating mode and for the Set reference function *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

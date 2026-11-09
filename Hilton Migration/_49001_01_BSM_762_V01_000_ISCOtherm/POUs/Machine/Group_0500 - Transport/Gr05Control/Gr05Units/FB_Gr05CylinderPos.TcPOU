@@ -1,0 +1,153 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Gr05CylinderPos" Id="{9caf2e93-68cf-4cb3-af2f-c5144cac01bc}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Gr05CylinderPos
+(*
+
+The function block used to control position cylinder.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			28.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;															(* Function block enable *)
+	etMachineMode				:ET_MachineMode;												(* Machine mode *)
+	etMachineState				:ET_MachineState;												(* Machine state *)
+	bNoEStop					:BOOL;															(* No ermergency Stop / Keine Notaus *)
+	bSafetyOK					:BOOL;															(* Safety ok / Sicherheit i.o *)
+	bAirPressureOK				:BOOL;															(* Air pressure OK *)
+	bExeMoveAbs				:BOOL;															(* Execute move absolut *)
+	lrTargetPosition				:LREAL;															(* Absolute target position *)
+	arbInBase					:ARRAY[1..ungGr05CylinderPosMaxNo] OF BOOL;						(* In base position *)
+	arbInWork					:ARRAY[1..ungGr05CylinderPosMaxNo] OF BOOL;						(* In work position *)
+	arbMoveToBaseRelease		:ARRAY[1..ungGr05CylinderPosMaxNo] OF BOOL;						(* Release move to base *)
+	arbMoveToWorkRelease		:ARRAY[1..ungGr05CylinderPosMaxNo] OF BOOL;						(* Release move to work *)
+	arbHandMoveToBase			:ARRAY[1..ungGr05CylinderPosMaxNo] OF BOOL;						(* Hand move to base *)
+	arbHandMoveToWork			:ARRAY[1..ungGr05CylinderPosMaxNo] OF BOOL;						(* Hand move to work *)
+	lrPosOffset					:LREAL;															(* Position offset *)
+	lrOriginShiftPos				:LREAL;															(* Origin shift position *)
+	etDirection					:ET_MC_Direction;													(* Direction: -1 Negative, +1 Positive *)
+	usnCodingType				:USINT;
+	bControlStateOn				:BOOL;															(* Control with input state *)
+	bControlOff					:BOOL;															(* Controle off *)
+	bValveOff					:BOOL;															(* Valve off *)
+	bConfirmAlarm				:BOOL;															(* Confirm alarm *)
+	tTimeOut						:TIME := t#6s;														(* TimeOut *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bCtrlEnabled					:BOOL;						(* Controller enabled *)
+	lrActPosition					:LREAL;															(* Actual position [mm] *)
+	arbMoveToBase				:ARRAY[1..ungGr05CylinderPosMaxNo] OF BOOL;						(* Move to base *)
+	arbMoveToWork				:ARRAY[1..ungGr05CylinderPosMaxNo] OF BOOL;						(* Move to work *)
+	arbErrorMoveToBase			:ARRAY[1..ungGr05CylinderPosMaxNo] OF BOOL;						(* Error move to base *)
+	arbErrorMoveToWork			:ARRAY[1..ungGr05CylinderPosMaxNo] OF BOOL;						(* Error move to work *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	bHomeCompleted				:BOOL;						(* Home completed *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	unCylinderPosIdx				:UINT;						(* Position cylinder index *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbCylinderPos				:ARRAY[1..ungGr05CylinderPosMaxNo] OF FB_CylinderPos;
+	fbMoveAbs					:FB_CylinderPos_MoveAbsolut;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+(* Control position cylinder cylinder *)
+(*
+lrRefPos := TAN(ABS(lrAngle)) * (lrRadius + lrSafetyDistance);
+*)
+
+fbMoveAbs(
+	bEnable := bEnable,
+	bNoEStop := bNoEStop,
+	bLightCurtainOK := bSafetyOK,
+	bAirPressure := bAirPressureOK,
+	bExecute := bExeMoveAbs,
+	lrPosition := lrTargetPosition,
+	lrPosOffset := lrPosOffset,
+	lrOriginShiftPos := lrOriginShiftPos,
+	etDirection := etDirection,
+	usnCodingType := usnCodingType,
+	lrActPosition => lrActPosition
+);
+
+FOR unCylinderPosIdx := 1 TO ungGr05CylinderPosMaxNo
+DO
+
+	fbCylinderPos[unCylinderPosIdx](
+		etMachineMode := etMachineMode,
+		etMachineState := etMachineState,
+		bAirPressureOK := bAirPressureOK,
+		bSafetyOK := bSafetyOK,
+		bInBase := arbInBase[unCylinderPosIdx],
+		bInWork := arbInWork[unCylinderPosIdx],
+		bMoveToBaseRelease := TRUE,
+		bMoveToWorkRelease := TRUE,
+		bHandMoveToBase := arbHandMoveToBase[unCylinderPosIdx],
+		bHandMoveToWork := arbHandMoveToWork[unCylinderPosIdx],
+		bAutoMoveToBase := fbMoveAbs.arbToBase[unCylinderPosIdx],
+		bAutoMoveToWork := fbMoveAbs.arbToWork[unCylinderPosIdx],
+		bConfirmAlarm := bConfirmAlarm,
+		bControlStateOn := bControlStateOn,
+		bControlOff := bControlOff,
+		bValveOff := bValveOff,
+		bValveErrOff := FALSE,
+		bErrorOff := FALSE,
+		tTimeOut := t#6s,
+		bHomeCompleted := bHomeCompleted,
+		bMoveToBase => arbMoveToBase[unCylinderPosIdx],
+		bMoveToWork => arbMoveToWork[unCylinderPosIdx]
+	);
+
+	fbMoveAbs.arbInBase[unCylinderPosIdx] := fbCylinderPos[unCylinderPosIdx].fbCylinderPos.bEndBase;
+	fbMoveAbs.arbInWork[unCylinderPosIdx] := fbCylinderPos[unCylinderPosIdx].fbCylinderPos.bEndWork;
+	fbMoveAbs.arbInError [unCylinderPosIdx] := fbCylinderPos[unCylinderPosIdx].fbCylinderPos.bError;
+
+END_FOR
+
+bCtrlEnabled := bNoEStop
+			   AND bSafetyOK
+			   AND bAirPressureOK;
+
+A_Alarm();]]></ST>
+    </Implementation>
+    <Action Name="A_Alarm" Id="{7bd0e1fc-0d72-4b31-abe4-4150e496c6df}">
+      <Implementation>
+        <ST><![CDATA[
+FOR unCylinderPosIdx := 1 TO ungGr05CylinderPosMaxNo
+DO
+
+	arbErrorMoveToBase[unCylinderPosIdx] := fbCylinderPos[unCylinderPosIdx].bErrorMoveToBase;
+	arbErrorMoveToWork[unCylinderPosIdx] := fbCylinderPos[unCylinderPosIdx].bErrorMoveToWork;
+
+END_FOR
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_Gr05CylinderPos">
+      <LineId Id="67" Count="58" />
+    </LineIds>
+    <LineIds Name="FB_Gr05CylinderPos.A_Alarm">
+      <LineId Id="0" Count="9" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,596 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Gr05AxisClamp" Id="{f876f9bf-3135-40ed-975a-7f0210b41e3e}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Gr05AxisClamp
+(*
+
+The function block used to control axis welding.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			28.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Axis present *)
+	etMachineMode				:ET_MachineMode;			(* Machine mode *)
+	etMachineState				:ET_MachineState;			(* Machine state *)
+	bNoEStop					:BOOL;						(* No ermergency Stop / Keine Notaus *)
+	bPowerSupplyOn				:BOOL;						(* Power supply on / Leitung eingeschaltet *)
+	bSafetyOK					:BOOL;						(* Safety ok / Sicherheit i.o *)
+	bMachineStandstill			:BOOL;						(* Machine standstill *)
+	bCtrlInterrupt					:BOOL;						(* Control interrupt *)
+	bMoveRelease				:BOOL;						(* Move release *)
+	bMoveInterrupt				:BOOL;						(* Move Interrupt *)
+	bSignalReference				:BOOL;						(* Reference signal *)
+	bHWSignalLimitMax			:BOOL;						(* Signal position limit switch maximum *)
+	bHWSignalLimitMin			:BOOL;						(* Signal position limit switch minimum *)
+	lrSoftLimitMax					:LREAL; 						(* Position limit switch maximum *)
+	lrSoftLimitMin					:LREAL; 						(* Position limit switch minimum *)
+	bTipPlus						:BOOL;						(* Manual tip in plus direction *)
+	bTipMinus					:BOOL;						(* Manual tip in minus direction *)
+	lrTipDistance					:LREAL;						(* Relative distance for movements *)
+	bPlusRelease				:BOOL;						(* Plus move release *)
+	bMinusRelease				:BOOL;						(* Minus move release *)
+	bExeSetPos					:BOOL;						(* Execute set position *)
+	bExeHome					:BOOL;						(* Execute home *)
+	bExeMoveAbs				:BOOL;						(* Execute move absolut *)
+	bExeMoveRel				:BOOL;						(* Execute move relative *)
+	bExeMoveAdd				:BOOL;						(* Execute move additive *)
+	bExeMoveSuper				:BOOL;						(* Execute move superimposed *)
+	bExeMoveVelo				:BOOL;						(* Execute move velo *)
+	bExeGearIn					:BOOL;						(* Execute gear in *)
+	bExeGearOut					:BOOL;						(* Execute gear out *)
+	bExeStop					:BOOL;						(* Execute move stop *)
+	bExeReset					:BOOL;						(* Execute auto reset *)
+	bExtOverrideEn				:BOOL;						(* External override enable *)
+	lrExtOverride					:LREAL;						(* External override *)
+	lrTargetPosition				:LREAL;						(* Absolute target position *)
+	lrManualVelocity				:LREAL;						(* Value of velocity in manual motion [mm/s] *)
+	lrVelocityNoRef				:LREAL;						(* Velocity if has no reference [mm/s] *)
+	bVelocityLimitEn				:BOOL;						(* Enable velocity limit *)
+	lrAutoVelocity					:LREAL;						(* Value of velocity in auto motion [mm/s] *)
+	lrVelocityMin					:LREAL;						(* Velocity minimum [%] *)
+	lrVelocityMax					:LREAL;						(* Velocity maximum [%] *)
+	lrAcceleration					:LREAL;						(* Value of the acceleration (always positive) *)
+	lrDeceleration				:LREAL;						(* Value of deceleration (always positive) *)
+	lrJerk						:LREAL;						(* Value of jerk (always positive) *)
+	bEngineTorqueLimitEn			:BOOL;						(* Enable engine torque limit *)
+	lrEngineTorque				:LREAL;						(* Engine torque [%] *)
+	bWithAbsoluteEncoder			:BOOL; 						(* Encoder is an absolute one / Absolutwertgeber *)
+	lrOriginShift					:LREAL;						(* Origin shift position *)
+	dnRatioNumerator				:DINT;						(* Gear ratio numerator. Alternatively, the gear ratio can be specified in the numerator as a floating comma value, if the denominator is 1. *)
+	udnRatioDenominator			:UDINT;						(* Gear ratio denominator *)
+	unForceMeasureType			:UINT;						(* Type of force measure system. 1: Simple mA,  2: EL3351 3: EL3356 *)
+	bVeloForceCtrlEn				:BOOL;						(* Enable velocity - force controller *)
+	lrVeloForceCtrlKp				:LREAL;						(* Velocity - force controller proportional band Kp *)
+	lrVeloForceCtrlTi				:LREAL;						(* Velocity - force controller integral Ti *)
+	lrVeloForcePreCtrlVelo			:LREAL;						(* Feedforward velocity precontrol wieghting =  0..1 *)
+	lrVeloForceCtrlLimit			:LREAL;						(* Velocity - force controller limit  *)
+	lrTargetForce					:LREAL;						(* Absolute target force [N] *)
+	lrForceCurrent				:LREAL;						(* Current force [mA] *)
+	lrForceOffset					:LREAL;						(* Force offset [N] *)
+	lrForceMin					:LREAL;						(* Force min 16#0000 *)
+	lrForceMax					:LREAL;						(* Force max 16#7FFF *)
+	lrForceMinN					:LREAL;						(* Force min [N] *)
+	lrForceMaxN					:LREAL;						(* Force max [N] *)
+	lrOverride					:LREAL;						(* Override *)
+	bConfirmAlarm				:BOOL;						(* Confirm alarm *)
+	tControllerOff					:TIME := t#60s;				(* Time to switch controller off *)
+	tAdsTimeOut 					:TIME := t#2s;					(* Timout for ads commands *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bCtrlEnabled					:BOOL;						(* Controller enabled *)
+	bNotMoving					:BOOL;						(* Axis not moving *)
+	bReferenced					:BOOL;						(* Axis referenced *)
+	bCoupled					:BOOL;						(* Axis coupled *)
+	lrActPosition					:LREAL;						(* Actual position [mm] *)
+	lrActVelocity					:LREAL;						(* Actual velocity [mm/s] *)
+	lrActForce					:LREAL;						(* Actual force [N] *)
+	bHardLimitMaxExceeded		:BOOL;						(* Position limit switch maximum is exceeded *)
+	bHardLimitMinExceeded		:BOOL;						(* Position limit switch minimum is exceeded *)
+	bSoftLimitMaxExceeded		:BOOL;						(* Position limit switch maximum is exceeded *)
+	bSoftLimitMinExceeded		:BOOL;						(* Position limit switch minimum is exceeded *)
+	bSafetyLock					:BOOL;						(* Safety lock*)
+	bErrorTerminal				:BOOL;						(* Error Axis terminal *)
+	bErrorCtrlEnabled				:BOOL;						(* Error Axis controller enabled *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	bHomeCompleted				:BOOL;						(* Home completed *)
+	Drive						:ST_DRIVE_REF;	(* The DRIVE_REF data type  is an interface between the PLC and the DRIVE and contains axis information *)
+	Axis							:ST_AXIS_REF;
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	nTorqueLimitMax				:INT := 100;
+	nVelocityLimitMax				:INT := 100;
+
+	lrVeloLimitMax				:LREAL;
+	lrVeloLimitMin					:LREAL;
+
+	sTerminalStatus				:STRING;
+
+	bSetCoeParaToDefault		:BOOL;
+	bReadCoePara				:BOOL;
+	bWriteCoePara				:BOOL;
+	stCoeWrite					:ST_EL3356CoeInfo;
+	stCoeRead					:ST_EL3356CoeInfo;
+
+	lrCacheWeightTara			:LREAL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbTerminalDiagnosis			:FB_TerminalDiagnosis;
+	rtMachineStandstill			:R_TRIG;
+	tonAxisEnabled				:TON;
+
+	fbController					:FB_STOEBERSDS_MC_AxisController;
+	fbMoveManual				:FB_STOEBERSDS_MC_AxisMoveManual;
+	fbMoveAuto					:FB_STOEBERSDS_MC_AxisMoveAuto;
+	fbLink						:FB_STOEBERSDS_AxisLink;
+	fbForceSimple				:FB_ScalingOffset;
+	fbForceEL3351				:FB_EL3351;
+	fbForceEL3356				:FB_EL3356;
+	fbForceCtrl					:FB_ForceController;
+	fbSawingOverride				:FB_Override;
+
+	rtWriteForcePara				:R_TRIG;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable								(* Signal FB enable *)
+THEN
+
+	RETURN;
+END_IF
+
+
+A_AxisLink();
+A_AxisGetStatus();
+A_AxisController();
+A_AxisForceCtrl();
+A_AxisMoveManual();
+A_AxisMoveAuto();
+A_AxisTerminalDiag();
+A_AxisAlarm();
+
+]]></ST>
+    </Implementation>
+    <Action Name="A_AxisAlarm" Id="{158fd755-7fee-47d1-b322-49bb9ab8285c}">
+      <Implementation>
+        <ST><![CDATA[
+(* Axis error *)
+tonAxisEnabled(
+	IN := fbController.bEnable
+		AND fbController.bRegulatorOn
+		AND NOT fbController.bStatusDelay,
+	PT := fbController.tStatusDelay + t#2s
+);
+
+bErrorCtrlEnabled := tonAxisEnabled.Q;
+(*byErrorPLCOpenController := fbAxisControl.byPLCOpenErrCode;*)
+(*bErrorController := fbAxisControl.bError;
+bErrorMoveManual := fbMoveManual.bError;
+bErrorMoveAuto := fbMoveAuto.bError;*)]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_AxisController" Id="{34fa1678-1986-4a1f-8d07-419ee74315ce}">
+      <Implementation>
+        <ST><![CDATA[
+(* Axis controller *)
+fbController(
+    	bEnable := TRUE,
+	etMachineMode := etMachineMode,
+	etMachineState := etMachineState,
+	bRegulatorOn := bNoEStop
+				      AND bPowerSupplyOn
+				      AND bSafetyOK
+                   		      AND NOT bCtrlInterrupt
+				      AND NOT fbMoveManual.bControllerOff
+				      AND NOT fbMoveAuto.bControllerOff,
+	bReset := bConfirmAlarm,
+	bCMDInterrupt := bMoveInterrupt,
+	bTerminalOK := fbTerminalDiagnosis.bTerminalOK,
+	bExeReset := bExeReset,
+  	bExeGearIn := bExeGearIn,
+    	bExeGearOut := bExeGearOut,
+   	dnRatioNumerator := dnRatioNumerator,
+    	udnRatioDenominator := udnRatioDenominator,
+	lrOverride := SEL(bExtOverrideEn,
+					SEL(
+						bVeloForceCtrlEn,
+						lrOverride,
+						fbForceCtrl.lrCVVelo),
+					lrExtOverride),
+	lrEngineTorque := SEL(
+						bEngineTorqueLimitEn,
+						nTorqueLimitMax,
+						(lrEngineTorque) / 1),
+	bWithAbsoluteEncoder := bWithAbsoluteEncoder,
+	bHWSignalLimitMax := bHWSignalLimitMax,
+	bHWSignalLimitMin := bHWSignalLimitMin,
+	lrSoftLimitMax := lrSoftLimitMax,
+	lrSoftLimitMin := lrSoftLimitMin,
+	lrAcceleration := lrAcceleration,
+	lrDeceleration := lrDeceleration,
+	lrJerk := lrJerk,
+	tTimeOut := tAdsTimeOut,
+	Axis := Axis,
+	bStatusDelay => bCtrlEnabled,
+	lrActPos => lrActPosition,
+	lrActVelo => lrActVelocity,
+	bNotMoving => bNotMoving,
+	bReferenced => bReferenced,
+	bCoupled => bCoupled,
+	bHardLimitMaxExceeded => bHardLimitMaxExceeded,
+	bHardLimitMinExceeded => bHardLimitMinExceeded,
+	bSoftLimitMaxExceeded => bSoftLimitMaxExceeded,
+	bSoftLimitMinExceeded => bSoftLimitMinExceeded
+);
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_AxisForceCtrl" Id="{c766a064-febe-4f65-ba55-924737da6899}">
+      <Implementation>
+        <ST><![CDATA[
+IF unForceMeasureType = 1			(* Current or voltage force measure *)
+THEN
+	fbForceCtrl.lrMaxForce := lrForceMaxN; (* [N] *)
+
+	fbForceSimple(
+		bEnable := TRUE,
+		lrInput := lrForceCurrent,
+		lrXLowLimit := lrForceMin, (* 16#0000 = 4 [mA] *)
+		lrXUpperLimit := lrForceMax, (* 16#7FFF = 20 [mA] *)
+		lrYLowLimit := lrForceMinN,  (*[N]*)
+		lrYUpperLimit := lrForceMaxN,  (*[N]*)
+		usiPrecision := 2,
+		lrOffset := LREAL_TO_REAL(lrForceOffset),
+		lrOutputPV => lrActForce
+	);
+
+
+ELSIF unForceMeasureType = 2			(* EL3351 force measure *)
+THEN
+	fbForceCtrl.lrMaxForce := lrForceMaxN; (* [N] *)
+
+	fbForceEL3351(
+		bEnable := TRUE,
+		nTerminalNr := 1,
+		stTerminalState := ,
+		stBridgeState := ,
+		stSupplyState := ,
+		dnRefvoltage := ,
+		dnDiffvoltage := ,
+		rOffset := LREAL_TO_REAL(lrForceOffset),
+		usiPrecision := 2,
+		bDeviceOk => ,
+		sDeviceStatus => ,
+		rUdiff => ,
+		rUref => ,
+		lrGrossWeightRV=> ,
+		lrGrossWeightPV => lrActForce,
+		lrNetWeightRV=> ,
+		lrNetWeightPV=> ,
+		lrTareWeightRV=> ,
+		lrTareWeightPV=>
+	);
+
+ELSIF  unForceMeasureType = 3			(* EL3356 force measure *)
+THEN
+
+(*
+	rtWriteForcePara(
+		CLK:= bgGr01ForceActiv5kN
+			   XOR bgGr01ForceActiv10kN
+	);
+
+	CASE nStepWriteForcePara OF
+		0:	(*Idle*)
+
+			fbForceEL3356.bWriteCoePara:= FALSE;
+			bWriteForceParaBusy := FALSE;
+
+			IF rtWriteForcePara.Q
+			THEN
+				nStepWriteForcePara := 10;
+				bWriteForceParaBusy := TRUE;
+			END_IF
+		10: 	(*Start*)
+
+			IF bgGr01ForceActiv5kN
+			THEN
+				fbForceCtrl.lrMaxForce := 5000, (* [N] *)
+
+				stCoeWrite.bEnableFilter := TRUE;
+				stCoeWrite.bEnableUserScale := TRUE;
+				stCoeWrite.dwFilterSettings := 0;
+				stCoeWrite.rGain := 1.0;
+				stCoeWrite.rTara := stgGr01HMI.stHMITOPLC.lrOriginShiftForceX2Right;
+				stCoeWrite.rRatedOutput := 0.995000;
+				stCoeWrite.rNominalLoad := 5000.0;
+				stCoeWrite.rZeroBalance := -0.00028;
+				stCoeWrite.rGravityOfEarth := 9.806650;
+				stCoeWrite.rScaleFactor := 1.0;
+				stCoeWrite.rReferenceLoad	:= 5.0;
+				stCoeWrite.bEnableUserScaleIndex8010 := FALSE;
+				stCoeWrite.dnUserScaleOffsetIndex8010 := 0;
+				stCoeWrite.dnUserScaleGainIndex8010 := 65536;
+				stCoeWrite.dwFilterSettingsIndex8010	:= 0;
+
+				fbForceEL3356.bWriteCoePara:= TRUE;
+
+				nStepWriteForcePara := 20;
+
+			ELSIF bgGr01ForceActiv10kN
+			THEN
+				fbForceCtrl.lrMaxForce := 10000, (* [N] *)
+
+				stCoeWrite.bEnableFilter := TRUE;
+				stCoeWrite.bEnableUserScale := TRUE;
+				stCoeWrite.dwFilterSettings := 0;
+				stCoeWrite.rGain := 1.0;
+				stCoeWrite.rTara := stgGr01HMI.stHMITOPLC.lrOriginShiftForceX2Right;
+				stCoeWrite.rRatedOutput := 0.9907;
+				stCoeWrite.rNominalLoad := 10000.0;
+				stCoeWrite.rZeroBalance := 0.00147;
+				stCoeWrite.rGravityOfEarth := 9.806650;
+				stCoeWrite.rScaleFactor := 1.0;
+				stCoeWrite.rReferenceLoad	:= 10.0;
+				stCoeWrite.bEnableUserScaleIndex8010 := FALSE;
+				stCoeWrite.dnUserScaleOffsetIndex8010 := 0;
+				stCoeWrite.dnUserScaleGainIndex8010 := 65536;
+				stCoeWrite.dwFilterSettingsIndex8010	:= 0;
+
+				fbForceEL3356.bWriteCoePara:= TRUE;
+
+				nStepWriteForcePara := 20;
+
+			ELSE
+
+				nStepWriteForcePara := 40;
+			END_IF
+
+		20: 	(*Wait*)
+			IF fbForceEL3356.fbCoe.bCoeBusy
+			THEN
+				fbForceEL3356.bWriteCoePara:= FALSE;
+
+				nStepWriteForcePara := 30;
+			END_IF
+	
+		30: (*Write*)
+			IF NOT fbForceEL3356.fbCoe.bCoeBusy
+			THEN
+				bWriteForceParaBusy := FALSE;
+
+				IF NOT fbForceEL3356.fbCoe.bCoeError
+				THEN
+					nStepWriteForcePara := 0;
+				ELSE
+					nStepWriteForcePara := 40;
+				END_IF
+			END_IF
+		40: (*Error*)
+			nStepWriteForcePara := 0;
+
+		ELSE
+			nStepWriteForcePara := 0;
+	END_CASE
+
+*)
+
+	fbForceCtrl.lrMaxForce := 5000; (* [N] *)
+
+	stCoeWrite.bEnableFilter := TRUE;
+	stCoeWrite.bEnableUserScale := TRUE;
+	stCoeWrite.dwFilterSettings := 0;
+	stCoeWrite.rGain := 1.0;
+	stCoeWrite.rTara := (*stgGr01HMI.stHMITOPLC.lrOriginShiftForce*)0.0;
+	stCoeWrite.rRatedOutput := 0.995000;
+	stCoeWrite.rNominalLoad := 5000.0;
+	stCoeWrite.rZeroBalance := -0.00028;
+	stCoeWrite.rGravityOfEarth := 9.806650;
+	stCoeWrite.rScaleFactor := 1.0;
+	stCoeWrite.rReferenceLoad	:= 5.0;
+	stCoeWrite.bEnableUserScaleIndex8010 := FALSE;
+	stCoeWrite.dnUserScaleOffsetIndex8010 := 0;
+	stCoeWrite.dnUserScaleGainIndex8010 := 65536;
+	stCoeWrite.dwFilterSettingsIndex8010	:= 0;
+
+	bWriteCoePara := lrCacheWeightTara <> (*stgGr01HMI.stHMITOPLC.lrOriginShiftForce*)0.0;
+
+	fbForceEL3356(
+		bEnable := TRUE,
+		nTerminalNr := 1,
+(*		stTerminalState := stinGr01EL3356A12TerminalState,
+		stChannelState := stinGr01EL3356A12ChannelState,*)
+		bSetCoeParaToDefault := bSetCoeParaToDefault,
+		bReadCoePara := bReadCoePara,
+		bWriteCoePara := bWriteCoePara,
+		rValue := (*rinGr01ForceRMBValue*)0.0,
+		stCoeWrite := stCoeWrite,
+		stCoeRead => stCoeRead,
+(*		stChannelCtrl => stoutGr01EL3356A8ChannelCtrl,*)
+		lrGrossWeightPV =>
+	);
+
+	lrActForce := F_LRealRound(fbForceEL3356.lrGrossWeightPV - lrForceOffset, 2);
+
+	lrCacheWeightTara := (*stgGr01HMI.stHMITOPLC.lrOriginShiftForce*)0.0;
+
+ELSE							(* Directly force measure *)
+
+	lrActForce := lrForceCurrent;
+	fbForceCtrl.lrMaxForce := lrForceMaxN; (* [N] *)
+
+END_IF
+
+fbForceCtrl(
+	bEnable := bNoEStop
+			    AND bPowerSupplyOn
+			    AND bSafetyOK
+			    AND bCtrlEnabled,
+	bControllerOn := bVeloForceCtrlEn,
+	lrVeloKp := lrVeloForceCtrlKp,
+	lrVeloTi := lrVeloForceCtrlTi,
+	lrCtrlVeloFilter := lrVeloForcePreCtrlVelo,
+	lrPVForce := lrActForce, (* [N] *)
+	lrSPForce := lrTargetForce, (* [N] *)
+	lrVeloMax := lrVeloForceCtrlLimit,
+	lrVeloMin := -lrVeloForceCtrlLimit,
+	lrTaskCycle := lrgActCycleTime
+);
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_AxisGetStatus" Id="{44f9b296-3a56-4003-9e4e-92f4b59708fb}">
+      <Implementation>
+        <ST><![CDATA[
+(* Get axis status *)
+Axis.fbReadStatusSDS(
+	stStoeberToPlc := Drive.stStoeberToPlc,
+	stPlcToStoeber := Drive.stPlcToStoeber,
+	stAxisStatus := Axis.stAxisStatus
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_AxisLink" Id="{f56055de-fee2-4114-bfb1-b1a077d04de1}">
+      <Implementation>
+        <ST><![CDATA[
+(* Axis linking *)
+fbLink(
+	Drive := Drive,
+	Axis := Axis
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_AxisMoveAuto" Id="{786904b3-c11a-449b-aa9f-49df50e9e660}">
+      <Implementation>
+        <ST><![CDATA[
+(* Move axis auto *)
+rtMachineStandstill(CLK := bMachineStandstill);
+
+lrVeloLimitMin := SEL(bVelocityLimitEn, INT_TO_LREAL( -1 * nVelocityLimitMax), lrVelocityMin);
+lrVeloLimitMax := SEL(bVelocityLimitEn, INT_TO_LREAL(nVelocityLimitMax), lrVelocityMax);
+
+fbMoveAuto(
+	bEnable := bNoEStop
+               		    AND bPowerSupplyOn
+               		    AND bSafetyOK,
+    	bCtrlEnabled := bCtrlEnabled
+                    		   AND bMoveRelease,
+	etMachineMode := etMachineMode,
+	etMachineState := etMachineState,
+	bReset := bConfirmAlarm,
+	bExeHome := bExeHome,
+	bExeMoveAbs := bExeMoveAbs,
+	bExeMoveRel := bExeMoveRel,
+	bExeMoveAdd := bExeMoveAdd,
+	bExeMoveSuper := bExeMoveSuper,
+	bExeMoveVelo := bExeMoveVelo,
+	bExeStop := bExeStop
+			      OR rtMachineStandstill.Q,
+	lrPosition := lrTargetPosition,
+	lrVelocity := LIMIT(lrVeloLimitMin, lrAutoVelocity, lrVeloLimitMax),
+	lrAcceleration := lrAcceleration,
+	lrDeceleration := lrDeceleration,
+	lrJerk := lrJerk,
+	lrOriginPosition := lrOriginShift,
+	bSignalReference := bSignalReference,
+	tControllerOff := tControllerOff,
+	bHomeCompleted := bHomeCompleted,
+	Axis := Axis
+ );]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_AxisMoveManual" Id="{80399e81-4ec0-43cc-b453-c0077154c3d2}">
+      <Implementation>
+        <ST><![CDATA[
+(* Move axis manual *)
+fbMoveManual(
+	bEnable := bNoEStop
+               		    AND bPowerSupplyOn
+               		    AND bSafetyOK,
+	bCtrlEnabled := bCtrlEnabled
+                			    AND bMoveRelease,
+	etMachineMode := etMachineMode,
+	etMachineState := etMachineState,
+	bReset := bConfirmAlarm,
+	bMovePlus := bTipPlus,
+	bMoveMinus := bTipMinus,
+	lrTipDistance := lrTipDistance,
+	bLimitMax := bHardLimitMaxExceeded
+			       OR bSoftLimitMaxExceeded ,
+	bLimitMin := bHardLimitMinExceeded
+			      OR bSoftLimitMinExceeded,
+	bPlusRelease := bPlusRelease,
+	bMinusRelease := bMinusRelease,
+	lrVelocity := SEL(NOT bReferenced, lrManualVelocity, lrVelocityNoRef),
+	lrAcceleration := lrAcceleration,
+	lrDeceleration := lrDeceleration,
+	lrJerk := lrJerk,
+	tControllerOff := tControllerOff,
+	bHomeCompleted := bHomeCompleted,
+	Axis := Axis
+);
+
+bSafetyLock := fbMoveManual.bMovePlus
+                		OR fbMoveManual.bMoveMinus;]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_AxisTerminalDiag" Id="{7d631732-0450-485a-9169-4582c18feb45}">
+      <Implementation>
+        <ST><![CDATA[
+(*Axis terminal diagnosis *)
+fbTerminalDiagnosis(
+	stTerminalState := Drive.stTerminalState,
+	sTerminalStatus => sTerminalStatus
+);
+
+bErrorTerminal := NOT fbTerminalDiagnosis.bTerminalOK;]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_Gr05AxisClamp">
+      <LineId Id="148" Count="17" />
+    </LineIds>
+    <LineIds Name="FB_Gr05AxisClamp.A_AxisAlarm">
+      <LineId Id="0" Count="13" />
+    </LineIds>
+    <LineIds Name="FB_Gr05AxisClamp.A_AxisController">
+      <LineId Id="0" Count="52" />
+    </LineIds>
+    <LineIds Name="FB_Gr05AxisClamp.A_AxisForceCtrl">
+      <LineId Id="0" Count="209" />
+    </LineIds>
+    <LineIds Name="FB_Gr05AxisClamp.A_AxisGetStatus">
+      <LineId Id="0" Count="6" />
+    </LineIds>
+    <LineIds Name="FB_Gr05AxisClamp.A_AxisLink">
+      <LineId Id="0" Count="5" />
+    </LineIds>
+    <LineIds Name="FB_Gr05AxisClamp.A_AxisMoveAuto">
+      <LineId Id="0" Count="34" />
+    </LineIds>
+    <LineIds Name="FB_Gr05AxisClamp.A_AxisMoveManual">
+      <LineId Id="0" Count="30" />
+    </LineIds>
+    <LineIds Name="FB_Gr05AxisClamp.A_AxisTerminalDiag">
+      <LineId Id="0" Count="7" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

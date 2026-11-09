@@ -1,0 +1,97 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_KUKA_Enable" Id="{cdf265fa-69a9-4212-a112-2a47293efd74}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_KUKA_Enable
+(*
+
+The function block used to move enable for an kuka
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			18.11.2016
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;			(* Signal FB enable *)
+	bAutoHand					:BOOL;			(* Auto := TRUE, Hand := FALSE *)
+	bNoEStop					:BOOL;			(* No ermergency Stop / Keine Notaus *)
+	bMoveOn					:BOOL;			(* Enable the move enable *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bMoveEnabled				:BOOL;			(* MoveEnabled = TRUE indicates that the kuka  drivers is ready for operation. *)
+	bError						:BOOL;			(* Error *)
+	udnErrorNo					:UDINT;			(* Error number *)
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	Kuka							:ST_KUKA_REF;
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	tMoveEnabledDelay 					:TIME := t#300ms;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	tonMoveEnabledDelay					:TON;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+	Kuka.PlcToKuka.bMoveEnable := FALSE;                   		 (* Disable *)
+	tonMoveEnabledDelay(IN := FALSE,
+				    		 PT := tMoveEnabledDelay);
+ELSE
+
+	IF NOT bNoEStop
+	THEN
+		Kuka.PlcToKuka.bMoveEnable := FALSE;                   		 (* Disable *)
+
+	ELSE
+		IF bAutoHand			(* Auto *)
+		THEN
+			IF (bMoveOn
+			      OR (NOT bMoveOn
+				     AND Kuka.KukaToPlc.bInWorkArea))
+			     AND Kuka.KukaToPlc.bIOActConf
+			     AND Kuka.KukaToPlc.bExt
+			THEN
+				Kuka.PlcToKuka.bMoveEnable := TRUE;                   		 (* Enable *)
+			ELSE
+				Kuka.PlcToKuka.bMoveEnable := FALSE;                   		 (* Enable *)
+			END_IF
+		ELSE				(* Manual *)
+			IF Kuka.KukaToPlc.bT1
+			     OR Kuka.KukaToPlc.bT2
+			     OR Kuka.KukaToPlc.bAut
+			THEN
+				Kuka.PlcToKuka.bMoveEnable := TRUE;                   		 (* Enable *)
+			ELSE
+				Kuka.PlcToKuka.bMoveEnable := FALSE;                   		 (* Enable *)
+			END_IF
+		END_IF
+	END_IF;
+
+END_IF;
+
+tonMoveEnabledDelay(IN := Kuka.PlcToKuka.bMoveEnable,				(* Move enabled *)
+			   		PT := tMoveEnabledDelay);
+bMoveEnabled := tonMoveEnabledDelay.Q;
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_KUKA_Enable">
+      <LineId Id="44" Count="42" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Error" Id="{ce39f4f3-c641-47db-b1ea-613c4068ce62}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Error
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable					:BOOL;						(* Enable FB signal *)
+	bReset					:BOOL;						(* Reset *)
+	stAlarmIn					:ST_AlarmProperties;			(* Alarm output *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	stAlarmOut				:ST_AlarmProperties;			(* Alarm output *)
+END_VAR
+VAR_IN_OUT
+
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* Check method enabled *)
+IF NOT bEnable
+THEN
+	RETURN;
+END_IF;
+
+IF bReset
+THEN
+	IF stAlarmOut.bActive
+	THEN
+		stAlarmOut.bActive := FALSE;
+		(*stAlarmOut.enType := ET_AlarmType_eIdle;*)
+		(*stAlarmOut.dtDateTime := DT#1970-01-01-00:00;*)
+		(*stAlarmOut.dnCode := 0;*)
+	END_IF;
+ELSE
+	IF stAlarmIn.bActive
+	    AND NOT stAlarmOut.bActive
+	THEN
+		stAlarmOut.bActive := TRUE;
+		stAlarmOut.enType := stAlarmIn.enType;
+		stAlarmOut.dtDateTime := stAlarmIn.dtDateTime;
+		stAlarmOut.dnCode := stAlarmIn.dnCode;
+	END_IF;
+END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Error">
+      <LineId Id="26" Count="24" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

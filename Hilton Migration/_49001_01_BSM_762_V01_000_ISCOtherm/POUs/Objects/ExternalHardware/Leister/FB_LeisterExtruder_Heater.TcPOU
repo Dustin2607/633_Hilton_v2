@@ -1,0 +1,326 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_LeisterExtruder_Heater" Id="{1e4dc18b-4265-40cb-be4e-1761b467a70f}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_LeisterExtruder_Heater
+(*
+
+The function block used to control heater of Leisetr extruder
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			09.11.2019
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Enable FB signal *)
+	bStart						:BOOL;						(* Start heater *)
+	bStop						:BOOL;						(* Stop heater *)
+	bRelease					:BOOL;						(* Release *)
+	nAirTemp					:INT;						(* Air temperatur *)
+	nPlastTemp					:INT;						(* Plast  temperatur *)
+	tTimeOut						:TIME := t#10s;				(* Timeout of air ok *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bDone						:BOOL;						(* Program done *)
+	bBusy						:BOOL;						(* Program busy *)
+	bError						:BOOL;						(* Error *)
+	udnErrorNo					:UDINT;
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	Leister						:ST_LEISTER_REF;
+END_VAR
+VAR
+	(* Enummerations *)
+	etHeater						:ET_LeisterHeater;
+
+	(* Variables *)
+	nWatchdog					:INT;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtStart						:R_TRIG;
+	rtStop						:R_TRIG;
+	tonWatchdog					:TON;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+	bDone := FALSE;					(* Program done *)
+	bBusy := FALSE;                                  	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;                                 		(* Error number *)
+
+	bBusy := bStart OR bStop;
+	bDone := bStart OR bStop;
+	Leister.bHeating:= bStart;
+
+	tonWatchdog(IN := FALSE);
+
+	RETURN;
+END_IF;
+
+(* Wait for triger *)
+rtStart(
+	CLK := bStart
+);
+
+rtStop(
+	CLK := bStop
+		    OR nAirTemp = 0
+		    OR nPlastTemp = 0
+);
+
+IF rtStop.Q
+THEN
+	etHeater := ET_LeisterHeater_eWaitExecute;                      						(* Next step *)
+
+END_IF;
+
+CASE etHeater
+OF
+
+	ET_LeisterHeater_eWaitExecute:
+		bBusy := FALSE;                                     	(* Program not busy *)
+		bError := FALSE;                         		(* Program not error *)
+		udnErrorNo := 0;                         		(* Error number *)
+
+		IF rtStop.Q
+		THEN
+			nWatchdog := 0;
+			bDone := FALSE;                          		(* Program not done *)
+			bBusy := TRUE;                                  	(* Program busy *)
+
+			tonWatchdog(IN := FALSE);
+
+			IF Leister.bEnabled
+			THEN
+				Leister.bStartHeater := FALSE;
+				Leister.bStopHeater := TRUE;
+				Leister.bStartExtruder := FALSE;
+				Leister.bStopExtruder := TRUE;
+
+				Leister.nExtruderSetSpeed := 0;
+
+				etHeater := ET_LeisterHeater_eStopHeater;              (* Next step *)
+
+			ELSE
+				udnErrorNo := 1;                     (* Error number *)
+
+				etHeater :=  ET_LeisterHeater_eError;             (* Next step *)
+			END_IF
+
+		ELSIF rtStart.Q
+			    AND bRelease
+		   	    AND nAirTemp > 0
+		    	    AND nPlastTemp > 0
+			    AND NOT Leister.bLockedInterface
+		THEN
+			nWatchdog := 0;
+			bDone := FALSE;                          		(* Program not done *)
+			bBusy := TRUE;                                  	(* Program busy *)
+
+			tonWatchdog(IN := FALSE);
+
+			Leister.bLockedInterface := TRUE;
+
+			IF Leister.bAirHeaterError
+			    OR Leister.bPlastHeaterError
+			THEN
+				Leister.bStartHeater := FALSE;
+				Leister.bStopHeater := FALSE;
+				Leister.bStartExtruder := FALSE;
+				Leister.bStopExtruder := FALSE;
+
+				udnErrorNo := 2;                     (* Error number *)
+
+				etHeater :=  ET_LeisterHeater_eError;             (* Next step *)
+
+			ELSIF Leister.bEnabled
+			THEN
+				Leister.bStartHeater := TRUE;
+				Leister.bStopHeater := FALSE;
+				Leister.nAirSetTemp := nAirTemp;
+				Leister.nPlastSetTemp := nPlastTemp;
+
+				IF Leister.bReady
+				     AND Leister.bStartRelease
+				THEN
+					etHeater := ET_LeisterHeater_eDone;              (* Next step *)
+				ELSE
+					etHeater := ET_LeisterHeater_eStartHeater;              (* Next step *)
+				END_IF
+			ELSE
+				Leister.bStartHeater := FALSE;
+				Leister.bStopHeater := FALSE;
+				Leister.bStartExtruder := FALSE;
+				Leister.bStopExtruder := FALSE;
+
+				udnErrorNo := 3;                     (* Error number *)
+
+				etHeater :=  ET_LeisterHeater_eError;             (* Next step *)
+			END_IF
+		END_IF
+
+	ET_LeisterHeater_eStartHeater :
+		tonWatchdog(
+			IN := TRUE,
+			PT:= tTimeOut
+		);
+
+		Leister.bStartHeater := TRUE;
+		Leister.bStopHeater := FALSE;
+
+		IF Leister.bHeating
+		THEN
+			tonWatchdog(IN := FALSE);
+
+			etHeater := ET_LeisterHeater_eDone;             (* Next step *)
+
+		ELSIF Leister.bAirHeaterError
+		THEN
+			Leister.bStartHeater := FALSE;
+			Leister.bStopHeater := FALSE;
+			Leister.bStartExtruder := FALSE;
+			Leister.bStopExtruder := FALSE;;
+
+			tonWatchdog(IN := FALSE);
+
+			udnErrorNo := 4;                     (* Error number *)
+
+			etHeater := ET_LeisterHeater_eError;             (* Next step *)
+
+		ELSIF Leister.bPlastHeaterError
+		THEN
+			Leister.bStartHeater := FALSE;
+			Leister.bStopHeater := FALSE;
+			Leister.bStartExtruder := FALSE;
+			Leister.bStopExtruder := FALSE;
+
+			tonWatchdog(IN := FALSE);
+
+			udnErrorNo := 5;                     (* Error number *)
+
+			etHeater := ET_LeisterHeater_eError;             (* Next step *)
+
+		ELSIF tonWatchdog.Q
+		THEN
+			Leister.bStartHeater := FALSE;
+			Leister.bStopHeater := FALSE;
+			Leister.bStartExtruder := FALSE;
+			Leister.bStopExtruder := FALSE;
+
+			tonWatchdog(IN := FALSE);
+
+			udnErrorNo := 6;                     (* Error number *)
+
+			etHeater := ET_LeisterHeater_eError;             (* Next step *)
+		END_IF;
+
+	ET_LeisterHeater_eStopHeater :
+		tonWatchdog(
+			IN := TRUE,
+			PT:= tTimeOut
+		);
+
+		Leister.bStartHeater := FALSE;
+		Leister.bStopHeater := TRUE;
+		Leister.bStartExtruder := FALSE;
+		Leister.bStopExtruder := TRUE;
+
+		Leister.nExtruderSetSpeed := 0;
+		Leister.nAirSetTemp := 0;
+		Leister.nPlastSetTemp := 0;
+
+		IF NOT Leister.bHeating
+		    AND NOT Leister.bRunning
+		    AND NOT Leister.bReady
+		    AND NOT Leister.bStartRelease
+		THEN
+			tonWatchdog(IN := FALSE);
+
+			etHeater := ET_LeisterHeater_eDone;             (* Next step *)
+
+		ELSIF Leister.bAirHeaterError
+		THEN
+			Leister.bStartHeater := FALSE;
+			Leister.bStopHeater := FALSE;
+			Leister.bStartExtruder := FALSE;
+			Leister.bStopExtruder := FALSE;;
+
+			tonWatchdog(IN := FALSE);
+
+			udnErrorNo := 4;                     (* Error number *)
+
+			etHeater := ET_LeisterHeater_eError;             (* Next step *)
+
+		ELSIF Leister.bPlastHeaterError
+		THEN
+			Leister.bStartHeater := FALSE;
+			Leister.bStopHeater := FALSE;
+			Leister.bStartExtruder := FALSE;
+			Leister.bStopExtruder := FALSE;
+
+			tonWatchdog(IN := FALSE);
+
+			udnErrorNo := 5;                     (* Error number *)
+
+			etHeater := ET_LeisterHeater_eError;             (* Next step *)
+
+		ELSIF tonWatchdog.Q
+		THEN
+			Leister.bStartHeater := FALSE;
+			Leister.bStopHeater := FALSE;
+			Leister.bStartExtruder := FALSE;
+			Leister.bStopExtruder := FALSE;
+
+			tonWatchdog(IN := FALSE);
+
+			udnErrorNo := 6;                     (* Error number *)
+
+			etHeater := ET_LeisterHeater_eError;             (* Next step *)
+		END_IF;
+
+	ET_LeisterHeater_eError:
+		bBusy := FALSE;						(* Command busy *)
+		bError := TRUE;						(* Command error  *)
+
+		etHeater := ET_LeisterHeater_eNoExecute;
+
+	ET_LeisterHeater_eDone:
+		bDone := TRUE;						(* Command done *)
+		bBusy := FALSE;						(* Command busy *)
+
+		etHeater := ET_LeisterHeater_eNoExecute;
+
+	ET_LeisterHeater_eNoExecute:
+		IF NOT bStart
+		     AND NOT bStop
+		THEN
+			(* Reset outputs *)
+			bDone := FALSE;						(* Command done *)
+			bBusy := FALSE;						(* Command busy *)
+			bError := FALSE;						(* Command error  *)
+
+			nWatchdog := 0;
+			Leister.bLockedInterface := FALSE;
+
+			etHeater := ET_LeisterHeater_eWaitExecute;
+		END_IF
+END_CASE;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_LeisterExtruder_Heater">
+      <LineId Id="51" Count="264" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

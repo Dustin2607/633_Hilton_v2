@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_DRIVESI6SC6CIA402_REF" Id="{5630d80a-9d7d-4388-b392-9dbdbd88862d}">
+    <Declaration><![CDATA[TYPE ST_DRIVESI6SC6CIA402_REF : FB_STOEBERSI6SC6CIA402_REF;
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

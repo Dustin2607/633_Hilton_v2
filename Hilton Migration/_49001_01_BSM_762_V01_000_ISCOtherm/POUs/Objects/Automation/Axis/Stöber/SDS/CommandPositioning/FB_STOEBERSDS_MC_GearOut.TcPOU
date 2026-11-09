@@ -1,0 +1,231 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_STOEBERSDS_MC_GearOut" Id="{7fbd2836-30ea-4a00-935f-4917817889ce}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_STOEBERSDS_MC_GearOut
+(*
+
+The function block used to decoupling the Slave from the Master axis. 
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			22.09.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bExecute					:BOOL;			(* Execut the function block *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bDone						:BOOL;			(* Program done *)
+	bBusy						:BOOL;			(* Program busy *)
+	bError						:BOOL;			(* Error *)
+	udnErrorNo					:UDINT;			(* Error number *)
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	Axis							:ST_AXIS_REF;
+END_VAR
+VAR
+	(* Enummerations *)
+	etMC_States					:ET_MC_States := ET_MC_States_eInit;
+
+	(* Variables *)
+	dwValue						:DWORD;
+	nWatchdog					:INT;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbReadSDO					:FB_EcCoESdoRead;
+	rtExecute						:R_TRIG;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+rtExecute(CLK := bExecute);
+
+IF rtExecute.Q
+THEN
+	etMC_States := ET_MC_States_eInit;                      						(* Next step *)
+
+END_IF;
+
+CASE etMC_States OF
+
+	ET_MC_States_eInit:
+		bBusy := FALSE;                                     	(* Program not busy *)
+		bError := FALSE;                         		(* Program not error *)
+		udnErrorNo := 0;                         		(* Error number *)
+
+		IF rtExecute.Q
+		THEN
+			nWatchdog := 0;
+			bDone := FALSE;                              	 	(* Program done *)
+			bBusy := TRUE;                                  	(* Program busy *)
+
+			Axis.bLockPDO := TRUE;
+
+			(* Read usnI192_Synchronlauf *)
+			fbReadSDO(
+				sNetId := Axis.sAdsAddr,
+				nSlaveAddr := Axis.unSlaveAddr,
+				bExecute := FALSE,
+				tTimeout := DEFAULT_ADS_TIMEOUT
+			);
+
+			IF Axis.stNcToPlc.stBaseDevice.bEnabled   			(* Control enabled *)
+			     AND Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bHomed          	(* Axis in reference *)
+			THEN
+				Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd := Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd AND 224;				(* Reset MC modes staus *)
+				Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bPLCOpenCmdExe := FALSE;                                                 						(* Reset MC_GearOut execute *)
+
+				Axis.stPlcToNc.stBaseDevice.bToggleBit := FALSE;    (* Reset toggle bit *)
+
+                			etMC_States := ET_MC_States_eReset;         (* Next step *)
+		                
+			ELSE
+				udnErrorNo := 4;                     (* Error number *)
+
+				etMC_States := ET_MC_States_eError;             (* Next step *)
+
+			END_IF;
+		END_IF;
+        
+	ET_MC_States_eReset:
+		nWatchdog := nWatchdog + 1;
+
+		IF NOT Axis.stNcToPlc.stBaseDevice.bToggleBit        		   	(* Ack Toggle bit *)
+		THEN
+			nWatchdog := 0;
+			etMC_States := ET_MC_States_eRunning;			(* Next step *)
+
+		ELSIF nWatchdog > 150
+		THEN
+			etMC_States := ET_MC_States_eError;             (* Next step *)
+		END_IF;
+
+	ET_MC_States_eRunning:
+		nWatchdog := nWatchdog + 1;
+
+		Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd := Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd OR 11;			(* Set MC_GearOut *)
+		Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bPLCOpenCmdExe := TRUE;                                                    					(* Set MC_GearOut execute *)
+
+		Axis.stPlcToNc.stBaseDevice.bToggleBit := TRUE;     (* Set Toggle bit *)
+
+		IF Axis.stNcToPlc.stBaseDevice.bToggleBit								(* Ack Toggle bit *)
+		     AND (Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd AND 31) = 11 			(* Ack MC_GearOut *)
+		     AND Axis.stNcToPlc.stBaseDevice.bAxisActive      						(* Axis active *)
+		     AND NOT Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bPLCOpenStandstill				(* Axis runnning *)
+		     AND NOT Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bPLCOpenCmdAborted			(* Aborted *)
+		THEN
+			Axis.stPlcToNc.stBaseDevice.bToggleBit := FALSE;    		(* Reset Toggle bit *)
+
+			nWatchdog := 0;
+			etMC_States := ET_MC_States_eWaiting;           (* Next step *)
+		
+		ELSIF Axis.stNcToPlc.stBaseDevice.bError					(* Error *)
+			   OR nWatchdog > 150
+		THEN
+			Axis.stPlcToNc.stBaseDevice.bToggleBit := FALSE;    		(* Reset Toggle bit *)
+
+			udnErrorNo := 2;                     (* Error number *)
+
+			etMC_States := ET_MC_States_eError;             (* Next step *)
+		END_IF;
+
+	ET_MC_States_eWaiting:
+		IF Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bPLCOpenCmdDone       		(* Command done *)
+		THEN
+
+			nWatchdog := nWatchdog + 1;
+
+			(* Read usnI192_Synchronlauf dwI192Synchronlauf := 16#FFFF *)
+			fbReadSDO(
+				sNetId := Axis.sAdsAddr,
+				nSlaveAddr := Axis.unSlaveAddr,
+				nSubIndex := 0,			(* Subindex of object *)
+				nIndex := 16#30C0,                   (* Index of object *)
+				pDstBuf := ADR(dwValue),
+				cbBufLen := SIZEOF(dwValue),
+				bExecute := TRUE,
+				tTimeout := DEFAULT_ADS_TIMEOUT
+			);
+
+			IF (NOT fbReadSDO.bBusy
+			     AND fbReadSDO.bError)
+			     OR nWatchdog > 150
+			THEN
+				fbReadSDO(bExecute := FALSE);
+
+				udnErrorNo := 5;                     (* Error number *)
+			
+				etMC_States := ET_MC_States_eError;              (* Next step *)
+			
+			ELSIF NOT fbReadSDO.bBusy
+				   AND NOT fbReadSDO.bError
+			THEN
+				IF NOT dwValue.1                         (* In gear *)
+				AND NOT Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bCoupled
+				THEN
+					fbReadSDO(bExecute := FALSE);
+
+					nWatchdog := 0;
+					etMC_States := ET_MC_States_eDone;              (* Next step *)
+
+				END_IF;
+			END_IF;
+
+		ELSIF Axis.stNcToPlc.stBaseDevice.bError					(* Error *)
+		THEN
+			udnErrorNo := 3;                     (* Error number *)
+		
+			etMC_States := ET_MC_States_eError;             (* Next step *)
+		END_IF;
+
+	ET_MC_States_eDone:
+		nWatchdog := 0;
+		bDone := NOT dwValue.1;			(* In Gear cmd done *)			(* Out gear          stNcToPlc.byI201_Motion_Status_Byte AND 5) = 5 *)
+		bBusy := FALSE;                                      	(* Program not busy *)
+
+		etMC_States := ET_MC_States_eNotExecute;            (* Next step *)
+
+	ET_MC_States_eError:
+		nWatchdog := 0;
+ 		Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bPLCOpenCmdExe := FALSE;         (* Reset MC_GearOut execute *)
+	         bDone := FALSE;				(* Gear out cmd error *)
+	         bError := TRUE;				(* Program error  *)
+	         bBusy := FALSE;				(* Program not busy *)
+
+		etMC_States := ET_MC_States_eNotExecute;            (* Next step *)
+        
+	ET_MC_States_eNotExecute:
+		IF NOT bExecute
+		THEN
+			nWatchdog := 0;
+			Axis.bLockPDO := FALSE;
+
+			bDone := FALSE;			(* Gear out cmd *)
+			bBusy := FALSE;                       (* Program not busy *)
+			bError := FALSE;                       (* Program not error *)
+			udnErrorNo := 0;                        (* Error number *)
+
+			Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd := Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd AND 224;			(* Reset MC modes staus *)
+ 			Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bPLCOpenCmdExe := FALSE;         										(* Reset MC_GearOut execute *)
+
+			etMC_States := ET_MC_States_eInit;              (* Next step *)
+		
+		END_IF;
+END_CASE;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_STOEBERSDS_MC_GearOut">
+      <LineId Id="46" Count="174" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

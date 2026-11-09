@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_LEISTER_EXTRUDER_REF" Id="{11b9035d-d8a1-40fc-b751-66426c79218b}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_LEISTER_EXTRUDER_REF
+VAR_INPUT
+	bEnable						:BOOL;						(* Enable *)
+	bResetAlarm					:BOOL;						(* Reset alarm *)
+	bDriveAbort					:BOOL;						(* Drive abort *)
+
+	bStartHeater					:BOOL;						(* Heater start *)
+	bStopHeater					:BOOL;						(* Heater stop *)
+	bStartExtruder				:BOOL;						(* Extruder start *)
+	bStopExtruder				:BOOL;						(* Extruder start *)
+
+	bEnabled					:BOOL;						(* Enabled *)
+	bError						:BOOL;						(* Error *)
+	bAirPressureOk				 :BOOL;						(* Air pressure Ok *)
+
+	bReady						:BOOL;						(* Ready *)
+	bHeating						:BOOL;						(* Heating *)
+	bStartRelease				:BOOL;						(* Start release *)
+	bRunning					:BOOL;						(* Running *)
+
+	bAirHeaterError				:BOOL;						(* Air heater error *)
+	bPlastHeaterError				:BOOL;						(* Plast heater error *)
+	bPlastDriveError				:BOOL;						(* Plast drive error *)
+
+	nExtruderSetSpeed			:INT;						(* Referenc extruding speed 0 - 100 % *)
+	nExtruderSpeedMin			:INT;						(* Minimal extruding speed 0 - 600 Upm *)
+	nExtruderSpeedMax			:INT;						(* Maximal extruding speed 0 - 600 Upm *)
+	nExtrudingActSpeed			:INT;						(* Current extruding speed Upm *)
+
+	nPlastSetTemp				:INT;						(* Referenc plast temperature  °C *)
+	nPlastOffsetTemp				:INT;						(* Offset plast temperature  °C *)
+	nPlastTempMin				:INT;						(* Minimal plast temperature  °C *)
+	nPlastTempMax				:INT;						(* Maximal plast temperature  °C *)
+	nPlastActTemp				:INT;						(* Current plast temperature ° C *)
+
+	nAirSetTemp					:INT;						(* Referenc air temperature  °C *)
+	nAirOffsetTemp				:INT;						(* Offset air temperature  °C *)
+	nAirTempMin					:INT;						(* Minimal air temperature  °C *)
+	nAirTempMax				:INT;						(* Maximal air temperature  °C *)
+	nAirActTemp					:INT;						(* Current air temperature ° C *)
+	nAirActFlow					:INT;						(* Current air flow l/min *)
+
+	bLockedInterface				:BOOL;						(* Interface lock *)
+
+	stTerminalState				AT %I*:ST_TerminalState;
+	stLeisterToPlc				AT %I*:ST_LEISTERTOPLC;
+	stPlcToLeister				AT %Q*:ST_PLCTOLEISTER;
+END_VAR
+VAR_OUTPUT
+
+END_VAR
+VAR_IN_OUT
+
+END_VAR
+VAR
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_LEISTER_EXTRUDER_REF">
+      <LineId Id="57" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

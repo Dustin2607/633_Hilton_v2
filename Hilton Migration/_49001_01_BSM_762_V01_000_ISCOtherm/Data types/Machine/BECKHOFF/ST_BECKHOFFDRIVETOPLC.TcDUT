@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_BECKHOFFDRIVETOPLC" Id="{e1fadc66-50ba-45d5-a5e9-770e4211c05f}">
+    <Declaration><![CDATA[(* Communication structure from drive to plc *)
+
+TYPE ST_BECKHOFFDRIVETOPLC :
+STRUCT
+	bAxisHELimitMax 					:BOOL; 						(* DI1.7 Maximum limit of  axis heating element / Endschalter Achse Heizelement maximal *)
+	bAxisHELimitMin 					:BOOL;						(* DI1.6 Minimum limit of  axis heating element / Endschalter Achse Heizelement minimal *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_LEISTERTOPLC" Id="{7ef40750-958f-473a-8be5-daef343b3cb4}">
+    <Declaration><![CDATA[TYPE ST_LEISTERTOPLC :
+STRUCT
+	arbyInput				:ARRAY[0..63] OF BYTE;
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

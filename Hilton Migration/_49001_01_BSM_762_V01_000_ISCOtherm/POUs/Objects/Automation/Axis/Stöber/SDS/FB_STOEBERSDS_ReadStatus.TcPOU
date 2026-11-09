@@ -1,0 +1,170 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_STOEBERSDS_ReadStatus" Id="{7ffcfc77-e42f-478a-b440-e4bd552041f3}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_STOEBERSDS_ReadStatus
+(*
+
+The function block used to state of an axis
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			22.09.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	stPLCTOSTOEBER						:ST_PLCTOSTOEBER;
+	stSTOEBERTOPLC						:ST_STOEBERTOPLC;
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	stAxisStatus								:ST_STOEBER_AxisStatus;
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	nPLCOpenState							:INT;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+(* Motion status byte  I201 *)
+nPLCOpenState := BYTE_TO_INT(stSTOEBERTOPLC.byI201MotionStatusByte AND 2#00001111);			(* PLC open state *)
+IF nPLCOpenState = 2
+     OR  stStoeberToPlc.nD200SpeedReferenceValueStatusWord.0
+THEN
+	stAxisStatus.bStandStill := TRUE;
+ELSE
+	stAxisStatus.bStandStill := FALSE;
+END_IF;
+IF nPLCOpenState = 5
+THEN
+	stAxisStatus.bInSync := TRUE;
+ELSE
+	stAxisStatus.bInSync := FALSE;
+END_IF;
+IF nPLCOpenState = 8
+THEN
+	stAxisStatus.bHoming := TRUE;
+ELSE
+	stAxisStatus.bHoming := FALSE;
+END_IF;
+IF stSTOEBERTOPLC.byI201MotionStatusByte.5
+THEN
+	stAxisStatus.bInPositionWindow := TRUE;
+ELSE
+	stAxisStatus.bInPositionWindow := FALSE;
+END_IF;
+IF stSTOEBERTOPLC.byI201MotionStatusByte.6
+THEN
+	stAxisStatus.bAccelerating := TRUE;
+ELSE
+	stAxisStatus.bAccelerating := FALSE;
+END_IF;
+IF stSTOEBERTOPLC.byI201MotionStatusByte.7
+THEN
+	stAxisStatus.bDecelerating := TRUE;
+ELSE
+	stAxisStatus.bDecelerating := FALSE;
+END_IF;
+
+(* Device state byte E200 *)
+(* (stSTOEBERTOPLC.byE200DeviceStatusByte AND 2#00000001) = 2#00000001 *)
+IF stSTOEBERTOPLC.byE200DeviceStatusByte.0
+THEN
+	stAxisStatus.bEnabled := TRUE;
+ELSE
+	stAxisStatus.bEnabled := FALSE;
+END_IF;
+IF stSTOEBERTOPLC.byE200DeviceStatusByte.1
+THEN
+	stAxisStatus.bError := TRUE;
+ELSE
+	stAxisStatus.bError := FALSE;
+END_IF;
+IF stSTOEBERTOPLC.byE200DeviceStatusByte.3
+THEN
+	stAxisStatus.bFastStopActive := TRUE;
+ELSE
+	stAxisStatus.bFastStopActive := FALSE;
+END_IF;
+IF stSTOEBERTOPLC.byE200DeviceStatusByte.6
+THEN
+	stAxisStatus.bLocalActive := TRUE;
+ ELSE
+	stAxisStatus.bLocalActive := FALSE;
+END_IF;
+
+(* Position state word I200 *)
+stAxisStatus.nActMotionID := WORD_TO_INT(SHR(stSTOEBERTOPLC.unI200PosiStatusWord, 13));			(* Actual motion ID: bits 13,14,15 [0 .. 7] *)
+IF stSTOEBERTOPLC.unI200PosiStatusWord.1
+THEN
+	stAxisStatus.bDenied:=TRUE;
+ELSE
+	stAxisStatus.bDenied:=FALSE;
+END_IF;
+IF stSTOEBERTOPLC.unI200PosiStatusWord.5
+THEN
+	stAxisStatus.bInPosition := TRUE;
+ELSE
+	stAxisStatus.bInPosition := FALSE;
+END_IF;
+IF stSTOEBERTOPLC.unI200PosiStatusWord.6
+THEN
+	stAxisStatus.bInReference :=TRUE;
+ELSE
+	stAxisStatus.bInReference:=FALSE;
+END_IF;
+IF stSTOEBERTOPLC.unI200PosiStatusWord.8
+    AND NOT stAxisStatus.bLocalActive
+THEN
+	stAxisStatus.bJogActive := TRUE;
+ELSE
+	stAxisStatus.bJogActive := FALSE;
+END_IF;
+IF stSTOEBERTOPLC.unI200PosiStatusWord.9
+THEN
+	stAxisStatus.bCam1 := TRUE;
+ELSE
+	stAxisStatus.bCam1 := FALSE;
+END_IF;
+IF stSTOEBERTOPLC.unI200PosiStatusWord.10
+THEN
+	stAxisStatus.bSwitchPoint := TRUE;
+ELSE
+	stAxisStatus.bSwitchPoint := FALSE;
+END_IF;
+IF stAxisStatus.bEnabled
+     AND nPLCOpenState  > 0			(* 0 = init *)
+     AND nPLCOpenState <> 7			(* 7 = error *)
+     AND nPLCOpenState <> 8 			(* 8 = homing active *)
+     AND NOT stAxisStatus.bLocalActive
+     AND NOT stAxisStatus.bJogActive
+THEN
+	stAxisStatus.bReadyToPos := TRUE;
+ELSE
+	stAxisStatus.bReadyToPos := FALSE;
+END_IF;
+
+(* Actual position = value of I203 / 10 exp(value of I06) *)
+(*stSTOEBERAxisStatus.lrActPosition := DINT_TO_REAL(stSTOEBERTOPLC.dnI203CurrentPosition) / (10*10* stSTOEBERAxisStatus.byI06DecimalDigits);*)]]></ST>
+    </Implementation>
+    <LineIds Name="FB_STOEBERSDS_ReadStatus">
+      <LineId Id="39" Count="120" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

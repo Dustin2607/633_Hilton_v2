@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_MC_Direction" Id="{6d6370b4-0452-4a25-963a-2ea6bc99ce4b}">
+    <Declaration><![CDATA[TYPE ET_MC_Direction :
+(
+	ET_MC_Direction_eCurrent := 0,
+	ET_MC_Direction_ePositive := 1,
+	ET_MC_Direction_eNegative := -1
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

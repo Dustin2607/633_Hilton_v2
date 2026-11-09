@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_PLCTOPERIPHERY" Id="{372b86af-40be-4dae-8904-c565fa28f38c}">
+    <Declaration><![CDATA[TYPE ST_PLCTOPERIPHERY :
+STRUCT
+
+	bAllDoorsLocked						:BOOL;						(* IN - All Doors Locked / Alle Türen geschlossen  *)
+	bExtStart								:BOOL;						(* IN - External start  *)
+
+	bMachineError						:BOOL;						(* IN - Machine has fault. *)
+	bMachineStandstill					:BOOL;						(* IN - Machine standstill. *)
+	bMachineReady						:BOOL;						(* IN - Machine ready. *)
+
+	nPrgNoSideA							:INT;						(* IN - Program on side A *)
+	nPrgNoSideB							:INT;						(* IN - Program on side B *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

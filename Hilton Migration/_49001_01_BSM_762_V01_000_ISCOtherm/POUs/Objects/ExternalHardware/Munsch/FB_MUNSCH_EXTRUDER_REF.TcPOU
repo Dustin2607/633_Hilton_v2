@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_MUNSCH_EXTRUDER_REF" Id="{f3349c53-5016-43b0-90cc-676322b3c17a}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_MUNSCH_EXTRUDER_REF
+VAR_INPUT
+	bSendExe					:BOOL;						(* Send execute *)
+	tSendPeriod					:TIME := t#0s;					(* Send data every period. If tSendPeriod is 0 then th function is not active *)
+	bLockedInterface				:BOOL;						(* Locked interface *)
+	bHeat						:BOOL;						(* Heat status ON = TRUE, OFF = FALSE *)
+	bHeating						:BOOL;						(* Heating status ON = TRUE, OFF = FALSE *)
+	bHeated						:BOOL;						(* Heated status ON = TRUE, OFF = FALSE *)
+	bError						:BOOL;						(* Error ON = TRUE, OFF = FALSE *)
+	bExtruding					:BOOL;						(* Extruder status ON = TRUE, OFF = FALSE *)
+	nMaterialRefTemp			:INT;						(* Referenc material temperature *)
+	nMaterialActTemp				:INT;						(* Current material temperature *)
+	nAirRefTemp					:INT;						(* Referenc air temperature *)
+	nAirActTemp					:INT;						(* Current air temperature *)
+	stMunschCmd				:ST_MUNSCH_CMD_Data;
+	stMunschRes					:ST_MUNSCH_RES_Data;
+	bInterfaceReady				:BOOL;						(* Interface ready to use *)
+	bInterfaceError				:BOOL;						(* Interface error *)
+	bStringReceived				:BOOL;						(* String received *)
+	bSetAirTemp					:BOOL;						(* Set air temperature *)
+	bSetMaterialTemp			:BOOL;						(* Set material temperature *)
+	bStartHeat					:BOOL;						(* Heat start *)
+	bStopHeat					:BOOL;						(* Heat stop *)
+	bStartExtruding				:BOOL;						(* Extruding start *)
+	bStopExtruding				:BOOL;						(* Extruding start *)
+	bReadStatus					:BOOL;						(* Enable read current status *)
+	bExtrudingStop				:BOOL;						(* Extruding stop *)
+	nExtrudingSpeed				:INT;						(* Extruding speed *)
+END_VAR
+VAR_OUTPUT
+
+END_VAR
+VAR_IN_OUT
+
+END_VAR
+VAR
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_MUNSCH_EXTRUDER_REF">
+      <LineId Id="38" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,165 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="Gr05Auto" Id="{06c58b52-2152-47f4-889c-c66a1d72e13c}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM Gr05Auto
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable					:BOOL;						(* Enable Gr05Auto *)
+	bExecute				:BOOL;						(* Auto execute *)
+
+	(* Instances *)
+	fbInit						:FB_Gr05AutoInit;
+	fbProcedure				:FB_Gr05AutoProcedure;
+
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	SFCCurrentStepHis			:ARRAY[0..120] OF STRING;
+	bClearHis						:BOOL;
+	usnt : INT := 1;
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtExecute					:R_TRIG;
+	fbAlarm					:FB_Gr05AutoAlarm;
+END_VAR
+VAR CONSTANT
+	nFatalErrorMaxIdx				:INT := 0;						(* Maximal index of  using alarms *)
+	nErrorMaxIdx					:INT := 2;						(* Maximal index of  using alarms *)
+	nWarningMaxIdx				:INT := 1;						(* Maximal index of  using alarms *)
+	nMessageMaxIdx				:INT := 0;						(* Maximal index of  using alarms *)
+	nHintMaxIdx					:INT := 0;						(* Maximal index of  using alarms *)
+
+	dnFatalErrorBaseIdentNo		:DINT := 52000;				(* Fatal error identification number *)
+	dnErrorBaseIdentNo			:DINT := 52100;				(* Error identification number *)
+	dnWarningBaseIdentNo		:DINT := 52200;				(* Warning identification number *)
+	dnMessageBaseIdentNo		:DINT := 52300;				(* Message identification number *)
+	dnHintBaseIdentNo			:DINT := 52400;				(* Hint identification number *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+    RETURN;
+END_IF;
+
+(* Check auto execute *)
+bExecute := bgGr00ModeAutomatic
+		     AND NOT fbInit.bFirstTime;
+
+rtExecute(CLK := bExecute);
+
+IF rtExecute.Q
+THEN
+	A_Init();
+END_IF;
+
+A_Procedure();
+A_Functions();
+A_Alarm();
+
+
+
+
+
+]]></ST>
+    </Implementation>
+    <Action Name="A_Alarm" Id="{7f1ba15d-abd6-49c3-9a25-e4b33e5b4bf8}">
+      <Implementation>
+        <ST><![CDATA[
+(* Collect and execute input alarms *)
+fbAlarm.stAlarmIn.arbError[0].bActive := fbProcedure.bErrorPipeBeginNoDetected;
+fbAlarm.stAlarmIn.arbError[0].dnCode := dnErrorBaseIdentNo + 0;
+
+fbAlarm.stAlarmIn.arbError[1].bActive := fbProcedure.bErrorPipeEndNoDetected;
+fbAlarm.stAlarmIn.arbError[1].dnCode := dnErrorBaseIdentNo + 1;
+
+fbAlarm.stAlarmIn.arbError[2].bActive := fbProcedure.bErrorCollisionDetected;
+fbAlarm.stAlarmIn.arbError[2].dnCode := dnErrorBaseIdentNo + 2;
+
+fbAlarm.stAlarmIn.arbWarning[0].bActive := fbProcedure.bWarningPipeBeginNoDetected;
+fbAlarm.stAlarmIn.arbWarning[0].dnCode := dnWarningBaseIdentNo + 0;
+
+fbAlarm(
+	etMachineMode := etgGr00MachineMode,
+	etMachineState := etgGr00MachineState,
+	bNoEStop := bgGr00NoEmergencyStop,
+	bConfirmAlarm := bgGr00ConfirmAlarm,
+	dtDateTime := stgGr00DateTime.dtDateTime,
+	nFatalErrorMaxIdx := nFatalErrorMaxIdx,
+	nErrorMaxIdx := nErrorMaxIdx,
+	nWarningMaxIdx := nWarningMaxIdx,
+	nMessageMaxIdx := nMessageMaxIdx,
+	nHintMaxIdx := nHintMaxIdx,
+	bMoveInterrupted := bgGr05MoveInterrupted,
+	bHomeCompleted := bgGr05HomeCompleted,
+	stAlarmOut => stgGr05Alarm.stAuto
+);
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Functions" Id="{f79e99ee-8b37-463d-b6db-f2e5c5562445}">
+      <Implementation>
+        <ST><![CDATA[
+;]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Init" Id="{b6e2ecbc-70a8-4ce8-8ff1-a3ba1f3727c5}">
+      <Implementation>
+        <ST><![CDATA[
+(* Initializing variables *)
+fbInit();]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Procedure" Id="{5b34a1f9-2609-4467-88e4-a59144c146da}">
+      <Implementation>
+        <ST><![CDATA[
+(* Execute auto procedure *)
+fbProcedure(
+	bEnable := fbInit.bFirstTime,
+	bExecute := bgGr05StartProcess,
+	bInterrupt := FALSE(*NOT bgGr05StartProcess*),
+	bReleaseNextStep := bgGr05StartProcess,
+	bDone => bgGr05AutoCompleted,
+	bInterrupted => bgGr05MoveInterrupted
+);
+
+
+
+(* This loup used to track the steps of this sequence *)
+IF bClearHis THEN
+	FOR usnt := 120 TO 1 BY  -1  DO
+		SFCCurrentStepHis[usnt] := '' ;
+	END_FOR
+	bClearHis := FALSE;
+ELSIF  fbProcedure.SFCCurrentStep <> SFCCurrentStepHis[0]  THEN
+	FOR usnt := 120 TO 1 BY  -1  DO
+		SFCCurrentStepHis[usnt] := SFCCurrentStepHis[usnt - 1] ;
+	END_FOR
+		SFCCurrentStepHis[0] := fbProcedure.SFCCurrentStep;
+END_IF
+
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="Gr05Auto">
+      <LineId Id="39" Count="24" />
+    </LineIds>
+    <LineIds Name="Gr05Auto.A_Alarm">
+      <LineId Id="0" Count="29" />
+    </LineIds>
+    <LineIds Name="Gr05Auto.A_Functions">
+      <LineId Id="0" Count="1" />
+    </LineIds>
+    <LineIds Name="Gr05Auto.A_Init">
+      <LineId Id="0" Count="2" />
+    </LineIds>
+    <LineIds Name="Gr05Auto.A_Procedure">
+      <LineId Id="0" Count="27" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

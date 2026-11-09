@@ -1,0 +1,183 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_VFD_MoveVelocity" Id="{321df2a4-2e9d-449f-9b52-5b2796b85d92}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_VFD_MoveVelocity
+(*
+
+The function block used to starts drive with a  specified speed and direction. 
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			14.06.2018
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bExecute					:BOOL;			(* Execut the function block *)
+	lrVelocity						:LREAL;			(* Speed *)
+	lrVelocityMax					:LREAL;			(* Maximal speed *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bInVelocity					:BOOL;			(* Target velocity is reached *)
+	bCmdAborted				:BOOL;			(* Command aborted *)
+	bBusy						:BOOL;			(* Program busy *)
+	bError						:BOOL;			(* Error *)
+	udnErrorNo					:UDINT;			(* Error number *)
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	Axis							:ST_VFD_AXIS_REF;			(* The AXIS_REF data type  is an interface between the PLC and the NC and contains axis information *)
+END_VAR
+VAR
+	(* Enummerations *)
+	etMC_States					:ET_MC_States := ET_MC_States_eInit;
+
+	(* Variables *)
+	lrProcessErr					:LREAL;			(* Process error, e(t) = SP - PV *)
+	nWatchdog					:INT;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtExecute						:R_TRIG;
+	rtAborted						:R_TRIG;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+rtExecute(CLK := bExecute);
+
+rtAborted(CLK := NOT Axis.bOperational);
+IF rtAborted.Q                                              (* Aborted *)
+     AND bBusy
+THEN
+	etMC_States := ET_MC_States_eAbort;                     (* Next step *)
+
+ELSIF rtExecute.Q
+	    AND NOT bCmdAborted
+THEN
+	etMC_States := ET_MC_States_eInit;                                   (* Next step *)
+END_IF;
+
+CASE etMC_States OF
+
+	ET_MC_States_eInit:
+		bCmdAborted := FALSE;			(* Command not aborted *)
+		bBusy := FALSE;                                    	(* Program not busy *)
+		bError := FALSE;                         		(* Program not error *)
+		udnErrorNo := 0;                         		(* Error number *)
+		
+		IF rtExecute.Q
+(*		     AND NOT Axis.bHasJob*)
+		THEN
+			nWatchdog := 0;
+			bInVelocity := FALSE;			(* Program done, in velocity *)
+			bBusy := TRUE;				(* Program busy *)
+
+			IF Axis.bOperational 			(* Control enabled *)
+			THEN
+				Axis.bHasJob := TRUE;
+
+				etMC_States := ET_MC_States_eReset;			(* Next step *)
+			ELSE
+				udnErrorNo := 4;                     (* Error number *)
+				
+				etMC_States := ET_MC_States_eError;			(* Next step *)
+
+			END_IF;
+		END_IF;
+
+	ET_MC_States_eReset:
+		nWatchdog := nWatchdog + 1;
+		IF nWatchdog > 150
+		THEN
+			etMC_States := ET_MC_States_eError;             (* Next step *)
+		END_IF;
+
+		nWatchdog := 0;
+
+		etMC_States := ET_MC_States_eRunning;			(* Next step *)
+
+	ET_MC_States_eRunning:
+		Axis.bReverseStop := LREAL_TO_INT(lrVelocity) > 0;
+		Axis.bForwardStop := LREAL_TO_INT(lrVelocity) < 0;
+		Axis.nSetMotorSpeed := LREAL_TO_INT(ABS(lrVelocity) * (32767.0/lrVelocityMax));
+
+		etMC_States := ET_MC_States_eWaiting;			(* Next step *)
+
+	ET_MC_States_eWaiting:
+		IF Axis.bMotorSpeedReached
+		THEN
+			etMC_States := ET_MC_States_eDone;			(* Next step *)
+
+		ELSIF Axis.bError           (* Error *)
+		THEN
+			udnErrorNo := 2;                                    (* Error number *)
+		
+			etMC_States := ET_MC_States_eError;                              (* Next step *)
+
+		END_IF
+
+	ET_MC_States_eAbort:
+		Axis.bReverseStop := FALSE;
+		Axis.bForwardStop := FALSE;
+		Axis.nSetMotorSpeed := 0;
+		bCmdAborted := TRUE;			(* Command aborted *)
+		bInVelocity := FALSE;					(* Program done, in velocity *)
+
+		 etMC_States := ET_MC_States_eNotExecute;			(* Next step *)
+
+	ET_MC_States_eDone:
+		nWatchdog := 0;
+		bInVelocity := TRUE;		(* Program done, in velocity *)
+		bBusy := FALSE;			(* Program not busy *)
+
+		etMC_States := ET_MC_States_eNotExecute;            (* Next step *)
+
+	ET_MC_States_eError:
+		Axis.bReverseStop := FALSE;
+		Axis.bForwardStop := FALSE;
+		Axis.nSetMotorSpeed := 0;
+		bInVelocity := FALSE;		(* Program done, in velocity *)
+		bError := TRUE;			(* Program error *)
+		bBusy := FALSE;			(* Program not busy *)
+
+        		etMC_States := ET_MC_States_eNotExecute;			(*Next step *)
+
+	ET_MC_States_eNotExecute:
+		IF NOT bExecute
+		THEN
+			Axis.bHasJob := FALSE;
+			nWatchdog := 0;
+			bInVelocity := FALSE;				(* Program done, in velocity *)
+			bCmdAborted := FALSE;			(* Command not aborted *)
+			bBusy := FALSE;                                 	(* Program not busy *)
+			bError := FALSE;                     			(* Program not error *)
+			udnErrorNo := 0;                     			(* Error number *)
+
+			etMC_States := ET_MC_States_eInit;			(* Next step *)
+
+		END_IF;
+END_CASE;
+
+IF Axis.bError
+     AND Axis.bFaultReset
+THEN
+	Axis.bReverseStop := FALSE;
+	Axis.bForwardStop := FALSE;
+	Axis.nSetMotorSpeed := 0;
+	Axis.bHasJob := FALSE;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_VFD_MoveVelocity">
+      <LineId Id="49" Count="123" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

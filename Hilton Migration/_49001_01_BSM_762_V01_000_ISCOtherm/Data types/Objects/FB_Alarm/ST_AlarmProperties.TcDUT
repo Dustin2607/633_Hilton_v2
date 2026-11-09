@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_AlarmProperties" Id="{5d431a59-0244-44aa-ad30-8f61c9fc2fd8}">
+    <Declaration><![CDATA[TYPE ST_AlarmProperties :
+STRUCT
+	bActive				:BOOL;				(* Alarm on *)
+	dtDateTime			:DATE_AND_TIME ;	(* Alarm time stamp *)
+	enType				:ET_AlarmType;		(* Alarm type *)
+	dnCode				:DINT;				(* Alarm code *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

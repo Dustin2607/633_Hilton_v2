@@ -1,0 +1,341 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_GFX4IRCtrlZone" Id="{a413e4c7-e054-4761-8efb-e0ee7e3cf7a9}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_GFX4IRCtrlZone
+(*
+
+The function block used to control Gerfan GFX4IR zone.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			12.07.2016
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+13.12.2017		1.01				PPA					Control with temperatur feedback
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable							:BOOL;						(* Function block enable *)
+	bReset							:BOOL;						(* Controller reset *)
+	bHandStart						:BOOL;						(* Execute start an external trajectory with rising edge *)
+	bHandStop						:BOOL;						(* Execute stop an external trajectory with rising edge *)
+	bAutoStart						:BOOL;						(* Execute start an external trajectory with rising edge *)
+	bAutoStop						:BOOL;						(* Execute stop an external trajectory with rising edge *)
+	bStartRelease					:BOOL;						(* Start release *)
+	bCtrlInterrupt						:BOOL;						(* Control interrupt *)
+	lrSetpoint						:LREAL;						(* Setpoint *)
+	bCtrlManAuto						:BOOL;						(* Auto := FALSE, Man := TRUE *)
+	bEnAutoCtrlOff					:BOOL := TRUE;				(* Auto off enable*)
+	tControllerOff						:TIME := t#90s;				(* Time to switch controller off *)
+	tControllerOn						:TIME := t#90s;				(* Time to switch controller on *)
+	lrTempMin						:LREAL;						(* Minimal temperature *)
+	lrTempMax						:LREAL;						(* Maximal temperature *)
+	lrTempLimitMin					:LREAL;						(* Minimal temperature limit *)
+	lrTempLimitMax					:LREAL;						(* Maximal temperature limit *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	unCurrentValue					:UINT;						(* Current value *)
+	bEnabled  						:BOOL;						(* Zone enabled *)
+	bDamaged						:BOOL;						(* Zone damaged *)
+	bDone							:BOOL;						(* Command done *)
+	bBusy							:BOOL;						(* Command busy *)
+	bError							:BOOL;						(* Command error  *)
+	udnErrorNo						:UDINT;						(* Error number *)
+	sErrorMsg						:STRING; 					(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	CtrlGFX4IRTOPLC					:ST_GFX4IRTOPLC;			(* The ST_GFX4IRTOPLC data type  is an interface between the PLC and the GFX4IR and contains controller information *)
+	CtrlPLCTOGFX4IR					:ST_PLCTOGFX4IR;			(* The ST_PLCTOGFX4IR data type  is an interface between the PLC and the GFX4IR and contains controller information *)
+END_VAR
+VAR
+	(* Enummerations *)
+	etGFX4IRStates					:ET_GFX4IR := ET_GFX4IRState_eWaitExecute;			(* Current state *)
+
+	(* Variables *)
+	nWatchdog						:INT;
+	bControllerOn						:BOOL;
+
+	bFirstTime						:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbControllerOff					:FB_SignalHandlingDelay;
+	fbControllerOn					:FB_SignalHandlingDelay;
+	fbScalingSP						:FB_Scaling;
+
+	rtAutoStart						:R_TRIG;
+	rtAutoStop						:R_TRIG;
+	rtHandStart						:R_TRIG;
+	rtHandStop						:R_TRIG;
+END_VAR
+VAR CONSTANT
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bFirstTime
+THEN
+	bControllerOn := TRUE;
+
+	nWatchdog := 0;
+	bDone := FALSE;						(* Command done *)
+	bBusy := FALSE;						(* Command busy *)
+	bError := FALSE;						(* Command error  *)
+
+	etGFX4IRStates := ET_GFX4IRState_eWaitExecute;
+
+	bFirstTime := TRUE;
+END_IF
+
+(* Scaling set point *)
+fbScalingSP(
+	bEnable := TRUE,
+	lrInput := lrSetpoint,
+	lrXLowLimit := lrTempMin,
+	lrXUpperLimit := lrTempMax,
+	lrYLowLimit := lrTempLimitMin,
+	lrYUpperLimit := lrTempLimitMax,
+	usiPrecision := 2
+);
+
+CtrlPLCTOGFX4IR.wControllerStatus.4 := bCtrlManAuto;			(* Auto := FALSE, Man := TRUE *)
+
+IF bCtrlManAuto										(* Auto := FALSE, Man := TRUE *)
+THEN
+	bEnabled := CtrlGFX4IRTOPLC.nOutputPower > 0
+			       AND (CtrlGFX4IRTOPLC.nOutputPower = LREAL_TO_INT(lrSetpoint  * 10.0));
+			       (*AND CtrlGFX4IRTOPLC.wControllerStatus.5					(* Ctrl enabled  *)
+			          AND NOT CtrlGFX4IRTOPLC.wControllerStatus.0;			(* Alarm  *)*)
+ELSE
+	bEnabled := CtrlGFX4IRTOPLC.nOutputPower > 0;
+			       (*AND (CtrlGFX4IRTOPLC.nProcessVariable >= LREAL_TO_INT(fbScalingSP.lrOutputPV));*)
+			       (*AND CtrlGFX4IRTOPLC.wControllerStatus.5					(* Ctrl enabled  *)
+			          AND NOT CtrlGFX4IRTOPLC.wControllerStatus.0;			(* Alarm  *)*)
+END_IF
+
+bDamaged := CtrlGFX4IRTOPLC.wControllerStatus.12;
+unCurrentValue := CtrlGFX4IRTOPLC.nOutputPower / 10;
+
+fbControllerOff(
+	bEnable := TRUE,
+	bIn := bEnAutoCtrlOff
+		  AND bEnabled,
+	tDelay := tControllerOff
+);
+
+fbControllerOn(
+	bEnable := TRUE,
+	bIn := NOT bEnabled					(* Ctrl disabled *)
+		  AND NOT bControllerOn,
+	tDelay := tControllerOn
+);
+
+(*
+IF bHandStop
+    OR bCtrlInterrupt
+THEN
+	CtrlPLCTOGFX4IR.wControllerStatus.3 := TRUE;			(* Ctrl ON = FALSE, OFF = TRUE *)
+	CtrlPLCTOGFX4IR.nLocalSetPoint := 0;
+	CtrlPLCTOGFX4IR.nManualOutput := 0;
+ELSIF bHandStart
+THEN
+	CtrlPLCTOGFX4IR.wControllerStatus.3 := FALSE;			(* Ctrl ON = FALSE, OFF = TRUE *)
+	CtrlPLCTOGFX4IR.nManualOutput := LREAL_TO_INT(lrSetpoint  * 10);
+END_IF
+
+RETURN;
+*)
+
+IF bCtrlInterrupt
+     OR fbControllerOff.bOut
+THEN
+	bControllerOn := FALSE;
+
+	CtrlPLCTOGFX4IR.wControllerStatus.3 := TRUE;			(* Ctrl ON = FALSE, OFF = TRUE *)
+	CtrlPLCTOGFX4IR.nLocalSetPoint := 0;
+	CtrlPLCTOGFX4IR.nManualOutput := 0;
+
+	nWatchdog := 0;
+	bDone := FALSE;						(* Command done *)
+	bBusy := FALSE;						(* Command busy *)
+	bError := FALSE;						(* Command error  *)
+
+	etGFX4IRStates := ET_GFX4IRState_eWaitExecute;
+
+ELSIF fbControllerOn.bOut
+THEN
+	bControllerOn := TRUE;
+END_IF
+
+IF bReset
+     AND bError
+THEN
+	(* Reset outputs *)
+	nWatchdog := 0;
+	bDone := FALSE;						(* Command done *)
+	bBusy := FALSE;						(* Command busy *)
+	bError := FALSE;						(* Command error  *)
+
+	etGFX4IRStates := ET_GFX4IRState_eWaitExecute;
+ELSE
+	(*IF bEnable
+	     AND CtrlGFX4IRTOPLC.wControllerStatus.8					(* Ctrl error *)
+	THEN
+		bError := TRUE;									(* Command error  *)
+
+		etGFX4IRStates := ET_GFX4IRState_eError;             		(* Next step *)
+	END_IF*);
+END_IF
+
+rtHandStart(CLK := bHandStart);
+rtHandStop(CLK := bHandStop);
+rtAutoStart(CLK := bAutoStart AND bStartRelease AND bControllerOn);
+rtAutoStop(CLK := bAutoStop);
+
+IF rtHandStart.Q OR rtHandStop.Q
+     OR rtAutoStart.Q OR rtAutoStop.Q
+THEN
+	nWatchdog := 0;
+	bDone := FALSE;						(* Command done *)
+	bBusy := FALSE;						(* Command busy *)
+	bError := FALSE;						(* Command error  *)
+
+	etGFX4IRStates := ET_GFX4IRState_eWaitExecute;
+END_IF
+
+CASE etGFX4IRStates
+OF
+	ET_GFX4IRState_eWaitExecute:
+		IF NOT bEnable
+		THEN
+			bDone := TRUE;						(* Command done *)
+			bBusy := TRUE;						(* Command busy *)
+			bError := FALSE;						(* Command error  *)
+			bEnabled  := bAutoStart AND NOT bAutoStop; 				(* Controller enabled *)
+
+			etGFX4IRStates := ET_GFX4IRState_eWaitExecute;
+
+		ELSIF NOT bCtrlInterrupt
+			    AND NOT fbControllerOff.bOut
+		THEN
+			IF bAutoStop
+			     OR bHandStop
+			THEN
+				nWatchdog := 0;
+
+				bDone := FALSE;						(* Command done *)
+				bBusy := TRUE;						(* Command busy *)
+				bError := FALSE;						(* Command error  *)
+				udnErrorNo := 0;						(* Error number *)
+				sErrorMsg := ''; 						(* Error message *)
+
+				etGFX4IRStates := ET_GFX4IRState_eCtrlOff;
+
+			ELSIF rtAutoStart.Q
+				    OR (rtHandStart.Q
+					    AND bStartRelease
+					    AND bControllerOn)
+			THEN
+				nWatchdog := 0;
+
+				bDone := FALSE;						(* Command done *)
+				bBusy := TRUE;						(* Command busy *)
+				bError := FALSE;						(* Command error  *)
+				udnErrorNo := 0;						(* Error number *)
+				sErrorMsg := ''; 						(* Error message *)
+
+				etGFX4IRStates := ET_GFX4IRState_eCtrlOn;
+
+			END_IF
+		END_IF
+
+	ET_GFX4IRState_eCtrlOn:
+		nWatchdog := nWatchdog + 1;
+
+		CtrlPLCTOGFX4IR.wControllerStatus.3 := FALSE;			(* Ctrl ON = FALSE, OFF = TRUE *)
+
+		IF bCtrlManAuto										(* Auto := FALSE, Man := TRUE *)
+		THEN
+			CtrlPLCTOGFX4IR.nManualOutput := LREAL_TO_UINT(lrSetpoint  * 10.0);
+		ELSE
+			CtrlPLCTOGFX4IR.nLocalSetPoint := LREAL_TO_INT(fbScalingSP.lrOutputPV);
+		END_IF
+
+		IF bEnabled											(* Ctrl enabled *)
+		THEN
+			nWatchdog := 0;
+			etGFX4IRStates := ET_GFX4IRState_eDone;
+
+		ELSIF nWatchdog > 5000
+		THEN
+			CtrlPLCTOGFX4IR.wControllerStatus.3 := TRUE;			(* Ctrl ON = FALSE, OFF = TRUE *)
+
+			etGFX4IRStates := ET_GFX4IRState_eError;            		 (* Next step *)
+		END_IF
+
+	ET_GFX4IRState_eCtrlOff:
+		nWatchdog := nWatchdog + 1;
+
+		CtrlPLCTOGFX4IR.wControllerStatus.3 := TRUE;			(* Ctrl ON = FALSE, OFF = TRUE *)
+		CtrlPLCTOGFX4IR.nLocalSetPoint := 0;
+		CtrlPLCTOGFX4IR.nManualOutput := 0;
+
+		IF NOT bEnabled
+		THEN
+			nWatchdog := 0;
+			etGFX4IRStates := ET_GFX4IRState_eDone;
+
+		ELSIF nWatchdog > 1000
+		THEN
+			CtrlPLCTOGFX4IR.wControllerStatus.3 := TRUE;			(* Ctrl ON = FALSE, OFF = TRUE *)
+			CtrlPLCTOGFX4IR.nLocalSetPoint := 0;
+			CtrlPLCTOGFX4IR.nManualOutput := 0;
+			etGFX4IRStates := ET_GFX4IRState_eError;             		(* Next step *)
+		END_IF
+
+	ET_GFX4IRState_eDone:
+		nWatchdog := 0;
+		bDone := TRUE;						(* Command done *)
+		bBusy := FALSE;						(* Command busy *)
+
+		etGFX4IRStates := ET_GFX4IRState_eNoExecute;
+
+	ET_GFX4IRState_eError:
+		nWatchdog := 0;
+		bBusy := FALSE;						(* Command busy *)
+		bError := TRUE;						(* Command error  *)
+
+		CtrlPLCTOGFX4IR.wControllerStatus.3 := TRUE;			(* Ctrl ON = FALSE, OFF = TRUE *)
+		CtrlPLCTOGFX4IR.nLocalSetPoint := 0;
+		CtrlPLCTOGFX4IR.nManualOutput := 0;
+
+		etGFX4IRStates := ET_GFX4IRState_eNoExecute;
+
+	ET_GFX4IRState_eNoExecute:
+		IF NOT bHandStart
+		     AND NOT bHandStop
+		     AND NOT bAutoStart
+		     AND NOT bAutoStop
+		THEN
+			(* Reset outputs *)
+			nWatchdog := 0;
+			bDone := FALSE;						(* Command done *)
+			bBusy := FALSE;						(* Command busy *)
+			bError := FALSE;						(* Command error  *)
+
+			etGFX4IRStates := ET_GFX4IRState_eWaitExecute;
+		END_IF
+END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="FB_GFX4IRCtrlZone">
+      <LineId Id="77" Count="253" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

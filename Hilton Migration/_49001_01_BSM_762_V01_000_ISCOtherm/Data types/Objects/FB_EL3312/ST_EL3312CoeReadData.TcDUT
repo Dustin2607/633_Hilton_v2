@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_EL3312CoeReadData" Id="{3aedc424-7d0a-447d-82f0-1a451fc4e621}">
+    <Declaration><![CDATA[TYPE ST_EL3312CoeReadData :
+STRUCT
+	wIdx: WORD;
+	bySubIdx: BYTE;
+	bReadOK: BOOL;
+	dwData: DWORD;
+	nSize: UDINT;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

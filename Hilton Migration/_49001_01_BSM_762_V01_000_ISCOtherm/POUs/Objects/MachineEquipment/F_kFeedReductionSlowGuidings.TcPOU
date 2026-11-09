@@ -1,0 +1,134 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_kFeedReductionSlowGuidings" Id="{63743f2e-e612-4f4d-bf9a-8706d385aa5e}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_kFeedReductionSlowGuidings : LREAL
+(*
+
+The function used to reduction saw feed dependent of slow sawband guidings 
+Output factor: 0..1 (1=no speed reduction)
+
+Constructor: 		Eduard Schüle
+Company:		E. Riexinger GmbH
+Date:			20.11.2015
+Version:			1.01
+
+Date:		Revision:	Who:	Comment
+24.11.2015	1.01			ES		speed reduction only if for guidings required
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable							:BOOL;						(* Function block enable *)
+	lrActPos							:LREAL;						(* Current position of axis *)
+	lrActSawbowAngle				:LREAL;						(* SawBow Angle, cutting angle *)
+	lrActGuiding1Position				:LREAL;
+	lrActGuiding2Position				:LREAL;
+	lrVerticalOffset					:LREAL;						(* vertical offset collision contour *)
+	lrActSpeed						:LREAL;						(* Current speed of axis *)
+	lrActVelo							:LREAL;						(* Current Velocity for axis *)
+	lrMaxVelo						:LREAL;						(* Max Velocity of axis *)
+	lrMaxMaster						:LREAL;						(* max. Velocity Master *)
+	lrMaxSlave						:LREAL;						(* max. Velocity Slave *)
+	lrMinK							:LREAL;						(* minimum Speedfactor, 0.0 .. 1.0 *)
+	lrCStartMaxPos					:LREAL;						(* Contour start maximal position *)
+	lrCEndMinPos					:LREAL;						(* Contour end minimal position  *)
+	lrCSafetyDistance					:LREAL;						(* Safety distance *)
+	lrTableHeight						:LREAL;						(* Table height, if need guidings go to table width *)
+	lrTableWidth						:LREAL;						(* table width *)
+	lrGuidingMinPos					:LREAL;						(* sawband guiding min position, below no speed reduction *)
+	lrGuidingMaxPos					:LREAL;						(* sawband guiding max position, above no speed reduction *)
+	lrGuidingWindow					:LREAL;						(* sawband guiding position window *)
+END_VAR
+VAR
+	(* Variables *)
+	lrActPosCache					:LREAL;						(* intern position of axis *)
+	lrCRadius						:LREAL;						(* Radius *)
+	lrCMiddlePos						:LREAL;						(* Middle position *)
+	lrCAlfa							:LREAL;						(* Angle of inclination *)
+	lrTanAlfa							:LREAL;						(* Tangent of alfa *)
+	lrAngleFactor						:LREAL;						(* Sawbow angle factor, ellipse *)
+	lrSpeedFactor					:LREAL;						(*  *)
+	lrVelo							:LREAL;						(*  *)
+	lrCStartMaxPosCache 				:LREAL;
+	lrCEndMinPosCache 				:LREAL;
+	lrActGuidingSetPosition			:LREAL;
+	lrActPosN1						:LREAL;						(*  position of axis last cycle *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	F_kFeedReductionSlowGuidings := lrActVelo;
+	RETURN;
+END_IF
+
+lrActGuidingSetPosition := F_CalcContour(
+	etContourType := ET_ContourType_eEllipse,
+	lrActPos := lrActPos,
+	lrActAngle := lrActSawbowAngle,
+	lrVerticalOffset := lrVerticalOffset,
+	lrStartMaxPos := lrCStartMaxPos,
+	lrEndMinPos := lrCEndMinPos,
+	lrSafetyDistance := lrCSafetyDistance-20.0,
+	lrTableHeight := lrTableHeight,
+	lrTableWidth := lrTableWidth,
+	lrActVeloExt := 0
+	);
+
+lrCStartMaxPosCache := lrCStartMaxPos + ABS(lrCSafetyDistance + 50.0);
+lrCEndMinPosCache := lrCEndMinPos - ABS(lrCSafetyDistance + 50.0);
+
+lrCRadius := ABS(lrCStartMaxPosCache - lrCEndMinPos) / 2;
+lrCMiddlePos := lrCEndMinPosCache + lrCRadius;										(* Middle position *)
+
+lrActPosCache := lrActPos - lrVerticalOffset;
+
+IF lrActPos >= lrTableHeight
+THEN
+	IF (lrActPosCache <= lrCStartMaxPosCache)
+		AND (lrActPosCache >= lrCEndMinPosCache)
+		AND lrCRadius > 0.0
+(*		AND NOT(lrActGuiding1Position < (lrGuidingMinPos + lrGuidingWindow)) (* nicht wenn MIN Position *)
+		AND NOT(lrActGuiding2Position < (lrGuidingMinPos + lrGuidingWindow))
+		AND NOT(lrActGuiding1Position > (lrGuidingMaxPos - lrGuidingWindow))	(* not if MAX position *)
+		AND NOT(lrActGuiding2Position > (lrGuidingMaxPos - lrGuidingWindow))*)
+		AND NOT(lrActGuiding1Position > lrActGuidingSetPosition)
+		AND NOT(lrActGuiding2Position > lrActGuidingSetPosition)
+(*		AND lrActSpeed < 0
+		(*AND (lrActPos - lrActPosN1) < 0 (* down < 0 *)*)
+		AND lrActPos > lrCMiddlePos*)
+	THEN
+		lrCAlfa := ACOS(ABS(lrCMiddlePos - lrActPosCache) /  lrCRadius);							(* Angle of inclination *)
+		lrTanAlfa := TAN(lrCAlfa);														(* Tangent of alfa *)
+		lrAngleFactor := 1 / COS( MIN(ABS(lrActSawbowAngle), 89.9) / 180.0*PI);			(* Sawbow angle factor, ellipse *)
+		lrSpeedFactor := MAX(lrMinK, lrTanAlfa * lrAngleFactor);
+
+		lrVelo := LIMIT(0, lrSpeedFactor * lrMaxSlave / lrMaxMaster * lrMaxVelo, lrMaxVelo);
+	
+		F_kFeedReductionSlowGuidings := MIN(lrVelo, ABS(lrActVelo));
+
+		IF lrActVelo<0 THEN
+			F_kFeedReductionSlowGuidings := -F_kFeedReductionSlowGuidings;
+		END_IF
+
+	ELSE
+
+		F_kFeedReductionSlowGuidings := lrActVelo;
+
+	END_IF
+ELSE
+	IF		 lrActGuiding1Position > (lrTableWidth / 2 + 10.0)
+		AND lrActGuiding2Position > (lrTableWidth / 2 +10.0)
+	THEN
+		F_kFeedReductionSlowGuidings := lrActVelo;
+	ELSE
+		F_kFeedReductionSlowGuidings := 0;
+	END_IF
+END_IF
+
+lrActPosN1 := lrActPos;]]></ST>
+    </Implementation>
+    <LineIds Name="F_kFeedReductionSlowGuidings">
+      <LineId Id="53" Count="70" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

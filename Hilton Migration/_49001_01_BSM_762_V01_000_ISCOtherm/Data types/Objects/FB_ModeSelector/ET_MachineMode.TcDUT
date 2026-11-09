@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_MachineMode" Id="{14ff3c62-093a-4329-9b1d-166540eeb3fc}">
+    <Declaration><![CDATA[(* Machine operating mode *)
+TYPE ET_MachineMode :
+(
+	ET_MachineMode_eUndefined := 0,
+	ET_MachineMode_eAutomatic := 1,
+	ET_MachineMode_eCycle := 2,
+	ET_MachineMode_eStepping := 3,
+	ET_MachineMode_eHome := 4,
+	ET_MachineMode_eManual := 5,
+	ET_MachineMode_eIdle := 10
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

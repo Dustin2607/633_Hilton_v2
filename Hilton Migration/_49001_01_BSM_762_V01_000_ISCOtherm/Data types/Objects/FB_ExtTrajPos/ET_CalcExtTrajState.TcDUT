@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_CalcExtTrajState" Id="{52da9976-7796-4b0d-bdca-16e95b20b91e}">
+    <Declaration><![CDATA[TYPE ET_CalcExtTrajState :
+(
+	ET_CalcExtTrajState_eWaitExecute := 0,
+	ET_CalcExtTrajState_eCalcTrajPos := 5,
+	ET_CalcExtTrajState_eDone := 197,
+	ET_CalcExtTrajState_eError := 198,
+	ET_CalcExtTrajState_eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

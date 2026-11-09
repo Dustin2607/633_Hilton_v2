@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_KL600xInit" Id="{c875bbee-a81b-487c-9dbd-c212faa8303f}">
+    <Declaration><![CDATA[TYPE ET_KL600xInit :
+(
+	ET_KL600xInit_eInit := 0,
+	ET_KL600xInit_eChkSettings,
+	ET_KL600xInit_eWriteEnableRTSCTS,
+	ET_KL600xInit_eWriteBaudRate,
+	ET_KL600xInit_eWriteDataFrame,
+	ET_KL600xInit_eDone := 197,
+	ET_KL600xInit_eError := 198,
+	ET_KL600xInit_eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

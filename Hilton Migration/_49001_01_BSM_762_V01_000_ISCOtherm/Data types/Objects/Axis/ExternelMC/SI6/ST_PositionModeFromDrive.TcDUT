@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_PositionModeFromDrive" Id="{b3f4219b-6ff6-4049-bafa-8e667c298a15}">
+    <Declaration><![CDATA[TYPE ST_PositionModeFromDrive :
+STRUCT
+	bPositionReached			:BOOL;			(* Set position reached, data source: I180; prerequisite: halt inactive = A515, bit 8 = 0
+												    Velocity is zero; data source: I199; prerequisite: halt inactive = A515, bit 8 = 1 *)
+	bSetpointAck					:BOOL;			(* Target position accepted from motion core *)
+	bFollowingError				:BOOL;			(* Following error *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

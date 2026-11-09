@@ -1,0 +1,118 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_STOEBERSI6_CIA402_Power" Id="{8dee885e-7f61-42bd-ad5c-6f69af03d481}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_STOEBERSI6_CIA402_Power
+(*
+
+The function block used to activates software enable for an axis
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			22.09.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;			(* Signal FB enable *)
+	bSwitchOn					:BOOL;			(* Enable the power. *)
+	bEnablePositive				:BOOL;			(* Advance movement enable in positive direction. *)
+	bEnableNegative				:BOOL;			(* Advance movement enable in negative direction. *)
+	bEnableVoltage				:BOOL;			(* Enable voltage *)
+	bQuickStop					:BOOL;			(* Quick stop 0 = active; 1 = inactive *)
+	lrOverride					:LREAL;			(* Velocity override in % for all motion commands. (0 <= Override <= 100.0) *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bStatus						:BOOL;			(* Status = TRUE indicates that the axis is ready for operation. *)
+	bError						:BOOL;			(* Error *)
+	udnErrorNo					:UDINT;			(* Error number *)
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	Axis							:ST_AXIS_REF;
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	tStatusDelay 					:TIME := t#300ms;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	tonStatusDelay				:TON;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+	Axis.stPlcToNc.stCIA402.bSwitchOn := FALSE;                   		 	(* Switch on *)
+	Axis.stPlcToNc.stCIA402.bEnableVoltage := FALSE;                    	(* Enable voltage *)
+	Axis.stPlcToNc.stCIA402.bQuickStop := FALSE;                    		(* Quick stop *)
+	Axis.stPlcToNc.stCIA402.bEnableOperation := FALSE;			(* Enable operation *)
+	tonStatusDelay(IN := FALSE,
+				    PT := tStatusDelay);
+ELSE
+	IF Axis.stNcToPlc.stCIA402.bEnabled
+	     OR Axis.stNcToPlc.stCIA402.bSwitchedOn
+	THEN
+		Axis.stPlcToNc.stCIA402.bSwitchOn := bSwitchOn;                   		 	(* Switch on *)
+		Axis.stPlcToNc.stCIA402.bEnableVoltage := bEnableVoltage;                   (* Enable voltage *)
+		Axis.stPlcToNc.stCIA402.bQuickStop := bQuickStop;                    		(* Quick stop *)
+
+	ELSIF Axis.stNcToPlc.stCIA402.bReadyToSwitchOn
+	THEN
+		Axis.stPlcToNc.stCIA402.bSwitchOn := bSwitchOn;                   			(* Switch on *)
+		Axis.stPlcToNc.stCIA402.bEnableVoltage := bEnableVoltage;                   (* Enable voltage *)
+		Axis.stPlcToNc.stCIA402.bQuickStop := bQuickStop;                    		(* Quick stop *)
+		Axis.stPlcToNc.stCIA402.bEnableOperation := FALSE;                    		(* Disable operation *)
+
+	ELSIF Axis.stNcToPlc.stCIA402.bSwitchOnDisabled
+	THEN
+		Axis.stPlcToNc.stCIA402.bSwitchOn := FALSE;                   		 		(* Switch off *)
+		Axis.stPlcToNc.stCIA402.bEnableVoltage := bEnableVoltage;       	 	(* Enable voltage *)
+		Axis.stPlcToNc.stCIA402.bQuickStop := bQuickStop;                    		(* Quick stop *)
+		Axis.stPlcToNc.stCIA402.bEnableOperation := FALSE;                    		(* Disable operation *)
+
+		IF Axis.stNcToPlc.stCIA402.bNotMoving
+		THEN
+			Axis.stPlcToNc.stCIA402.etModesOfOperation := ET_ModesOfOperation_None;					(* Mode of operation *)
+		END_IF
+	ELSE
+		Axis.bLockPDO := FALSE;										(* Lock PDO *)
+		Axis.stPlcToNc.stCIA402.bSwitchOn := FALSE;                   		 		(* Switch off *)
+		Axis.stPlcToNc.stCIA402.bEnableVoltage := FALSE;                    		(* Disable voltage *)
+		Axis.stPlcToNc.stCIA402.bQuickStop := FALSE;                    			(* Quick stop *)
+		Axis.stPlcToNc.stCIA402.bEnableOperation := FALSE;                   	 	(* Disable operation *)
+
+		IF Axis.stNcToPlc.stCIA402.bNotMoving
+		THEN
+			Axis.stPlcToNc.stCIA402.etModesOfOperation := ET_ModesOfOperation_None;					(* Mode of operation *)
+		END_IF
+
+	END_IF;
+END_IF;
+
+Axis.stPlcToNc.stCIA402.bFeedEnablePlus := bEnablePositive;
+Axis.stPlcToNc.stCIA402.bFeedEnableMinus := bEnableNegative;
+
+Axis.stPlcToNc.stCIA402.nOverride := LREAL_TO_INT(lrOverride);
+
+tonStatusDelay(IN := Axis.stNcToPlc.stCIA402.bSwitchedOn,					(* Control enabled *)
+			   PT := tStatusDelay);
+bStatus := tonStatusDelay.Q;
+
+bError := Axis.stNcToPlc.stCIA402.bError;                     (* Error *)
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_STOEBERSI6_CIA402_Power">
+      <LineId Id="47" Count="60" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

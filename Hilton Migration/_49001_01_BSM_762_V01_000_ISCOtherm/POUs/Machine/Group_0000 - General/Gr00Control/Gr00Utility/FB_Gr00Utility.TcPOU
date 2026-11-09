@@ -1,0 +1,393 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Gr00Utility" Id="{2dde8993-b0f9-4f82-b192-aa7b8cf4d050}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Gr00Utility
+(*
+
+The function block used to control general utility of the machine.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			28.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bSignalStart					:BOOL;						(* Signal "Start" / Signal "Start" *)
+	bSignalStop					:BOOL;						(* Signal "Stop" / Signal "Stop" *)
+	bSignalAbort					:BOOL;						(* Signal "Abort" / Signal "Abort" *)
+	bSignalHome					:BOOL;						(* Signal "Home" / Signal "Grundstellung" *)
+	bSignalReference				:BOOL;						(* Signal "Reference" / Signal "Referenz" *)
+	bSignalReset					:BOOL;						(* Signal "Reset" / Signal "Reset *)
+	bSignalMachinePurge			:BOOL;						(* Machine purge *)
+	bAutoStartRelease			:BOOL;						(* Auto start release *)
+	bHomeStartRelease			:BOOL;						(* Home start release *)
+	bAutoToHome				:BOOL;						(* If auto completed go to home *)
+	bHomeCompleted				:BOOL;						(* Home completed signal *)
+	bAutoCompleted				:BOOL;						(* Auto completed signal *)
+	bAllDoorsClosed 				:BOOL;						(* All doors closed *)
+	bAllDoorsLocked 				:BOOL;						(* All doors locked *)
+	bLightCurtainOk				:BOOL;						(* Light curtain ok *)
+	bExeCounter					:BOOL;						(* Execute counter *)
+	bResetCounterUser			:BOOL;						(* Reset counter user *)
+	bStartTime					:BOOL;						(* Start measurement of cylce time *)
+	bStopTime					:BOOL;						(* Stop measurement of cylce time *)
+	bLifetimeOn					:BOOL;						(* Lifetime on *)
+	bResetLifetimeAll				:BOOL; 						(* Reset all counters *)
+	sLifetimeFilePath				:STRING;					(* File path for life time *)
+	sLifetimeFileName			:STRING;					(* File name for life time *)
+	bWritePersistent				:BOOL;						(* Write persistent data *)
+	bDownTraceDataExe 			:BOOL;						(* Download traceability data *)
+	stTraceability					:ST_Traceability;				(* Traceability data *)
+	tAdsTimeOut 					:TIME := t#2s;					(* Timout for ads commands *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	etMachineMode				:ET_MachineMode;			(* Machine mode *)
+	etMachineState				:ET_MachineState;			(* Machine state *)
+	bModeAutomatic				:BOOL;						(* Machine mode automatic *)
+	bModeHome					:BOOL;						(* Machine mode home *)
+	bModeManual				:BOOL;						(* Machine mode manual *)
+	bMachineRunning				:BOOL;						(* Machine running *)
+	bMachineStandstill			:BOOL;						(* Machine standstill *)
+	bMachinePurge				:BOOL;						(* Machine purge *)
+	bConfirmAlarm				:BOOL;						(* Alarm confirm *)
+	rActOverride					:REAL;						(* Actual override *)
+	lrLifetimeAll					:LREAL;						(* Lifetime *)
+	lrLifetimeAfterTrunOn			:LREAL;						(* Time after turn on *)
+	lrActCycleTime				:LREAL;						(* Actual cycle time *)
+	dwCycleTime					:DWORD;					(* Cycletime in 0.01sec / Zykluszeit in 0.01Sekunden *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	etMachineModeReq			:ET_MachineMode;			(* Machine mode request *)
+	rGlobalOverride				:REAL;						(* Global override *)
+	udnCounterTotal				:UDINT;						(* Total counter *)
+	udnCounterUser				:UDINT;						(* Total counter *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	nIRHSCtrlCnt					:INT;
+	nIRHSZoneCnt				:INT;
+	lrIRHSSetpointLeftSide			:LREAL;
+	lrIRHSSetpointRightSide		:LREAL;
+
+	bTraceExe					:BOOL;
+	ftTraceExe					:F_TRIG;
+	rtDownTraceDataExe			:R_TRIG;
+	rtDownTraceDataReset		:R_TRIG;
+	udnTraceSampleCnt			:UDINT;
+	udnTraceDataCnt				:UDINT;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbModeSelector				:FB_ModeSelector;			(* Mode selector *)
+	fbOverride					:FB_Override;					(* Override *)
+	fbLifetime					:FB_TimeHoursCounter;		(* Machine lifetime *)
+	fbCounterTotal				:FB_Counter;					(* Counter total *)
+	fbCounterUser				:FB_Counter;					(* Counter user *)
+	rtResetCounterUser			:R_TRIG;						(* Reset counter user *)
+	fbCylceTime					:FB_Timer;					(* Machine cycle time *)
+	fbSUPS						:FB_S_UPS_CX51x0;			(*  The function block FB_S_UPS_CX51x0 can be used on CX devices with one-second UPS to control the one-second UPS from the PLC *)
+	fbWritePersistentData			:WritePersistentData;			(*  Write Persistent *)
+	fbGetCurTaskIdx				:GETCURTASKINDEX;			(* This function block finds the task index of the task from which it is called *)
+	fbRTC						:FB_RTC;					(* Get current time *)
+	fbTraceability					:FB_Traceability;				(* Traceability *)
+	rtMachinePurge				:R_TRIG;
+	SystemTaskInfoArr: INT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+A_OperationMode();
+A_Override();
+A_Counter();
+A_CycleTime();
+A_MachinePurge();
+A_Persistent();
+A_PlcTaskSystemInfo();
+A_RTC();
+A_Traceability();
+
+
+
+
+
+]]></ST>
+    </Implementation>
+    <Action Name="A_Counter" Id="{a76de720-a836-4d60-a585-108dc094c4d1}">
+      <Implementation>
+        <ST><![CDATA[
+(* Hours counter *)
+fbLifetime(
+	bEnable := TRUE,
+	bDeleteAll := bResetLifetimeAll,
+	sAmsNetId := sgAmsNetId,
+	bCount := bLifetimeOn,
+	bSave := FALSE,
+	sFilePath := sLifetimeFilePath,
+	sFileName := sLifetimeFileName,
+	tSaveIntervall := t#5m,
+	tTimeout := tAdsTimeOut,
+	lrAllOverHours => lrLifetimeAll,
+	lrNoRetainHours => lrLifetimeAfterTrunOn,
+ );
+
+(* General counter *)
+fbCounterTotal(
+	bEnable := TRUE,
+	bExecute := bExeCounter,
+	bReset := fbCounterTotal.bOverflow,
+	udnCounter := udnCounterTotal
+);
+
+rtResetCounterUser(CLK:= bResetCounterUser);
+
+fbCounterUser(
+	bEnable := TRUE,
+	bExecute := bExeCounter,
+	bReset := rtResetCounterUser.Q
+			 OR fbCounterUser.bOverflow,
+	udnCounter := udnCounterUser
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_CycleTime" Id="{be029e3a-8ddb-4b33-be5e-5d356f1a1ee0}">
+      <Implementation>
+        <ST><![CDATA[
+(* Cylce time *)
+fbCylceTime(
+	bEnable := TRUE,
+	bReset := FALSE,
+	bStartStop := bStartTime
+			        AND bModeAutomatic,
+	bStop := bStopTime
+		        OR bMachineStandstill,
+	tMaxTime := ,
+	stRefTime => ,
+	stActTime => ,
+	stRestTime =>
+);
+
+dwCycleTime := fbCylceTime.stActTime.dwDeciSec;]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_MachinePurge" Id="{0ab65900-954c-49a1-971b-74fc5e33a980}">
+      <Implementation>
+        <ST><![CDATA[
+rtMachinePurge(CLK := 	bSignalMachinePurge);
+
+IF NOT bModeAutomatic
+     OR bAutoCompleted
+THEN
+	bMachinePurge := FALSE;
+
+ELSIF rtMachinePurge.Q
+THEN
+	bMachinePurge := TRUE;
+END_IF]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_OperationMode" Id="{42a518b3-dd1b-4820-a289-1209514f9c62}">
+      <Implementation>
+        <ST><![CDATA[
+(* Operation mode control *)
+fbModeSelector(
+	bStart := bSignalStart,
+	bStop := bSignalStop,
+	bAbort := bSignalAbort,
+	bHome := bSignalHome,
+	bReset := bSignalReset,
+	bReference := bSignalReference,
+	bAutoStartRelease := bAutoStartRelease,
+	bHomeStartRelease := bHomeStartRelease,
+	bAutoToHome := bAutoToHome,
+	bHomeCompleted := bHomeCompleted,
+	bAutoCompleted := bAutoCompleted,
+	bAllDoorsClosed  := bAllDoorsClosed,
+	bAllDoorsLocked := bAllDoorsLocked,
+	bLightCurtainOk := bLightCurtainOk,
+	etMachineMode => etMachineMode,
+	etMachineState => etMachineState,
+	bModeAutomatic => bModeAutomatic,
+	bModeHome => bModeHome,
+	bModeManual => bModeManual,
+	bMachineRunning => bMachineRunning,
+	bMachineStandstill => bMachineStandstill,
+	bConfirmAlarm => bConfirmAlarm,
+	etMachineModeReq := etMachineModeReq
+);
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Override" Id="{78915dc2-c243-4cf7-ba34-72ce962f01f1}">
+      <Implementation>
+        <ST><![CDATA[
+(* Override control *)
+fbOverride(
+	bEnable := TRUE,
+	bBypassAccDec := bModeManual,
+	bSetOverideMax := bModeAutomatic,
+	rAcc := rgGr00AdsOverrideAcc,
+	rDec := rgGr01AdsOverrideDec,
+	rSetOverride := rGlobalOverride,
+	rActOverride => rActOverride
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Persistent" Id="{fa4aa848-7ac9-4ab5-b018-4f0e657e5d2b}">
+      <Implementation>
+        <ST><![CDATA[
+(*  The function block FB_S_UPS_CX51x0 can be used on CX devices with one-second UPS to control the one-second UPS from the PLC *)
+fbSUPS(
+	sNetID := sgAmsNetId,													(* AmsNetID of the controller. *)
+	iPLCPort := AMSPORT_R0_PLC_RTS1,									(* Port number of the PLC runtime system (AMSPORT_R0_PLC_RTS1 = 801, AMSPORT_R0_PLC_RTS2 = 811, AMSPORT_R0_PLC_RTS3 = 821, AMSPORT_R0_PLC_RTS4 = 831). *)
+	iUPSPort := 16#588,													(* Port number via which the UPS status is read (standard value is 16#588) *)
+	tTimeout := DEFAULT_ADS_TIMEOUT,									(* ADS Timeout *)
+	eUpsMode := eSUPS_WrPersistData_Shutdown,							(* The eUpsMode defines whether persistent data are to be written and whether a QuickShutdown is to be performed.
+																		Standard value is eSUPS_WrPersistData_Shutdown, i.e. with writing of the persistent data and then QuickShutdown. See E_S_UPS_Mode. *)
+	ePersistentMode := SPDM_2PASS,										(* Mode for the writing of the persistent data. Standard value is SPDM_2PASS *)
+	tRecoverTime := t#10s													(* Time after which the UPS reverts to the PowerOK status in the case of UPS modes without shutdown.
+																	   	    The tRecoverTime must be somewhat longer than the maximum holding time of the UPS, since the UPS switches off even when the voltage returns. *)
+);
+
+
+(* If persistent variables are defined in one of the PLC's runtime systems, then their current values are stored in a file in the TwinCAT\Boot directory when the TwinCAT system stops (after the last PLC cycle). *)
+fbWritePersistentData(
+	NETID := sgAmsNetId,
+	PORT := AMSPORT_R0_PLC_RTS1,
+	START := bWritePersistent
+			   AND NOT fbWritePersistentData.BUSY,
+	TMOUT := DEFAULT_ADS_TIMEOUT
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_PlcTaskSystemInfo" Id="{3de26191-b8ed-43bc-8322-92490ef8f70b}">
+      <Implementation>
+        <ST><![CDATA[
+fbGetCurTaskIdx();
+
+// lrActCycleTime := UDINT_TO_LREAL(SystemTaskInfoArr[fbGetCurTaskIdx.index].cycleTime) / 10000000;
+
+
+
+
+fbGetCurTaskIdx();
+
+GVL._PlcTaskSystemInfo := _TaskInfo[fbGetCurTaskIdx.index];
+
+lrActCycleTime := UDINT_TO_LREAL(_TaskInfo[fbGetCurTaskIdx.index].CycleTime) / 10000000;
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_RTC" Id="{6cec8227-c097-4090-bb19-8d819d2ab91a}">
+      <Implementation>
+        <ST><![CDATA[
+fbRTC(
+	stDateTime => stgGr00DateTime
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Traceability" Id="{877129ff-9ebe-428b-a868-1b958abf19ee}">
+      <Implementation>
+        <ST><![CDATA[
+stTraceability.sDateTime := stgGr00DateTime.sDateTime;
+
+stTraceability.stSettings.sPath := sTracePath(*CONCAT(CONCAT(sTracePath,fbRTC.sDate),'\')*);
+stTraceability.stSettings.sFileName := stgGr00DateTime.sDateTime;
+stTraceability.stSettings.sFileExtension := sTraceFileExtension;
+
+rtDownTraceDataReset(
+	CLK := bModeAutomatic
+);
+
+IF rtDownTraceDataReset.Q
+THEN
+	udnTraceSampleCnt := 0;
+	MEMSET(ADR(stTraceability.arstData), 0, SIZEOF(stTraceability.arstData));
+END_IF
+
+rtDownTraceDataExe(
+	CLK := bTraceEnable
+		    AND bDownTraceDataExe
+);
+
+IF rtDownTraceDataExe.Q
+     AND udnTraceSampleCnt < udnTraceSampleMax
+THEN
+	udnTraceDataCnt := 0;
+	udnTraceSampleCnt := udnTraceSampleCnt +1;
+	(*1*)
+	udnTraceDataCnt := udnTraceDataCnt + 1;
+	stTraceability.arstData[udnTraceSampleCnt,udnTraceDataCnt].sName := 'Time';
+	stTraceability.arstData[udnTraceSampleCnt,udnTraceDataCnt].sValue := stgGr00DateTime.sDateTime;
+	stTraceability.arstData[udnTraceSampleCnt,udnTraceDataCnt].sUnit := '';
+
+	(*2*)
+	udnTraceDataCnt := udnTraceDataCnt + 1;
+	stTraceability.arstData[udnTraceSampleCnt,udnTraceDataCnt].sName := 'Cntr';
+	stTraceability.arstData[udnTraceSampleCnt,udnTraceDataCnt].sValue := UDINT_TO_STRING(stgGr00HMI.stPLCTOHMI.udnCounterTotal);
+	stTraceability.arstData[udnTraceSampleCnt,udnTraceDataCnt].sUnit := '';
+
+END_IF
+
+(*ftTraceExe(CLK := bgGr00ModeAutomatic);*)
+fbTraceability(
+	bEnable := bTraceEnable,
+	bExecute := bAutoCompleted
+			     (*OR
+			     (NOT bAutoCompleted
+			      AND (bSignalStop OR bSignalAbort)
+			      AND ftTraceExe.Q)*)
+			     OR bTraceExe,
+	stTraceability := stTraceability
+);
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_Gr00Utility">
+      <LineId Id="103" Count="15" />
+    </LineIds>
+    <LineIds Name="FB_Gr00Utility.A_Counter">
+      <LineId Id="0" Count="32" />
+    </LineIds>
+    <LineIds Name="FB_Gr00Utility.A_CycleTime">
+      <LineId Id="0" Count="15" />
+    </LineIds>
+    <LineIds Name="FB_Gr00Utility.A_MachinePurge">
+      <LineId Id="0" Count="11" />
+    </LineIds>
+    <LineIds Name="FB_Gr00Utility.A_OperationMode">
+      <LineId Id="0" Count="27" />
+    </LineIds>
+    <LineIds Name="FB_Gr00Utility.A_Override">
+      <LineId Id="0" Count="10" />
+    </LineIds>
+    <LineIds Name="FB_Gr00Utility.A_Persistent">
+      <LineId Id="0" Count="22" />
+    </LineIds>
+    <LineIds Name="FB_Gr00Utility.A_PlcTaskSystemInfo">
+      <LineId Id="11" Count="2" />
+      <LineId Id="3" Count="0" />
+      <LineId Id="22" Count="2" />
+      <LineId Id="15" Count="6" />
+      <LineId Id="14" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Gr00Utility.A_RTC">
+      <LineId Id="0" Count="3" />
+    </LineIds>
+    <LineIds Name="FB_Gr00Utility.A_Traceability">
+      <LineId Id="0" Count="53" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

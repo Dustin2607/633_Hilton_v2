@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_DriveConfig" Id="{f646066c-10d5-4b7c-9180-e6b44b5e9d89}">
+    <Declaration><![CDATA[TYPE ST_DriveConfig :
+STRUCT
+	
+	bRealDrive					:BOOL := TRUE; 				(* Encoder ID number *) 
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

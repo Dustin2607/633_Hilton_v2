@@ -1,0 +1,462 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_LoggerFile" Id="{10a14ef5-03ea-422d-a323-2ba5639f68b9}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_LoggerFile
+(*
+
+This function block is used to write loggin datas into file.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			25.03.2014
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+
+VAR_INPUT
+	bEnable						:BOOL;					(* Enable FB *)
+	bExecute					:BOOL;					(* Execute operation *)
+	sFilePath					:STRING;				(* File path *)
+	sFileName					:STRING;				(* File name *)
+	sFileSuffix					:STRING := 'dat';			(* Suffix of file *)
+	arstLoggerWaitInterrupt			:ARRAY[1..unLOG_BEFOR_MAX_NO] OF ST_LoggerVar;			(* Data to write to file *)
+	arstLoggerDuringInterrupt		:ARRAY[1..unLOG_DURING_MAX_NO] OF ST_LoggerVar;			(* Data to write to file *)
+	arstLoggerAfterInterrupt			:ARRAY[1..unLOG_AFTER_MAX_NO] OF ST_LoggerVar;			(* Data to write to file *)
+	tTimeout						:TIME := t#1s;				(* States the time before the function is cancelled *)
+END_VAR
+VAR_OUTPUT
+	bBusy						:BOOL;					(* Program busy *)
+	bDone						:BOOL;					(* Program done *)
+	bError						:BOOL;					(* Program error *)
+	udnErrNo					:UDINT;					(* Error number *)
+END_VAR
+VAR_IN_OUT
+
+END_VAR
+VAR
+	(* Enummerations *)
+	enStep						: (eWaitExecute := 0, eChkFileName, eChkeNumOfRecords, eFileOpen, eChkFileOpen, eFilePuts, eChkFilePuts, eFileClose, eChkFileClose, eDone, eError, eNotExecute);			(* Sequence state for open, read/write and close the file *)
+	enGetData					: (eWaitInterruptData, eDuringInterruptData, eAfterInterruptData, eNoData);					(* Sequence state for data *)
+
+	(* Variables *)
+	bFirstTime					:BOOL;					(* First PLC cycle *)
+	unLogSize					:UINT;
+	unLogIdx						:UINT;
+	unRecordsSize				:UINT;
+	unRecordsIdx					:UINT;
+
+	dwMode						:DWORD;				(* Contains the mode in which the file is to be opened *)
+	sPathName					:STRING;				(* Contains the path and filename for the file to be opened *)
+	hFileHandle					:UINT;					(* File handle *)
+
+	unPutsCounter				:UINT;
+
+	sRecordsToWrite				:STRING;
+
+	(* Instances *)
+	fbFileOpen					:FB_FileOpen;			(* File open *)
+	fbFileClose					:FB_FileClose;			(* File close *)
+	fbFilePuts					:FB_FilePuts;				(* File puts *)
+
+END_VAR
+VAR CONSTANT
+	sSeparator					:STRING := '$T';
+	sNewLine					:STRING := '$N'; 							(* End line sign for lines *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable				(* Enable FB *)
+THEN
+	bFirstTime := FALSE;		(* First PLC cycle *)
+	bBusy := FALSE;			(* Program busy *)
+	bDone := FALSE;			(* Program done *)
+	bError := FALSE;			(* Program error *)
+	udnErrNo := 0;				(* Error number *)
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+	bBusy := FALSE;			(* Program busy *)
+	bDone := FALSE;			(* Program done *)
+	bError := FALSE;			(* Program error *)
+
+	enStep := eWaitExecute;
+
+	bFirstTime := TRUE;
+END_IF
+
+
+(* Sequence state for open, read/write and close the file *)
+CASE enStep
+OF
+
+	eWaitExecute:
+		IF bExecute
+		THEN
+			fbFileOpen.bExecute := FALSE;			(* File open *)
+			fbFileClose.bExecute := FALSE;			(* File close *)
+			fbFilePuts.bExecute := FALSE;			(* File puts *)
+
+			bBusy := TRUE;
+			bDone := FALSE;
+			bError := FALSE;
+			udnErrNo := 0;
+
+			dwMode := FOPEN_MODEWRITE OR FOPEN_MODETEXT;
+
+			enStep := eChkFileName;			(* Next step *)
+
+		END_IF
+
+	(* Check file name and path *)
+	eChkFileName:
+
+		sPathName := CONCAT(
+						sFilePath, CONCAT(
+									sFileName, CONCAT(
+												'.', sFileSuffix)));
+
+		IF sFilePath <> ''
+		     AND sFileName <> ''
+		     AND sFileSuffix <> ''
+		THEN
+			enStep := eChkeNumOfRecords;			(* Next step *)
+
+		ELSE
+			udnErrNo := eChkFileName;
+
+			enStep := eError;				(* Next step *)
+
+		END_IF
+
+	(* Check number of records to save *)
+	eChkeNumOfRecords:
+		IF unNUM_OF_LOG_VAR = 0
+		THEN
+			enStep := eDone;				(* Next step *)
+	
+		ELSE
+			enStep := eFileOpen;			(* Next step *)
+
+		END_IF
+	(* Open the file *)
+	eFileOpen:
+		fbFileOpen.bExecute := TRUE;
+
+		enStep := eChkFileOpen;				(* Next step *)
+
+	(* Check open the file *)
+	eChkFileOpen:
+		IF NOT fbFileOpen.bBusy
+		THEN
+			IF NOT fbFileOpen.bError
+			THEN
+				fbFileOpen.bExecute := FALSE;
+				hFileHandle := fbFileOpen.hFile;
+
+				unLogIdx := 0;
+		  		unRecordsIdx := 0;
+
+				enGetData := eWaitInterruptData;
+				enStep := eFilePuts;			(* Next step *)
+
+			ELSE
+				fbFileOpen.bExecute := FALSE;
+				udnErrNo := fbFileOpen.nErrId;
+	
+				enStep := eError;					(* Next step *)
+
+			END_IF
+		END_IF
+
+	(* Puts data into the file *)
+	eFilePuts:
+		(* Get data *)
+		A_GetData();
+
+		IF LEN(sRecordsToWrite) > 254
+		THEN
+			sRecordsToWrite := DELETE(
+								sRecordsToWrite,
+								LEN(sRecordsToWrite) + 1 - 254, 254
+							    );
+		END_IF
+
+
+		sRecordsToWrite := CONCAT(
+							sRecordsToWrite,
+							SEL(unRecordsIdx = 0, sSeparator, sNewLine)
+						    );
+
+
+		fbFilePuts.bExecute := TRUE;
+
+		enStep := eChkFilePuts;				(* Next step *)
+
+	(* Check puts the file *)
+	eChkFilePuts:
+		IF NOT fbFilePuts.bBusy
+		THEN
+			IF NOT fbFilePuts.bError
+			THEN
+				fbFilePuts.bExecute := FALSE;
+				unPutsCounter := unPutsCounter + 1;
+
+				IF enGetData = eNoData
+				THEN
+					enStep := eFileClose;				(* Next step *)
+				ELSE
+					enStep := eFilePuts;				(* Next step *)
+				END_IF
+
+			ELSIF  fbFilePuts.bError
+			THEN
+				fbFilePuts.bExecute := FALSE;
+				udnErrNo := fbFilePuts.nErrId;
+
+				enStep := eError;					(* Next step *)
+
+			END_IF
+		END_IF
+
+	(* Close the file *)
+	eFileClose:
+		fbFileClose.bExecute := TRUE;
+
+		enStep := eChkFileClose;				(* Next step *)
+
+	(* Check close the file *)
+	eChkFileClose:
+		IF NOT fbFileClose.bBusy
+		THEN
+			IF NOT fbFileClose.bError
+			THEN
+				fbFileClose.bExecute := FALSE;
+				enStep := eDone;					(* Next step *)
+
+				IF bError
+				THEN
+					enStep := eError;				(* Next step *)
+				END_IF
+
+			ELSE
+				fbFileClose.bExecute := FALSE;
+				udnErrNo := fbFileClose.nErrId;
+	
+				enStep := eError;					(* Next step *)
+				
+			END_IF
+		END_IF
+
+	eDone:
+		bBusy := FALSE;
+		bDone := TRUE;
+		bError := FALSE;
+		udnErrNo := 0;
+
+		enStep := eNotExecute;					(* Next step *)
+
+	eError:
+		IF NOT bError
+		     AND hFileHandle <> 0
+		THEN
+			bDone := FALSE;
+			bError := TRUE;
+
+			enStep := eFileClose;					(* Next step *)
+
+		ELSE
+			bBusy := FALSE;
+			bDone := FALSE;
+			bError := TRUE;
+	
+			enStep := eNotExecute;					(* Next step *)
+		END_IF
+
+	eNotExecute:
+		IF NOT bExecute
+		THEN
+			bBusy := FALSE;
+			bDone := FALSE;
+			bError := FALSE;
+			udnErrNo := 0;
+
+			enStep := eWaitExecute;			(* Next step *)
+
+		END_IF
+
+END_CASE
+
+fbFileOpen(
+	sNetId := '',
+	sPathName := sPathName,
+	nMode := dwMode,
+	ePath := PATH_GENERIC,
+	tTimeout := tTimeout
+);
+fbFileClose(
+	sNetId := '',
+	hFile := hFileHandle,
+	tTimeout := tTimeout
+);
+fbFilePuts(
+	sNetId := '',
+	hFile:= hFileHandle,
+	sLine := sRecordsToWrite,
+	tTimeout := tTimeout
+ );]]></ST>
+    </Implementation>
+    <Action Name="A_GetData" Id="{8e7a510f-301a-4716-b496-cc37d2b25c4b}">
+      <Implementation>
+        <ST><![CDATA[
+CASE enGetData
+OF
+	eWaitInterruptData:
+		IF unLogIdx = 0
+		THEN
+			unLogIdx := 1;
+			unLogSize := unLOG_BEFOR_MAX_NO;
+
+			sRecordsToWrite := '[WAIT INTERRUPT]';
+
+		ELSIF unRecordsIdx = 0
+		THEN
+			unRecordsIdx	 := 1;
+			unRecordsSize := unNUM_OF_LOG_VAR;
+
+			sRecordsToWrite := CONCAT(
+								UDINT_TO_STRING(arstLoggerWaitInterrupt[unLogIdx].udnCycleNo),
+								CONCAT(
+									sSeparator,
+									arstLoggerWaitInterrupt[unLogIdx].sTimeStamp
+								)
+							   );
+
+		ELSE
+
+			sRecordsToWrite := arstLoggerWaitInterrupt[unLogIdx].arsLogVars[unRecordsIdx];
+
+			unRecordsIdx := unRecordsIdx + 1;
+
+			IF unRecordsIdx > unRecordsSize
+			THEN
+				unRecordsIdx := 0;
+				unLogIdx := unLogIdx + 1;
+			END_IF
+
+		END_IF
+
+		IF unLogIdx > unLogSize
+		THEN
+			unLogIdx := 0;
+		  	unRecordsIdx := 0;
+			enGetData := eDuringInterruptData;					(* Next step *)
+		END_IF
+
+	eDuringInterruptData:
+
+		IF unLogIdx = 0
+		THEN
+			unLogIdx := 1;
+			unLogSize := unLOG_DURING_MAX_NO;
+
+			sRecordsToWrite := '[DURING INTERRUPT]';
+
+		ELSIF unRecordsIdx = 0
+		THEN
+			unRecordsIdx	 := 1;
+			unRecordsSize := unNUM_OF_LOG_VAR;
+
+			sRecordsToWrite := CONCAT(
+								UDINT_TO_STRING(arstLoggerDuringInterrupt[unLogIdx].udnCycleNo),
+								CONCAT(
+									sSeparator,
+									arstLoggerDuringInterrupt[unLogIdx].sTimeStamp
+								)
+							   );
+
+		ELSE
+			sRecordsToWrite := arstLoggerDuringInterrupt[unLogIdx].arsLogVars[unRecordsIdx];
+
+			unRecordsIdx := unRecordsIdx + 1;
+
+			IF unRecordsIdx > unRecordsSize
+			THEN
+				unRecordsIdx := 0;
+				unLogIdx := unLogIdx + 1;
+			END_IF
+
+		END_IF
+
+		IF unLogIdx > unLogSize
+		THEN
+			unLogIdx := 0;
+		  	unRecordsIdx := 0;
+			enGetData := eAfterInterruptData;					(* Next step *)
+		END_IF
+
+	eAfterInterruptData:
+
+		IF unLogIdx = 0
+		THEN
+			unLogIdx := 1;
+			unLogSize := unLOG_AFTER_MAX_NO;
+
+			sRecordsToWrite := '[AFTER INTERRUPT]';
+
+			IF LEN(arstLoggerAfterInterrupt[unLogIdx].sTimeStamp) = 0
+			THEN
+				unLogIdx := unLOG_AFTER_MAX_NO + 1;
+			END_IF
+
+		ELSIF unRecordsIdx = 0
+		THEN
+			unRecordsIdx	 := 1;
+			unRecordsSize := unNUM_OF_LOG_VAR;
+
+			sRecordsToWrite := CONCAT(
+								UDINT_TO_STRING(arstLoggerAfterInterrupt[unLogIdx].udnCycleNo),
+								CONCAT(
+									sSeparator,
+									arstLoggerAfterInterrupt[unLogIdx].sTimeStamp
+								)
+							   );
+
+		ELSE
+			sRecordsToWrite := arstLoggerAfterInterrupt[unLogIdx].arsLogVars[unRecordsIdx];
+
+			unRecordsIdx := unRecordsIdx + 1;
+
+			IF unRecordsIdx > unRecordsSize
+			THEN
+				unRecordsIdx := 0;
+				unLogIdx := unLogIdx + 1;
+			END_IF
+
+		END_IF
+
+		IF unLogIdx > unLogSize
+		THEN
+			unLogIdx := 0;
+		  	unRecordsIdx := 0;
+			enGetData := eNoData;
+		END_IF
+
+	eNoData:
+		unLogIdx := 0;
+		 unRecordsIdx := 0;
+
+END_CASE]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_LoggerFile">
+      <LineId Id="65" Count="240" />
+    </LineIds>
+    <LineIds Name="FB_LoggerFile.A_GetData">
+      <LineId Id="0" Count="138" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

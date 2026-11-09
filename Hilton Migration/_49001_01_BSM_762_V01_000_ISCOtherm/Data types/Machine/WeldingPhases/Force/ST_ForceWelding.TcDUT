@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_ForceWelding" Id="{9bd7ea61-9e6a-40a0-84d5-11384f1f9513}">
+    <Declaration><![CDATA[TYPE ST_ForceWelding :
+STRUCT
+	lrWeldingForce						:LREAL;											(* Welding force [N] *)
+	unWeldingRamp						:UINT;											(* Welding ramp [s] *)
+	unCoolDownTime						:UINT;											(* Cool down time [s]  *)
+	arunCoolingTime						:ARRAY[1..2] OF UINT;								(* Cooling time *)
+	lrVeloForceCtrlKp						:LREAL;											(* Velocity - force controller proportional band Kp *)
+	lrVeloForceCtrlTi						:LREAL;											(* Velocity - force controller integral Ti *)
+	lrVeloForcePreCtrlVelo					:LREAL;											(* Feedforward velocity precontrol wieghting =  0..1 *)
+	lrVeloForceCtrlLimit					:LREAL;											(* Velocity - force controller limit  *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

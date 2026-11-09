@@ -1,0 +1,191 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_STOEBERSDS_MC_Reset" Id="{57a03997-c03b-4d06-83d6-c0cf99ab818e}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_STOEBERSDS_MC_Reset
+(*
+
+The function block used to reset the axis for motion commands. 
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			22.09.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bExecute					:BOOL;			(* Execut the function block *)
+
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bDone						:BOOL;			(* Program done *)
+	bBusy						:BOOL;			(* Program busy *)
+	bError						:BOOL;			(* Error *)
+	udnErrorNo					:UDINT;			(* Error number *)
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	Axis							:ST_AXIS_REF;
+END_VAR
+VAR
+	(* Enummerations *)
+	etMC_States					:ET_MC_States := ET_MC_States_eInit;
+
+	(* Variables *)
+	nWatchdog					:INT;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtExecute						:R_TRIG;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+rtExecute(CLK := bExecute);
+
+IF rtExecute.Q
+THEN
+	etMC_States := ET_MC_States_eInit;                      (* Next step *)
+END_IF;
+
+CASE etMC_States OF
+
+	ET_MC_States_eInit:
+		bBusy := FALSE;			(* Program not busy *)
+		bError := FALSE;			(* Program not error *)
+		udnErrorNo := 0;			(* Error number *)
+
+		IF rtExecute.Q
+		     AND NOT Axis.bLockPDO
+		THEN
+			nWatchdog := 0;
+			bDone := FALSE;			(* Program done, in position *)
+			bBusy := TRUE;			(* Program busy *)
+
+			Axis.bLockPDO := TRUE;
+
+			Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd := Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd AND 224;			(* Reset MC modes staus *)
+			Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bPLCOpenCmdExe := FALSE;                                                 					(* Reset MC_Reset execute *)
+	
+			Axis.stPlcToNc.stBaseDevice.bToggleBit := FALSE;			(* Reset Toggle bit *)
+			Axis.stPlcToNc.stBaseDevice.bFaultReset := FALSE;			(* Error reset *)
+			
+			etMC_States := ET_MC_States_eReset;				(* Next step *)
+		
+			IF Axis.stNcToPlc.stBaseDevice.bError                    				(* Error *)
+			     OR Axis.stNcToPlc.stBaseDevice.bGroupError                  		(* Group error *)
+			THEN
+				etMC_States :=  ET_MC_States_eReset;                     	(* Next step *)
+			
+			ELSE
+				etMC_States := ET_MC_States_eDone;			(* Next step *)
+
+			END_IF;
+		END_IF;
+
+	ET_MC_States_eReset:
+		nWatchdog := nWatchdog + 1;
+
+		IF NOT Axis.stNcToPlc.stBaseDevice.bToggleBit			(* Ack Toggle bit *)
+		THEN
+			Axis.stPlcToNc.stBaseDevice.bFaultReset := TRUE;         (* Error reset *)
+
+			nWatchdog := 0;
+			etMC_States := ET_MC_States_eRunning;		 (* Next step *)
+
+		ELSIF nWatchdog > 150
+		THEN
+			etMC_States := ET_MC_States_eError;             (* Next step *)
+		END_IF;
+
+
+	ET_MC_States_eRunning:
+		nWatchdog := nWatchdog + 1;
+
+		Axis.stPlcToNc.stBaseDevice.bFaultReset := FALSE;        (* Error reset *)
+		Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd := Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd OR 7;			(* Set MC_Reset *)
+		Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bPLCOpenCmdExe := TRUE;											(* Set MC_Reset execute *)
+		
+		Axis.stPlcToNc.stBaseDevice.bToggleBit := TRUE;			(* Set Togglebit *)
+
+		IF Axis.stNcToPlc.stBaseDevice.bToggleBit								(* Ack Togglebit *)
+		     AND (Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd  AND 31) = 7			(* Ack MC_Reset *)
+		     AND Axis.stNcToPlc.stBaseDevice.bAxisActive							(* Axis active *)
+		THEN
+			Axis.stPlcToNc.stBaseDevice.bToggleBit := FALSE;			(* Reset Togglebit *)
+
+			nWatchdog := 0;
+			etMC_States := ET_MC_States_eWaiting;           			(* Next step *)
+		
+		ELSIF Axis.stNcToPlc.stBaseDevice.bError         					(* Error *)
+			   OR nWatchdog > 150
+		THEN
+			Axis.stPlcToNc.stBaseDevice.bToggleBit := FALSE;			(* Reset Togglebit *)
+
+			udnErrorNo := 2;                     							(* Error number *)
+		
+			etMC_States := ET_MC_States_eError;             			(* Next step *)
+		END_IF;
+
+	ET_MC_States_eWaiting:
+		nWatchdog := nWatchdog + 1;
+
+		IF Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bPLCOpenCmdDone          							(* Command done - Stoeber create no done without MC error *)
+		     OR (Axis.stNcToPlc.stBaseDevice.stCommandPositioning.byPLCOpenState AND 16#0F) <> 7					(* No MC error stop *)
+		THEN
+			etMC_States := ET_MC_States_eDone;              			(* Next step *)
+		
+		ELSIF Axis.stNcToPlc.stBaseDevice.bError          					(* Error *)
+			   OR nWatchdog > 150
+		THEN
+			udnErrorNo := 3;                     							(* Error number *)
+		
+			etMC_States := ET_MC_States_eError;             			(* Next step *)
+		END_IF;
+
+	ET_MC_States_eDone:
+		nWatchdog := 0;
+		bDone := TRUE;                        (* Program done *)
+		bBusy := FALSE;			(* Program not busy *)
+
+		etMC_States := ET_MC_States_eNotExecute;            (* Next step *)
+
+	ET_MC_States_eError:
+		nWatchdog := 0;
+		Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bPLCOpenCmdExe := FALSE;			(* Reset MC_Stop execute *)
+		bDone := FALSE;			(* Program done *)
+		bError := TRUE;			(* Program error *)
+		bBusy := FALSE;			(* Program not busy *)
+
+		etMC_States := ET_MC_States_eNotExecute;            (* Next step *)
+        
+	ET_MC_States_eNotExecute:
+		IF NOT bExecute
+		THEN
+			nWatchdog := 0;
+			Axis.bLockPDO := FALSE;
+
+			bDone := FALSE;			(* Program done, in position *)
+			bBusy := FALSE;			(* Program not busy *)
+			bError := FALSE;			(* Program not error *)
+			udnErrorNo := 0;			(* Error number *)
+
+			Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd := Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd AND 224;			(* Reset MC modes staus *)
+ 			Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bPLCOpenCmdExe := FALSE;         										(* Reset MC_Reset execute *)
+			
+			etMC_States := ET_MC_States_eInit;              (* Next step *)
+		
+		END_IF;
+END_CASE;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_STOEBERSDS_MC_Reset">
+      <LineId Id="44" Count="136" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

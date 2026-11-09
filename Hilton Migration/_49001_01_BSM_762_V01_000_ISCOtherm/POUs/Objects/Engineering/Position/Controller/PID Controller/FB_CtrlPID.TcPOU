@@ -1,0 +1,126 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_CtrlPID" Id="{4c0689b4-a167-4e32-ba4a-8a941fa9fd8b}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_CtrlPID
+(*
+Function block is a PID controller.
+The PID controller works according to the fomula CV = in * (Kp + Ki * Integral(e)), in = SP - PV).
+The output limits are active.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			03.06.2014
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+
+VAR_INPUT
+	(* Enummerations *)
+
+	(* Variables *)
+	bEnable								:BOOL := TRUE;					(* Enable FB *)
+	lrSetPoint							:LREAL;							(* Set point - SP *)
+	lrProcessVariable						:LREAL;							(* Process variable - PV *)
+	lrDeadZone							:LREAL;							(* Dead zone *)
+	lrSignalOffset							:LREAL := 0.0;						(* Offset signal *)
+	lrKp									:LREAL := 0.005;					(* Tuning parameter, proportional gain *)
+	lrTi									:LREAL := 1E32;					(* Tuning parameter, time of integral *)
+	lrTd									:LREAL := 0.0;						(* Tuning parameter, time of differential *)
+	lrTaskCycle							:LREAL := 0.010; 					(* Cycle time [sec] *)
+	bManual								:BOOL;							(* Manual mode *)
+	lrManualSignal						:LREAL;							(* Manual signal *)
+	bSetToZero 							:BOOL;							(* Integral setting to zero *)
+	lrLimitMin								:LREAL := -1E40;					(* Limit minimum *)
+	lrLimitMax							:LREAL := 1E40;					(* Limit maximum *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR
+VAR_OUTPUT
+	(* Enummerations *)
+
+	(* Variables *)
+	lrCtrlVariable							:LREAL;							(* Controller variable - CV *)
+	lrProcessErr							:LREAL;							(* Process error, e(t) = SP - PV *)
+	bLimitMin							:BOOL;							(* Limit minimum reached *)
+	bLimitMax							:BOOL;							(* Limit maximum reached *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	bFirstTime							:BOOL;							(* First cycle *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbTypePIDW							:FB_TypePIDW;
+	fbControllerOut						:FB_CtrlOut;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	lrCtrlVariable := 0.0;
+	bLimitMin := FALSE;
+	bLimitMax := FALSE;
+	bFirstTime := FALSE;
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+	bFirstTime := TRUE;
+END_IF
+
+(* Calculate process error *)
+lrProcessErr := F_CtrlIn(
+	lrSetPoint := lrSetPoint,
+	lrProcessVariable := lrProcessVariable,
+	lrDeadZone := lrDeadZone
+);
+
+(* Start controller *)
+fbTypePIDW(
+	bEnable := bEnable,
+	lrInSignal := lrProcessErr,
+	lrKp := lrKp,
+	lrTi := lrTi,
+	lrTd := lrTd,
+	lrTaskCycle := lrTaskCycle,
+	bSetToZero := bSetToZero,
+	lrLimitMin := lrLimitMin,
+	lrLimitMax := lrLimitMax
+ );
+
+(* Set controller output *)
+fbControllerOut(
+	lrInSignal := fbTypePIDW.lrOutSignal,
+	lrSignalOffset := lrSignalOffset,
+	lrLimitMin := lrLimitMin,
+	lrLimitMax := lrLimitMax,
+	lrOutSignal => lrCtrlVariable,
+	bLimitMin => bLimitMin,
+	bLimitMax => bLimitMax
+ );]]></ST>
+    </Implementation>
+    <LineIds Name="FB_CtrlPID">
+      <LineId Id="72" Count="43" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

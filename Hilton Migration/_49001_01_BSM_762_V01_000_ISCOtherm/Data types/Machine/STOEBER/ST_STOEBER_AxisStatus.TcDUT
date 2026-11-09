@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_STOEBER_AxisStatus" Id="{f7486759-0cb3-4f6a-bf8c-54d863af653c}">
+    <Declaration><![CDATA[(* Status of Stober inverter *)
+
+TYPE ST_STOEBER_AxisStatus :
+STRUCT
+	bEnabled					:BOOL;			(* Enabled = TRUE indicates that the inverter is enabled. *)
+	bError						:BOOL;			(* Error = TRUE indicates that the inverter has error.*)
+	bFastStopActive				:BOOL;			(* FastStopActive = TRUE indicates that the fast stop is active.*)
+	bReadyToPos				:BOOL;			(* ReadyToPos = TRUE indicates that the inverter is ready to positioning.*)
+	bLocalActive					:BOOL;			(* LocalActive = TRUE indicates that the local mode active.*)
+	bJogActive					:BOOL;			(* JogActive = TRUE indicates that the jog mode active.*)
+	bConstantVelocity               		:BOOL;			(* ConstantVelocity = TRUE indicates that the inverter is in velocity *)
+	bAccelerating					:BOOL;			(* Drive is accelerating *)
+	bDecelerating				:BOOL;			(* Drive is decelerating *)
+	bInPosition					:BOOL;			(* InPosition = TRUE indicates that the inverter is in position.*)
+	bInPositionWindow			:BOOL;			(* InPositionWindow = TRUE indicates that the inverter is in position window.*)
+	bInReference					:BOOL;			(* InReference = TRUE indicates that the inverter is in reference.*)
+	bStandStill					:BOOL;			(* StandStill = TRUE indicates that the inverter has stand still.*)
+	bInSync						:BOOL;			(* InSync = TRUE indicates that the inverter in sync.*)
+	bHoming						:BOOL;			(* Homing = TRUE indicates that the referencing is active.*)
+	bCam1						:BOOL;			(* Cam1 = TRUE indicates that the cam 1 active.*)
+	bSwitchPoint					:BOOL;			(* SwitchPoint = TRUE indicates that the switch point active.*)
+	bDenied						:BOOL;			(* Denied = TRUE indicates that the command denied .*)
+	bLimitSwitch					:BOOL;			(* LimitSwitch = TRUE indicates that the hard- oder software limit switch touched.*)
+	nActMotionID					:INT;			(* ActMotionID = TRUE indicates that the actual motion ID.*)
+	lrActPosition					:REAL;			(* ActPosition = TRUE indicates that the actual position.*)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

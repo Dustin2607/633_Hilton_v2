@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_PLCTOGFX4IR" Id="{45e2d741-3d3d-4be0-b986-624b5184344f}">
+    <Declaration><![CDATA[TYPE ST_PLCTOGFX4IR :
+STRUCT
+	nLocalSetPoint			:INT;
+	nManualOutput			:WORD;
+	wControllerStatus			:WORD;
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

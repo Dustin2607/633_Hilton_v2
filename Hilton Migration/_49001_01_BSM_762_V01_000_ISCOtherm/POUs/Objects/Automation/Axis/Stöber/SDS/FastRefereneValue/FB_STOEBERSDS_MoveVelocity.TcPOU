@@ -1,0 +1,248 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_STOEBERSDS_MoveVelocity" Id="{adbccbba-089a-4f39-b67b-7447fee95564}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_STOEBERSDS_MoveVelocity
+(*
+
+The function block used to starts a continuous movement with specified velocity and direction. 
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			22.09.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bExecute					:BOOL;			(* Execut the function block *)
+	lrVelocity						:LREAL;			(* Value of velocity *)
+	etMC_Direction				:ET_MC_Direction;(* Direction *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bInVelocity					:BOOL;			(* Target velocity is reached *)
+	bCmdAborted				:BOOL;			(* Command aborted *)
+	bBusy						:BOOL;			(* Program busy *)
+	bError						:BOOL;			(* Error *)
+	udnErrorNo					:UDINT;			(* Error number *)
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	Axis							:ST_AXIS_REF;
+END_VAR
+VAR
+	(* Enummerations *)
+	etMC_States					:ET_MC_States := ET_MC_States_eInit;
+
+	(* Variables *)
+	nWatchdog					:INT;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtExecute						:R_TRIG;
+	rtAborted						:R_TRIG;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+rtExecute(CLK := bExecute);
+
+rtAborted(CLK := NOT Axis.stNcToPlc.stBaseDevice.bEnabled);
+IF rtAborted.Q                                              (* Aborted *)
+THEN
+	etMC_States := ET_MC_States_eAbort;                     (* Next step *)
+
+ELSIF rtExecute.Q
+	    AND NOT bCmdAborted
+THEN
+	etMC_States := ET_MC_States_eInit;                                   (* Next step *)
+
+	IF Axis.stNcToPlc.stBaseDevice.bQuickStop               (* Halt *)
+	THEN
+		udnErrorNo := 2;                                    (* Error number *)
+
+		etMC_States := ET_MC_States_eError;                              (* Next step *)
+	END_IF;
+END_IF;
+
+CASE etMC_States OF
+        
+	ET_MC_States_eInit:
+		bCmdAborted := FALSE;                               (* Command not aborted  *)
+		bBusy := FALSE;                                         (* Program not busy  *)
+		bError := FALSE;                                        (* Program not error  *)
+		udnErrorNo := 0;                                        (* Error number *)
+
+		IF rtExecute.Q
+		     AND NOT Axis.bLockPDO
+		THEN
+			nWatchdog := 0;
+			bInVelocity := FALSE;                               (* Target velocity is not reached *)
+			bBusy := TRUE;                                  (* Program busy *)
+
+			Axis.bLockPDO := TRUE;
+
+			IF Axis.stNcToPlc.stBaseDevice.bEnabled          (* Control enabled *)
+			THEN
+
+				Axis.stPlcToNc.stBaseDevice.bToggleBit := FALSE;    (* Reset Toggle bit *)
+
+				IF etMC_Direction = ET_MC_Direction_ePositive
+				THEN
+					IF NOT Axis.stPlcToNc.stBaseDevice.stFastRefereneValue.bHWLimitMax
+					THEN
+						Axis.stPlcToNc.stBaseDevice.stFastRefereneValue.nSpeed := LIMIT(0, ABS(LREAL_TO_INT(lrVelocity * 163.84)), 16384);			(* Value of velocity *)
+					ELSE
+						Axis.stPlcToNc.stBaseDevice.stFastRefereneValue.nSpeed := 0;
+					END_IF
+
+					etMC_States := ET_MC_States_eReset;                      (* Next step *)
+
+				ELSIF etMC_Direction = ET_MC_Direction_eNegative
+				THEN
+					IF NOT Axis.stPlcToNc.stBaseDevice.stFastRefereneValue.bHWLimitMin
+					THEN
+						Axis.stPlcToNc.stBaseDevice.stFastRefereneValue.nSpeed := LIMIT(-16384, -ABS(LREAL_TO_INT(lrVelocity * 163.84)), 0);                  	(* Value of velocity *)
+					ELSE
+						Axis.stPlcToNc.stBaseDevice.stFastRefereneValue.nSpeed := 0;
+					END_IF
+
+					etMC_States := ET_MC_States_eReset;                      (* Next step *)
+
+				ELSIF etMC_Direction = ET_MC_Direction_eCurrent
+				THEN
+					IF (lrVelocity > 0 AND NOT Axis.stPlcToNc.stBaseDevice.stFastRefereneValue.bHWLimitMax)
+					     OR (lrVelocity < 0 AND NOT Axis.stPlcToNc.stBaseDevice.stFastRefereneValue.bHWLimitMin)
+					THEN
+						Axis.stPlcToNc.stBaseDevice.stFastRefereneValue.nSpeed := LIMIT(-16384, ABS(LREAL_TO_INT(lrVelocity * 163.84)), 16384);		(* Value of velocity *)
+					ELSE
+						Axis.stPlcToNc.stBaseDevice.stFastRefereneValue.nSpeed := 0;
+					END_IF
+
+					etMC_States := ET_MC_States_eReset;                      (* Next step *)
+				    
+				END_IF;
+
+			ELSE
+				udnErrorNo := 4;                                    (* Error number *)
+			
+				etMC_States := ET_MC_States_eError;                              (* Next step *)
+
+			END_IF;
+		END_IF;
+
+	ET_MC_States_eReset:
+		nWatchdog := nWatchdog + 1;
+
+		IF NOT Axis.stNcToPlc.stBaseDevice.bToggleBit           (* Ack Togglebit *)
+		THEN
+			nWatchdog := 0;
+			etMC_States := ET_MC_States_eRunning;                            (* Next step *)
+
+		ELSIF nWatchdog > 150
+		THEN
+			etMC_States := ET_MC_States_eError;             (* Next step *)
+
+		END_IF;
+
+	ET_MC_States_eRunning:
+		(*nWatchdog := nWatchdog + 1;*)
+
+		Axis.stPlcToNc.stBaseDevice.bToggleBit := TRUE;        (* Set Togglebit *)
+
+		IF Axis.stNcToPlc.stBaseDevice.bToggleBit               (* Ack Togglebit *)
+		AND Axis.stNcToPlc.stBaseDevice.bAxisActive           (*Axis active *)
+		AND (Axis.stNcToPlc.stBaseDevice.stFastRefereneValue.nMotorSpeed <> 0                        (* Axis runnning *)
+			  OR Axis.stPlcToNc.stBaseDevice.stFastRefereneValue.nSpeed = 0)
+		THEN
+			Axis.stPlcToNc.stBaseDevice.bToggleBit := FALSE;   (* Reset Togglebit *)
+
+			nWatchdog := 0;
+			etMC_States := ET_MC_States_eWaiting;                            (* Next step *)
+
+		ELSIF Axis.stNcToPlc.stBaseDevice.bError            (* Error *)
+			   OR nWatchdog > 150
+		THEN
+			Axis.stPlcToNc.stBaseDevice.bToggleBit := FALSE;   (* Reset Togglebit *)
+
+			udnErrorNo := 2;                                    (* Error number *)
+		
+			etMC_States := ET_MC_States_eError;                              (* Next step *)
+		END_IF;
+
+	ET_MC_States_eWaiting:
+		IF Axis.stNcToPlc.stBaseDevice.stFastRefereneValue.bVeloReached                        (* In velocity *)
+		THEN
+			etMC_States := ET_MC_States_eDone;                           (* Next step *)
+		
+		ELSIF Axis.stNcToPlc.stBaseDevice.bError            (* Error *)
+		THEN
+			udnErrorNo := 3;                                    (* Error number *)
+		
+			etMC_States := ET_MC_States_eError;                              (* Next step *)
+		END_IF;
+
+	ET_MC_States_eAbort:
+		bCmdAborted := TRUE;                                (* Command aborted *)
+		bInVelocity := FALSE;                                   (* Target velocity is not reached *)
+		Axis.stPlcToNc.stBaseDevice.stFastRefereneValue.nSpeed := 0;                        (* Value of the velocity *)
+
+		etMC_States := ET_MC_States_eNotExecute;                 (* Next step *)
+
+	ET_MC_States_eDone:
+		nWatchdog := 0;
+		bInVelocity := TRUE;                                (* Target velocity is reached    *)
+		bBusy := FALSE;                                     (* Program not busy *)
+	
+		etMC_States := ET_MC_States_eNotExecute;                     (* Next step *)
+
+	ET_MC_States_eError:
+		nWatchdog := 0;
+		Axis.stPlcToNc.stBaseDevice.stFastRefereneValue.nSpeed := 0;                        (* Value of the velocity *)
+		bInVelocity := FALSE;                               (* Target velocity is not reached *)
+		bError := TRUE;                                 (* Program error *)
+		bBusy := FALSE;                                     (* Program not busy *)
+	
+		etMC_States := ET_MC_States_eNotExecute;                     (* Next step *)
+
+	ET_MC_States_eNotExecute:
+		IF NOT bExecute
+		THEN
+			nWatchdog := 0;
+			Axis.bLockPDO := FALSE;
+
+			bInVelocity := FALSE;                           (* Target velocity is not reached *)
+			bCmdAborted := FALSE;                       (* Command not aborted *)
+			bBusy := FALSE;                                 (* Program not busy *)
+			bError := FALSE;                                (* Program not error *)
+			udnErrorNo := 0;                                (* Error number *)
+			
+			etMC_States := ET_MC_States_eInit;                           (* Next step *)
+
+		END_IF;
+
+END_CASE;
+
+IF Axis.stPlcToNc.stBaseDevice.bQuickStop               (* Halt *)
+THEN
+	etMC_States := ET_MC_States_eAbort;                                  (* Next step *)
+END_IF;
+
+IF Axis.stNcToPlc.stBaseDevice.bError
+     AND Axis.stPlcToNc.stBaseDevice.bFaultReset
+THEN
+	Axis.stPlcToNc.stBaseDevice.stFastRefereneValue.nSpeed := 0;
+	Axis.bLockPDO := FALSE;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_STOEBERSDS_MoveVelocity">
+      <LineId Id="48" Count="189" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

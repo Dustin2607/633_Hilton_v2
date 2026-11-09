@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_AxisMoveManualSetLimits" Id="{5d7877d6-c795-440a-9f0e-815899097faa}">
+    <Declaration><![CDATA[TYPE ET_AxisMoveManualSetLimits :
+(
+	ET_AxisMoveManualSetLimits_eWaitExecute := 0,
+	ET_AxisMoveManualSetLimits_eSetVelo := 5,
+	ET_AxisMoveManualSetLimits_eWfSetVelo := 10,
+	ET_AxisMoveManualSetLimits_eDone := 197,
+	ET_AxisMoveManualSetLimits_eError := 198,
+	ET_AxisMoveManualSetLimits_eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

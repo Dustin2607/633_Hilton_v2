@@ -1,0 +1,322 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_YASKAWA_StartPrg" Id="{aea99155-1512-4cc8-b99a-1de73938045c}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_YASKAWA_StartPrg
+(*
+
+The function block used to start kuka
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			18.11.2016
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;			(* Signal FB enable *)
+	bReset						:BOOL;			(* Signal reset *)
+	bAutoHand					:BOOL;			(* Auto := TRUE, Hand := FALSE *)
+	bStart						:BOOL;			(* Start program *)
+	bStop						:BOOL;			(* Stop program *)
+	bInterrupt						:BOOL;			(* Interrupt *)
+	nPrgNo						:INT;			(* Program number *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bRunning					:BOOL;						(* Program running *)
+	bDone						:BOOL;						(* Program done *)
+	bInterrupted					:BOOL;						(* Program interrupted *)
+	bBusy						:BOOL;						(* Program busy *)
+	bError						:BOOL;						(* Error *)
+	udnErrorNo					:UDINT;
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	Yaskawa					:ST_YASKAWA_REF;				(* The YASKAWA_REF data type  is an interface between the PLC and the YASKAWA and contains axis information *)
+END_VAR
+VAR
+	(* Enummerations *)
+	etYaskawaStart				:ET_YaskawaStart;
+
+	(* Variables *)
+	wDoneFlag					:WORD;
+	bFirstTime					:BOOL;
+
+	nWatchdog					:INT;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtStart						:R_TRIG;
+	rtStop						:R_TRIG;
+	rtReset						:R_TRIG;
+	rtInterrupt						:R_TRIG;
+	tonWatchdog					:TON;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+	bDone := FALSE;					(* Program done *)
+	bInterrupted := FALSE;				(* Program interrupted *)
+	bBusy := FALSE;                                  	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;                                 		(* Error number *)
+
+	Yaskawa.stPlcToYaskawa.bCallMasterJob := FALSE;
+	Yaskawa.stPlcToYaskawa.bExternalStart := FALSE;
+	Yaskawa.stPlcToYaskawa.bExternalHold := FALSE;
+
+	RETURN;
+END_IF;
+
+IF NOT bFirstTime
+THEN
+	tonWatchdog(IN := FALSE);
+
+	Yaskawa.stPlcToYaskawa.bCallMasterJob := FALSE;
+	Yaskawa.stPlcToYaskawa.bExternalStart := FALSE;
+	Yaskawa.stPlcToYaskawa.bExternalHold := FALSE;
+
+	etYaskawaStart := ET_YaskawaStart_eWaitExecute;              (* Next step *)
+
+	bFirstTime := TRUE;
+END_IF
+
+rtReset(CLK := bReset);
+
+IF rtReset.Q
+     AND bError
+THEN
+	bError := FALSE;
+
+	tonWatchdog(IN := FALSE);
+
+	Yaskawa.stPlcToYaskawa.bCallMasterJob := FALSE;
+	Yaskawa.stPlcToYaskawa.bExternalStart := FALSE;
+	Yaskawa.stPlcToYaskawa.bExternalHold := FALSE;
+
+	etYaskawaStart := ET_YaskawaStart_eWaitExecute;              (* Next step *)
+END_IF
+
+rtInterrupt(CLK := bInterrupt);
+IF rtInterrupt.Q
+THEN
+	tonWatchdog(IN := FALSE);
+
+	Yaskawa.stPlcToYaskawa.bCallMasterJob := FALSE;
+	Yaskawa.stPlcToYaskawa.bExternalStart := FALSE;
+	Yaskawa.stPlcToYaskawa.bExternalHold := FALSE;
+
+	etYaskawaStart := ET_YaskawaStart_eInterrupted;              (* Next step *)
+END_IF;
+
+(* Wait for triger *)
+rtStart(
+	CLK := bStart
+);
+
+IF rtStart.Q
+     AND NOT bStop
+     AND Yaskawa.stYaskawaToPlc.bServoIsOn
+     AND NOT Yaskawa.stYaskawaToPlc.bAlarmErrorOccured
+THEN
+	Yaskawa.stPlcToYaskawa.bCallMasterJob := FALSE;
+	Yaskawa.stPlcToYaskawa.bExternalStart := FALSE;
+
+	IF bAutoHand
+	THEN
+		Yaskawa.stPlcToYaskawa.bExternalHold := FALSE;
+	END_IF
+
+	etYaskawaStart := ET_YaskawaStart_eWaitExecute;              (* Next step *)
+
+END_IF
+
+rtStop(
+	CLK := bStop
+);
+
+IF rtStop.Q
+     OR Yaskawa.stYaskawaToPlc.bAlarmErrorOccured
+THEN
+	Yaskawa.stPlcToYaskawa.bCallMasterJob := FALSE;
+	Yaskawa.stPlcToYaskawa.bExternalStart := FALSE;
+	Yaskawa.stPlcToYaskawa.bExternalHold := Yaskawa.stYaskawaToPlc.bOperatingRunning
+										     AND NOT Yaskawa.stYaskawaToPlc.bAlarmErrorOccured;
+
+	etYaskawaStart := ET_YaskawaStart_eWaitExecute;              (* Next step *)
+
+END_IF
+
+bRunning := Yaskawa.stYaskawaToPlc.bOperatingRunning;
+Yaskawa.stPlcToYaskawa.nPrgNo := nPrgNo;
+
+(* Send command *)
+CASE etYaskawaStart OF
+
+	ET_YaskawaStart_eWaitExecute:
+		bBusy := FALSE;                                     	(* Program not busy *)
+		bError := FALSE;                         		(* Program not error *)
+
+		IF rtStart.Q
+     		     AND bAutoHand			(* Automatic *)
+		     AND NOT bStop
+		THEN
+			nWatchdog := 0;
+			bDone:= FALSE;                               		(* Program done *)
+			bInterrupted := FALSE;				(* Program interrupted *)
+			bBusy := TRUE;                                  	(* Program busy *)
+			udnErrorNo := 0;                         		(* Error number *)
+
+			wDoneFlag := 0;
+
+			tonWatchdog(IN := FALSE);
+
+			Yaskawa.stPlcToYaskawa.bCallMasterJob := FALSE;
+			Yaskawa.stPlcToYaskawa.bExternalStart := FALSE;
+
+			IF NOT bAutoHand
+			     AND Yaskawa.stYaskawaToPlc.bHold
+			THEN
+				Yaskawa.stPlcToYaskawa.bExternalHold := FALSE;
+
+				etYaskawaStart := ET_YaskawaStart_eExternalStart;              (* Next step *)
+			ELSE
+				Yaskawa.stPlcToYaskawa.bExternalHold := FALSE;
+
+				etYaskawaStart := ET_YaskawaStart_eCallMasterJob;              (* Next step *)
+			END_IF
+		END_IF
+
+	ET_YaskawaStart_eCallMasterJob:
+		nWatchdog := nWatchdog + 1;
+
+		Yaskawa.stPlcToYaskawa.bCallMasterJob := TRUE;
+
+		IF Yaskawa.stYaskawaToPlc.bTopMasterJob
+		     AND Yaskawa.stYaskawaToPlc.bServoIsOn
+		     AND NOT Yaskawa.stYaskawaToPlc.bAlarmErrorOccured
+		THEN
+			nWatchdog := 0;
+
+			Yaskawa.stPlcToYaskawa.bCallMasterJob := FALSE;
+
+			etYaskawaStart := ET_YaskawaStart_eExternalStart;              (* Next step *)
+
+		ELSIF Yaskawa.stYaskawaToPlc.bAlarmErrorOccured
+			    OR nWatchdog > 1000
+		THEN
+			Yaskawa.stPlcToYaskawa.bCallMasterJob := FALSE;
+
+			udnErrorNo := 1;                     (* Error number *)
+
+			etYaskawaStart := ET_YaskawaStart_eError;              (* Next step *)
+
+		END_IF
+
+	ET_YaskawaStart_eExternalStart:
+		nWatchdog := nWatchdog + 1;
+
+		Yaskawa.stPlcToYaskawa.bExternalStart := TRUE;
+
+		IF Yaskawa.stYaskawaToPlc.bOperatingRunning
+		THEN
+			wDoneFlag.0 := TRUE;
+		END_IF
+
+		IF NOT Yaskawa.stYaskawaToPlc.bPrgDone
+		THEN
+			wDoneFlag.1 := TRUE;
+		END_IF
+
+		IF wDoneFlag.0
+		     AND wDoneFlag.1
+		     AND Yaskawa.stYaskawaToPlc.bServoIsOn
+		     AND NOT Yaskawa.stYaskawaToPlc.bAlarmErrorOccured
+		THEN
+			nWatchdog := 0;
+			wDoneFlag := 0;
+
+			Yaskawa.stPlcToYaskawa.bCallMasterJob := FALSE;
+			Yaskawa.stPlcToYaskawa.bExternalStart := FALSE;
+
+			etYaskawaStart := ET_YaskawaStart_eWfPrgDone;              (* Next step *)
+
+		ELSIF Yaskawa.stYaskawaToPlc.bAlarmErrorOccured
+			    OR nWatchdog > 1000
+		THEN
+			wDoneFlag := 0;
+
+			Yaskawa.stPlcToYaskawa.bExternalStart := FALSE;
+
+			udnErrorNo := 2;                     (* Error number *)
+
+			etYaskawaStart := ET_YaskawaStart_eError;              (* Next step *)
+
+		END_IF
+
+	ET_YaskawaStart_eWfPrgDone:
+		IF Yaskawa.stYaskawaToPlc.bPrgDone
+	     	    AND NOT Yaskawa.stYaskawaToPlc.bAlarmErrorOccured
+		THEN
+			Yaskawa.stPlcToYaskawa.bCallMasterJob := FALSE;;
+			Yaskawa.stPlcToYaskawa.bExternalStart := FALSE;
+
+			etYaskawaStart := ET_YaskawaStart_eDone;              (* Next step *)
+
+		ELSIF Yaskawa.stYaskawaToPlc.bAlarmErrorOccured
+		THEN
+			Yaskawa.stPlcToYaskawa.bCallMasterJob := FALSE;;
+			Yaskawa.stPlcToYaskawa.bExternalStart := FALSE;
+
+			udnErrorNo := 3;                     (* Error number *)
+
+			etYaskawaStart := ET_YaskawaStart_eError;              (* Next step *)
+
+		END_IF
+
+	ET_YaskawaStart_eInterrupted:
+		bInterrupted := TRUE;                                      	(* Program interrupted *)
+		bBusy := FALSE;                                     		(* Program not busy *)
+
+		etYaskawaStart := ET_YaskawaStart_eNoExecute;            		(* Next step *)
+
+	ET_YaskawaStart_eDone:
+		bDone := TRUE;						(* Command done *)
+		bBusy := FALSE;						(* Command busy *)
+
+		etYaskawaStart := ET_YaskawaStart_eNoExecute;
+
+	ET_YaskawaStart_eError:
+		bBusy := FALSE;						(* Command busy *)
+		bError := TRUE;						(* Command error  *)
+
+		etYaskawaStart := ET_YaskawaStart_eNoExecute;
+
+	ET_YaskawaStart_eNoExecute:
+		IF NOT bStart
+		THEN
+			(* Reset outputs *)
+			bDone := FALSE;						(* Command done *)
+			bInterrupted := FALSE;				(* Program interrupted *)
+			bBusy := FALSE;						(* Command busy *)
+			bError := FALSE;						(* Command error  *)
+
+			nWatchdog := 0;
+
+			etYaskawaStart := ET_YaskawaStart_eWaitExecute;
+		END_IF
+END_CASE;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_YASKAWA_StartPrg">
+      <LineId Id="58" Count="253" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

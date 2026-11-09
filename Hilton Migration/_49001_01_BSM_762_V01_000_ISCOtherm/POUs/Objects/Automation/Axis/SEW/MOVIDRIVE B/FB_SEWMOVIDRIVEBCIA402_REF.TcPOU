@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_SEWMOVIDRIVEBCIA402_REF" Id="{cbc4ac5f-c14a-49d2-9ee0-7d2d9bb099da}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_SEWMOVIDRIVEBCIA402_REF
+VAR_INPUT
+	stTerminalState			AT %I*:ST_TerminalState;
+	stSEWToPlc				AT %I*:ST_SEWMOVIEDRIVEBCIA402TOPLC;
+	stPlcToSEW				AT %Q*:ST_PLCTOSEWMOVIEDRIVEBCIA402;
+END_VAR
+VAR_OUTPUT
+
+END_VAR
+VAR_IN_OUT
+
+END_VAR
+VAR
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_SEWMOVIDRIVEBCIA402_REF">
+      <LineId Id="15" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

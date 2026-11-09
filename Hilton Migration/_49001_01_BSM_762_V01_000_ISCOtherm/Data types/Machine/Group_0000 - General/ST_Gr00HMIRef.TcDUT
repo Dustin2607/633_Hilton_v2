@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_Gr00HMIRef" Id="{445db56e-5b96-4139-9cd0-78138b05c37e}">
+    <Declaration><![CDATA[TYPE ST_Gr00HMIRef :
+STRUCT
+	stHMITOPLC				:ST_Gr00HMITOPLC;
+	stPLCTOHMI				:ST_Gr00PLCTOHMI;
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

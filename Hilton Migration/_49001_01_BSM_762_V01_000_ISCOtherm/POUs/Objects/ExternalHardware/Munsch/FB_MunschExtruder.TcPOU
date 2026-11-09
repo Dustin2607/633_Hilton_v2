@@ -1,0 +1,156 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_MunschExtruder" Id="{5d57e104-ac09-402e-94d9-d7654d0fa65b}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_MunschExtruder
+(*
+
+This function block is used to send and recive data's via KL600x to/from Munsch extruder.
+
+KL600x configuration is 	1200 8-N-1
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			14.09.2016
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;					(* Enable FB *)
+	sDeviceNetId					:STRING;				(* Fieldbus master NetId *)
+	unSlaveAddr 					:UINT;					(* Fixed address of the slave *)
+	sDateTime					:STRING;				(* Current date and time *)
+	bReset						:BOOL;					(* Reset *)
+	bSendExe					:BOOL;					(* Send execute *)
+	tSendPeriod					:TIME := t#0s;				(* Send data every period. If tSendPeriod is 0 then th function is not active *)
+	stMunschCmd				:ST_MUNSCH_CMD_Data;
+	tTimeOut 					:TIME := t#2s;				(* Timout  *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	stMunschRes					:ST_MUNSCH_RES_Data;
+	bInterfaceReady				:BOOL;				(* Interface ready to use *)
+	bInterfaceError				:BOOL;				(* Interface error *)
+	bStringReceived				:BOOL;				(* String received *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	stRXbuffer 					:ComBuffer;
+	stTXbuffer					:ComBuffer;
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	sSendString					:STRING;
+	sReceivedString				:STRING;
+
+	bFirstTime					:BOOL;					(* First PLC cycle *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbKL600x						:FB_KL600xData;
+
+END_VAR
+VAR CONSTANT
+	bEnableRTSCTS				:BOOL := FALSE;
+	udnBaudrate					:UDINT := 1200;
+	unDataBits					:UINT := 8;
+	sParity						:STRING := 'N';
+	unStopBits					:UINT := 1;
+	sStringPrefix					:STRING := '$FC';
+	sStringSuffix					:STRING := '';
+	byEnRTSCTSSubIndex		:BYTE := 16#01;					(* Subindex of object *)
+	wEnRTSCTSIndex			:WORD := 16#8000;                 			 (* Index of object *)
+	byBaudrateSubIndex			:BYTE := 16#11;					(* Subindex of object *)
+	wBaudrateIndex				:WORD := 16#8000;				(* Index of object *)
+	byDataFrameSubIndex			:BYTE := 16#15;					(* Subindex of object *)
+	wDataFrameIndex				:WORD := 16#8000;                                     (* Index of object *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable							(* Enable FB *)
+THEN
+	fbKL600x(
+		bEnable := FALSE,
+		tTimeOut:= tTimeOut,
+		sReceivedString := sReceivedString,
+		stRXbuffer := stRXbuffer,
+		stTXbuffer := stTXbuffer
+	);
+
+	bFirstTime := FALSE;					(* First PLC cycle *)
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+
+
+	bFirstTime := TRUE;
+END_IF
+
+IF bReset
+     AND bInterfaceError
+THEN
+	bInterfaceError := FALSE;
+END_IF
+
+sSendString := F_MunschCMD(
+	stMunschCmd := stMunschCmd
+);
+
+fbKL600x(
+	bEnable := TRUE,
+	sDeviceNetId:= sDeviceNetId,
+	unSlaveAddr:= unSlaveAddr,
+	sDateTime:= sDateTime,
+	bEnableRTSCTS := bEnableRTSCTS,
+	udnBaudrate:= udnBaudrate,
+	unDataBits:= unDataBits,
+	sParity:= sParity,
+	unStopBits:= unStopBits,
+	sStringPrefix := sStringPrefix,
+	sStringSuffix := sStringSuffix,
+	bReset := bReset,
+	bSendExe:= bSendExe,
+	tSendPeriod:= tSendPeriod,
+	sSendString:= sSendString,
+	byEnRTSCTSSubIndex := byEnRTSCTSSubIndex,
+	wEnRTSCTSIndex := wEnRTSCTSIndex,
+	byBaudrateSubIndex := byBaudrateSubIndex,
+	wBaudrateIndex := wBaudrateIndex,
+	byDataFrameSubIndex	 := byDataFrameSubIndex,
+	wDataFrameIndex := wDataFrameIndex,
+	tTimeOut:= tTimeOut,
+	sReceivedString := sReceivedString,
+	stRXbuffer := stRXbuffer,
+	stTXbuffer := stTXbuffer,
+	bKL600xReady => bInterfaceReady,
+	bStringReceived => bStringReceived
+ );
+
+stMunschRes := F_MunschRES(
+	sResponse := sReceivedString
+);
+
+IF fbKL600x.arbError[0]
+     OR fbKL600x.arbError[1]
+     OR fbKL600x.arbError[2]
+     OR (bStringReceived AND stMunschRes.etResponse = ET_MUNSCH_RES_CMDERROR)
+THEN
+	bInterfaceError := TRUE;
+END_IF
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_MunschExtruder">
+      <LineId Id="72" Count="73" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

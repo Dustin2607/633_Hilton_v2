@@ -1,0 +1,161 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Gr05CylinderClamp" Id="{2cf268c1-9713-4335-a0aa-f8221cc5f5cf}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Gr05CylinderClamp
+(*
+
+The function block used to lock/unlock welding head.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			28.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	etMachineMode				:ET_MachineMode;			(* Machine mode *)
+	etMachineState				:ET_MachineState;			(* Machine state *)
+	bAirPressureOK				:BOOL;						(* Air pressure OK *)
+	bSafetyOk					:BOOL;						(* Safety Ok *)
+	bOpened					:BOOL;						(* Opened *)
+	bClosed						:BOOL;						(* Closed *)
+	bOpenRelease				:BOOL;						(* Release open *)
+	bCloseRelease				:BOOL;						(* Release close *)
+	bHandOpen					:BOOL;						(* Hand open *)
+	bHandClose					:BOOL;						(* Hand close *)
+	bAutoOpen					:BOOL;						(* Auto open *)
+	bAutoClose					:BOOL;						(* Auto close *)
+	bExtAutoCtrlEn				:BOOL;						(* Enable external auto control *)
+	bExtOpen					:BOOL;						(* External open *)
+	bExtClose					:BOOL;						(* External close *)
+	bControlOff					:BOOL;						(* TRUE - controle off *)
+	bControlStateOn				:BOOL;						(* Control with input state *)
+	bValveOff					:BOOL;						(* Valve off *)
+	bConfirmAlarm				:BOOL;						(* Confirm alarm *)
+	tTimeOut						:TIME := t#6s;					(* TimeOut *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bOpen						:BOOL;						(* Open *)
+	bClose						:BOOL;						(* Close *)
+	bErrorOpen					:BOOL;						(* Error open *)
+	bErrorClose					:BOOL;						(* Error close *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	bHomeCompleted				:BOOL;						(* Home completed *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbCylinder					:FB_Cylinder;
+	fbCylinderOpened				:FB_SignalHandlingDelay;
+	fbCylinderClosed				:FB_SignalHandlingDelay;
+	fbCylinderOpenRelease		:FB_SignalHandlingDelay;
+	fbCylinderCloseRelease		:FB_SignalHandlingDelay;
+	fbExtOpen					:FB_SignalHandlingEdge;
+	fbExtClose					:FB_SignalHandlingEdge;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+(* Control clamp cylinder *)
+
+fbCylinderOpened(
+	bEnable := TRUE,
+	bIn := bOpened,
+	tDelay := t#0ms
+);
+
+fbCylinderClosed(
+	bEnable := TRUE,
+	bIn := bClosed,
+	tDelay := 	t#3s
+);
+
+fbCylinderOpenRelease(
+	bEnable := TRUE,
+	bIn := bOpenRelease,
+	tDelay :=t#0ms
+);
+
+fbCylinderCloseRelease(
+	bEnable := TRUE,
+	bIn := bCloseRelease,
+	tDelay := t#0ms
+);
+
+fbExtOpen(
+	bEnable := TRUE,
+	bIn := bExtOpen,
+	tDelay := t#0ms
+);
+
+fbExtClose(
+	bEnable := TRUE,
+	bIn := bExtClose,
+	tDelay := t#0ms
+);
+
+fbCylinder(
+	bEnable := TRUE,
+	bAirPressure := bAirPressureOK,
+	bSafetyOk := bSafetyOk,
+	bReset := bConfirmAlarm,
+	bAutoHand := etMachineMode = ET_MachineMode_eHome
+			         OR etMachineMode = ET_MachineMode_eStepping
+			         OR etMachineMode = ET_MachineMode_eAutomatic,
+	bHandBase := bHandOpen OR fbExtOpen.bRisingEdge,
+	bHandWork := bHandClose OR fbExtClose.bRisingEdge,
+	bAutoBase := SEL(bExtAutoCtrlEn, bAutoOpen, fbExtOpen.bRisingEdge),
+	bAutoWork := SEL(bExtAutoCtrlEn, bAutoClose, fbExtClose.bRisingEdge),
+	bAtBasePos := fbCylinderOpened.bOut,
+	bAtWorkPos := fbCylinderClosed.bOut,
+	bBaseRelease := fbCylinderOpenRelease.bOut,
+	bWorkRelease := fbCylinderCloseRelease.bOut,
+	bControlStateOn := bControlStateOn,
+	bControlOff := bControlOff,
+	bValveOff := bValveOff,
+	bValveErrOff := FALSE,
+	bErrorOff := FALSE,
+	tTimeOut := tTimeOut + fbCylinderClosed.tDelay,
+	bHomeCompleted := bHomeCompleted,
+	bMoveToBase => bOpen,
+	bMoveToWork => bClose
+);
+
+A_Alarm();]]></ST>
+    </Implementation>
+    <Action Name="A_Alarm" Id="{98c11d07-d8ad-4e59-9de5-19a4c9d81de4}">
+      <Implementation>
+        <ST><![CDATA[
+bErrorClose := fbCylinder.bError
+			AND (fbCylinder.udnErrorNo = 1
+				   OR fbCylinder.udnErrorNo = 2
+				   OR fbCylinder.udnErrorNo = 5);
+
+bErrorOpen := fbCylinder.bError
+			 AND (fbCylinder.udnErrorNo = 3
+			       	    OR fbCylinder.udnErrorNo = 4
+			       	    OR fbCylinder.udnErrorNo = 5);]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_Gr05CylinderClamp">
+      <LineId Id="67" Count="66" />
+    </LineIds>
+    <LineIds Name="FB_Gr05CylinderClamp.A_Alarm">
+      <LineId Id="0" Count="9" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

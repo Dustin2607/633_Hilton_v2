@@ -1,0 +1,214 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_STOEBERSDS_MC_MoveSuperimposed" Id="{841dc743-fa7a-4593-9981-76d0f57647bc}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_STOEBERSDS_MC_MoveSuperimposed
+(*
+
+The function block used to specified relative distance additional to an existing motion. The existing Motion is not interrupted, but is superimposed by the additional motion.
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			22.09.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bExecute					:BOOL;			(* Execut the function block *)
+	lrDistance					:LREAL;			(* Relative distance for the motion. *)
+	lrVelocity						:LREAL;			(* Value of velocity *)
+	lrAcceleration					:LREAL;			(* Value of the acceleration (always positive) *)
+	lrDeceleration				:LREAL;			(* Value of deceleration (always positive) *)
+	lrJerk						:LREAL;			(* Value of the jerk (always positive). *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bDone						:BOOL;			(* Program done *)
+	bCmdAborted				:BOOL;			(* Command aborted *)
+	bBusy						:BOOL;			(* Program busy *)
+	bError						:BOOL;			(* Error *)
+	udnErrorNo					:UDINT;			(* Error number *)
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	Axis							:ST_AXIS_REF;
+END_VAR
+VAR
+	(* Enummerations *)
+	etMC_States					:ET_MC_States := ET_MC_States_eInit;
+
+	(* Variables *)
+	nWatchdog					:INT;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtExecute						:R_TRIG;
+	rtAborted						:R_TRIG;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+rtExecute(CLK := bExecute);
+rtAborted(CLK := Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bPLCOpenCmdAborted);			(* Aborted *)
+
+IF rtAborted.Q                                              (* Aborted *)
+THEN
+	etMC_States := ET_MC_States_eAbort;                     (* Next step *)
+
+ELSIF rtExecute.Q
+	    AND NOT bCmdAborted
+THEN
+	etMC_States := ET_MC_States_eInit;                      (* Next step *)
+    
+END_IF;
+
+CASE etMC_States OF
+
+	ET_MC_States_eInit:
+		bCmdAborted := FALSE;			(* Command not aborted *)
+		bBusy := FALSE;                                    	(* Program not busy *)
+		bError := FALSE;                         		(* Program not error *)
+		udnErrorNo := 0;                         		(* Error number *)
+
+		IF rtExecute.Q
+		THEN
+			nWatchdog := 0;
+			bDone := FALSE;				(* Program done, in position *)
+			bBusy := TRUE;				(* Program busy *)
+
+			Axis.stPlcToNc.stBaseDevice.stCommandPositioning.nVeloFactor := LIMIT(-16384, LREAL_TO_INT(lrVelocity * 163.84), 16384); 	 					(* Value of velocity *)
+			Axis.stPlcToNc.stBaseDevice.stCommandPositioning.usnAccFactor := LREAL_TO_USINT(ABS(lrAcceleration * 2.55));           		(* Value of the acceleration (always positive) *)
+			Axis.stPlcToNc.stBaseDevice.stCommandPositioning.usnDccFaktor := LREAL_TO_USINT(ABS(lrDeceleration * 2.55));			(* Value of the deceleration (always positive) *)
+			Axis.stPlcToNc.stBaseDevice.stCommandPositioning.usnJerkFaktor := LREAL_TO_USINT(ABS(lrJerk * 2.55));			(* Value of the jerk (always positive) *)
+
+			IF Axis.stNcToPlc.stBaseDevice.bEnabled   			(* Control enabled *)
+			     AND Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bHomed          	(* Axis in reference *)
+			THEN
+				Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd := Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd AND 224;			(* Reset MC modes staus *)
+				Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bPLCOpenCmdExe := FALSE;                                                 					(* Reset MC_MoveSuperimposed execute *)
+
+				Axis.stPlcToNc.stBaseDevice.bToggleBit := FALSE;    (* Reset Toggle bit *)
+
+				Axis.stPlcToNc.stBaseDevice.stCommandPositioning.dnTargetPosition := LREAL_TO_DINT(lrDistance * (EXPT(10, Axis.stNcToPlc.stBaseDevice.stCommandPositioning.rDecimalDigits)));         			(* Set position *)
+				
+				etMC_States := ET_MC_States_eReset;			(* Next step *)
+
+			ELSE
+				udnErrorNo := 4;                     (* Error number *)
+				
+				etMC_States := ET_MC_States_eError;			(* Next step *)
+
+			END_IF;
+		END_IF;
+
+	ET_MC_States_eReset:
+		nWatchdog := nWatchdog + 1;
+
+		IF NOT Axis.stNcToPlc.stBaseDevice.bToggleBit			(* Ack Togglebit *)
+		THEN
+			nWatchdog := 0;
+			etMC_States := ET_MC_States_eRunning;			(* Next step *)
+		
+		ELSIF nWatchdog > 150
+		THEN
+			etMC_States := ET_MC_States_eError;             (* Next step *)
+		END_IF;
+
+	ET_MC_States_eRunning:
+		nWatchdog := nWatchdog + 1;
+
+		Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd := Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd OR 12;			(* Set MC_MoveSuperimposed *)
+		Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bPLCOpenCmdExe := TRUE;                                                      					(* Set MC_MoveSuperimposed execute *)
+		
+		Axis.stPlcToNc.stBaseDevice.bToggleBit := TRUE;			(* Set Toggle bit *)
+
+		IF Axis.stNcToPlc.stBaseDevice.bToggleBit                					(* Ack Toggle bit *)
+		AND (Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd AND 31) = 12			(* Ack MC_MoveSuperimposed *)
+		AND Axis.stNcToPlc.stBaseDevice.bAxisActive        						(* Axis active*)
+		AND (NOT Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bPLCOpenStandstill       			(* Axis runnning *)
+			   OR (Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bPositionReached      			(* Position reached *)
+				   AND Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bPLCOpenStandstill)   		(* Axis standstil *)
+			  )
+		AND NOT Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bPLCOpenCmdAborted       		(* Aborted *)
+		THEN
+			Axis.stPlcToNc.stBaseDevice.bToggleBit := FALSE;    		(* Reset Toggle bit *)
+
+			nWatchdog := 0;
+			etMC_States := ET_MC_States_eWaiting;			(* Next step *)
+		
+		ELSIF Axis.stNcToPlc.stBaseDevice.bError         				(* Error *)
+			   OR nWatchdog > 150
+		THEN
+			Axis.stPlcToNc.stBaseDevice.bToggleBit := FALSE;    		(* Reset Toggle bit *)
+
+			udnErrorNo := 2;                     (* Error number *)
+			
+			etMC_States := ET_MC_States_eError;             (* Next step *)
+		END_IF;
+
+	ET_MC_States_eWaiting:
+		IF Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bPositionReached					(* Position reached *)
+		     AND Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bPLCOpenCmdDone       		(* Command done *)
+		THEN
+			etMC_States := ET_MC_States_eDone;			(* Next step *)
+		
+		ELSIF Axis.stNcToPlc.stBaseDevice.bError			(* Error *)
+			   OR Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bDenied			(* Denied *)
+		THEN
+			udnErrorNo := 3;                    				(* Error number *)
+		
+			etMC_States := ET_MC_States_eError;             		(* Next step *)
+		END_IF;
+
+	ET_MC_States_eAbort:
+		bCmdAborted := TRUE;			(* Command aborted *)
+		bDone := FALSE;					(* Program done, in position *)
+		Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bPLCOpenCmdExe := FALSE;			(* Reset MC_MoveSuperimposed execute *)
+
+		 etMC_States := ET_MC_States_eNotExecute;			(* Next step *)
+
+	ET_MC_States_eDone:
+		nWatchdog := 0;
+		bDone := TRUE;			(* Program done, in position *)
+		bBusy := FALSE;			(* Program not busy *)
+
+		etMC_States := ET_MC_States_eNotExecute;            (* Next step *)
+
+	ET_MC_States_eError:
+		nWatchdog := 0;
+		Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bPLCOpenCmdExe := FALSE;			(* Reset MC_MoveSuperimposed execute *)
+		bDone := FALSE;			(* Program done, in position *)
+		bError := TRUE;			(* Program error *)   
+		bBusy := FALSE;			(* Program not busy *)
+
+        		etMC_States := ET_MC_States_eNotExecute;			(*Next step *)
+
+	ET_MC_States_eNotExecute:
+		IF NOT bExecute
+		THEN
+			nWatchdog := 0;
+
+			bDone := FALSE;					(* Program done, in position *)
+			bCmdAborted := FALSE;			(* Command not aborted *)
+			bBusy := FALSE;                                 	(* Program not busy *)
+			bError := FALSE;                     			(* Program not error *)
+			udnErrorNo := 0;                     			(* Error number *)
+
+			Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd := Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd AND 224;			(* Reset MC modes staus *)
+			Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bPLCOpenCmdExe := FALSE;                                                 					(* Reset MC_MoveSuperimposed execute *)
+			
+			etMC_States := ET_MC_States_eInit;			(* Next step *)
+		
+		END_IF;
+END_CASE;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_STOEBERSDS_MC_MoveSuperimposed">
+      <LineId Id="50" Count="153" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

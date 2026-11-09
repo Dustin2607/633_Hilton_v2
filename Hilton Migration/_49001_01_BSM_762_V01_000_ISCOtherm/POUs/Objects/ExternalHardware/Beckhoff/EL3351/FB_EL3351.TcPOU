@@ -1,0 +1,145 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_EL3351" Id="{67ae802b-321b-4fbb-b77f-5a9dc09bf439}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_EL3351
+(*
+
+The function block used to operating of EL3351
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			17.02.2016
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;
+	nTerminalNr					:UINT;
+	stTerminalState				:ST_TerminalState;
+	stBridgeState					:ST_EL3351ChannelState;		(* AI bridge state *)
+	stSupplyState					:ST_EL3351ChannelState;		(* AI supply state *)
+	dnRefvoltage					:DINT;						(* Raw values of voltage *)
+	dnDiffvoltage					:DINT;						(* Raw values of voltage *)
+
+	rOffset						:REAL;						(* [technical unit]  *)
+	usiPrecision					:USINT := 2;
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bDeviceOk					:BOOL;
+	sDeviceStatus				:STRING(255);
+	rUdiff						:REAL;
+	rUref						:REAL;
+	lrGrossWeightRV				:LREAL;			(* Raw Value *)
+	lrGrossWeightPV				:LREAL;			(* Judgment Value *)
+	lrNetWeightRV				:LREAL;			(* Raw Value *)
+	lrNetWeightPV				:LREAL;			(* Judgment Value *)
+	lrTareWeightRV				:LREAL;			(* Raw Value *)
+	lrTareWeightPV				:LREAL;			(* Judgment Value *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	bTerminalOK					:BOOL;
+	sTerminalStatus				:STRING;
+	bCoeAccessOK				:BOOL;
+	bBridgeChannelOK			:BOOL;
+	bSupplyChannelOK			:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbTerminalDiagnosis			:FB_TerminalDiagnosis;
+	fbChannelDiagnosis			:FB_EL3351ChannelDiagnosis;
+	fbCoe						:FB_EL3351CoE;
+	fbMeasure					:FB_EL3351Measuring;
+	fbToggleBit					:FB_ToggleBit;
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	bDeviceOk := TRUE;
+	lrGrossWeightRV := 0.0;				(* Raw Value *)
+	lrGrossWeightPV := 0.0;				(* Judgment Value *)
+	lrNetWeightRV := 0.0;				(* Raw Value *)
+	lrNetWeightPV := 0.0;				(* Judgment Value *)
+	lrTareWeightRV := 0.0;				(* Raw Value *)
+	lrTareWeightPV := 0.0;				(* Judgment Value *)
+	RETURN;
+END_IF
+
+(*Terminal Diagnosis*)
+fbTerminalDiagnosis(
+	stTerminalState := stTerminalState,
+	bTerminalOK => bTerminalOK,
+	sTerminalStatus => sTerminalStatus
+);
+
+(*Channel Diagnosis*)
+fbChannelDiagnosis(
+	stBridgeState := stBridgeState,
+	stSupplyState := stSupplyState,
+	bBridgeChannelOK=> bBridgeChannelOK,
+	bSupplyChannelOK=> bSupplyChannelOK
+);
+
+(*CoE Settings *)
+fbCoE(
+	stAdsAddr:= stTerminalState.stAdsAddr,
+	bCoeAccessOK => bCoeAccessOK
+);
+
+(* Measure *)
+fbMeasure(
+	diDiffvoltage := dnRefvoltage ,
+	diRefvoltage := dnDiffvoltage,
+	rUref => rUref,
+	rUdiff => rUdiff,
+	rGrossWeight => ,
+	rNetWeight => ,
+	rTareWeight =>
+);
+
+(* ToggleBit *)
+fbToggleBit(
+	bToggle := stBridgeState.bToggle ,
+);
+
+IF bCoeAccessOK
+     AND bTerminalOK
+     AND bBridgeChannelOK
+     AND bSupplyChannelOK
+THEN
+	bDeviceOk := TRUE;
+	sDeviceStatus:= '';
+ELSE
+	bDeviceOK:= FALSE;
+	sDeviceStatus:= UINT_TO_STRING(nTerminalNr);
+	sDeviceStatus:= CONCAT (sDeviceStatus, '. ');
+END_IF
+
+lrGrossWeightRV := REAL_TO_LREAL(fbMeasure.rGrossWeight);
+lrGrossWeightPV := F_LRealRound(lrGrossWeightRV + rOffset, usiPrecision);
+lrNetWeightRV := REAL_TO_LREAL(fbMeasure.rGrossWeight);
+lrNetWeightPV := F_LRealRound(lrNetWeightRV + rOffset, usiPrecision);
+lrTareWeightRV := REAL_TO_LREAL(fbMeasure.rGrossWeight);
+lrTareWeightPV := F_LRealRound(lrTareWeightRV + rOffset, usiPrecision);
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_EL3351">
+      <LineId Id="66" Count="68" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

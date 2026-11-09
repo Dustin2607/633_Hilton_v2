@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_Gr00HMITOPLC" Id="{4642d933-4dbc-4d03-a0f6-ea4d9d8be5c9}">
+    <Declaration><![CDATA[TYPE ST_Gr00HMITOPLC :
+STRUCT
+	etMachineMode			:ET_MachineMode;			(* Machine mode enum variable *)
+	bBtnStart					:BOOL; 						(* Button start *)
+	bBtnStop					:BOOL; 						(* Button stop *)
+	bBtnReset				:BOOL; 						(* Button reset *)
+	bBtnForceRef				:BOOL; 						(* Button reference force *)
+	bBtnMachinePurge		:BOOL;						(* Button machine purge  *)
+	bResetCounterUser		:BOOL;						(* Reset counter user *)
+	bSafetyInterlockOff		:BOOL;						(* Deactivation safety interlocks if machine is in manual mode *)
+	bProgramActive			:BOOL;						(* Program active *)
+	rOverride				:REAL;						(* Override *)
+	sActRecipe 				:STRING;					(* Current recipe *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

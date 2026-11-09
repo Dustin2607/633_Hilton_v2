@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_STOEBERSI6_CIA402_Reset" Id="{314b30f3-f68b-49a4-aba3-dbb1b2475941}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_STOEBERSI6_CIA402_Reset
+(*
+
+The function block used to reset an axis
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			22.09.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bExecute					:BOOL;		(* Execut the function block *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bDone						:BOOL;			(* Status = TRUE indicates that the axis is ready for operation. *)
+	bBusy						:BOOL;			(* Program busy *)
+	bError						:BOOL;			(* Error *)
+	udnErrorNo					:UDINT;			(* Error number *)
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	Axis							:ST_AXIS_REF;
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtExecute						:R_TRIG;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+rtExecute(CLK := bExecute);       (* Error *)
+
+IF rtExecute.Q
+THEN
+	bBusy := TRUE;
+	Axis.stPlcToNc.stCIA402.bFaultReset := TRUE;
+
+ELSIF bBusy     (* Error *)
+THEN
+	bBusy := FALSE;
+	Axis.stPlcToNc.stCIA402.bFaultReset := FALSE;
+END_IF;
+
+bDone := bExecute
+		AND NOT bBusy
+		AND NOT  Axis.stNcToPlc.stCIA402.bError;        (* Error *)]]></ST>
+    </Implementation>
+    <LineIds Name="FB_STOEBERSI6_CIA402_Reset">
+      <LineId Id="41" Count="16" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_EL3356ChannelState" Id="{28506f11-3640-4fb7-963f-e76fdaa669df}">
+    <Declaration><![CDATA[TYPE ST_EL3356ChannelState :
+STRUCT
+	bOverrange				:BOOL;			(* State Overrange *)
+	bDataInvalid				:BOOL;			(* State Data invalid *)
+	bError 					:BOOL;			(* State error *)
+	bCalibrationInProgress 	:BOOL;			(* State calibration in progress *)
+	bSteadyState 			:BOOL;			(* Stady state *)
+	bSyncError				:BOOL;			(* Sync error *)
+	bToggle					:BOOL;			(* TxPDO Toggle *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

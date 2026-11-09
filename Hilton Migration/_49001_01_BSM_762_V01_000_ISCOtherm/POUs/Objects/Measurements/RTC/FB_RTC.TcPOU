@@ -1,0 +1,135 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_RTC" Id="{818dab32-f294-43aa-8d0e-2a9b2a2f83bc}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_RTC
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+	(* Variables *)
+	bTimeValid							:BOOL;
+	dtRTC        							:DT;
+	dtRTCEX      							:DT;
+	stDateTime							:ST_DateTime;
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	bFirstTime							:BOOL;	
+	bBusy								:BOOL;
+	bError								:BOOL;
+	udnErrorNo							:UDINT;			
+
+	bValidRTC      						:BOOL;	
+	bValidRTCEX    						:BOOL;
+
+	actSysTimeDate						:TIMESTRUCT;				(* Structure SysTimeDate *)
+	
+	
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+   	fbGetLocalTime  					:NT_GetTime;
+	tonSyncTimer       					:TON;
+	ftSyncTrigger     					:F_TRIG;
+
+	rtFirstTime						:R_TRIG;
+
+	fbRTC           						:RTC;
+	fbRTCEX        						:RTC_EX;
+
+	(* Information given by the RTC *)
+	wYear								:WORD;
+	wMonth								:WORD;
+	wDay								:WORD;
+	wHour								:WORD;
+	wMinute								:WORD;
+	wSecond							:WORD;
+	wMilliseconds						:WORD;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bFirstTime
+THEN
+	bFirstTime := TRUE;
+	
+END_IF
+
+
+(* Get RTC *)
+rtFirstTime(CLK := bFirstTime);
+
+(* Time synchronization *)
+tonSyncTimer(
+	IN := NOT tonSyncTimer.Q,
+	PT := T#100MS,
+);
+
+(* This function provides the time (seconds) which has passed since 01.01.1970 00:00:00 (RTC). *)
+fbGetLocalTime(
+	NETID := '',
+	START := tonSyncTimer.Q
+			 OR rtFirstTime.Q,
+	TMOUT := T#5S,
+	BUSY => bBusy,
+	ERR => bError,
+	ERRID => udnErrorNo
+);
+
+actSysTimeDate := fbGetLocalTime.TIMESTR;
+
+(*This function converts the time given into format SysTimeDate.*)
+ftSyncTrigger(CLK := bBusy AND NOT bError);
+
+fbRTC(
+	EN := ftSyncTrigger.Q, 
+	PDT := SYSTEMTIME_TO_DT(actSysTimeDate), 
+	Q => bValidRTC, 
+	CDT => dtRTC 
+);
+
+fbRTCEX(
+	EN := ftSyncTrigger.Q,
+	PDT := SYSTEMTIME_TO_DT(actSysTimeDate),
+	PMSEK := actSysTimeDate.wMilliseconds,
+	Q => bValidRTCEX, 
+	CDT => dtRTCEX 
+);
+
+(*The structure SysTimeDate contains detailed information on the system time, 
+split up into a readable format, e.g.:*)
+
+wYear := actSysTimeDate.wYear;
+wMonth := actSysTimeDate.wMonth;
+wDay := actSysTimeDate.wDay;
+wHour := actSysTimeDate.wHour;
+wMinute := actSysTimeDate.wMinute;
+wSecond := actSysTimeDate.wSecond;
+wMilliseconds := actSysTimeDate.wMilliseconds;
+
+stDateTime.dtDateTime := dtRTC;
+stDateTime.dtDateTimeEx := dtRTCEX;
+
+stDateTime.sDate := CONCAT(WORD_TO_STRING(wYear),
+		 CONCAT(SEL(LEN(WORD_TO_STRING(wMonth))=1 ,WORD_TO_STRING(wMonth),CONCAT('0',WORD_TO_STRING(wMonth))),
+				SEL(LEN(WORD_TO_STRING(wDay))=1 ,WORD_TO_STRING(wDay),CONCAT('0',WORD_TO_STRING(wDay)))));
+
+stDateTime.sTime := CONCAT(SEL(LEN(WORD_TO_STRING(wHour))=1 ,WORD_TO_STRING(wHour),CONCAT('0',WORD_TO_STRING(wHour))),
+		 CONCAT(SEL(LEN(WORD_TO_STRING(wMinute))=1 ,WORD_TO_STRING(wMinute),CONCAT('0',WORD_TO_STRING(wMinute))),
+				SEL(LEN(WORD_TO_STRING(wSecond))=1 ,WORD_TO_STRING(wSecond),CONCAT('0',WORD_TO_STRING(wSecond)))));
+
+stDateTime.sTimeEx := CONCAT(stDateTime.sTime, SEL(LEN(WORD_TO_STRING(wMilliseconds))=1 , SEL(LEN(WORD_TO_STRING(wMilliseconds))=2 , WORD_TO_STRING(wMilliseconds), CONCAT('0',WORD_TO_STRING(wMilliseconds))), CONCAT('00',WORD_TO_STRING(wMilliseconds))));
+				
+stDateTime.sDateTime := CONCAT(stDateTime.sDate,CONCAT('_', stDateTime.sTime));
+
+stDateTime.sDateTimeEx := CONCAT(stDateTime.sDate,CONCAT('_', stDateTime.sTimeEx));
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_RTC">
+      <LineId Id="50" Count="74" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

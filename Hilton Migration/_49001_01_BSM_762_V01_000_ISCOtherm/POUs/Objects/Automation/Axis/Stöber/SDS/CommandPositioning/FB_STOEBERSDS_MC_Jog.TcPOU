@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_STOEBERSDS_MC_Jog" Id="{c85db648-77c0-4cbe-9829-e83f9729e416}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_STOEBERSDS_MC_Jog
+(*
+
+The function block enables an axis to be moved via manual keys.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			22.09.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;			(* Signal FB enable *)
+	bJogForward					:BOOL;			(* Axis moved in positive direction of travel. *)
+	bJogBackwards				:BOOL;			(* Axis moved in negative direction of travel. *)
+	etMode						:ET_JogMode;	(* The mode input specifies the mode for manual operation. *)
+	lrPosition 					:LREAL;			(* Relative distance for movements in MC_JOGMODE_INCHING mode. *)
+	lrVelocity						:LREAL;			(* Target velocity *)
+	lrAcceleration					:LREAL;			(* Value of the acceleration (always positive) *)
+	lrDeceleration				:LREAL;			(* Value of deceleration (always positive) *)
+	lrJerk						:LREAL;			(* Value of jerk (always positive) *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bActive						:BOOL;			(* If Active is TRUE the axis is controlled by the jog function. *)
+	bError						:BOOL;			(* Error *)
+	udnErrorNo					:UDINT;			(* Error number *)
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	Axis							:ST_AXIS_REF;
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	bFirstTime					:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	tonStatusDelay				:TON;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+	bActive := FALSE;
+
+	Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bTipEnable := FALSE;			(* Activates tipping mode *)
+	Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bTipPlus := FALSE;         			(* Tip mode in positive direction *)
+	Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bTipMinus := FALSE;         			(* Tip mode in negative direction *)
+
+	bFirstTime := FALSE;
+	RETURN;
+END_IF;
+
+IF NOT bFirstTime
+THEN
+
+	bFirstTime := TRUE;
+END_IF;
+
+Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bTipEnable := bJogForward XOR bJogBackwards;			(* Activates tipping mode *)
+Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bTipPlus := bJogForward;                             					(* Tip mode in positive direction *)
+Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bTipMinus := bJogBackwards;                          					(* Tip mode in negative direction *)
+
+IF Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bTipEnable
+THEN
+	Axis.stPlcToNc.stBaseDevice.stCommandPositioning.nVeloFactor := LIMIT(-16384, LREAL_TO_INT(lrVelocity * 163.84), 16384);			(* Value of velocity *)
+	Axis.stPlcToNc.stBaseDevice.stCommandPositioning.usnAccFactor := LREAL_TO_USINT(ABS(lrAcceleration * 2.55));           			(* Value of the acceleration (always positive) *)
+	Axis.stPlcToNc.stBaseDevice.stCommandPositioning.usnDccFaktor := LREAL_TO_USINT(ABS(lrDeceleration * 2.55));           			(* Value of the deceleration (always positive) *)
+END_IF
+
+bActive := Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bTipEnable;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_STOEBERSDS_MC_Jog">
+      <LineId Id="49" Count="30" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,201 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Gr01HomeSawband" Id="{38407d92-2b4e-4213-a9b1-20a5e67ebd2c}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Gr01HomeSawband
+(*
+
+The function block used to stop sawband.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			28.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+(*
+
+The function block used to stop spindle.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			28.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Enable FB signal *)
+	bExecute					:BOOL;						(* Procedure execute *)
+	bReleaseNextStep			:BOOL;						(* Procedure release next step *)
+	bFirstTime					:BOOL;
+
+	pfbAxis						:POINTER TO FB_Gr01Sawband;
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bDone						:BOOL;						(* Program done *)
+	bBusy						:BOOL;						(* Program busy *)
+	bError						:BOOL;						(* Program error *)
+	udnErrorNo					:UDINT;						(* Error number *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+	etHomeSawband				:ET_Gr01HomeSawband;				(* Home mode enum variable *)
+
+	(* Variables *)
+
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtExecute						:R_TRIG;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+	bDone := FALSE;					(* Program done *)
+	bBusy := FALSE;                                  	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;                                 		(* Error number *)
+
+	bFirstTime := FALSE;
+	RETURN;
+END_IF;
+
+IF NOT bFirstTime
+THEN
+	bDone := FALSE;                                	(* Program done *)
+	bBusy := FALSE;                                 	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;                                 		(* Error number *)
+
+	etHomeSawband := ET_Gr01HomeSawband_eWaitExecute;       			(* Next step *)
+
+	bFirstTime := TRUE;
+END_IF;
+
+rtExecute(CLK := bExecute);
+
+CASE etHomeSawband OF
+
+	ET_Gr01HomeSawband_eWaitExecute:
+		bBusy := FALSE;                                     		(* Program not busy *)
+		bError := FALSE;                                    		(* Program not error *)
+
+		IF rtExecute.Q
+		THEN
+			bDone := FALSE;                                 	(* Program done, in position *)
+			bBusy := TRUE;                                  	(* Program busy *)
+
+			etHomeSawband := ET_Gr01HomeSawband_eStop;		(* Next step *)
+		END_IF;
+
+	ET_Gr01HomeSawband_eStop:
+		 pfbAxis^.bExeStop := TRUE;
+		 pfbAxis^.lrAutoSpeed := 0.0;
+
+		IF pfbAxis^.fbMoveAuto.fbStop.bBusy
+		THEN
+			etHomeSawband := ET_Gr01HomeSawband_eWFStop;              (* Next step *)
+
+		ELSIF pfbAxis^.fbMoveAuto.fbStop.bError
+		THEN
+			pfbAxis^.bExeStop := FALSE;
+
+			etHomeSawband := ET_Gr01HomeSawband_eError;         					(* Next step *)
+
+		END_IF;
+
+	ET_Gr01HomeSawband_eWFStop:
+		IF  pfbAxis^.bNotMoving
+		     AND pfbAxis^.fbMoveAuto.bStopped
+		     AND bReleaseNextStep
+		THEN
+			pfbAxis^.bExeStop := FALSE;
+
+			etHomeSawband :=ET_Gr01HomeSawband_eReset;              (* Next step *)
+
+		ELSIF pfbAxis^.fbMoveAuto.fbStop.bError
+		THEN
+			pfbAxis^.bExeStop := FALSE;
+
+			etHomeSawband := ET_Gr01HomeSawband_eError;         					(* Next step *)
+
+		END_IF
+
+	ET_Gr01HomeSawband_eReset:
+		pfbAxis^.bExeReset := TRUE;
+		pfbAxis^.lrAutoSpeed := 0.0;
+
+		IF pfbAxis^.fbController.fbReset.bBusy
+		THEN
+			etHomeSawband := ET_Gr01HomeSawband_eWfReset;              (* Next step *)
+
+		ELSIF pfbAxis^.fbController.fbReset.bError
+		THEN
+			pfbAxis^.bExeReset := FALSE;
+
+			etHomeSawband := ET_Gr01HomeSawband_eError;         					(* Next step *)
+
+		END_IF;
+
+	ET_Gr01HomeSawband_eWfReset:
+		IF pfbAxis^.fbController.bReseted
+		     AND bReleaseNextStep
+		THEN
+			pfbAxis^.bExeReset := FALSE;
+
+			etHomeSawband := ET_Gr01HomeSawband_eDone;         		(* Next step *)
+
+		ELSIF pfbAxis^.fbController.fbReset.bError
+		THEN
+			pfbAxis^.bExeReset := FALSE;
+
+			etHomeSawband := ET_Gr01HomeSawband_eError;         					(* Next step *)
+
+		END_IF;
+
+	ET_Gr01HomeSawband_eDone:
+		bDone := TRUE;                                     		(* Program done, in position *)
+		bBusy := FALSE;                                     		(* Program not busy *)
+
+		etHomeSawband := ET_Gr01HomeSawband_eNoExecute;            	(* Next step *)
+
+	ET_Gr01HomeSawband_eError:
+		bDone := FALSE;                                     		(* Program done, in position *)
+		bError := TRUE;                                     		(* Program error *)
+		bBusy := FALSE;                                     		(* Program not busy *)
+
+		etHomeSawband := ET_Gr01HomeSawband_eNoExecute;           	(* Next step *)
+
+	ET_Gr01HomeSawband_eNoExecute:
+		IF NOT bExecute
+		THEN
+			bDone := FALSE;                                 	(* Program done *)
+			bBusy := FALSE;                                		(* Program not busy *)
+			bError := FALSE;                                		(* Program not error *)
+
+			etHomeSawband := ET_Gr01HomeSawband_eWaitExecute;       (* Next step *)
+		
+		END_IF;
+        
+END_CASE;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Gr01HomeSawband">
+      <LineId Id="61" Count="129" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_STOEBERSDS_AxisLink" Id="{6015c514-bda9-4fa2-9dfe-c59e5e80e998}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_STOEBERSDS_AxisLink
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR_IN_OUT
+	Drive						:ST_Drive_REF;			(* The DRIVE_REF data type  is an interface between the PLC and the DRIVE and contains axis information *)
+	Axis							:ST_Axis_REF;			(* The AXIS_REF data type  is an interface between the PLC and the NC and contains axis information *)
+END_VAR
+VAR
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+(* Set terminal parameters *)
+Axis.sAdsAddr:= F_CreateAmsNetId(Drive.stTerminalState.stAdsAddr.netId);
+Axis.unSlaveAddr:= Drive.stTerminalState.stAdsAddr.port;
+
+(* Copy the actual values from the inverter to the axis reference *)
+Axis.stNcToPlc.stBaseDevice.bEnabled := Drive.stStoeberToPlc.byE200DeviceStatusByte.0;				(* The drive is ready for operation. *)
+Axis.stNcToPlc.stBaseDevice.bError := Drive.stStoeberToPlc.byE200DeviceStatusByte.1;				(* The drive state is fault. *)
+Axis.stNcToPlc.stBaseDevice.bGroupError := Drive.stStoeberToPlc.unI200PosiStatusWord.2;				(* Group error: Maximum following error *)
+Axis.stNcToPlc.stBaseDevice.bQuickStop := Drive.stStoeberToPlc.byE200DeviceStatusByte.2;			(* Quick stop is queued/is being executed. *)
+Axis.stNcToPlc.stBaseDevice.bAxisActive := Drive.stStoeberToPlc.byE200DeviceStatusByte.5;			(* Axis is active. *)
+Axis.stNcToPlc.stBaseDevice.bToggleBit := Drive.stStoeberToPlc.byE200DeviceStatusByte.7;			(* Handshake bit. *)
+
+Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bConstantVelocity := Drive.stStoeberToPlc.unI200PosiStatusWord.4;			(* Constant speed reached. *)
+Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bHomed := Drive.stStoeberToPlc.unI200PosiStatusWord.6;				(* Axis is referenced. *)
+Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bPositionReached := Drive.stStoeberToPlc.unI200PosiStatusWord.5;		(* Window around target position reached for the first time. *)
+Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bPositionWinReached := Drive.stStoeberToPlc.byI201MotionStatusByte.5;	(* Actual position is located in the position window. *)
+Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bNotMoving := NOT Drive.stStoeberToPlc.byE200DeviceStatusByte.0           	(* Control enabled *) 			(* Axis is logically stationary. *)
+               										     OR NOT Drive.stStoeberToPlc.byE200DeviceStatusByte.5     				(* An axis is active. *)
+               										     OR Drive.stStoeberToPlc.unI200PosiStatusWord.7;                       				(* Axis standstill *)
+Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bDenied := Drive.stStoeberToPlc.unI200PosiStatusWord.1;					(* Indicates that the command denied .*)
+Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bCoupled := (Drive.stStoeberToPlc.byI201MotionStatusByte AND 16#0F) = 5;	(* Axis coupling state *)
+Axis.stNcToPlc.stBaseDevice.stCommandPositioning.dnActPosition := Drive.stStoeberToPlc.dnI203CurrentPosition;				(* Value of current (actual) position *)
+Axis.stNcToPlc.stBaseDevice.stCommandPositioning.dnActVelocity := Drive.stStoeberToPlc.dnI88Speed;						(* Value of current (actual) velocity *)
+Axis.stNcToPlc.stBaseDevice.stCommandPositioning.nActEngineTorque := Drive.stStoeberToPlc.nE90MMotor;					(* Indication of the current motor torque in Nm *)
+
+Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bLimitMaxExceeded := NOT Axis.stPlcToNc.stBaseDevice.bFeedEnablePlus;				(* Position limit switch maximum is exceeded *)
+Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bLimitMinExceeded := NOT Axis.stPlcToNc.stBaseDevice.bFeedEnableMinus;			(* Position limit switch minimum is exceeded *)
+
+Axis.stNcToPlc.stBaseDevice.stCommandPositioning.byPLCOpenState := Drive.stStoeberToPlc.byI201MotionStatusByte AND 2#00001111;			(* Supplies information on the reaction of the axis during operation on a fieldbus. *)
+Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bPLCOpenStandstill := Drive.stStoeberToPlc.unI200PosiStatusWord.7;						(* PLCopen state Standstill. *)
+Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bPLCOpenCmdAborted := Drive.stStoeberToPlc.unI200PosiStatusWord.3;					(* Positioning command denied/aborted. TRUE means that the last positioning job was aborted. *)
+Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bPLCOpenCmdDone := Drive.stStoeberToPlc.byI201MotionStatusByte.4;						(* TRUE means that the command was executed successfully. *)
+Axis.stNcToPlc.stBaseDevice.stCommandPositioning.byPLCOpenErrorCode := Drive.stStoeberToPlc.byI90ErrorCode;							(* When the PLCOpen state is ErrorStop. *)
+
+Axis.stNcToPlc.stBaseDevice.stFastRefereneValue.bStandstill := Drive.stStoeberToPlc.nD200SpeedReferenceValueStatusWord.0;					(* Standstill. *)
+Axis.stNcToPlc.stBaseDevice.stFastRefereneValue.bVeloReached := Drive.stStoeberToPlc.nD200SpeedReferenceValueStatusWord.1;			(* Reference value reached *)
+Axis.stNcToPlc.stBaseDevice.stFastRefereneValue.nMotorSpeed := Drive.stStoeberToPlc.nE100MMotor;										(* Current motor speed *)
+
+(* Copy the setpoint values from the axis reference to the inverter *)
+Drive.stPlcToStoeber.byA180DeviceControlByte.0 := Axis.stPlcToNc.stBaseDevice.bEnable;					(* Enable controller *)
+Drive.stPlcToStoeber.byA180DeviceControlByte.1 := Axis.stPlcToNc.stBaseDevice.bFaultReset;				(* Acknowledgment for faults of the device state machine. *)
+Drive.stPlcToStoeber.byA180DeviceControlByte.2 := Axis.stPlcToNc.stBaseDevice.bQuickStop;				(* Brakes the motor *)
+Drive.stPlcToStoeber.wI210PosiControlWord.1 := Axis.stPlcToNc.stBaseDevice.bFeedEnablePlus;				(* Feed enable plus *)
+Drive.stPlcToStoeber.wI210PosiControlWord.2 := Axis.stPlcToNc.stBaseDevice.bFeedEnableMinus;			(* Feed enable minus *)
+Drive.stPlcToStoeber.wI210PosiControlWord.3 :=  Axis.stPlcToNc.stBaseDevice.bHomingSensor;				(* Referencing cam signal or homing sensor *)
+Drive.stPlcToStoeber.byA180DeviceControlByte.7 :=  Axis.stPlcToNc.stBaseDevice.bToggleBit;				(* Handshake bit. *)
+Drive.stPlcToStoeber.nC230TorqueLimit := Axis.stPlcToNc.stBaseDevice.nTorqueLimit;						(* Value of torque limit (absolute value) *)
+
+Drive.stPlcToStoeber.nI230Override := Axis.stPlcToNc.stBaseDevice.stCommandPositioning.nOverride;						(* Value of override 16384 = 100 %. *)
+Drive.stPlcToStoeber.nI215VeloFaktor := Axis.stPlcToNc.stBaseDevice.stCommandPositioning.nVeloFactor;					(* Value of the velocity 16384 = 100 %. *)
+Drive.stPlcToStoeber.usnI216AccFaktor := Axis.stPlcToNc.stBaseDevice.stCommandPositioning.usnAccFactor;					(* Value of the acceleration (always positive) 255 = 100% *)
+Drive.stPlcToStoeber.usnI217DccFaktor := Axis.stPlcToNc.stBaseDevice.stCommandPositioning.usnDccFaktor	;				(* Value of the deceleration (always positive) 255 = 100% *)
+Drive.stPlcToStoeber.dnI213TargetPosition := Axis.stPlcToNc.stBaseDevice.stCommandPositioning.dnTargetPosition;			(* Value of target position *)
+Drive.stPlcToStoeber.dnI34ReferencePosition := Axis.stPlcToNc.stBaseDevice.stCommandPositioning.dnReferencePosition;		(* Value which is loaded as the actual position in the reference point.  *)
+Drive.stPlcToStoeber.wI210PosiControlWord.4 := Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bTipEnable;				(* Activates tipping mode. *)
+Drive.stPlcToStoeber.wI210PosiControlWord.5 := Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bTipPlus;				(* Tip mode in positive direction. *)
+Drive.stPlcToStoeber.wI210PosiControlWord.6 := Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bTipMinus;				(* Tip mode in negative direction. *)
+Drive.stPlcToStoeber.byI211MotionCommandByte := Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd;		(* Global parameter for specification of the command to be executed via fieldbus. *)
+Drive.stPlcToStoeber.wI210PosiControlWord.0 := Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bPLCOpenCmdExe;		(* With a rising edge, the command in Motion Command is executed. *)
+
+Drive.stPlcToStoeber.nD230NReferenceValueRelative := LREAL_TO_INT(Axis.stPlcToNc.stBaseDevice.stFastRefereneValue.nSpeed * Axis.stPlcToNc.stBaseDevice.stFastRefereneValue.nOverride/100.0);				(* Relative speed reference value *)]]></ST>
+    </Implementation>
+    <LineIds Name="FB_STOEBERSDS_AxisLink">
+      <LineId Id="11" Count="61" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

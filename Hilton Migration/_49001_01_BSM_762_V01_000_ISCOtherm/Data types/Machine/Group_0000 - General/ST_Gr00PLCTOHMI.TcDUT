@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_Gr00PLCTOHMI" Id="{b7bb8bf7-7a70-49a7-9889-71b8e1583c03}">
+    <Declaration><![CDATA[TYPE ST_Gr00PLCTOHMI :
+STRUCT
+	etMachineMode						:ET_MachineMode;			(* Machine mode *)
+	etMachineState						:ET_MachineState;			(* Machine state *)
+	wBtnStartStatus						:WORD;						(* Button start status *)
+	wBtnStopStatus						:WORD;						(* Button stop status *)
+	wBtnResetStatus						:WORD;						(* Button reset status *)
+	wBtnForceRefStatus					:WORD;						(* Button reference force status *)
+	wBtnAutoStatus						:WORD;						(* Button auto status *)
+	wBtnHomeStatus						:WORD;						(* Button home status *)
+	wBtnManualStatus						:WORD;						(* Button manual status *)
+	wLampStatus							:WORD;						(* Lamp status *)
+	wAlarmStatus							:WORD;						(* Alarm status *)
+	bMachineRunning						:BOOL;						(* Machine running *)
+	bHomeCompleted						:BOOL;						(* Home completed *)
+	bAutoCompleted						:BOOL;						(* Auto completed *)
+	bModeAutomatic						:BOOL;						(* Machine mode automatic *)
+	bModeHome							:BOOL;						(* Machine mode home *)
+	bModeManual						:BOOL;						(* Machine mode manual *)
+	udnCounterTotal						:UDINT;						(* Total counter *)
+	udnCounterUser						:UDINT;						(* User counter *)
+	dwCycleTime							:DWORD;					(* Cycletime in 0.01sec / Zykluszeit in 0.01Sekunden *)
+	lrMachineLifetime						:LREAL;				 		(* Machine lifetime *)
+	lrMachineLifetimeAfterTurnOn			:LREAL;				 		(* Machine lifetime after turn on *)
+	sPrgFilePath							:STRING;					(* Current program file path *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

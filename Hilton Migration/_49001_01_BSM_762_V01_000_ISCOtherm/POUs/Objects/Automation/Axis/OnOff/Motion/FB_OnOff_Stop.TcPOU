@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_OnOff_Stop" Id="{28886e29-0f4d-4042-88a3-a5984a308ff3}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_OnOff_Stop
+(*
+
+The function block used to activates software enable for an axis
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			22.09.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bExecute					:BOOL;			(* Execut the function block *)
+	pAxis						:POINTER TO ST_AXIS_REF_V2;
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bDone						:BOOL;			(* Status = TRUE indicates that the axis is ready for operation. *)
+	bError						:BOOL;			(* Error *)
+	udnErrorNo					:UDINT;			(* Error number *)
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtExecute						:R_TRIG;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+rtExecute(CLK := bExecute);                           (* Control enabled *)
+
+IF rtExecute.Q
+THEN
+	pAxis^.stAxisCtrl.bQuickStop := TRUE;					(* Halt *)
+
+ELSIF pAxis^.stDynamics.lrActVelo = 0.0            (* Axis standstill *)
+THEN
+	pAxis^.stAxisCtrl.bQuickStop := FALSE;                        	(* Halt *)
+END_IF;
+
+bDone := bExecute
+		AND pAxis^.stDynamics.lrActVelo = 0.0;                      	(* Axis standstill *)]]></ST>
+    </Implementation>
+    <LineIds Name="FB_OnOff_Stop">
+      <LineId Id="41" Count="13" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

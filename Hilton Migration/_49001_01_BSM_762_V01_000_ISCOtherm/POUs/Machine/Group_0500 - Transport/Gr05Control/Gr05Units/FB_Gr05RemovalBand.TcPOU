@@ -1,0 +1,154 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Gr05RemovalBand" Id="{f669990f-86e6-4a94-a7dc-1f2af2f9cc46}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Gr05RemovalBand
+(*
+
+The function block used to remove parts.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			28.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	etMachineMode				:ET_MachineMode;			(* Machine mode *)
+	etMachineState				:ET_MachineState;			(* Machine state *)
+	bNoEStop					:BOOL;						(* No ermergency Stop / Keine Notaus *)
+	bPowerSupplyOn				:BOOL;						(* Power supply on / Leitung eingeschaltet *)
+	bSafetyOK					:BOOL;						(* Safety ok / Sicherheit i.o *)
+	bInPlusLimit					:BOOL;						(* In plus limit *)
+	bInMinusLimit					:BOOL;						(* In minus limit *)
+	bMoveToPlusRelease			:BOOL;						(* Release move to plus *)
+	bMoveToMinusRelease		:BOOL;						(* Release move to minus *)
+	bHandMoveToPlus			:BOOL;						(* Hand move to pluse *)
+	bHandMoveToMinus			:BOOL;						(* Hand move to minus *)
+	bAutoMoveToPlus			:BOOL;						(* Auto move to plus *)
+	arbAutoMoveToMinus			:ARRAY[1..2] OF BOOL;		(* Auto move to minus *)
+	bConfirmAlarm				:BOOL;						(* Confirm alarm *)
+	tTimeOut						:TIME := t#6s;					(* TimeOut *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bMoveToPlus				:BOOL;						(* Move to plus *)
+	bMoveToMinus				:BOOL;						(* Move to minus *)
+	bErrorMoveToPlus			:BOOL;						(* Error move to plus *)
+	bErrorMoveToMinus			:BOOL;						(* Error move to minus *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	bHomeCompleted				:BOOL;						(* Home completed *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbMotor					:FB_Motor;
+	fbMotorAtPlusLimit			:FB_SignalHandlingDelay;
+	fbMotorAtMinusLimit		:FB_SignalHandlingDelay;
+	fbMotorPlusRelease		:FB_SignalHandlingDelay;
+	fbMotorMinusRelease		:FB_SignalHandlingDelay;
+	tofAutoMoveToMinus		:TOF;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+(* Control removal band motor *)
+
+fbMotorAtPlusLimit(
+	bEnable := TRUE,
+	bIn := bInPlusLimit,
+	tDelay := t#0ms
+);
+
+fbMotorAtMinusLimit(
+	bEnable := TRUE,
+	bIn := bInMinusLimit,
+	tDelay := t#0ms
+);
+
+fbMotorPlusRelease(
+	bEnable := TRUE,
+	bIn := bMoveToPlusRelease,
+	tDelay :=t#0ms
+);
+
+fbMotorMinusRelease(
+	bEnable := TRUE,
+	bIn := bMoveToMinusRelease,
+	tDelay := t#0ms
+);
+
+tofAutoMoveToMinus(
+	IN := arbAutoMoveToMinus[1]
+		OR arbAutoMoveToMinus[2],				(* Auto move to minus *)
+	PT := t#0s,
+);
+
+fbMotor(
+	bEnable := TRUE,
+	bNoEmergencyStop := bNoEStop
+						AND bSafetyOK,
+	bVoltageOK := bPowerSupplyOn,
+	bReset := bConfirmAlarm,
+	bAutoHand := etMachineMode = ET_MachineMode_eHome
+			         OR etMachineMode = ET_MachineMode_eStepping
+			         OR etMachineMode = ET_MachineMode_eAutomatic,
+	bHandPlus := bHandMoveToPlus,
+	bHandMinus := bHandMoveToMinus,
+	bAutoPlus := bAutoMoveToPlus,
+	bAutoMinus := tofAutoMoveToMinus.Q,
+	bAtPlusLimit := fbMotorAtPlusLimit.bOut,
+	bAtMinusLimit := fbMotorAtMinusLimit.bOut,
+	bPlusRelease := fbMotorPlusRelease.bOut,
+	bMinusRelease := fbMotorMinusRelease.bOut,
+	bSyncPlus := FALSE,
+	bSyncMinus := FALSE,
+	bSyncOn := FALSE,
+	bControlOff := NOT bHandMoveToMinus
+				AND NOT tofAutoMoveToMinus.Q,
+	tControlOff := t#1s500ms,
+	bMotorCtrlErrOff := FALSE,
+	bErrorOff := TRUE,
+	tSyncTimeOut := ,
+	tConTimeOut := ,
+	tCtrlTimeOut := tTimeOut,
+	bHomeCompleted := bHomeCompleted,
+	bMoveToPlus => bMoveToPlus,
+	bMoveToMinus => bMoveToMinus
+);
+
+A_Alarm();]]></ST>
+    </Implementation>
+    <Action Name="A_Alarm" Id="{f2fc1565-9321-4f78-ac5c-66d8c0f79f76}">
+      <Implementation>
+        <ST><![CDATA[
+bErrorMoveToPlus := fbMotor.bError
+					AND (fbMotor.udnErrorNo = 1
+					     OR fbMotor.udnErrorNo = 2
+					     OR fbMotor.udnErrorNo = 5);
+
+bErrorMoveToMinus := fbMotor.bError
+					 AND (fbMotor.udnErrorNo = 3
+					       OR fbMotor.udnErrorNo = 4
+					       OR fbMotor.udnErrorNo = 5);]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_Gr05RemovalBand">
+      <LineId Id="60" Count="66" />
+    </LineIds>
+    <LineIds Name="FB_Gr05RemovalBand.A_Alarm">
+      <LineId Id="0" Count="9" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

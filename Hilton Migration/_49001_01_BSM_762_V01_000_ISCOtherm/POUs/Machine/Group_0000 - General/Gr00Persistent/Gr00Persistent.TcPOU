@@ -1,0 +1,97 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="Gr00Persistent" Id="{b03e0f17-1b5a-41f4-9cf7-e3fc44c04344}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM Gr00Persistent
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable					:BOOL;						(* Enable Gr00Persistent *)
+END_VAR
+VAR PERSISTENT
+	(* Enummerations *)
+
+	(* Variables *)
+	rOverride							:REAL;						(* Override 0 - 100 % *)
+	udnCounterTotal						:UDINT;						(* Total counter *)
+	udnCounterUser						:UDINT;						(* User counter *)
+	bProgramActive						:BOOL;						(* Program active *)
+
+	arstSaveDiagSlaveInfo 				:ARRAY [0..dnDIAG_SLAVEINFO_SIZE] OF ST_SlaveStateInfo;
+	arstSaveDiagSlaveInfoScanned			:ARRAY [0..dnDIAG_SLAVEINFO_SIZE] OF ST_SlaveStateInfoScanned;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	bFirstTime							:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	bFirstTime := FALSE;
+	RETURN;
+END_IF;
+
+IF NOT bFirstTime
+THEN
+	A_SetPerVar();
+
+	bFirstTime := TRUE;
+END_IF;
+
+A_GetPerVar();]]></ST>
+    </Implementation>
+    <Action Name="A_GetPerVar" Id="{a610f42a-a829-4160-827f-850c661cfeb3}">
+      <Implementation>
+        <ST><![CDATA[
+bgGr00WritePersistent := rOverride <> stgGr00HMI.stHMITOPLC.rOverride
+					OR udnCounterTotal <> stgGr00HMI.stPLCTOHMI.udnCounterTotal
+					OR udnCounterUser <> stgGr00HMI.stPLCTOHMI.udnCounterUser
+					OR bProgramActive <> stgGr00HMI.stHMITOPLC.bProgramActive
+					OR MEMCMP(ADR(arstSaveDiagSlaveInfo), ADR(SaveDiagSlaveInfo), SIZEOF(SaveDiagSlaveInfo)) <> 0
+					OR MEMCMP(ADR(arstSaveDiagSlaveInfoScanned), ADR(SaveDiagSlaveInfoScanned), SIZEOF(SaveDiagSlaveInfoScanned)) <> 0;
+
+rOverride := stgGr00HMI.stHMITOPLC.rOverride;
+udnCounterTotal := stgGr00HMI.stPLCTOHMI.udnCounterTotal;
+udnCounterUser := stgGr00HMI.stPLCTOHMI.udnCounterUser;
+bProgramActive := stgGr00HMI.stHMITOPLC.bProgramActive;
+
+MEMCPY(ADR(arstSaveDiagSlaveInfo), ADR(SaveDiagSlaveInfo), SIZEOF(SaveDiagSlaveInfo));
+MEMCPY(ADR(arstSaveDiagSlaveInfoScanned), ADR(SaveDiagSlaveInfoScanned), SIZEOF(SaveDiagSlaveInfoScanned));]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_SetPerVar" Id="{427a8c4f-200c-42c5-94bf-e2e651b97b8e}">
+      <Implementation>
+        <ST><![CDATA[
+stgGr00HMI.stHMITOPLC.rOverride := rOverride;
+stgGr00HMI.stPLCTOHMI.udnCounterTotal := udnCounterTotal;
+stgGr00HMI.stPLCTOHMI.udnCounterUser := udnCounterUser;
+stgGr00HMI.stHMITOPLC.bProgramActive := bProgramActive;
+
+MEMCPY(ADR(SaveDiagSlaveInfo), ADR(arstSaveDiagSlaveInfo), SIZEOF(arstSaveDiagSlaveInfo));
+MEMCPY(ADR(SaveDiagSlaveInfoScanned), ADR(arstSaveDiagSlaveInfoScanned), SIZEOF(arstSaveDiagSlaveInfoScanned));]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="Gr00Persistent">
+      <LineId Id="36" Count="13" />
+    </LineIds>
+    <LineIds Name="Gr00Persistent.A_GetPerVar">
+      <LineId Id="0" Count="14" />
+    </LineIds>
+    <LineIds Name="Gr00Persistent.A_SetPerVar">
+      <LineId Id="0" Count="7" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

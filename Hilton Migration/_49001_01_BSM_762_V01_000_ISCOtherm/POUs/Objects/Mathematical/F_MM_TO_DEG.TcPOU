@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_MM_TO_DEG" Id="{0ab7aa55-d71c-4789-8139-210cf39f7b1a}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_MM_TO_DEG : LREAL
+(*
+
+The function used to convert mm to deg.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			12.11.2019
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	lrDiameter							:LREAL; 						(*  Input variable *)
+	lrDistance							:LREAL; 						(*  Input variable *)
+END_VAR
+VAR
+	(* Variables *)
+
+END_VAR
+VAR CONSTANT
+	lrRotation							:LREAL := 360.0;				(* Rotation deg *)
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF lrDiameter <> 0
+THEN
+	F_MM_TO_DEG := lrDistance * lrRotation / (lrDiameter * PI);
+ELSE
+	F_MM_TO_DEG := 0.0;
+END_IF
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="F_MM_TO_DEG">
+      <LineId Id="27" Count="8" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

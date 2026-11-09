@@ -1,0 +1,99 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Limiter" Id="{9b989844-7195-48d5-b056-0007e7a24b74}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Limiter
+(*
+Function block used to limits input signal. 
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			21.07.2014
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Enummerations *)
+
+	(* Variables *)
+	bEnable								:BOOL := TRUE;					(* Enable FB *)
+
+	lrInSignal								:LREAL;							(* Input signal *)
+	lrLimitMin								:LREAL;							(* Limit minimum *)
+	lrLimitMax							:LREAL;							(* Limit maximum *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+END_VAR
+VAR_OUTPUT
+	(* Enummerations *)
+	
+	(* Variables *)
+	lrOutSignal							:LREAL;							(* Output signal *)
+	bLimitMin							:BOOL;							(* Minimum limit reached *)
+	bLimitMax							:BOOL;							(* Maximum limit reached *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+END_VAR
+VAR
+	(* Enummerations *)
+	
+	(* Variables *)
+	bFirstTime							:BOOL;							(* First cycle *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	lrOutSignal := lrInSignal;
+
+	bLimitMin := FALSE;							(* Minimum limit reached *)
+	bLimitMax := FALSE;							(* Maximum limit reached *)
+
+	bFirstTime := FALSE;
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+
+	bFirstTime := TRUE;
+END_IF
+
+lrOutSignal := lrInSignal;
+bLimitMin := FALSE;							(* Minimum limit reached *)
+bLimitMax := FALSE;							(* Maximum limit reached *)
+
+IF lrInSignal <= lrLimitMin
+THEN
+	lrOutSignal  := lrLimitMin;
+	bLimitMin := TRUE;
+
+ELSIF lrInSignal >= lrLimitMax
+THEN
+	lrOutSignal := lrLimitMax;
+	bLimitMax := TRUE;
+
+END_IF
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Limiter">
+      <LineId Id="56" Count="32" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

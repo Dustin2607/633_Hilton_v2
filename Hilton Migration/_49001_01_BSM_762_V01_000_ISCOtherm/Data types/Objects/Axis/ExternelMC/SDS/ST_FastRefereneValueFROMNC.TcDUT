@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_FastRefereneValueFROMNC" Id="{c78e4e5e-272a-4a2e-941b-098363568fc2}">
+    <Declaration><![CDATA[TYPE ST_FastRefereneValueFROMNC :
+STRUCT
+	(* Fast Referene Value *)
+	bStandstill					:BOOL;			(* Standstill. *)
+	bVeloReached				:BOOL;			(* Reference value reached *)
+	nMotorSpeed					:INT;			(* Current motor speed *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_GFX4IR_REF" Id="{3a65c466-5440-42ff-82af-e32ee13b9ba8}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_GFX4IR_REF
+VAR_INPUT
+	Gfx4IRToPlc			AT %I*:ARRAY[1..4] OF ST_GFX4IRTOPLC;
+END_VAR
+VAR_OUTPUT
+	PlcToGfx4IR			AT %Q*:ARRAY[1..4] OF ST_PLCTOGFX4IR;
+END_VAR
+VAR
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_GFX4IR_REF">
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

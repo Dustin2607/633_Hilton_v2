@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_Gr05HomeAxisClamp1" Id="{432fc297-6287-4651-b73d-455b0804456c}">
+    <Declaration><![CDATA[TYPE ET_Gr05HomeAxisClamp1 :
+(
+	ET_Gr05HomeAxisClamp1_eWaitExecute := 0,
+	ET_Gr05HomeAxisClamp1_eWaitAxisStatus,
+	ET_Gr05HomeAxisClamp1_eMoveStop,
+	ET_Gr05HomeAxisClamp1_eWFMoveStop,
+	ET_Gr05HomeAxisClamp1_eAxisReset,
+	ET_Gr05HomeAxisClamp1_eWfAxisReset,
+	ET_Gr05HomeAxisClamp1_eChkAxisCoupled,
+	ET_Gr05HomeAxisClamp1_eAxisRef,
+	ET_Gr05HomeAxisClamp1_eWfAxisRef,
+	ET_Gr05HomeAxisClamp1_eWfErrorByReference,
+	ET_Gr05HomeAxisClamp1_eWfErrorByPipeCollision,
+	ET_Gr05HomeAxisClamp1_eAxisMoveHomePos,
+	ET_Gr05HomeAxisClamp1_eAxisInHomePos,
+	ET_Gr05HomeAxisClamp1_eMoveStop2,
+	ET_Gr05HomeAxisClamp1_eWFMoveStop2,
+	ET_Gr05HomeAxisClamp1_eAxisMovePipeEndVelo,
+	ET_Gr05HomeAxisClamp1_eWfAxisInPipeEndVelo,
+	ET_Gr05HomeAxisClamp1_eMoveStop3,
+	ET_Gr05HomeAxisClamp1_eWFMoveStop3,
+	ET_Gr05HomeAxisClamp1_eWfErrorByPipeEndNoDetected,
+	ET_Gr05HomeAxisClamp1_eDone := 197,
+	ET_Gr05HomeAxisClamp1_eError := 198,
+	ET_Gr05HomeAxisClamp1_eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

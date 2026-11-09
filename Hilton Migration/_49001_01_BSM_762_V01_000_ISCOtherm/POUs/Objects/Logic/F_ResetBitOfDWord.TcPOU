@@ -1,0 +1,84 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_ResetBitOfDWord" Id="{8673aa9a-7fc3-4be2-958e-2bd76edbfb61}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_ResetBitOfDWord : DWORD
+VAR_INPUT
+	dwInput			:DWORD;
+	usnBitNr			:USINT;
+END_VAR
+VAR
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[F_ResetBitOfDWord := dwInput;
+CASE usnBitNr OF
+	0:
+	F_ResetBitOfDWord.0 := FALSE;
+	1:
+	F_ResetBitOfDWord.1 := FALSE;
+	2:
+	F_ResetBitOfDWord.2 := FALSE;
+	3:
+	F_ResetBitOfDWord.3 := FALSE;
+	4:
+	F_ResetBitOfDWord.4 := FALSE;
+	5:
+	F_ResetBitOfDWord.5 := FALSE;
+	6:
+	F_ResetBitOfDWord.6 := FALSE;
+	7:
+	F_ResetBitOfDWord.7 := FALSE;
+	8:
+	F_ResetBitOfDWord.8 := FALSE;
+	9:
+	F_ResetBitOfDWord.9 := FALSE;
+	10:
+	F_ResetBitOfDWord.10 := FALSE;
+	11:
+	F_ResetBitOfDWord.11 := FALSE;
+	12:
+	F_ResetBitOfDWord.12 := FALSE;
+	13:
+	F_ResetBitOfDWord.13 := FALSE;
+	14:
+	F_ResetBitOfDWord.14 := FALSE;
+	15:
+	F_ResetBitOfDWord.15 := FALSE;
+	16:
+	F_ResetBitOfDWord.16 := FALSE;
+	17:
+	F_ResetBitOfDWord.17 := FALSE;
+	18:
+	F_ResetBitOfDWord.18 := FALSE;
+	19:
+	F_ResetBitOfDWord.19 := FALSE;
+	20:
+	F_ResetBitOfDWord.20 := FALSE;
+	21:
+	F_ResetBitOfDWord.21 := FALSE;
+	22:
+	F_ResetBitOfDWord.22 := FALSE;
+	23:
+	F_ResetBitOfDWord.23 := FALSE;
+	24:
+	F_ResetBitOfDWord.24 := FALSE;
+	25:
+	F_ResetBitOfDWord.25 := FALSE;
+	26:
+	F_ResetBitOfDWord.26 := FALSE;
+	27:
+	F_ResetBitOfDWord.27 := FALSE;
+	28:
+	F_ResetBitOfDWord.28 := FALSE;
+	29:
+	F_ResetBitOfDWord.29 := FALSE;
+	30:
+	F_ResetBitOfDWord.30 := FALSE;
+	31:
+	F_ResetBitOfDWord.31 := FALSE;
+END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="F_ResetBitOfDWord">
+      <LineId Id="7" Count="66" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

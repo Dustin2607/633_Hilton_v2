@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_PERIPHERY_REF" Id="{3d1c9026-b3b6-4865-ad38-a21940b7764a}">
+    <Declaration><![CDATA[TYPE ST_PERIPHERY_REF : FB_PERIPHERY_REF;
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

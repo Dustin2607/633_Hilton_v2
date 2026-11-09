@@ -1,0 +1,197 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_PositionEncoder" Id="{82129667-6e55-407a-93f4-01490d3719d0}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_PositionEncoder
+(*
+Position encoder resolution.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			20.01.2014
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Enummerations *)
+	
+	(* Variables *)
+	bEnable								:BOOL;							(* Enable FB *)
+
+	dwEncCurrentValue					:DWORD;						(* Encoder current value [inc] *)
+
+	stEncCfg								:ST_EncoderConfig;				(* Encoder configuration *)
+
+	(* References *)
+
+	(* Interfaces *)
+	pAxis								:POINTER TO ST_AXIS_REF_V2;
+
+	(* Instances *)
+	fbActPosFilter							:FB_ValueFilter;					(* Actual position filter *)
+END_VAR
+VAR_OUTPUT
+	(* Enummerations *)
+	
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	bFirstTime							:BOOL;							(* First cycle *)
+
+	dwActPos							:DWORD;						(* Current position inc *)
+	dwOldActPos							:DWORD;						(* Position old value *)
+	dnPosDistance						:DINT;							(* Positon distance from encoder values *)
+	dwPosOffset							:DWORD;						(* Positon offset from encoder values *)
+	(* References *)
+	lroffset:LREAL;
+	(* Interfaces *)
+
+	(* Instances *)
+	fbVeloAccDecJerk					:FB_CalcVeloAccDecJerk;
+
+END_VAR
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	bFirstTime := FALSE;
+
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+	A_Init();
+
+	bFirstTime := TRUE;
+END_IF
+
+A_GetPosition();
+A_GetDynamics();
+
+
+]]></ST>
+    </Implementation>
+    <Action Name="A_GetDynamics" Id="{51f8ccb6-74d1-4b06-b732-76bc84e4f64e}">
+      <Implementation>
+        <ST><![CDATA[
+(* Current position value filtering *)
+fbActPosFilter(
+	bEnable := TRUE,
+	lrInSignal := pAxis^.stPosition.lrActPos,
+	lrDeltaMax := 0.001
+);
+
+(* Current dynamics *)
+fbVeloAccDecJerk(
+	bEnable := TRUE,
+	bReset := FALSE,
+	lrActPos := fbActPosFilter.lrOutSignal,
+	lrSectorTime := pAxis^.stScaling.lrTaskCycle ,
+	etDirection => pAxis^.stScaling.etDirection,
+	lrCalcVelo => pAxis^.stDynamics.lrActVelo,
+	bAccelerating => pAxis^.stAxisStates.bAccelerating,
+	bDecelerating => pAxis^.stAxisStates.bDecelerating,
+	lrCalcAcc => pAxis^.stDynamics.lrActAcc,
+	lrCalcDec => pAxis^.stDynamics.lrActDec,
+	lrCalcJerk => pAxis^.stDynamics.lrActJerk
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_GetPosition" Id="{87905f46-9b92-4c2d-9774-151bfce18648}">
+      <Implementation>
+        <ST><![CDATA[
+dwActPos := dwEncCurrentValue;																			(* Current position inc *)
+
+IF stEncCfg.etScalingMethod = ET_ScalingMethod_eSMRotary
+THEN
+
+	dnPosDistance := F_ModuloDistance(dwActPos, dwOldActPos, stEncCfg.dwModuloValue);						(* Position distance in inc *)
+
+	dwActPos := dwActPos + DINT_TO_DWORD(dnPosDistance);												(* Current position in inc *)
+
+	pAxis^.stPosition.dwActPos := dwActPos;																	(* Current position in inc *)
+
+	pAxis^.stPosition.lrActPos := F_ConvertActPosResiduals(													(* Current position in technical units *)
+		dwPos := dwActPos,
+		pAxis := pAxis
+	);
+
+	pAxis^.stPosition.lrSetPos := F_ModR(pAxis^.stPosition.lrSetPos, stEncCfg.lrModuloFactor);						(* Current period positon in technical units *)
+
+ELSIF stEncCfg.etScalingMethod = ET_ScalingMethod_eSMLinear
+THEN
+(*
+	IF stEncCfg.dwModuloValue > 0
+	THEN
+
+		dnPosDistance := DWORD_TO_DINT(dwActPos - dwOldActPos);											(* Position distance in inc *)
+
+		IF dnPosDistance > (stEncCfg.dwModuloValue / 2)
+		THEN
+			dwPosOffset := dwPosOffset - stEncCfg.dwModuloValue;												(* Position offset in inc *)
+
+		ELSIF dnPosDistance < -DWORD_TO_DINT(stEncCfg.dwModuloValue / 2)
+		THEN
+			dwPosOffset := dwPosOffset + stEncCfg.dwModuloValue;												(* Position offset in inc *)
+
+		END_IF
+
+		dwActPos := dwPosOffset + dwEncCurrentValue;														(* Current position in inc *)
+
+	END_IF
+*)
+	pAxis^.stPosition.dwActPos := dwActPos;																	(* Current position in inc *)
+
+	pAxis^.stPosition.lrActPos := F_ConvertActPosResiduals(													(* Current position in technical units *)
+								dwPos := dwActPos,
+								pAxis := pAxis
+							 );
+
+END_IF
+
+dwOldActPos := dwEncCurrentValue;
+
+(*pAxis^.stPosition.lrActPos := pAxis^.stPosition.lrSetPos;*)														(* Current position in technical units *)
+
+
+
+
+
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Init" Id="{85cd68b0-c3f6-4aea-af92-76fe7bd2b1ee}">
+      <Implementation>
+        <ST><![CDATA[
+dwOldActPos := dwEncCurrentValue;]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_PositionEncoder">
+      <LineId Id="63" Count="18" />
+    </LineIds>
+    <LineIds Name="FB_PositionEncoder.A_GetDynamics">
+      <LineId Id="0" Count="21" />
+    </LineIds>
+    <LineIds Name="FB_PositionEncoder.A_GetPosition">
+      <LineId Id="0" Count="59" />
+    </LineIds>
+    <LineIds Name="FB_PositionEncoder.A_Init">
+      <LineId Id="0" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

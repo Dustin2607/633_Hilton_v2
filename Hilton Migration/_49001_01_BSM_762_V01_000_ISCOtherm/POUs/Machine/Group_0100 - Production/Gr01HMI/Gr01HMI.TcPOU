@@ -1,0 +1,74 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="Gr01HMI" Id="{08c851aa-8d26-4d0c-ae4e-59973789f8b2}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM Gr01HMI
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable					:BOOL;						(* Enable Gr01HMI *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	nIdx						:INT;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	RETURN;
+END_IF;
+
+A_GetHMIVar();
+A_SetHMIVar();]]></ST>
+    </Implementation>
+    <Action Name="A_GetHMIVar" Id="{09fdabb6-fc55-4677-92b3-29903bdc8707}">
+      <Implementation>
+        <ST><![CDATA[
+(* Collect hmi signals *)
+;]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_SetHMIVar" Id="{da33d59e-f680-489f-88e7-3ffce0c0e329}">
+      <Implementation>
+        <ST><![CDATA[
+(* Collect hmi signals *)
+stgGr01HMI.stPLCTOHMI.bHomeCompleted := bgGr01HomeCompleted;
+stgGr01HMI.stPLCTOHMI.wBtnStartStatus.0 := arbgGr01StartProcess[1]
+									       OR arbgGr01StartProcess[2]
+									       OR arbgGr01StartProcess[3];
+stgGr01HMI.stPLCTOHMI.wBtnStopStatus.0 := NOT arbgGr01StartProcess[1]
+									       AND NOT arbgGr01StartProcess[2]
+									       AND NOT arbgGr01StartProcess[3];
+stgGr01HMI.stPLCTOHMI.wBtnStepProcStatus := 0;
+stgGr01HMI.stPLCTOHMI.wAxisSawBowStatus.0 := NOT binGr01AxisSawBowLimitMin;
+stgGr01HMI.stPLCTOHMI.wAxisSawBowStatus.1 := NOT binGr01AxisSawBowLimitMax;
+stgGr01HMI.stPLCTOHMI.wAxisAngleStatus.0 := NOT binGr01AxisAngleLimitMin;
+stgGr01HMI.stPLCTOHMI.wAxisAngleStatus.1 := NOT binGr01AxisAngleLimitMax;;
+stgGr01HMI.stPLCTOHMI.wSawbandStatus.0 := FALSE;
+stgGr01HMI.stPLCTOHMI.wSawbandStatus.1 := FALSE;
+stgGr01HMI.stPLCTOHMI.wSawbandAirStatus.0 := boutGr01SawbandAirOn;
+stgGr01HMI.stPLCTOHMI.wSawbandAirStatus.1 := NOT boutGr01SawbandAirOn;
+stgGr01HMI.stPLCTOHMI.wLaserStatus.0 := boutGr01LaserOn;
+stgGr01HMI.stPLCTOHMI.wLaserStatus.1 := NOT boutGr01LaserOn;
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="Gr01HMI">
+      <LineId Id="18" Count="6" />
+    </LineIds>
+    <LineIds Name="Gr01HMI.A_GetHMIVar">
+      <LineId Id="0" Count="2" />
+    </LineIds>
+    <LineIds Name="Gr01HMI.A_SetHMIVar">
+      <LineId Id="0" Count="21" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

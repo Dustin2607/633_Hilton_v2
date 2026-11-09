@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_kAngleActuatorSpeedLin" Id="{6122c2cb-c973-43c3-8821-3cf5ea754409}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_kAngleActuatorSpeedLin : LREAL
+(*
+
+The function used to linearization speed of angle actuator dependent of angle, sin()-function aligned 
+Output factor: 0..1 (1=no speed reduction)
+
+Constructor: 		Eduard Schüle
+Company:		E. Riexinger GmbH
+Date:			19.11.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable							:BOOL;						(* Function block enable *)
+	lrActAngle						:LREAL;						(* actual angle *)
+	lrAngleOffset						:LREAL;						(* parameter sin-function angle offset *)
+	lrMultiplier						:LREAL;						(* parameter sin-function multiplier *)
+	lrOffset							:LREAL;						(* parameter sin-function offset *)
+END_VAR
+VAR
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	F_kAngleActuatorSpeedLin := 1.0;
+	RETURN;
+END_IF
+
+lrActAngle := LIMIT(-50, lrActAngle, 50);
+
+F_kAngleActuatorSpeedLin := MIN(SIN( (lrActAngle + lrAngleOffset)/180*PI) * lrMultiplier + lrOffset, 1.0);
+]]></ST>
+    </Implementation>
+    <LineIds Name="F_kAngleActuatorSpeedLin">
+      <LineId Id="25" Count="9" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

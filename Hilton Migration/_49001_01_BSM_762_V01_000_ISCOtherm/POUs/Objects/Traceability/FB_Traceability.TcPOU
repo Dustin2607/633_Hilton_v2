@@ -1,0 +1,219 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Traceability" Id="{a42ba94f-7ce6-4a8b-9787-732bec09469b}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Traceability
+(*
+
+This function block is used to traceability of data.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			02.09.2016
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+21.02.2018		0.01			PPA						Additional logger for samples
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;					(* Enable FB *)
+	bExecute					:BOOL;					(* Execute operation *)
+	stTraceability					:ST_Traceability;
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bBusy						:BOOL;					(* Program busy *)
+	bDone						:BOOL;					(* Program done *)
+	bError						:BOOL;					(* Program error *)
+	udnErrNo					:UDINT;					(* Error number *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	sDateTimeCache				:STRING;
+	arsDataRecord				:ARRAY[0..udnTraceSampleMax] OF STRING(udnTraceStringLengthMax);
+	udnDataRecordCnt			:UDINT;
+
+	udnIdxData					:UDINT;
+	udnIdxSample				:UDINT;
+	enStep						:INT;
+
+	bFirstTime					:BOOL;					(* First PLC cycle *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbTraceability					:FB_FileHandler;				(* Traceability *)
+	rtExecute						:R_TRIG;
+END_VAR
+VAR CONSTANT
+	sEndLine					:STRING := '$N'; 							(* End line sign for lines *)
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable				(* Enable FB *)
+THEN
+	bFirstTime := FALSE;		(* First PLC cycle *)
+	bBusy := FALSE;			(* Program busy *)
+	bDone := FALSE;			(* Program done *)
+	bError := FALSE;			(* Program error *)
+	udnErrNo := 0;				(* Error number *)
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+
+	bFirstTime := TRUE;
+END_IF
+
+rtExecute(CLK := bExecute);
+
+IF rtExecute.Q
+    AND NOT fbTraceability.bBusy
+THEN
+	sDateTimeCache := stTraceability.sDateTime;
+
+	FOR udnIdxSample := 0 TO udnTraceSampleMax
+	DO
+
+		IF udnIdxSample = 0
+		THEN
+			arsDataRecord[udnIdxSample] := CONCAT('No', sTraceColSep);
+
+			FOR udnIdxData := 1 TO udnTraceDataMax
+			DO
+				IF LEN(stTraceability.arstData[1,udnIdxData].sName) <> 0
+				     AND LEN(stTraceability.arstData[1,udnIdxData].sValue) <> 0
+				THEN
+					arsDataRecord[udnIdxSample] := CONCAT(arsDataRecord[udnIdxSample],
+											  			   CONCAT(stTraceability.arstData[1,udnIdxData].sName,
+													  			    CONCAT(' ',
+															 			     CONCAT(stTraceability.arstData[1,udnIdxData].sUnit, sTraceColSep)
+													 					     )
+											  					    )
+														 );
+
+				END_IF
+
+				IF udnIdxData = udnTraceDataMax
+				    AND LEN(arsDataRecord[udnIdxSample]) <> 0
+				THEN
+					arsDataRecord[udnIdxSample] := REPLACE(arsDataRecord[udnIdxSample], sEndLine, 1, LEN(arsDataRecord[udnIdxSample]));
+				END_IF
+			END_FOR
+
+		ELSE
+
+			arsDataRecord[udnIdxSample] := CONCAT(UDINT_TO_STRING(udnIdxSample), sTraceColSep);
+	
+			FOR udnIdxData := 1 TO udnTraceDataMax
+			DO
+				IF LEN(stTraceability.arstData[udnIdxSample,udnIdxData].sName) <> 0
+				     AND LEN(stTraceability.arstData[udnIdxSample,udnIdxData].sValue) <> 0
+				THEN
+					arsDataRecord[udnIdxSample] := CONCAT(arsDataRecord[udnIdxSample],
+												CONCAT(stTraceability.arstData[udnIdxSample,udnIdxData].sValue, sTraceColSep)
+											);
+		
+				END_IF
+		
+				IF udnIdxData = udnTraceDataMax
+				    AND LEN(arsDataRecord[udnIdxSample]) <> 0
+				THEN
+					arsDataRecord[udnIdxSample] := REPLACE(arsDataRecord[udnIdxSample], sEndLine, 1, LEN(arsDataRecord[udnIdxSample]));
+				END_IF
+			END_FOR
+
+		END_IF
+
+	END_FOR
+END_IF
+
+CASE enStep
+OF
+
+	0:
+		IF rtExecute.Q
+		THEN
+			udnDataRecordCnt := 0;
+			fbTraceability.sWriteRecord := arsDataRecord[udnDataRecordCnt];
+
+			enStep := 1;
+		END_IF
+
+	1:
+		fbTraceability.bExecute := TRUE;
+
+		IF fbTraceability.bBusy
+		     AND NOT fbTraceability.bError
+		THEN
+
+			enStep := 2;
+		ELSIF fbTraceability.bError
+		THEN
+			fbTraceability.bExecute := FALSE;
+
+			enStep := 0;
+		END_IF
+	2:
+		IF fbTraceability.bDone
+		     AND NOT fbTraceability.bError
+		THEN
+			fbTraceability.bExecute := FALSE;
+
+			enStep := 3;
+
+		ELSIF fbTraceability.bError
+		THEN
+			fbTraceability.bExecute := FALSE;
+
+			enStep := 0;
+		END_IF
+
+	3:	IF NOT fbTraceability.bBusy
+		     AND NOT fbTraceability.bDone
+		     AND NOT fbTraceability.bError
+		THEN
+			fbTraceability.bExecute := FALSE;
+
+			udnDataRecordCnt := udnDataRecordCnt +1;
+			IF udnDataRecordCnt < udnTraceSampleMax
+			THEN
+				fbTraceability.sWriteRecord := arsDataRecord[udnDataRecordCnt];
+
+				enStep := 1;
+			ELSE
+				enStep := 0;
+			END_IF
+
+		ELSIF fbTraceability.bError
+		THEN
+			fbTraceability.bExecute := FALSE;
+
+			enStep := 0;
+		END_IF
+
+END_CASE
+
+fbTraceability(
+	bEnable := TRUE,
+	sFilePath := stTraceability.stSettings.sPath,
+	sFileName := CONCAT(sDateTimeCache, (*CONCAT('_', stTraceability.stSettings.sFileName)*)''),
+	sFileSuffix := stTraceability.stSettings.sFileExtension,
+	dwOpenMode := FOPEN_MODEAPPEND (* OR  FOPEN_MODETEXT*),
+	tTimeout := t#2s,
+	bBusy => bBusy,
+	bDone => bDone,
+	bError => bError,
+	udnErrNo => udnErrNo);]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Traceability">
+      <LineId Id="53" Count="155" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

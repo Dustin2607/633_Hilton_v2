@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_CtrlOut" Id="{e6ea9504-88dd-4fc2-8fc9-3962c10c6994}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_CtrlOut
+(*
+Function block used to set output from controller.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			03.06.2014
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Enummerations *)
+
+	(* Variables *)
+	lrInSignal								:LREAL;							(* Input signal *)
+	lrSignalOffset							:LREAL := 0.0;						(* Offset signal *)
+	lrLimitMin								:LREAL := -1E40;					(* Limit minimum *)
+	lrLimitMax							:LREAL := 1E40;					(* Limit maximum *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR
+VAR_OUTPUT
+	(* Enummerations *)
+
+	(* Variables *)
+	lrOutSignal							:LREAL;							(* Output signal *)
+	bLimitMin							:BOOL;							(* Limit minimum reached *)
+	bLimitMax							:BOOL;							(* Limit maximum reached *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbLimiter								:FB_Limiter;						(* Signal output limiter *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+(* Limit the outputs *)
+fbLimiter(
+	bEnable := TRUE,
+	lrInSignal := lrInSignal + lrSignalOffset,
+	lrLimitMin := lrLimitMin,
+	lrLimitMax := lrLimitMax,
+	lrOutSignal => lrOutSignal,
+	bLimitMin => bLimitMin,
+	bLimitMax => bLimitMax
+);]]></ST>
+    </Implementation>
+    <LineIds Name="FB_CtrlOut">
+      <LineId Id="56" Count="10" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

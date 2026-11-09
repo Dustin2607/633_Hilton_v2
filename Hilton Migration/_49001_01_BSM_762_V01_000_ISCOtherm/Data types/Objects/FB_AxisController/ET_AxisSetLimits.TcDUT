@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_AxisSetLimits" Id="{ca5cfdfd-4386-446d-8044-ea5ef28b20c0}">
+    <Declaration><![CDATA[TYPE ET_AxisSetLimits :
+(
+	ET_AxisSetLimits_eWaitExecute := 0,
+	ET_AxisSetLimits_eSetReferenceSystem,
+	ET_AxisSetLimits_eWfSetReferenceSystem,
+	ET_AxisSetLimits_eSetPositionBias,
+	ET_AxisSetLimits_eWfSetPositionBias,
+	ET_AxisSetLimits_eSetLimitPos,
+	ET_AxisSetLimits_eWfSetLimitPos,
+	ET_AxisSetLimits_eSetLimitNeg,
+	ET_AxisSetLimits_eWfSetLimitNeg,
+	ET_AxisSetLimits_eEnableLimitPos,
+	ET_AxisSetLimits_eWfEnableLimitPos,
+	ET_AxisSetLimits_eEnableLimitNeg,
+	ET_AxisSetLimits_eWfEnableLimitNeg,
+	ET_AxisSetLimits_eEnablePosLagMonitoring,
+	ET_AxisSetLimits_eWfEnablePosLagMonitoring,
+	ET_AxisSetLimits_eDone := 197,
+	ET_AxisSetLimits_eError := 198,
+	ET_AxisSetLimits_eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

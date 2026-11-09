@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_Dynamics" Id="{3a6ec8f0-1049-4d5a-bdeb-9fdd9ef9dcad}">
+    <Declaration><![CDATA[TYPE ST_Dynamics :
+STRUCT
+	(* Velocities *)
+	lrActVelo 				:LREAL;			(* Actual velocity [mm/s] *)
+	dnActVelo 				:DINT;			(* Actual velocity [mm/s] *)   
+	lrMaxVelo 				:LREAL;			(* Actual limit of velocity [mm/s] *)
+	lrSetVelo 				:LREAL;			(* Setpoint velocity [mm/s] *)
+	dnSetVelo 				:DINT;    			(* Setpoint velocity [mm/s] *)
+	lrCacheVelo 				:LREAL;    		(* Cache velocity [mm/s] *)
+	lrSWMaxVelo 			:LREAL;			(* Max limit of velocity [mm/s] *)
+ 	lrSWMaxSetRefVelo		:LREAL;			(* Max limit of reference velocity [mm/s] *)
+	lrManualVeloFast			:LREAL;
+	lrManualVeloSlow			:LREAL;
+
+	(* Acceleration *)
+	lrActAcc 					:LREAL;			(* Actual acceleration [mm/s2] *)
+	dnActAcc 				:DINT; 			(* Actual acceleration [mm/s2] *)   
+	lrMaxAcc 				:LREAL;			(* Actual limit of acceleration [mm/s2] *)
+	lrSetAcc		 			:LREAL;			(* Setpoint acceleration [mm/s2] *)
+	dnSetAcc		 		:DINT;   			(* Setpoint acceleration [mm/s2] *)
+	lrCacheAcc 				:LREAL;  			(* Cache acceleration [mm/s2] *)
+	lrSWMaxAcc 				:LREAL;			(* Max limit of acceleration [mm/s2] *)
+
+	(* Deceleration *)
+	lrActDec 					:LREAL;			(* Actual deceleration [mm/s2] *)
+	dnActDec 				:DINT;    			(* Actual deceleration [mm/s2] *)
+	lrMaxDec 				:LREAL; 			(* Actual limit of deceleration [mm/s2] *)
+	lrSetDec 					:LREAL;  			(* Setpoint deceleration [mm/s2] *)
+	dnSetDec		 		:DINT;   			(* Setpoint deceleration [mm/s2] *)
+	lrCacheDec 				:LREAL;    		(* Cache deceleration [mm/s2] *)
+	lrSWMaxDec 				:LREAL; 			(* Max limit of deceleration [mm/s2] *)
+
+	(* Jerk *)
+	lrActJerk 					:LREAL;  			(* Actual jerk [mm/s3] *)
+	dnActJerk 				:DINT;  			(* Actual jerk [mm/s3] *)
+	lrMaxJerk 				:LREAL;			(* Actual limit of jerk [mm/s3] *) 
+	lrSetJerk 				:LREAL;  			(* Setpoint jerk [mm/s3] *)
+	dnSetJerk		 		:DINT;   			(* Setpoint jerk [mm/s3] *)
+	lrCacheJerk 				:LREAL;    		(* Cache jerk [mm/s3] *)
+	lrSWMaxJerk 				:LREAL; 			(* Max limit of jerk [mm/s3] *)
+
+	(* Current *)
+	lrActCur 					:LREAL;			(* Actual current *)
+	dnActCur					:DINT;			(* Actual current *)
+	lrMaxCur 					:LREAL;			(* Actual limit of current *)
+	lrSetCur 					:LREAL;			(* Setpoint current *)
+	dnSetCur 				:DINT;			(* Setpoint current *)
+	lrCacheCur 				:LREAL;  			(* Cache current *)
+	lrSWMaxCur 				:LREAL;			(* Max limit of current *)
+   
+	(* Torque *)
+	lrActTor 					:LREAL;  			(* Actual torque [Nm] *)
+	dnActTor 				:DINT; 			(* Actual torque [Nm] *) 
+	lrMaxTor 				:LREAL; 			(* Actual limit of torque [Nm] *)
+	lrSetTor 					:LREAL;			(* Setpoint torque [Nm] *)
+	lrCacheTor				:LREAL;    		(* Cache torque [Nm] *)
+	dnSetTor 				:DINT;			(* Setpoint torque [Nm] *)
+	
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

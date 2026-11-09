@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="Gr00Simulation" Id="{76b5f478-0d67-4680-92a6-51df61363549}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM Gr00Simulation
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable								:BOOL;						(* Enable Gr05Persistent *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+
+	RETURN;
+END_IF;
+
+A_ForceInput();]]></ST>
+    </Implementation>
+    <Action Name="A_ForceInput" Id="{2d4cd225-db68-49ec-b824-8438a2b65bc4}">
+      <Implementation>
+        <ST><![CDATA[
+
+GVL_Gr00IO.binGr00AirPressureOK := TRUE;
+GVL_Gr00IO.binGr00LightCurtainOK := TRUE;
+GVL_Gr00IO.arbinGr00PowerSupplyOn[2] := TRUE;
+GVL_Gr00IO.arbinGr00PowerSupplyOn[3] := TRUE;
+GVL_Gr00IO.arbinGr00PowerSupplyOn[4] := TRUE;
+GVL_Gr00IO.arbinGr00PowerSupplyOn[5] := TRUE;
+GVL_Gr00IO.arbinGr00DoorsClosed[1] := TRUE;
+GVL_Gr00IO.arbinGr00DoorsClosed[2] := TRUE;
+GVL_Gr00IO.arbinGr00DoorsClosed[3] := TRUE;
+GVL_Gr00IO.arbinGr00DoorsClosed[4] := TRUE;
+GVL_Gr00IO.arbinGr00DoorsClosed[5] := TRUE;
+GVL_Gr00IO.binGr00AllDoorsClosed := GVL_Gr00IO.arbinGr00DoorsClosed[1]
+								AND GVL_Gr00IO.arbinGr00DoorsClosed[2]
+								AND GVL_Gr00IO.arbinGr00DoorsClosed[3]
+								AND GVL_Gr00IO.arbinGr00DoorsClosed[4]
+								AND GVL_Gr00IO.arbinGr00DoorsClosed[5];
+
+GVL_Gr00IO.binGr00AllDoorsLocked := TRUE;
+GVL_Gr00IO.binGr00TempOK := TRUE;
+
+
+// only for simulation
+// GVL_Gr00IO.binNoEmergencyStop := TRUE;
+// GVL_Gr00IO.binMoveRelease := TRUE;
+// GVL_Gr00IO.binMoveReleaseSB := TRUE;]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="Gr00Simulation">
+      <LineId Id="52" Count="6" />
+    </LineIds>
+    <LineIds Name="Gr00Simulation.A_ForceInput">
+      <LineId Id="40" Count="25" />
+      <LineId Id="38" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

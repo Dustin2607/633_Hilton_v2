@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_JogMode" Id="{de841f72-d419-488e-a15e-d7376a14f58c}">
+    <Declaration><![CDATA[TYPE ET_JogMode :
+(
+	ET_JogMode_MC_JOGMODE_STANDARD,
+	ET_JogMode_MC_JOGMODE_INCHING
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

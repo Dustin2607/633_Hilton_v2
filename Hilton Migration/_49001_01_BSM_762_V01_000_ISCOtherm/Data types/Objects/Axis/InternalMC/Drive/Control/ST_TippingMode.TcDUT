@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_TippingMode" Id="{ba6337dd-7183-4333-a36d-c1ad6ee69363}">
+    <Declaration><![CDATA[TYPE ST_TippingMode :
+STRUCT
+	(* Tipping mode *)
+	bTipEnable				:BOOL;			(* Activates tipping mode *)
+	bTippingActive			:BOOL;			(* Manual or local mode is active *)
+	bTipPositive				:BOOL;			(* Tip mode in positive direction *)
+	bTipNegative				:BOOL;			(* Tip mode in negative direction *)
+
+	bTipStepPositive			:BOOL;			(* Tip mode in positive direction. With rising edge, the axis moves along the path *)
+	bTipStepNegative			:BOOL;			(* Tip mode in negative direction. With rising edge, the axis moves along the path *)
+	
+	lrJogIncrementFor			:LREAL;			(* Jog increment forward [mm] *)
+	lrJogIncrementBack		:LREAL;			(* Jog increment backward [mm] *) 
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

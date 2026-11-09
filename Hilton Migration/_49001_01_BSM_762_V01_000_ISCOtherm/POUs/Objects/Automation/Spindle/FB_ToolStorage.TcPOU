@@ -1,0 +1,433 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_ToolStorage" Id="{88ccdf4f-3d5a-4e1c-814b-c6ac4207b637}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ToolStorage
+(*
+
+The function block used to storage the tool parameters.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			18.06.2018
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Enable FB signal *)
+	bReset						:BOOL;						(* Reset *)
+	bResetSelectedToolNest		:BOOL;						(* Reset selected tool nest *)
+	unSelectedToolNest			:UINT;						(* Selected tool nest *)
+	bResetAllToolNests			:BOOL;						(* Reset all tool nests  *)
+	bExeToolNest				:BOOL;						(* Execute  tool nest *)
+	unToolNo					:UINT;						(* Tool number *)
+	bToolLifetimeOn				:BOOL;						(* Tool lifetime enabled *)
+	rToolRotationalSpeedAct		:REAL;						(* Tool current rotational speed *)
+	parbToolNestPresent			:POINTER TO ARRAY[0..unToolStorageCapacity] OF BOOL;				(* Tool in nest present *)
+	parunToolNo					:POINTER TO ARRAY[0..unToolStorageCapacity] OF UINT;				(* Tool nummer *)
+	parsToolDescription			:POINTER TO ARRAY[0..unToolStorageCapacity] OF STRING(11);		(* Tool description *)
+	parunToolRotationalSpeed 		:POINTER TO ARRAY[0..unToolStorageCapacity] OF UINT;				(* Rotational speed *)
+	parunToolLifetimeSet			:POINTER TO ARRAY[0..unToolStorageCapacity] OF UINT;				(* Setpoint tool lifetime *)
+	parunToolLifetimeAct			:POINTER TO ARRAY[0..unToolStorageCapacity] OF UINT;				(* Curret tool lifetime *)
+	paretToolStatus				:POINTER TO ARRAY[0..unToolStorageCapacity] OF ET_ToolStatus;		(* Tool status *)
+	unToolNestUsingMax			:UINT;						(* Tool nest using maximal number *)
+	tWatchdog					:TIME := t#5s;					(* Watchdog time *)
+	lrTaskCycle					:LREAL;						(* Task cycle *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bDone						:BOOL;						(* Program done *)
+	bBusy						:BOOL;						(* Program busy *)
+	bError						:BOOL;						(* Program error *)
+	udnErrorNo					:UDINT;						(* Error number *)
+END_VAR
+VAR_IN_OUT
+	unToolNestPrv				:UINT;												(* Previous tool nest number *)
+	unToolNestAct				:UINT;												(* Current tool nest number *)
+	unToolNestUsing				:UINT;												(* Using tool nest number *)
+END_VAR
+VAR
+	(* Enummerations *)
+	etToolStorage				:ET_ToolStorage;
+
+	(* Variables *)
+	unToolNestCount				:UINT;						(* Tool nest counter *)
+	unToolNestSearchCount		:UINT;						(* Tool nest search counter  *)
+	rToolLifetime					:REAL;						(* Tool lifetime *)
+	bToolLifetimeReached			:BOOL;						(* Tool lifetime reached *)
+
+	unIdxToolNestCount			:UINT;
+	unLifetimeOnNewTool			:UINT;
+
+	bFirstTime					:BOOL;						(* First cycle *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtResetSelectedToolNest		:R_TRIG;
+	rtResetAllToolNests			:R_TRIG;
+	rtExeToolNest				:R_TRIG;
+	tonWatchdog					:TON;
+END_VAR
+VAR CONSTANT
+	unToolStorageCapacity		:UINT := 32;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	bDone := FALSE;					(* Program done *)
+	bBusy := FALSE;                                  	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;                                 		(* Error number *)
+
+	tonWatchdog(IN := FALSE);
+
+	etToolStorage := ET_ToolStorage_eWaitExecute;       				(* Next step *)
+
+	bFirstTime := FALSE;
+	RETURN;
+END_IF;
+
+IF NOT bFirstTime
+THEN
+	bDone := FALSE;					(* Program done *)
+	bBusy := FALSE;                                  	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;                                 		(* Error number *)
+
+	tonWatchdog(IN := FALSE);
+
+	etToolStorage := ET_ToolStorage_eWaitExecute;       				(* Next step *)
+
+	bFirstTime := TRUE;
+END_IF;
+
+IF unToolNestUsingMax > unToolStorageCapacity
+THEN
+	unToolNestUsingMax := unToolStorageCapacity;
+END_IF
+
+(* Get current tool *)
+IF unToolNestCount >= unToolNestUsingMax
+THEN
+	unToolNestCount := 0;
+END_IF
+unToolNestCount := unToolNestCount + 1;
+
+(* Control tool lifetime *)
+IF parunToolLifetimeSet^[unToolNestCount] <> 0															(* If 0 then tool lifetime monitoring is not active *)
+THEN
+	IF parunToolLifetimeAct^[unToolNestCount] >= (parunToolLifetimeSet^[unToolNestCount] * 100)				(* Tool lifetime was exceeded *)
+	THEN
+		IF paretToolStatus^[unToolNestCount] = ET_ToolStatus_eOk										(* Satus is OK *)
+		THEN
+			paretToolStatus^[unToolNestCount] := ET_ToolStatus_eLifettimeExceeded;						(* Tool lifetime exceeded *)
+			bToolLifetimeReached := TRUE; 														(* Tool lifetime reached *)
+		END_IF
+	END_IF;
+END_IF;
+
+IF paretToolStatus^[unToolNestCount] = ET_ToolStatus_eLifettimeExceeded								(* Tool lifetime exceeded *)
+     AND (
+		parunToolLifetimeSet^[unToolNestCount] = 0													(* If 0 then tool lifetime monitoring is not active *)
+      		OR ((parunToolLifetimeSet^[unToolNestCount] * 100) > parunToolLifetimeAct^[unToolNestCount])  			(* Tool lifetime not exceeded *)
+    	       )
+THEN
+	paretToolStatus^[unToolNestCount] := ET_ToolStatus_eOk;											(* Tool Ok *)
+END_IF
+
+
+(* Measurement tool lifetime *)
+IF bToolLifetimeOn
+THEN
+	(* Save tool lifetime with tool change *)
+	IF unToolNestAct <> unLifetimeOnNewTool				(* New tool in came *)
+	    OR (
+			bToolLifetimeReached							(* Tool lifetime reached *)
+			AND parunToolLifetimeAct^[unToolNestAct] = 0
+		  )
+	THEN
+		unLifetimeOnNewTool := unToolNestAct ;
+		rToolLifetime := parunToolLifetimeAct^[unToolNestAct];
+		bToolLifetimeReached := FALSE; 					(* Tool lifetime reached *)
+	END_IF
+
+	(*rToolLifetime:=  rToolLifetime +(rToolRotationalSpeedAct * UDINT_TO_REAL(SystemTaskInfoArr[1].cycleTime) / 100000000);*)
+
+	rToolLifetime :=  rToolLifetime +(rToolRotationalSpeedAct * lrTaskCycle);
+
+	IF unToolNestAct <> 0
+	THEN
+		parunToolLifetimeAct^[unToolNestAct] := REAL_TO_UINT(rToolLifetime);
+	END_IF
+
+END_IF
+
+
+(* Reset selected tool nests *)
+rtResetSelectedToolNest(
+	CLK := bResetSelectedToolNest
+);
+
+IF rtResetSelectedToolNest.Q
+THEN
+	parunToolLifetimeAct^[unSelectedToolNest] := 0;			(* Tool lifetime clear *)
+
+	IF parunToolNo^[unSelectedToolNest] <>  0
+	THEN
+		paretToolStatus^[unSelectedToolNest] := ET_ToolStatus_eOk;		(* Set tool status *)
+	END_IF
+END_IF;
+
+
+(* Reset all tool nests *)
+rtResetAllToolNests(
+	CLK := bResetAllToolNests
+);
+
+IF rtResetAllToolNests.Q
+THEN
+	FOR unIdxToolNestCount := 1 TO unToolNestUsingMax
+	DO
+		IF unIdxToolNestCount <> unToolNestAct
+		THEN
+			parunToolLifetimeAct^[unIdxToolNestCount] := 0;			(* Tool lifetime clear *)
+	
+			IF parunToolNo^[unIdxToolNestCount] <>  0
+			THEN
+				paretToolStatus^[unIdxToolNestCount] := ET_ToolStatus_eOk;			(* Set tool status 1 = Ok*)
+			END_IF
+		END_IF
+	END_FOR
+END_IF;
+
+(* Reset *)
+IF bReset
+     AND bError
+THEN
+	bError := FALSE;
+END_IF
+
+(* Search tool nest *)
+rtExeToolNest(CLK := bExeToolNest);
+
+IF rtExeToolNest.Q
+THEN
+	etToolStorage := ET_ToolStorage_eWaitExecute;                      						(* Next step *)
+END_IF;
+
+CASE etToolStorage OF
+        
+	ET_ToolStorage_eWaitExecute:
+		bBusy := FALSE;                                     	(* Program not busy *)
+		bError := FALSE;                         		(* Program not error *)
+		udnErrorNo := 0;                         		(* Error number *)
+
+		IF rtExeToolNest.Q
+		THEN
+			bDone := FALSE;                          	(* Program not done *)
+			bBusy := TRUE;                                  (* Program busy *)
+
+			tonWatchdog(IN := FALSE);
+
+			unToolNestSearchCount := 0;		(* Reset tool search counter *)
+
+			IF unToolNo = 0												(* Get old tool nest *)
+			THEN
+				etToolStorage := ET_ToolStorage_eGetOldToolNest;			(* Next step *)
+
+			ELSIF unToolNo = 1000										(* Check tool place *)
+			THEN
+				etToolStorage := ET_ToolStorage_eChkToolPlace;			(* Next step *)
+
+			ELSIF unToolNo = 1001										(* Check tool put up *)
+			THEN
+				etToolStorage := ET_ToolStorage_eChkToolPickUp;			(* Next step *)
+
+			ELSE														(* Get new tool nest  *)
+				etToolStorage := ET_ToolStorage_eGetNewToolNest;			(* Next step *)
+			END_IF
+
+		END_IF
+
+	ET_ToolStorage_eGetNewToolNest:
+
+			unToolNestSearchCount := unToolNestSearchCount + 1;
+
+			IF unToolNestSearchCount <= unToolNestUsingMax
+			THEN
+				IF parunToolNo^[unToolNestSearchCount] = unToolNo													(* Correct tool nest found *)
+				      AND (parbToolNestPresent^[unToolNestSearchCount]													(* Current nest busy *)
+					        OR parunToolNo^[unToolNestSearchCount] = parunToolNo^[unToolNestUsing])						(* Identical tool number *)
+				      AND paretToolStatus^[unToolNestSearchCount] = ET_ToolStatus_eOk										(* Tool status is Ok *)
+				      AND ((parunToolLifetimeSet^[unToolNestSearchCount] * 100) >= parunToolLifetimeAct^[unToolNestSearchCount])		(* Tool lifetime not exceeded *)
+				THEN
+					IF  parunToolNo^[unToolNestSearchCount] <> parunToolNo^[unToolNestUsing]									(* Different tool number *)
+				 	THEN
+						IF NOT parbToolNestPresent^[unToolNestUsing]														(* Previous nest free *)
+						THEN
+							unToolNestPrv := unToolNestUsing;																(* Previous tool nest *)
+							unToolNestAct := unToolNestSearchCount;														(* New tool nest *)
+
+							etToolStorage := ET_ToolStorage_eDone;			(* Next step *)
+						ELSE
+							unToolNestPrv := 0;
+							unToolNestAct := unToolNestSearchCount;
+
+							etToolStorage := ET_ToolStorage_eError;			(* Next step *)
+						END_IF
+					ELSE																								(* Identical tool number *)
+						IF unToolNestSearchCount = unToolNestUsing														(* Different nest number *)
+						THEN																								(* Identical nest number *)
+							IF paretToolStatus^[unToolNestUsing] <> ET_ToolStatus_eOk														(* Tool status is not Ok *)
+							     OR ((parunToolLifetimeSet^[unToolNestUsing] * 100) < parunToolLifetimeAct^[unToolNestUsing])		(* Tool lifetime exceeded *)
+							THEN
+								IF NOT parbToolNestPresent^[unToolNestUsing]														(* Previous nest free *)
+								THEN
+									unToolNestPrv := unToolNestUsing;																(* Previous tool nest *)
+									unToolNestAct := 0;														(* New tool nest *)
+								
+									etToolStorage := ET_ToolStorage_eDone;			(* Next step *)
+								ELSE
+									unToolNestPrv := unToolNestUsing;
+									unToolNestAct := 0;
+	
+									etToolStorage := ET_ToolStorage_eError;			(* Next step *)
+								END_IF
+							ELSE
+								(*unToolNestPrv := 0;
+								unToolNestAct := unToolNestSearchCount;
+	
+								etToolStorage := ET_ToolStorage_eDone;			(* Next step *)*);
+							END_IF
+						ELSE
+							IF NOT parbToolNestPresent^[unToolNestUsing]														(* Previous nest free *)
+							THEN
+								unToolNestPrv := unToolNestUsing;																(* Previous tool nest *)
+								unToolNestAct := unToolNestSearchCount;														(* New tool nest *)
+
+								etToolStorage := ET_ToolStorage_eDone;			(* Next step *)
+							ELSE
+								unToolNestPrv := 0;
+								unToolNestAct := unToolNestSearchCount;
+	
+								etToolStorage := ET_ToolStorage_eError;			(* Next step *)
+							END_IF
+						END_IF
+					END_IF
+				END_IF
+			ELSE
+				IF NOT parbToolNestPresent^[unToolNestUsing]														(* Previous nest free *)
+				THEN
+					IF unToolNestUsing > 0
+					THEN
+						unToolNestPrv := unToolNestUsing;
+						unToolNestAct := 0;
+					END_IF
+
+					etToolStorage := ET_ToolStorage_eError;			(* Next step *)
+
+				ELSE
+					etToolStorage := ET_ToolStorage_eError;			(* Next step *)
+
+				END_IF
+			END_IF
+
+	ET_ToolStorage_eGetOldToolNest:
+		IF NOT parbToolNestPresent^[unToolNestUsing]														(* Previous nest free *)
+		THEN
+			IF unToolNestUsing > 0
+			THEN
+				unToolNestPrv := unToolNestUsing;
+				unToolNestAct := 0;
+			END_IF
+
+			etToolStorage := ET_ToolStorage_eDone;		(* Next step *)
+
+		ELSE
+			etToolStorage := ET_ToolStorage_eError;			(* Next step *)
+
+		END_IF
+
+	ET_ToolStorage_eChkToolPlace:
+		tonWatchdog(
+			IN := TRUE,
+			PT:= tWatchdog
+		);
+
+		IF parbToolNestPresent^[unToolNestPrv]
+		THEN
+			tonWatchdog(IN := FALSE);
+
+			unToolNestPrv := 0;
+			unToolNestUsing := 0;
+
+			etToolStorage := ET_ToolStorage_eDone;		(* Next step *)
+
+		ELSIF tonWatchdog.Q
+		THEN
+			tonWatchdog(IN := FALSE);
+
+			etToolStorage := ET_ToolStorage_eError;			(* Next step *)
+
+		END_IF
+
+	ET_ToolStorage_eChkToolPickUp:
+		tonWatchdog(
+			IN := TRUE,
+			PT:= tWatchdog
+		);
+
+		IF NOT parbToolNestPresent^[unToolNestAct]
+		THEN
+			tonWatchdog(IN := FALSE);
+
+			unToolNestUsing := unToolNestAct;
+
+			etToolStorage := ET_ToolStorage_eDone;		(* Next step *)
+
+		ELSIF tonWatchdog.Q
+		THEN
+			tonWatchdog(IN := FALSE);
+
+			etToolStorage := ET_ToolStorage_eError;			(* Next step *)
+
+		END_IF
+
+	ET_ToolStorage_eDone:
+		bDone := TRUE;				(* Program done *)
+		bBusy := FALSE;                                (* Program not busy *)
+
+		etToolStorage := ET_ToolStorage_eNoExecute;            (* Next step *)
+
+	ET_ToolStorage_eError:
+	         bDone := FALSE;				(* Program not done *)
+	         bError := TRUE;				(* Program error  *)
+	         bBusy := FALSE;				(* Program not busy *)
+
+		etToolStorage := ET_ToolStorage_eNoExecute;            (* Next step *)
+
+	ET_ToolStorage_eNoExecute:
+		IF NOT bExeToolNest
+		THEN
+			bDone := FALSE;			(* Program not done *)
+			bBusy := FALSE;                       (* Program not busy *)
+			bError := FALSE;                       (* Program not error *)
+			udnErrorNo := 0;                        (* Error number *)
+
+			etToolStorage := ET_ToolStorage_eWaitExecute;              (* Next step *)
+
+		END_IF;
+END_CASE;
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ToolStorage">
+      <LineId Id="76" Count="346" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

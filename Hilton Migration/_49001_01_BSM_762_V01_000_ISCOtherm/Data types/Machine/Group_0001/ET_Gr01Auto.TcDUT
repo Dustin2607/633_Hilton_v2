@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_Gr01Auto" Id="{7c12930a-3f53-4678-b820-a559e2b0000b}">
+    <Declaration><![CDATA[TYPE ET_Gr01Auto :
+(
+	ET_Gr01Auto_eWaitExecute := 0,
+	ET_Gr01Auto_eWaitAxisStatus,
+	ET_Gr01Auto_eGetProcessPara,
+	ET_Gr01Auto_eWfErrorCollisionDetected,
+	ET_Gr01Auto_eChkProcessEnd,
+	ET_Gr01Auto_eAxisAngleToWorkPos,
+	ET_Gr01Auto_eWfAxisAngleInWorkPos,
+	ET_Gr01Auto_eWfReq,
+	ET_Gr01Auto_eAngleAck,
+	ET_Gr01Auto_eSawingAck,
+	ET_Gr01Auto_eSawbandStart,
+	ET_Gr01Auto_eWfSawbandStart,
+	ET_Gr01Auto_eSawingStart,
+	ET_Gr01Auto_eWfSawingDone,
+	ET_Gr01Auto_eAxisSawBowToSafePos,
+	ET_Gr01Auto_eWfAxisSawBowInSafePos,
+	ET_Gr01Auto_eStopOrContinue,
+	ET_Gr01Auto_eSawBandStop,
+	ET_Gr01Auto_eSawBandStopped,
+	ET_Gr01Auto_eTransportReq,
+	ET_Gr01Auto_eTransportAck,
+	ET_Gr01Auto_eAxisSawBowToSafePos2,
+	ET_Gr01Auto_eWfAxisSawBowInSafePos2,
+	ET_Gr01Auto_eAxisAngleToBasePos,
+	ET_Gr01Auto_eWfAxisAngleInBasePos,
+	ET_Gr01Auto_eDone := 197,
+	ET_Gr01Auto_eError := 198,
+	ET_Gr01Auto_eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,85 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_VFD_Power" Id="{1962e9be-fc41-49a4-ab75-05429af695e1}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_VFD_Power
+(*
+
+The function block used to enable drive
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			14.06.2018
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;			(* Signal FB enable *)
+	bRegulatorOn				:BOOL;			(* Enable the power stage *)
+	lrOverride					:LREAL;			(* Velocity override in % for all motion commands. (0 <= Override <= 100.0) *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bStatus						:BOOL;			(* Status = TRUE indicates that the axis is ready for operation. *)
+	bError						:BOOL;			(* Error *)
+	udnErrorNo					:UDINT;			(* Error number *)
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	Axis							:ST_VFD_AXIS_REF;			(* The AXIS_REF data type  is an interface between the PLC and the NC and contains axis information *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	tStatusDelay 					:TIME := t#300ms;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	tonStatusDelay				:TON;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+	Axis.bEnable := FALSE;                   		 (* Switch off *)
+	Axis.bReverseStop := FALSE;			(* Halt *)
+	Axis.bForwardStop := FALSE;
+	Axis.nSetMotorSpeed := 0;
+
+	tonStatusDelay(IN := FALSE,
+				    PT := tStatusDelay);
+ELSE
+
+	IF NOT bRegulatorOn
+	     OR Axis.bError
+	THEN
+		Axis.bEnable := FALSE;			(* Switch off *)
+		Axis.bReverseStop := FALSE;			(* Halt *)
+		Axis.bForwardStop := FALSE;
+		Axis.nSetMotorSpeed := 0;
+	ELSE
+		Axis.bEnable := TRUE;                     	(* Switch on *)
+	END_IF;
+
+END_IF;
+
+Axis.nOverride := LIMIT(0,LREAL_TO_INT(lrOverride), 100);
+
+tonStatusDelay(IN := Axis.bOperational,		(* Control enabled *)
+			   PT := tStatusDelay);
+bStatus := tonStatusDelay.Q;
+
+bError := Axis.bError;                    			 (* Error *)]]></ST>
+    </Implementation>
+    <LineIds Name="FB_VFD_Power">
+      <LineId Id="43" Count="31" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

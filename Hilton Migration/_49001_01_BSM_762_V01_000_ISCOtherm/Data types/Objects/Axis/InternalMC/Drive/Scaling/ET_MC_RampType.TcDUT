@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_MC_RampType" Id="{a20ef4c2-b14f-4504-b029-3dd014478ff7}">
+    <Declaration><![CDATA[TYPE ET_MC_RampType :
+(
+	ET_MC_RampType_eMTTrapez,
+	ET_MC_RampType_eMTSinSquare,
+	ET_MC_RampType_eMTParabolic
+	
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

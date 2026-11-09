@@ -1,0 +1,240 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_STOEBERSI6_CIA402_Home" Id="{a902ef18-3a3f-4ea6-adeb-507662dc5d57}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_STOEBERSI6_CIA402_Home
+(*
+
+The function block used to carried out calibration of the axis (referencing) . 
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			22.09.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bExecute					:BOOL;			(* Execut the function block *)
+	lrOriginPosition				:LREAL;			(* Origin position when the reference signal is detected *)
+	snMethod					:SINT; 			(* The homing method. *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bDone						:BOOL;			(* Program done *)
+	bCmdAborted				:BOOL;			(* Command aborted *)
+	bBusy						:BOOL;			(* Program busy *)
+	bError						:BOOL;			(* Error *)
+	udnErrorNo					:UDINT;			(* Error number *)
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	Axis							:ST_AXIS_REF;
+END_VAR
+VAR
+	(* Enummerations *)
+	etMC_States					:ET_MC_States := ET_MC_States_eInit;
+
+	(* Variables *)
+	nWatchdog					:INT;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtExecute						:R_TRIG;
+	rtAborted						:R_TRIG;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+rtExecute(CLK := bExecute);
+rtAborted(CLK := NOT Axis.stNcToPlc.stCIA402.bSwitchedOn);
+
+IF rtAborted.Q                                             									(* Aborted *)
+THEN
+	etMC_States := ET_MC_States_eAbort;                   					 (* Next step *)
+
+ELSIF rtExecute.Q
+	    AND NOT bCmdAborted
+THEN
+	etMC_States := ET_MC_States_eInit;                      						(* Next step *)
+
+END_IF;
+
+CASE etMC_States OF
+
+	ET_MC_States_eInit:
+		bCmdAborted := FALSE;			(* Command not aborted *)
+		bBusy := FALSE;                                     	(* Program not busy *)
+		bError := FALSE;                         		(* Program not error *)
+		udnErrorNo := 0;                         		(* Error number *)
+
+		IF rtExecute.Q
+		     AND NOT Axis.bLockPDO
+		THEN
+			nWatchdog := 0;
+			bDone := FALSE;                          		(* Target position is not reached *)
+			bBusy := TRUE;                                  	(* Program busy *)
+
+			Axis.bLockPDO := TRUE;
+
+			IF Axis.stNcToPlc.stCIA402.bSwitchedOn						(* Switched on *)
+			THEN
+				Axis.stPlcToNc.stCIA402.stHomingMode.bHomingOperationStart := FALSE;
+
+				IF Axis.stNcToPlc.stCIA402.bEnabled
+				THEN
+					IF Axis.stNcToPlc.stCIA402.etModesOfOperation <> ET_ModesOfOperation_Homing						(* Activated homing mode *)
+					THEN
+						Axis.stPlcToNc.stCIA402.bEnableOperation := TRUE;
+						Axis.stPlcToNc.stCIA402.bHalt := TRUE;
+
+						etMC_States := ET_MC_States_eReset;             (* Next step *)
+
+					ELSE
+						Axis.stPlcToNc.stCIA402.bEnableOperation := TRUE;
+
+						etMC_States := ET_MC_States_eRunning;		(* Next step *)
+
+					END_IF
+				ELSE
+					etMC_States := ET_MC_States_eReset;             (* Next step *)
+
+				END_IF;
+
+			ELSIF Axis.stNcToPlc.stCIA402.bError					(* Error *)
+			THEN
+				udnErrorNo := 1;                     (* Error number *)
+
+				etMC_States := ET_MC_States_eError;             (* Next step *)
+
+			ELSE
+				udnErrorNo := 2;                     (* Error number *)
+
+				etMC_States := ET_MC_States_eError;             (* Next step *)
+
+			END_IF;
+		END_IF;
+
+	ET_MC_States_eReset:
+		nWatchdog := nWatchdog + 1;
+
+		IF Axis.stNcToPlc.stCIA402.bNotMoving         				(* Axis sillstand *)
+		THEN
+			Axis.stPlcToNc.stCIA402.etModesOfOperation := ET_ModesOfOperation_Homing;					(* Activates homing mode *)
+
+			nWatchdog := 0;
+
+			etMC_States := ET_MC_States_eRunning;			(* Next step *)
+
+		ELSIF Axis.stNcToPlc.stCIA402.bError					(* Error *)
+			   OR nWatchdog > 1500
+		THEN
+			Axis.stPlcToNc.stCIA402.bEnableOperation := FALSE;
+			Axis.stPlcToNc.stCIA402.bHalt := FALSE;
+
+			udnErrorNo := 3;                     (* Error number *)
+
+			etMC_States := ET_MC_States_eError;             (* Next step *)
+		END_IF;
+
+	ET_MC_States_eRunning:
+		nWatchdog := nWatchdog + 1;
+
+		IF Axis.stNcToPlc.stCIA402.etModesOfOperation = ET_ModesOfOperation_Homing						(* Activated homing mode *)
+		THEN
+			Axis.stPlcToNc.stCIA402.bEnableOperation := TRUE;
+			Axis.stPlcToNc.stCIA402.bHalt := FALSE;
+			Axis.stPlcToNc.stCIA402.stHomingMode.dnHomeOffset := LREAL_TO_DINT(lrOriginPosition * EXPT(10,Axis.stNcToPlc.stCIA402.snDecimalDigits));
+			Axis.stPlcToNc.stCIA402.stHomingMode.snHomingMethod := snMethod;
+
+			nWatchdog := 0;
+
+			etMC_States := ET_MC_States_eWaiting;           (* Next step *)
+
+		ELSIF Axis.stNcToPlc.stCIA402.bError					(* Error *)
+			   OR nWatchdog > 1500
+		THEN
+			Axis.stPlcToNc.stCIA402.bEnableOperation := FALSE;
+			Axis.stPlcToNc.stCIA402.stHomingMode.bHomingOperationStart := FALSE;
+			Axis.stPlcToNc.stCIA402.bHalt := FALSE;
+
+			udnErrorNo := 4;                     (* Error number *)
+
+			etMC_States := ET_MC_States_eError;             (* Next step *)
+		END_IF;
+
+	ET_MC_States_eWaiting:
+		Axis.stPlcToNc.stCIA402.stHomingMode.bHomingOperationStart := Axis.stNcToPlc.stCIA402.bEnabled;
+
+		IF Axis.stNcToPlc.stCIA402.bEnabled
+		     AND Axis.stNcToPlc.stCIA402.stHomingMode.bHomeReached
+		     AND Axis.stNcToPlc.stCIA402.bPLCOpenDone      		(* Command done *)
+		THEN
+			Axis.stPlcToNc.stCIA402.bEnableOperation := FALSE;
+			Axis.stPlcToNc.stCIA402.stHomingMode.bHomingOperationStart := FALSE;
+
+			etMC_States := ET_MC_States_eDone;              (* Next step *)
+
+		ELSIF Axis.stNcToPlc.stCIA402.bError					(* Error *)
+		THEN
+			Axis.stPlcToNc.stCIA402.bEnableOperation := FALSE;
+			Axis.stPlcToNc.stCIA402.stHomingMode.bHomingOperationStart := FALSE;
+			Axis.stPlcToNc.stCIA402.bHalt := FALSE;
+
+			udnErrorNo := 5;                     (* Error number *)
+
+			etMC_States := ET_MC_States_eError;             (* Next step *)
+		END_IF;
+
+	ET_MC_States_eAbort:
+		bCmdAborted := TRUE;			(* Command aborted *)
+		bDone := FALSE;                          		(* Target position is not reached *)
+
+		Axis.stPlcToNc.stCIA402.bEnableOperation := FALSE;
+		Axis.stPlcToNc.stCIA402.stHomingMode.bHomingOperationStart := FALSE;
+		Axis.stPlcToNc.stCIA402.bHalt := FALSE;
+
+		 etMC_States := ET_MC_States_eNotExecute;        (* Next step *)
+
+	ET_MC_States_eDone:
+		nWatchdog := 0;
+		bDone := TRUE;                          		(* Target position reached *)
+		bBusy := FALSE;                                      	(* Program not busy *)
+
+		etMC_States := ET_MC_States_eNotExecute;            (* Next step *)
+
+	ET_MC_States_eError:
+		nWatchdog := 0;
+		bDone := FALSE;                          	(* Target position is not reached *)
+	         bError := TRUE;				(* Program error  *)
+	         bBusy := FALSE;				(* Program not busy *)
+
+		etMC_States := ET_MC_States_eNotExecute;            (* Next step *)
+
+	ET_MC_States_eNotExecute:
+		IF NOT bExecute
+		THEN
+			nWatchdog := 0;
+			Axis.bLockPDO := FALSE;
+
+			bDone := FALSE;                      (* Target position is not reached *)
+			bCmdAborted := FALSE;	(* Command not aborted *)
+			bBusy := FALSE;                       (* Program not busy *)
+			bError := FALSE;                       (* Program not error *)
+			udnErrorNo := 0;                        (* Error number *)
+
+			etMC_States := ET_MC_States_eInit;              (* Next step *)
+
+		END_IF;
+END_CASE;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_STOEBERSI6_CIA402_Home">
+      <LineId Id="48" Count="181" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

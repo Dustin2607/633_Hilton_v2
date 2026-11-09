@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_LoggerVar" Id="{d6cd394a-ca4b-48f5-8d4a-49769c50fd27}">
+    <Declaration><![CDATA[TYPE ST_LoggerVar :
+STRUCT
+	udnCycleNo		:UDINT;
+	sTimeStamp		:STRING(15);			(* Alarm time stamp *)
+	arsLogVars		:ARRAY[1..unNUM_OF_LOG_VAR] OF STRING(10);
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

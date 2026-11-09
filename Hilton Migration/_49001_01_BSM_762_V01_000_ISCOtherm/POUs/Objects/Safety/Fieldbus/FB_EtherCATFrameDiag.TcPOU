@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_EtherCATFrameDiag" Id="{8a9771a3-7c0b-45b6-9ccf-e8e723b86d8d}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_EtherCATFrameDiag
+VAR_INPUT
+	wFrmXWcState 		: WORD;
+	wReqZeroMask 		: WORD := 16#FFFF; (* bit TRUE: require wFrmXWcState.bit = FALSE, bit FALSE: ignore wFrmXWcState.bit *)
+END_VAR
+VAR_OUTPUT
+	bFrameWcStateOK		: BOOL;
+END_VAR
+VAR
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* set/clear frame flag *)
+bFrameWcStateOK := ((wFrmXWcState AND wReqZeroMask) = 0);]]></ST>
+    </Implementation>
+    <LineIds Name="FB_EtherCATFrameDiag">
+      <LineId Id="10" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

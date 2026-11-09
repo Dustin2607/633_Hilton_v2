@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_SpindlePreheat" Id="{a3335bb3-2d69-44f3-886e-5f8c2d6c000f}">
+    <Declaration><![CDATA[TYPE ST_SpindlePreheat :
+STRUCT
+	dwOverride				:DWORD;			(* Override is percent of total speed of spindle. The range of override is from 0%  to 100 %  of rated speed.*)
+	tDuration					:TIME;				(* Duration time for current phase *)
+	dwSpeedRpm			:DWORD;			(* Current speed RPM - Read Only *)
+	otstDuration				:OTSTRUCT;			(* Duration time in OTSTRUCT - Read Only*)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

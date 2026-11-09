@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_PositionWelding" Id="{a67fd12e-7590-495d-b7d9-766d72b6275a}">
+    <Declaration><![CDATA[TYPE ST_PositionWelding :
+STRUCT
+	lrWeldingPosition						:LREAL;											(* Welding position [mm] *)
+	unWeldingVelo						:UINT;											(* Welding force [%] *)
+	unWeldingRamp						:UINT;											(* Welding ramp [s] *)
+	unCoolDownTime						:UINT;											(* Cool down time [s]  *)
+	arunCoolingTime						:ARRAY[1..2] OF UINT;								(* Cooling time *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <GVL Name="GVL_Gr01Config" Id="{677a6212-0d50-4582-a0fe-532dce55d6cd}">
+    <Declaration><![CDATA[{attribute 'Tc2GvlVarNames'}
+VAR_GLOBAL CONSTANT
+	tgGr01ControllerOff					:TIME := t#10s;				(* Delay to switch the controller off *)
+	tgGr01LightCurtainDelay				:TIME := t#1s;					(* After time light Curtain safe *)
+	tgGr01MaxRefTime					:TIME := t#4m;					(* Maximum time after start reference until message in reference / Maximale Zeit von Starten der Referenbzfahr bis ende der Referenzfahrt *)
+
+	rgGr01AdsOverrideAcc					:REAL := 10.0;					(* Override accerlation per second / Override Beschleuingung pro sekunde *)
+	rgGr01AdsOverrideDec				:REAL :=100.0;				(* Override decerlation per second / Override Verzögerung pro sekunde *)
+
+	sgGr01LifetimeFilePath					:STRING := 'C:\TwinCAT\Boot\';	(* File path for life time *)
+	sgGr01LifetimeFileName				:STRING := 'lt1';				(* File name for life time *)
+
+	rGr01PipeDiameterMin					:REAL := 160;					(* 6.625" Minimal pipe diameter *)
+	rGr01PipeDiameterMax				:REAL := 770;					(* 30" Maximal pipe diameter *)
+
+	(* Axis angle parameters *)
+	udngGr01AxisAngleInc					:UDINT := 8192;	  			(* Increment value of axis angle pro path[INC] *)
+	lrgGr01AxisAnglePath					:LREAL := 360.0;  				(* Path lenght of axis angle [deg] *)
+
+	lrgGr01AngleAutoMax					:LREAL := 45;					(* Maximal angle to sawing in automatic mode *)
+
+	(* Saw band parameters*)
+	udngGr01SawbandInc					:UDINT := 18;	  				(* Increment value of saw band pro rotation [INC] *)
+	lrgGr01SawbandDistance				:LREAL := 1602.21;  			(* Rotation distance of saw band  [mm] *)
+
+	tgGr01SawbandAirOffDelay				:TIME := t#10s;				(* Sawband air off delay *)
+	tgGr01VacuumCleanerOffDelay			:TIME := t#10s;				(* Vacuum cleaner off delay *)
+	tgGr01SawbandReadyDelay			:TIME := t#5s;					(* Sawband ready delay *)
+	tgGr01SpeedNoConstant		 		:TIME := t#3s;					(* Sawband speed no constant *)
+
+END_VAR
+]]></Declaration>
+  </GVL>
+</TcPlcObject>

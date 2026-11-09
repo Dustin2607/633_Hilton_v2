@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_AxisCtrl" Id="{f728326a-d662-4ea5-88d4-b31670618754}">
+    <Declaration><![CDATA[TYPE ST_AxisCtrl :
+STRUCT
+
+	bEnable				:BOOL; 			(* Signal via fieldbus for controller enable. *) 
+	bFaultReset			:BOOL;			(* Acknowledgment for faults og the device state machine. *)
+	bQuickStop			:BOOL;			(* Brakes the motor on the ramp. *)
+	bCommunication 		:BOOL;			(* Communication toggle bit. *)
+	dwOverride 			:DWORD; 		(* Velocity override *)
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

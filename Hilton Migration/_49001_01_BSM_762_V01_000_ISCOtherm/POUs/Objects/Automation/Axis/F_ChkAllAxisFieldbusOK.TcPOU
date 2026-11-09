@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_ChkAllAxisFieldbusOK" Id="{0d9e42a3-7893-472c-be5f-745c6272141b}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_ChkAllAxisFieldbusOK : BOOL
+(*
+
+The function used to detect if all axis fieldbus ok.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			23.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Signal FB enable *)
+	bFieldbusOKAxis1				:BOOL;						(* Controller enabled *)
+	bFieldbusOKAxis2				:BOOL;						(* Controller enabled *)
+	bFieldbusOKAxis3				:BOOL;						(* Controller enabled *)
+	bFieldbusOKAxis4				:BOOL;						(* Controller enabled *)
+	bFieldbusOKAxis5				:BOOL;						(* Controller enabled *)
+	bFieldbusOKAxis6				:BOOL;						(* Controller enabled *)
+	bFieldbusOKAxis7				:BOOL;						(* Controller enabled *)
+	bFieldbusOKAxis8				:BOOL;						(* Controller enabled *)
+	bFieldbusOKAxis9				:BOOL;						(* Controller enabled *)
+	bFieldbusOKAxis10			:BOOL;						(* Controller enabled *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable							(* Signal FB enable *)
+THEN
+	F_ChkAllAxisFieldbusOK := bEnable;
+
+	RETURN;
+END_IF
+
+F_ChkAllAxisFieldbusOK := bFieldbusOKAxis1
+					  AND bFieldbusOKAxis2
+					  AND bFieldbusOKAxis3
+					  AND bFieldbusOKAxis4
+					  AND bFieldbusOKAxis5
+					  AND bFieldbusOKAxis6
+					  AND bFieldbusOKAxis7
+					  AND bFieldbusOKAxis8
+					  AND bFieldbusOKAxis9
+					  AND bFieldbusOKAxis10;]]></ST>
+    </Implementation>
+    <LineIds Name="F_ChkAllAxisFieldbusOK">
+      <LineId Id="40" Count="17" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

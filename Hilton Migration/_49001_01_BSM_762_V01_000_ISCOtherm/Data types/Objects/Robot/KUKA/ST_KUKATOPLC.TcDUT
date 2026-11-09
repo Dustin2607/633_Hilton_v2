@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_KUKATOPLC" Id="{f487b447-00f2-4a3d-819f-82624a7bccd7}">
+    <Declaration><![CDATA[TYPE ST_KUKATOPLC :
+STRUCT
+	bStopMess						:BOOL;						(* $OUT[1010] - Any message occurring which requires the robot to be stopped / Störung Roboter *)
+	bPgNoReq						:BOOL;						(* $OUT[33] - A change of signal requests the higher-level controller to send a program number / PGNO Req-Signalwechsel fordert Leitrechner Programmnr. zu senden *)
+	bApplRun						:BOOL;						(* $OUT[34] - Program is currently being executed / TRUE wenn Programm abgearbeitet wird *)
+	bPeriRdy						:BOOL;						(* $OUT[1012] - Robot drives are switched on / TRUE wenn Roboterantriebe eingeschaltet *)
+	bAlarmStop						:BOOL;						(* $OUT[1013] - Emergency stop / Not Aus *)
+	bUserSafe						:BOOL;						(* $OUT[1011] - If the safety fence monitoring switch is opened (AUT mode) or an enabling switch is released (T1 or T2 mode). / Abfrage Schutzgitter(Auto)/Zustimmungsschalter(Test) *)
+	bT1								:BOOL;						(* $OUT[993] - Operating mode T1 / Betriebsart T1 *)
+	bT2								:BOOL;						(* $OUT[994] - Operating mode T2/ Betriebsart T2 *)
+	bAut								:BOOL;						(* $OUT[995] - Operating mode Aut / Betriebsart Aut *)
+	bExt								:BOOL;						(* $OUT[996] - Operating mode Ext / Betriebsart Ext *)
+	bOnPath							:BOOL;						(* $OUT[997] - Set as long as the robot stays on its programmed path / TRUE solange sich Rob. auf programmierten Bahn befindet *)
+	bProAct							:BOOL;						(* $OUT[1021] - Whenever a process is active / Programmbearbeitung aktiv *)
+	bInHome							:BOOL;						(* $OUT[1000] - Whether or not the robot is in its HOME position  / In Home Position *)
+	arbInHome						:ARRAY[1..5] OF BOOL;		(* $OUT[1003..1007] - Whether or not the robot is in its HOME position  / In Home Position *)
+	bErrToPlc						:BOOL;						(* $OUT[35] - Error output to PLC / Steuerungs- oder Technologiefehler aufgetreten *)
+	bIOActConf						:BOOL;						(* $OUT[140] - This output is TRUE if Automatic External mode is selected and the input $I_O_ACT is TRUE. / *)
+	bInWorkArea 						:BOOL;						(* $OUT[36] - Robot in work area / Roboter in Bearbeitunsbereich*)
+
+	bForceToBase					:BOOL;						(* $OUT[10] - Move force to base position *)
+	bForceToWork					:BOOL;						(* $OUT[11] - Move force to work position *)
+	bCutoffToBase					:BOOL;						(* $OUT[12] - Move cutoff to base position *)
+	bCutoffToWork					:BOOL;						(* $OUT[13] - Move cutoffe to work position *)
+
+	bMEStartHeat					:BOOL;						(* $OUT[18] - Start heat *)
+	bMEStopHeat					:BOOL;						(* $OUT[19] - Stop heat *)
+	bMEStartExtruding					:BOOL;						(* $OUT[20] - Start extruding *)
+	bMEStopExtruding					:BOOL;						(* $OUT[21] - Stop extruding *)
+	bMEStartFlush 					:BOOL;						(* $OUT[22] - Start flush *)
+	bMEStopFlush 					:BOOL;						(* $OUT[23] - Stop flush *)
+	nMEExtrudingSpeed				:INT;						(* $OUT[100] - Extruding speed [%] *)
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

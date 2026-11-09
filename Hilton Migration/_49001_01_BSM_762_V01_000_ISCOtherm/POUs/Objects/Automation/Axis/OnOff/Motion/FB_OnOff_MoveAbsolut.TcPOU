@@ -1,0 +1,257 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_OnOff_MoveAbsolut" Id="{7e1a70dd-6c7a-48aa-8df0-286f71cc8f15}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_OnOff_MoveAbsolut
+(*
+
+The function block used to starts positioning to an absolute target position. 
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			22.09.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bExecute					:BOOL;			(* Execut the function block *)
+	lrPosition						:LREAL;			(* Absolute target position *)
+	bSuperImposed				:BOOL ;			(* Switch SuperImposed on / off *)
+	etMC_Direction				:ET_MC_Direction;(* Direction *)
+	(* Interfaces *)
+	pAxis						:POINTER TO ST_AXIS_REF_V2;
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bMoveToPlus				:BOOL;						(* Move to plus *)
+	bMoveToMinus				:BOOL;						(* Move to minus *)
+	bDone						:BOOL;			(* Program done *)
+	bCmdAborted				:BOOL;			(* Command aborted *)
+	bBusy						:BOOL;			(* Program busy *)
+	bError						:BOOL;			(* Error *)
+	udnErrorNo					:UDINT;			(* Error number *)
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+	etMC_States					:ET_MC_States := ET_MC_States_eInit;
+
+	(* Variables *)
+	lrSetPos						:LREAL;
+	lrActPos						:LREAL;
+	lrAbsDistance				:LREAL;
+	lrActDistance					:LREAL;
+	nWatchdog					:INT;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtExecute						:R_TRIG;
+	rtAborted						:R_TRIG;
+
+END_VAR
+VAR CONSTANT
+	EPSILON 					:LREAL := 1E-6;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+rtExecute(CLK := bExecute);
+
+rtAborted(CLK := NOT pAxis^.stAxisStates.bOperational);
+IF rtAborted.Q                                              (* Aborted *)
+THEN
+	etMC_States := ET_MC_States_eAbort;                     (* Next step *)
+
+ELSIF rtExecute.Q
+	   AND NOT bCmdAborted
+THEN
+	etMC_States := ET_MC_States_eInit;                                   (* Next step *)
+
+	IF pAxis^.stAxisStates.bQuickStop               (* Halt *)
+	THEN
+		udnErrorNo := 2;                                    (* Error number *)
+
+		etMC_States := ET_MC_States_eError;                              (* Next step *)
+	END_IF;
+END_IF;
+
+lrSetPos := F_LRealRound(lrReal := pAxis^.stPosition.lrSetPos, usiPrecision := 2);
+lrActPos := F_LRealRound(lrReal := pAxis^.stPosition.lrActPos, usiPrecision := 2);
+
+CASE etMC_States OF
+
+	ET_MC_States_eInit:
+		bCmdAborted := FALSE;			(* Command not aborted *)
+		bBusy := FALSE;                                    	(* Program not busy *)
+		bError := FALSE;                         		(* Program not error *)
+		udnErrorNo := 0;                         		(* Error number *)
+
+		IF rtExecute.Q
+		     AND NOT pAxis^.stAxisStates.bHasJob
+		THEN
+			nWatchdog := 0;
+			bDone := FALSE;				(* Program done, in position *)
+			bBusy := TRUE;				(* Program busy *)
+
+			IF pAxis^.stAxisStates.bOperational   			(* Control enabled *)
+			THEN
+				pAxis^.stAxisStates.bHasJob := TRUE;
+
+				pAxis^.stPosition.lrSetPos := lrPosition;
+				pAxis^.stPosition.dnSetPos := F_ConvertSetPosResiduals(
+											lrPos := lrPosition,
+											pAxis := pAxis);
+				lrAbsDistance := ABS(lrPosition - pAxis^.stPosition.lrActPos);
+
+				etMC_States := ET_MC_States_eReset;                      (* Next step *)
+
+				(* Check for errors *)
+				IF lrAbsDistance < EPSILON
+				THEN
+					etMC_States := ET_MC_States_eDone;                              (* Next step *)
+				END_IF
+
+			ELSE
+				udnErrorNo := 4;                     (* Error number *)
+				
+				etMC_States := ET_MC_States_eError;			(* Next step *)
+
+			END_IF;
+		END_IF;
+
+	ET_MC_States_eReset:
+		nWatchdog := nWatchdog + 1;
+		IF nWatchdog > 150
+		THEN
+			etMC_States := ET_MC_States_eError;             (* Next step *)
+		END_IF;
+
+		bMoveToPlus := FALSE;
+		bMoveToMinus := FALSE;
+
+		nWatchdog := 0;
+
+		etMC_States := ET_MC_States_eRunning;			(* Next step *)
+
+	ET_MC_States_eRunning:
+		nWatchdog := nWatchdog + 1;
+		IF nWatchdog > 150
+		THEN
+			etMC_States := ET_MC_States_eError;             (* Next step *)
+		END_IF;
+
+		nWatchdog := 0;
+		etMC_States := ET_MC_States_eWaiting;			(* Next step *)
+
+	ET_MC_States_eWaiting:
+		lrActDistance := ABS(lrSetPos - lrActPos);
+		
+		IF lrSetPos > lrActPos
+		THEN
+			bMoveToPlus := TRUE;
+			bMoveToMinus := FALSE;
+		
+		ELSIF lrSetPos < lrActPos
+		THEN
+			bMoveToPlus := FALSE;
+			bMoveToMinus := TRUE;
+
+		END_IF
+
+		IF bSuperImposed
+		THEN
+			IF  lrActDistance <= 2.0
+			THEN
+				bMoveToPlus := FALSE;
+				bMoveToMinus := FALSE;
+
+			END_IF
+		ELSE
+			IF  lrActDistance <= 0.1
+			THEN
+				bMoveToPlus := FALSE;
+				bMoveToMinus := FALSE;
+
+				etMC_States := ET_MC_States_eDone;			(* Next step *)
+	
+			END_IF
+		END_IF
+
+		IF pAxis^.stAxisStates.bError           (* Error *)
+		THEN
+			udnErrorNo := 2;                                    (* Error number *)
+
+			etMC_States := ET_MC_States_eError;                              (* Next step *)
+		END_IF;
+
+	ET_MC_States_eAbort:
+		bMoveToPlus := FALSE;
+		bMoveToMinus := FALSE;
+		bCmdAborted := TRUE;			(* Command aborted *)
+		bDone := FALSE;					(* Program done, in position *)
+
+		 etMC_States := ET_MC_States_eNotExecute;			(* Next step *)
+
+	ET_MC_States_eDone:
+		bMoveToPlus := FALSE;
+		bMoveToMinus := FALSE;
+		nWatchdog := 0;
+		bDone := TRUE;			(* Program done, in position *)
+		bBusy := FALSE;			(* Program not busy *)
+
+		etMC_States := ET_MC_States_eNotExecute;            (* Next step *)
+
+	ET_MC_States_eError:
+		bMoveToPlus := FALSE;
+		bMoveToMinus := FALSE;
+		nWatchdog := 0;
+		bDone := FALSE;			(* Program done, in position *)
+		bError := TRUE;			(* Program error *)
+		bBusy := FALSE;			(* Program not busy *)
+
+        		etMC_States := ET_MC_States_eNotExecute;			(*Next step *)
+
+	ET_MC_States_eNotExecute:
+		IF NOT bExecute
+		THEN
+			pAxis^.stAxisStates.bHasJob := FALSE;
+			bMoveToPlus := FALSE;
+			bMoveToMinus := FALSE;
+			nWatchdog := 0;
+			bDone := FALSE;					(* Program done, in position *)
+			bCmdAborted := FALSE;			(* Command not aborted *)
+			bBusy := FALSE;                                 	(* Program not busy *)
+			bError := FALSE;                     			(* Program not error *)
+			udnErrorNo := 0;                     			(* Error number *)
+
+			etMC_States := ET_MC_States_eInit;			(* Next step *)
+		
+		END_IF;
+END_CASE;
+
+IF pAxis^.stAxisCtrl.bQuickStop               (* Halt *)
+THEN
+	etMC_States := ET_MC_States_eAbort;                                  (* Next step *);
+END_IF;
+
+IF pAxis^.stAxisStates.bError
+     AND pAxis^.stAxisCtrl.bFaultReset
+THEN
+	bMoveToPlus := FALSE;
+	bMoveToMinus := FALSE;
+	pAxis^.stAxisStates.bHasJob := FALSE;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_OnOff_MoveAbsolut">
+      <LineId Id="60" Count="186" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

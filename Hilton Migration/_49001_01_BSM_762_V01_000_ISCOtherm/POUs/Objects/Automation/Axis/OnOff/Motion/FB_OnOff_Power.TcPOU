@@ -1,0 +1,82 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_OnOff_Power" Id="{883c89c1-7484-4bd7-a8ed-352a68c1be06}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_OnOff_Power
+(*
+
+The function block used to activates software enable for an axis
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			22.09.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;			(* Signal FB enable *)
+	bRegulatorOn				:BOOL;			(* Enable the power stage *)
+	bEnablePositive				:BOOL;			(* Advance movement enable in positive direction. *)
+	bEnableNegative				:BOOL;			(* Advance movement enable in negative direction. *)
+	pAxis						:POINTER TO ST_AXIS_REF_V2;
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bStatus						:BOOL;			(* Status = TRUE indicates that the axis is ready for operation. *)
+	bError						:BOOL;			(* Error *)
+	udnErrorNo					:UDINT;			(* Error number *)
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	tStatusDelay 					:TIME := t#300ms;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	tonStatusDelay				:TON;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+	pAxis^.stAxisCtrl.bEnable := FALSE;                   		 (* Switch off *)
+	tonStatusDelay(IN := FALSE,
+				    PT := tStatusDelay);
+ELSE
+
+	IF NOT bRegulatorOn
+	     OR pAxis^.stAxisStates.bError
+	THEN
+		pAxis^.stAxisCtrl.bEnable := FALSE;			(* Switch off *)
+	ELSE
+		pAxis^.stAxisCtrl.bEnable := TRUE;                     	(* Switch on *)
+	END_IF;
+
+END_IF;
+
+pAxis^.stLimitSwitches.bHWLimitMax := NOT bEnablePositive;
+pAxis^.stLimitSwitches.bHWLimitMin := NOT bEnableNegative;
+
+
+tonStatusDelay(IN := pAxis^.stAxisStates.bOperational,		(* Control enabled *)
+			   PT := tStatusDelay);
+bStatus := tonStatusDelay.Q;
+
+bError := pAxis^.stAxisStates.bError;                     (* Error *)]]></ST>
+    </Implementation>
+    <LineIds Name="FB_OnOff_Power">
+      <LineId Id="45" Count="26" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

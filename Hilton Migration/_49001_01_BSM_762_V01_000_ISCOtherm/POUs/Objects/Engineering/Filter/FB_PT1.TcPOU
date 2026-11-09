@@ -1,0 +1,74 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_PT1" Id="{c8c31bb2-b290-453f-8769-161173e48e98}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_PT1
+(*
+
+Function block low-pass filter (PT1)  for damping of fast alternating input-values.
+K(s) = k/1+sT1  -> h(t) = k(1 - e^(-t/T1))
+
+The Discrete-Time Integrator using Euler method: 
+y(n+1) = 1/T1 * dt * (kp * xn - yn) + yn => kp * xn * dt / T1+ yn * (1 - dt / T1)
+
+y(n+1) = kp * xn * Tcycle / T1+ yn * (1 - Tcycle / T1)
+T1 = 0 =>  y(n+1) = kp * xn
+
+Sample Time
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			20.03.2014
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Variables *)
+	bEnable								:BOOL;						(* Enable FB *)
+	lrInSignal								:LREAL;						(* Input value to the block *)
+	lrKp									:LREAL := 1;					(* Proportional gain of integrator *)
+	tT1									:TIME := t#200ms;				(* Time constant  of integrator *)
+	tTaskCycle							:TIME := t#2ms;				(* Cycle time *)
+END_VAR
+VAR_OUTPUT
+	(* Variables *)
+	lrOutSignal							:LREAL;						(* Output value the block state *)
+END_VAR
+VAR
+	(* Variables *)
+	bFirstTime							:BOOL;
+	lrTimeRatio							:LREAL;
+
+	lrLastSignal							:LREAL;						(* Last signal *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	lrOutSignal := 0.0;
+	bFirstTime := FALSE;
+	RETURN;
+END_IF
+
+
+IF NOT bFirstTime
+     OR tT1= t#0ms
+     OR tT1 < (tTaskCycle + tTaskCycle)
+THEN
+	lrOutSignal := lrKp * lrInSignal;
+
+	bFirstTime := TRUE;
+ELSE
+	lrTimeRatio := TIME_TO_LREAL(tTaskCycle) / TIME_TO_LREAL(tT1);
+
+	lrOutSignal := (lrKp * lrInSignal * lrTimeRatio) + (lrLastSignal * (1 -  lrTimeRatio));
+END_IF
+
+lrLastSignal := lrOutSignal;
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_PT1">
+      <LineId Id="41" Count="22" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

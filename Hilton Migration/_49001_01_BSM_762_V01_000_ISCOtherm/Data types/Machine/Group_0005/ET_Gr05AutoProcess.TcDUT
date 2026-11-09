@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_Gr05AutoProcess" Id="{9651f220-3136-433a-94df-96224e30ca80}">
+    <Declaration><![CDATA[TYPE ET_Gr05AutoProcess :
+(
+	ET_Gr05AutoProcess_eWaitExecute := 0,
+	ET_Gr05AutoProcess_eWaitAxisStatus,
+	ET_Gr05AutoProcess_eWfStartProcessReq,
+	ET_Gr05AutoProcess_eStartProcessPrg,
+	ET_Gr05AutoProcess_eWfProcessPrgDone,
+	ET_Gr05AutoProcess_eExtruderStart,
+	ET_Gr05AutoProcess_eWfExtruderStart,
+	ET_Gr05AutoProcess_eExtruderStop,
+	ET_Gr05AutoProcess_eWfExtruderStop,
+	ET_Gr05AutoProcess_eStartEndPrg,
+	ET_Gr05AutoProcess_eWfEndPrgDone,
+	ET_Gr05AutoProcess_ePrgInterrupted,
+	ET_Gr05AutoProcess_eStartHomePrg,
+	ET_Gr05AutoProcess_eWfHomePrgDone,
+	ET_Gr05AutoProcess_eInterrupted := 196,
+	ET_Gr05AutoProcess_eDone := 197,
+	ET_Gr05AutoProcess_eError := 198,
+	ET_Gr05AutoProcess_eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

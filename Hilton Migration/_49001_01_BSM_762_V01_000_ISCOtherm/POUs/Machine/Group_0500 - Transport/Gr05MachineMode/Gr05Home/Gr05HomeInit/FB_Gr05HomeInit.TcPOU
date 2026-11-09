@@ -1,0 +1,124 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Gr05HomeInit" Id="{63bca5ad-30aa-4190-bec4-ed399b153fde}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Gr05HomeInit
+(*
+
+The function block used to initialize home mode.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			28.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bFirstTime					:BOOL;
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	unClampIdx					:UINT;						(* Clamp index *)
+	unCylinderPosIdx				:UINT;						(* Position cylinder index *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+(* Initializing variables *)
+IF NOT bFirstTime
+THEN
+
+	(* Initialise axis saw bow *)
+	Gr05Control.fbAxisClamp1.bExeSetPos := FALSE;					(* Execute set  position *)
+	Gr05Control.fbAxisClamp1.bExeHome := FALSE;					(* Execute home *)
+	Gr05Control.fbAxisClamp1.bExeMoveAbs := FALSE;					(* Execute move absolut *)
+	Gr05Control.fbAxisClamp1.bExeMoveRel := FALSE;					(* Execute move relative *)
+	Gr05Control.fbAxisClamp1.bExeMoveAdd := FALSE;					(* Execute move additive *)
+	Gr05Control.fbAxisClamp1.bExeMoveSuper := FALSE;				(* Execute move superimposed *)
+	Gr05Control.fbAxisClamp1.bExeMoveVelo := FALSE;					(* Execute move velo *)
+	Gr05Control.fbAxisClamp1.bExeGearIn := FALSE;					(* Execute gear in *)
+	Gr05Control.fbAxisClamp1.bExeGearOut := FALSE;					(* Execute gear out *)
+	Gr05Control.fbAxisClamp1.bExeStop := FALSE;						(* Execute move stop *)
+	Gr05Control.fbAxisClamp1.bExeReset := FALSE;						(* Execute auto reset *)
+	Gr05Control.fbAxisClamp1.bExtOverrideEn := FALSE;					(* Execute extern override *)
+
+	(* Initialise clamp *)
+	FOR unClampIdx :=1 TO ungGr05ClampMaxNo
+	DO
+		Gr05Control.arfbCylinderClamp[unClampIdx].bAutoOpen := FALSE;					(* Auto open *)
+		Gr05Control.arfbCylinderClamp[unClampIdx].bAutoClose := FALSE;					(* Auto close *)
+		Gr05Control.arfbCylinderClamp[unClampIdx].bControlStateOn := FALSE;
+	END_FOR
+
+	(* Initialise slide *)
+	Gr05Control.fbSlide.bAutoMoveToBase := FALSE;				(* Auto move to base *)
+	Gr05Control.fbSlide.bAutoMoveToWork := FALSE;				(* Auto move to work *)
+	Gr05Control.fbSlide.bControlStateOn := FALSE;
+
+	(* Initialise removal band *)
+	Gr05Control.fbRemovalBand.bAutoMoveToPlus := FALSE;				(* Auto move to plus *)
+	Gr05Control.fbRemovalBand.arbAutoMoveToMinus[1] := FALSE;				(* Auto move to minus *)
+	Gr05Control.fbRemovalBand.arbAutoMoveToMinus[2] := FALSE;				(* Auto move to minus *)
+
+	(* Initialise position cylinder *)
+	Gr05Control.fbCylinderPos.bExeMoveAbs := FALSE;					(* Execute move absolut *)
+	Gr05Control.fbCylinderPos.bControlStateOn := FALSE;
+
+	(* Auto procedure *)
+	Gr05Auto.fbProcedure.bEnable := FALSE;								(* Start init process *)
+	Gr05Auto.fbProcedure.SFCInit := TRUE;								(* Reset SFC *)
+	Gr05Auto.fbProcedure.bFirstTime := FALSE;							(* Initialise *)
+	Gr05Auto.fbProcedure.bExecute := FALSE;							(* Reset *)
+	Gr05Auto.fbProcedure();											(* Start init process *)
+	Gr05Auto.fbProcedure.SFCInit := FALSE;								(* Initialise over *)
+
+	(* Auto functions *)
+
+
+	(* Home procedure *)
+	Gr05Home.fbProcedure.bEnable := FALSE;							(* Start init process *)
+	Gr05Home.fbProcedure.bExecute := FALSE;
+	Gr05Home.fbProcedure();
+
+	(* Home functions *)
+	Gr05Home.fbAxisClamp1.bEnable := FALSE;							(* Start init process *)
+	Gr05Home.fbAxisClamp1.bExecute := FALSE;
+	Gr05Home.fbAxisClamp1();
+
+	Gr05Home.fbAxisClamp2.bEnable := FALSE;							(* Start init process *)
+	Gr05Home.fbAxisClamp2.bExecute := FALSE;
+	Gr05Home.fbAxisClamp2();
+
+	Gr05Auto.fbInit.bFirstTime := FALSE;
+	bgGr05HomeCompleted := FALSE;
+	bgGr05MoveInterrupted := FALSE;
+	bgGr05HomeNotInCrashGr01 := FALSE;
+	bgGr05HomeNotInCrashGr02 := FALSE;
+
+	bFirstTime := TRUE;
+END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Gr05HomeInit">
+      <LineId Id="40" Count="73" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

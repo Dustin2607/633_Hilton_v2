@@ -1,0 +1,297 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Gr01HomeAxisSawBow" Id="{5ced1073-4acd-4f67-8abc-b9fcf6aee78d}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Gr01HomeAxisSawBow
+(*
+
+The function block used to referenc axis.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			01.12.2016
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Enable FB signal *)
+	bExecute					:BOOL;						(* Procedure execute *)
+	bReleaseNextStep			:BOOL;						(* Procedure release next step *)
+	bFirstTime					:BOOL;
+
+	lrHomeVelo					:LREAL;
+	lrHomePosition				:LREAL;
+
+	pfbAxis						:POINTER TO FB_Gr01AxisSawBow;
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bDone						:BOOL;						(* Program done *)
+	bBusy						:BOOL;						(* Program busy *)
+	bError						:BOOL;						(* Program error *)
+	udnErrorNo					:UDINT;						(* Error number *)
+
+	bErrorByReference			:BOOL; 						(* Error: Timeout by referece run / Fehler:  Timeout bei Refrenzfahrt *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+	etHomeAxis					:ET_Gr01HomeAxis;				(* Home mode enum variable *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtExecute						:R_TRIG;
+	tonWatchdog					:TON;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+	bDone := FALSE;					(* Program done *)
+	bBusy := FALSE;                                  	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;                                 		(* Error number *)
+
+	bFirstTime := FALSE;
+	RETURN;
+END_IF;
+
+IF NOT bFirstTime
+THEN
+	bDone := FALSE;                                	(* Program done *)
+	bBusy := FALSE;                                 	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;                                 		(* Error number *)
+
+	bErrorByReference := FALSE;
+	tonWatchdog(IN := FALSE);
+
+	etHomeAxis := ET_Gr01HomeAxis_eWaitExecute;       			(* Next step *)
+
+	bFirstTime := TRUE;
+END_IF;
+
+rtExecute(CLK := bExecute);
+
+CASE etHomeAxis OF
+
+	ET_Gr01HomeAxis_eWaitExecute:
+		bBusy := FALSE;                                     		(* Program not busy *)
+		bError := FALSE;                                    		(* Program not error *)
+
+		IF rtExecute.Q
+		THEN
+			bDone := FALSE;                                 	(* Program done, in position *)
+			bBusy := TRUE;                                  	(* Program busy *)
+
+			etHomeAxis := ET_Gr01HomeAxis_eWaitAxisStatus;		(* Next step *)
+		END_IF;
+
+	ET_Gr01HomeAxis_eWaitAxisStatus:
+		IF pfbAxis^.bCtrlEnabled
+		THEN
+			etHomeAxis := ET_Gr01HomeAxis_eMoveStop;         		(* Next step *)
+		END_IF;
+
+	ET_Gr01HomeAxis_eMoveStop:
+		pfbAxis^.bExeStop := TRUE;
+		pfbAxis^.lrAutoVelocity := 0.0;
+
+		IF pfbAxis^.fbMoveAuto.fbStop.bBusy
+		THEN
+			etHomeAxis := ET_Gr01HomeAxis_eWFMoveStop;              (* Next step *)
+
+		ELSIF pfbAxis^.fbMoveAuto.fbStop.bError
+		THEN
+			pfbAxis^.bExeStop := FALSE;
+
+			etHomeAxis := ET_Gr01HomeAxis_eError;         					(* Next step *)
+
+		END_IF;
+
+	ET_Gr01HomeAxis_eWFMoveStop:
+		IF pfbAxis^.fbMoveAuto.bStopped
+		     AND bReleaseNextStep
+		THEN
+			pfbAxis^.bExeStop := FALSE;
+
+			etHomeAxis := ET_Gr01HomeAxis_eAxisReset;              (* Next step *)
+
+		ELSIF pfbAxis^.fbMoveAuto.fbStop.bError
+		THEN
+			pfbAxis^.bExeStop := FALSE;
+
+			etHomeAxis := ET_Gr01HomeAxis_eError;         					(* Next step *)
+
+		END_IF;
+
+	ET_Gr01HomeAxis_eAxisReset:
+		pfbAxis^.bExeReset := TRUE;
+		pfbAxis^.lrAutoVelocity := 0.0;
+
+		IF pfbAxis^.fbController.fbReset.bBusy
+		THEN
+			etHomeAxis := ET_Gr01HomeAxis_eWfAxisReset;              (* Next step *)
+
+		ELSIF pfbAxis^.fbController.fbReset.bError
+		THEN
+			pfbAxis^.bExeReset := FALSE;
+
+			etHomeAxis := ET_Gr01HomeAxis_eError;         					(* Next step *)
+
+		END_IF;
+
+	ET_Gr01HomeAxis_eWfAxisReset:
+		IF pfbAxis^.fbController.bReseted
+		     AND bReleaseNextStep
+		THEN
+			pfbAxis^.bExeReset := FALSE;
+
+			etHomeAxis := ET_Gr01HomeAxis_eAxisRef;         		(* Next step *)
+
+		ELSIF pfbAxis^.fbController.fbReset.bError
+		THEN
+			pfbAxis^.bExeReset := FALSE;
+
+			etHomeAxis := ET_Gr01HomeAxis_eError;         					(* Next step *)
+
+		END_IF;
+
+	ET_Gr01HomeAxis_eAxisRef:
+		IF NOT pfbAxis^.bReferenced
+		     OR etgGr00MachineState = ET_MachineState_eHomeRefExe
+		THEN
+			pfbAxis^.bExeHome := TRUE;
+
+			IF pfbAxis^.fbMoveAuto.fbHome.bBusy
+			THEN
+				etHomeAxis := ET_Gr01HomeAxis_eWfAxisRef;              (* Next step *)
+
+			ELSIF pfbAxis^.fbMoveAuto.fbHome.bError
+			THEN
+				pfbAxis^.bExeHome := FALSE;
+
+				etHomeAxis := ET_Gr01HomeAxis_eError;         					(* Next step *)
+
+			END_IF;
+
+		ELSE
+			etHomeAxis := ET_Gr01HomeAxis_eAxisMoveHomePos;              (* Next step *)
+		END_IF;
+
+	ET_Gr01HomeAxis_eWfAxisRef:
+		tonWatchdog(
+			IN := TRUE,
+			PT:= tgGr01MaxRefTime
+		);
+
+		IF tonWatchdog.Q
+		THEN
+			tonWatchdog(IN := FALSE);
+			bErrorByReference := TRUE;
+			pfbAxis^.bExeHome := FALSE;
+
+			etHomeAxis := ET_Gr01HomeAxis_eWfErrorByReference;         					(* Next step *)
+
+		ELSIF pfbAxis^.fbMoveAuto.bInReference
+		THEN
+			tonWatchdog(IN := FALSE);
+
+			IF bReleaseNextStep
+			THEN
+				pfbAxis^.bExeHome := FALSE;
+
+				etHomeAxis := ET_Gr01HomeAxis_eAxisMoveHomePos;              (* Next step *)
+			END_IF
+		ELSIF pfbAxis^.fbMoveAuto.fbHome.bError
+		THEN
+			tonWatchdog(IN := FALSE);
+			pfbAxis^.bExeHome := FALSE;
+
+			etHomeAxis := ET_Gr01HomeAxis_eError;         					(* Next step *)
+
+		END_IF;
+
+	ET_Gr01HomeAxis_eWfErrorByReference:
+		IF stgGr01Alarm.stHome.arbError[0].bActive
+		THEN
+			bErrorByReference := FALSE;
+			udnErrorNo := 1;
+			etHomeAxis := ET_Gr01HomeAxis_eError;         					(* Next step *)
+		END_IF
+
+	ET_Gr01HomeAxis_eAxisMoveHomePos:
+		pfbAxis^.bExeMoveAbs := TRUE;
+		pfbAxis^.lrAutoVelocity := lrHomeVelo;
+		pfbAxis^.lrTargetPosition := lrHomePosition;
+
+		IF pfbAxis^.fbMoveAuto.fbMoveAbs.bBusy
+		THEN
+			etHomeAxis := ET_Gr01HomeAxis_eAxisInHomePos;              (* Next step *)
+
+		ELSIF pfbAxis^.fbMoveAuto.fbMoveAbs.bError
+		THEN
+			pfbAxis^.bExeMoveAbs := FALSE;
+
+			etHomeAxis := ET_Gr01HomeAxis_eError;         					(* Next step *)
+
+		END_IF;
+
+	ET_Gr01HomeAxis_eAxisInHomePos:
+		IF pfbAxis^.fbMoveAuto.bInPosition
+		     AND bReleaseNextStep
+		THEN
+			pfbAxis^.bExeMoveAbs := FALSE;
+
+			etHomeAxis := ET_Gr01HomeAxis_eDone;              (* Next step *)
+
+		ELSIF pfbAxis^.fbMoveAuto.fbMoveAbs.bError
+		THEN
+			pfbAxis^.bExeMoveAbs := FALSE;
+
+			etHomeAxis := ET_Gr01HomeAxis_eError;         					(* Next step *)
+
+		END_IF;
+
+	ET_Gr01HomeAxis_eDone:
+		bDone := TRUE;                                     		(* Program done, in position *)
+		bBusy := FALSE;                                     		(* Program not busy *)
+
+		etHomeAxis := ET_Gr01HomeAxis_eNoExecute;            	(* Next step *)
+
+	ET_Gr01HomeAxis_eError:
+		bDone := FALSE;                                     		(* Program done, in position *)
+		bError := TRUE;                                     		(* Program error *)
+		bBusy := FALSE;                                     		(* Program not busy *)
+
+		etHomeAxis := ET_Gr01HomeAxis_eNoExecute;           	(* Next step *)
+
+	 ET_Gr01HomeAxis_eNoExecute:
+		IF NOT bExecute
+		THEN
+			bDone := FALSE;                                 	(* Program done *)
+			bBusy := FALSE;                                		(* Program not busy *)
+			bError := FALSE;                                		(* Program not error *)
+
+			etHomeAxis := ET_Gr01HomeAxis_eWaitExecute;       (* Next step *)
+
+		END_IF;
+
+END_CASE;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Gr01HomeAxisSawBow">
+      <LineId Id="53" Count="233" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

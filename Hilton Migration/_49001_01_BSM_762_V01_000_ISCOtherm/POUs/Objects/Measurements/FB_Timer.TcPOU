@@ -1,0 +1,146 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Timer" Id="{3b94bd77-e076-4807-8f8e-9bb892a7b6c3}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Timer
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable					:BOOL;						(* Enable FB signal *)
+	bReset					:BOOL;						(* Reset timer *)
+	bStartStop				:BOOL;						(* Timer start stop *)
+	bStop					:BOOL;						(* Timer stop *)
+	tMaxTime				:TIME := t#1092m;				(* Maximum time *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	stRefTime				:ST_Time;						(* Reference time *)
+	stActTime				:ST_Time;						(* Actuel time *)
+	stRestTime				:ST_Time;						(* Rest time *)
+END_VAR
+VAR_IN_OUT
+
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	stTime					:ST_Time;						(* Actuel time *)
+	bTimeStarted				:BOOL;							(* Meassuare time started *)
+
+	bFirstTime				:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtReset					:R_TRIG;
+	rtStartStop				:R_TRIG;
+	rtStop					:R_TRIG;
+
+	tonMeassureTime			:TON;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	bTimeStarted := FALSE;
+	rtStartStop(CLK := FALSE);
+	tonMeassureTime(
+		IN := FALSE,                   (* Reset timer *)
+		PT := tMaxTime
+	);
+
+	bFirstTime := FALSE;
+	RETURN;
+END_IF;
+
+IF NOT bFirstTime
+THEN
+	MEMSET(ADR(stActTime), 0, SIZEOF(stActTime));
+	MEMSET(ADR(stRestTime), 0, SIZEOF(stRestTime));
+	MEMSET(ADR(stTime), 0, SIZEOF(stTime));
+	bFirstTime := TRUE;
+END_IF;
+
+IF bReset
+THEN
+	bTimeStarted := FALSE;
+	tonMeassureTime(
+		IN := FALSE,
+	         PT := tMaxTime
+	);
+    
+	MEMSET(ADR(stActTime), 0, SIZEOF(stActTime));
+	MEMSET(ADR(stRestTime), 0, SIZEOF(stRestTime));
+	MEMSET(ADR(stTime), 0, SIZEOF(stTime));
+END_IF;
+
+
+(* Rising edge start / stop *)
+rtStartStop(CLK := bStartStop);
+
+IF rtStartStop.Q                                   				 (* Startsignal trigger *)
+THEN
+	IF bTimeStarted                              			 (* Meassuare time started *)
+	THEN
+		bTimeStarted := TRUE;                      	 (* Time measure started *)
+		tonMeassureTime(				 (* Stop (reset) timer *)
+			IN := FALSE,
+		         PT := tMaxTime
+		);
+		MEMSET(ADR(stTime), 0, SIZEOF(stTime));
+	ELSE
+		bTimeStarted := TRUE;                    	 (* Time measure started *)
+		MEMSET(ADR(stTime), 0, SIZEOF(stTime));
+	END_IF;
+END_IF;
+
+(* Rising edge stop*)
+rtStop(CLK := bStop);
+
+IF rtStop.Q                                        				 (* Stop timer *)
+THEN
+	bTimeStarted := FALSE;                        	 	 (* Time measure stoped *)
+END_IF;
+
+(* Start timer *)
+tonMeassureTime(
+	IN := bTimeStarted,
+	PT := tMaxTime
+);
+
+(* Set outputs *)
+stRefTime.dwSec := TIME_TO_DWORD(tonMeassureTime.PT) / 1000;
+
+stRefTime.dwDeciSec := TIME_TO_DWORD(tonMeassureTime.PT) / 100;
+
+stRefTime.dwCentiSec := TIME_TO_DWORD(tonMeassureTime.PT) / 10;
+
+stRefTime.dwMiliSec := TIME_TO_DWORD(tonMeassureTime.PT) / 1;
+
+IF bTimeStarted
+THEN
+	stActTime.dwSec := stTime.dwSec + TIME_TO_DWORD(tonMeassureTime.ET) / 1000;
+	stRestTime.dwSec := TIME_TO_DWORD(tonMeassureTime.PT) / 1000 - stActTime.dwSec;
+	
+	stActTime.dwDeciSec := stTime.dwDeciSec + TIME_TO_DWORD(tonMeassureTime.ET) / 100;
+	stRestTime.dwDeciSec := TIME_TO_DWORD(tonMeassureTime.PT) / 100 - stActTime.dwDeciSec;
+	
+	stActTime.dwCentiSec := stTime.dwCentiSec + TIME_TO_DWORD(tonMeassureTime.ET) / 10;
+	stRestTime.dwCentiSec := TIME_TO_DWORD(tonMeassureTime.PT) / 10 - stActTime.dwCentiSec;
+
+	stActTime.dwMiliSec := stTime.dwMiliSec + TIME_TO_DWORD(tonMeassureTime.ET) / 1;
+	stRestTime.dwMiliSec := TIME_TO_DWORD(tonMeassureTime.PT) / 1 - stActTime.dwMiliSec;
+END_IF;
+
+IF tonMeassureTime.Q                                		(* Maximum time reached *)
+THEN
+	MEMSET(ADR(stTime), 0, SIZEOF(stTime));
+	bTimeStarted := FALSE;                          		(* Time measure stoped *)
+END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Timer">
+      <LineId Id="39" Count="96" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

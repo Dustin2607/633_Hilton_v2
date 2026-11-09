@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <GVL Name="TwinCAT_Import" Id="{e9713082-50f9-4f51-aaf9-62b80fb75783}">
+    <Declaration><![CDATA[{attribute 'Tc2GvlVarNames'}
+(* Generated automatically by TwinCAT - do not edit manually! *)
+VAR_GLOBAL
+END_VAR
+]]></Declaration>
+  </GVL>
+</TcPlcObject>

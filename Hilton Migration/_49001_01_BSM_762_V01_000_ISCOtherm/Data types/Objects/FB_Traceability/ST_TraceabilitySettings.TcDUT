@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_TraceabilitySettings" Id="{17b593ca-e33a-4b6b-9223-aef3655f5068}">
+    <Declaration><![CDATA[TYPE ST_TraceabilitySettings :
+STRUCT
+	sPath								:STRING;						(* Path to file e.g. 'c:\', Hard Disk\ *)
+	sFileName							:STRING(20);						(* Name of file *)
+	sFileExtension						:STRING(5);						(* File extension  *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

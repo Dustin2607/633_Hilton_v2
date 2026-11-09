@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_MC_States" Id="{722504e0-5e47-4e15-8ee1-9ad2f689895d}">
+    <Declaration><![CDATA[TYPE ET_MC_States :
+(
+	ET_MC_States_eInit := 100,
+	ET_MC_States_eReset,
+	ET_MC_States_eRunning,
+	ET_MC_States_eWaiting,
+	ET_MC_States_eAbort,
+	ET_MC_States_eDone,
+	ET_MC_States_eError,
+	ET_MC_States_eNotExecute
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

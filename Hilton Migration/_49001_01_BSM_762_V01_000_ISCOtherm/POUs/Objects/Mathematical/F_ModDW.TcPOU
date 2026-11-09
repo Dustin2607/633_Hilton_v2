@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_ModDW" Id="{13cd23a6-ba05-46db-baff-b193e3e1e2e5}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_ModDW : DWORD
+(*
+Modulo function for double word numbers (dividend mod divisor).
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			20.01.2014
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	dwDividend						:DWORD;
+	dwDivisor						:DWORD;
+END_VAR
+VAR
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+F_MODDW := dwDivisor;
+
+IF dwDivisor <> 0 
+THEN
+	F_MODDW := dwDividend MOD dwDivisor;
+END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="F_ModDW">
+      <LineId Id="19" Count="6" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

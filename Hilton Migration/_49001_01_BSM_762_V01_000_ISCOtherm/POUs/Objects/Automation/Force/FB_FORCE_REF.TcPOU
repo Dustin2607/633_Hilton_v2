@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_FORCE_REF" Id="{c1956b62-14b5-4df6-84c1-ad869bcf1112}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_FORCE_REF
+VAR_INPUT
+	unForceMeasureType			:UINT;								(* Type of force measure system. 1: Simple mA,  2: EL3351 3: EL3356 *)
+
+	fbForceSimple				:FB_ScalingOffset;
+
+	lrForceMin					:LREAL;								(* Force min [mA] 16#0000 = 4 [mA] *)
+	lrForceMax	 				:LREAL;								(* Force max [mA] 16#7FFF = 20 [mA] *)
+	lrForceMinN					:LREAL;								(* Force min [N] *)
+	lrManualForceMaxN			:LREAL;								(* Force max [N] *)
+	lrAutoForceMaxN				:LREAL;								(* Force max [N] *)
+
+	fbForceEL3356				:FB_EL3356;
+
+	stRefSettingsEL3356			:ST_EL3356CoeInfo;					(* Reference settings of EL3356 force input modul *)
+	stActSettingsEL3356			:ST_EL3356CoeInfo;					(* Actual settings of EL3356 force input modul *)
+
+	stTerminalStateEL3356			AT %I*:ST_TerminalState;				(* Terminal state EL3356 *)
+	stChannelStateEL3356			AT %I*:ST_EL3356ChannelState;		(* Channel state EL3356 *)
+	stChannelCtrlEL3356			AT %Q*:ST_EL3356ChannelCtrl;			(* Channel control EL3356 *)
+
+	stForceToPlc					AT %I*:ST_FORCETOPLC;
+	stPlcToForce					AT %Q*:ST_PLCTOFORCE;
+END_VAR
+VAR_OUTPUT
+
+END_VAR
+VAR_IN_OUT
+
+END_VAR
+VAR
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_FORCE_REF">
+      <LineId Id="33" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

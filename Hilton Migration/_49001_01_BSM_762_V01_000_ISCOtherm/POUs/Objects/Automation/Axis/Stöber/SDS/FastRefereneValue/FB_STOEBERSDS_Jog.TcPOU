@@ -1,0 +1,98 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_STOEBERSDS_Jog" Id="{89d38041-1ea0-4481-b6cd-94811eb89ad0}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_STOEBERSDS_Jog
+(*
+
+The function block enables an axis to be moved via manual keys.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			22.09.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;			(* Signal FB enable *)
+	bJogForward					:BOOL;			(* Axis moved in positive direction of travel. *)
+	bJogBackwards				:BOOL;			(* Axis moved in negative direction of travel. *)
+	lrVelocity						:LREAL;			(* Target velocity *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bActive						:BOOL;			(* If Active is TRUE the axis is controlled by the jog function. *)
+	bError						:BOOL;			(* Error *)
+	udnErrorNo					:UDINT;			(* Error number *)
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	Axis							:ST_AXIS_REF;
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	bFirstTime					:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	ftActive						:F_TRIG;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+	bActive := FALSE;
+
+	bFirstTime := FALSE;
+ELSE
+
+	IF NOT bFirstTime
+	THEN
+	
+		bFirstTime := TRUE;
+	END_IF;
+
+	IF bJogForward XOR bJogBackwards			(* Activates tipping mode *)
+	THEN
+		IF bJogForward							(* Tip mode in positive direction *)
+		THEN
+			Axis.stPlcToNc.stBaseDevice.stFastRefereneValue.nSpeed := LIMIT(0, ABS(LREAL_TO_INT(lrVelocity * 163.84)), 16384);			(* Value of velocity *)
+	
+		ELSIF bJogBackwards						(* Tip mode in negative direction *)
+		THEN
+			Axis.stPlcToNc.stBaseDevice.stFastRefereneValue.nSpeed := LIMIT(-16384, -ABS(LREAL_TO_INT(lrVelocity * 163.84)), 0);                  	(* Value of velocity *)
+	
+		END_IF
+
+		bActive := TRUE;
+	ELSE
+		bActive := FALSE;
+	
+		Axis.stPlcToNc.stBaseDevice.stFastRefereneValue.nSpeed := 0;
+
+	END_IF
+END_IF;
+
+ftActive(CLK := bActive);
+IF ftActive.Q
+THEN
+	Axis.stPlcToNc.stBaseDevice.stFastRefereneValue.nSpeed := 0;
+END_IF;
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_STOEBERSDS_Jog">
+      <LineId Id="45" Count="42" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

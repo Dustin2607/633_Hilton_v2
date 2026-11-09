@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_PLCTOYASKAWA" Id="{001221c4-250b-4eab-b885-45f91399520d}">
+    <Declaration><![CDATA[TYPE ST_PLCTOYASKAWA :
+STRUCT
+	bExternalStart							:BOOL;					(* If the I/O interface is active, this input can be set to start or continue a program. Only the rising edge of the signal is valid *)
+	bExternalServoOn						:BOOL;					(* Switch on the robot drives. When these signals are on, the servo power supply is cut off and the manipulator stops. *)
+	bCallMasterJob						:BOOL;					(* These signals have the same function as the cycle select key on the playback panel. Use the signals when desiring to change cycle specifications from the outside. *)
+	bAlarmReset							:BOOL;					(* This signal clears alarms or errors when there is a minor failure,system alarm, user alarm, or user error. *)
+	bReducedSpeed						:BOOL;					(* Reduced speed *)
+	bExternalHold						:BOOL;					(* External hold *)
+
+	bExternalServoOffHoldStop				:BOOL;					(* External servo off hold stop. *)
+	bExternalServoOffEStop				:BOOL;					(* External servo off E-Stop *)
+
+	bMachineError						:BOOL;					(* IN  - Machine has fault. *)
+	bMachineRunning						:BOOL;					(* IN  - Machine running. *)
+	bInterrupt								:BOOL;					(* IN - Interrupt;. *)
+
+	usnOverride							:USINT;					(* IN - Override *)
+	nPrgNo								:INT;					(* IN  - Automatic program number  *)
+
+	unPipeDiameter						:UINT;					(* IN - Pipe diameter. *)
+	nPipeBaseHeight						:INT;					(* IN - Pipe base height. *)
+	nExtruderTowardAngle					:INT;					(* IN - Extruder toward angle deg *)
+	nExtruderSideAngle					:INT;					(* IN - Extruder side angle deg *)
+
+	bWeldingInBase						:BOOL;					(* IN - Welding in base. *)
+	bWeldingInWork						:BOOL;					(* IN - Welding in work. *)
+	bWeldingShoeTop					:BOOL;					(* IN - Welding shoe top. *)
+	bWeldingShoeBottom					:BOOL;					(* IN - Welding shoe bottom. *)
+	bWeldingHeadUnlocked				:BOOL;					(* IN - Welding head unlocked. *)
+	bWeldingHeadLocked					:BOOL;					(* IN - Welding head locked. *)
+	bGripperTongsOpened				:BOOL;					(* IN - Gripper tongs opened. *)
+	bGripperTongsClosed					:BOOL;					(* IN - Gripper tongs closed. *)
+
+	bWeldingInMiddle						:BOOL;					(* IN - Welding in middle position *)
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

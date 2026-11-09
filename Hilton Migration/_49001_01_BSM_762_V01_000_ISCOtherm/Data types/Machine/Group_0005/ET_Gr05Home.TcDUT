@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_Gr05Home" Id="{21163cdc-00d5-44a3-8b73-e3431e0ed9c1}">
+    <Declaration><![CDATA[TYPE ET_Gr05Home :
+(
+	ET_Gr05Home_eWaitExecute := 0,
+	ET_Gr05Home_eWaitAxisStatus,
+	ET_Gr05Home_eWfFreeToMove,
+	ET_Gr05Home_eClampsSlide,
+	ET_Gr05Home_eAxisClamp1,
+	ET_Gr05Home_eWfAxisClamp1,
+	ET_Gr05Home_eAxisClamp2,
+	ET_Gr05Home_eWfAxisClamp2,
+	ET_Gr05Home_eDone := 197,
+	ET_Gr05Home_eError := 198,
+	ET_Gr05Home_eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

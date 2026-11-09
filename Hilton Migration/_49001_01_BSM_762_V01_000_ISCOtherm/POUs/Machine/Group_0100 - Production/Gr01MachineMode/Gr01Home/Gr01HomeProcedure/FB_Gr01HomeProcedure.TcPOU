@@ -1,0 +1,291 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Gr01HomeProcedure" Id="{5f560772-777c-44d4-b41b-73c60a450557}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Gr01HomeProcedure
+(*
+
+The function block used to initialize home mode.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			28.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Enable FB signal *)
+	bExecute					:BOOL;						(* Home procedure execute *)
+	bReleaseNextStep			:BOOL;						(* Home procedure release next step *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bDone						:BOOL;						(* Program done *)
+	bBusy						:BOOL;						(* Program busy *)
+	bError						:BOOL;						(* Program error *)
+	udnErrorNo					:UDINT;						(* Error number *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+	etGr01Home					:ET_Gr01Home;				(* Home mode enum variable *)
+
+	(* Variables *)
+	byBusyFlag					:BYTE;
+	byDoneFlag					:BYTE;
+
+	bFirstTime					:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	tonWatchdog					:TON;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+	bDone := FALSE;					(* Program done *)
+	bBusy := FALSE;                                  	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;                                 		(* Error number *)
+
+	bFirstTime := FALSE;
+	RETURN;
+END_IF;
+
+IF NOT bFirstTime
+THEN
+	bDone := FALSE;                                	(* Program done *)
+	bBusy := FALSE;                                 	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;                                 		(* Error number *)
+
+	tonWatchdog(IN := FALSE);
+
+	etGr01Home := ET_Gr01Home_eWaitExecute;       			(* Next step *)
+
+	bFirstTime := TRUE;
+END_IF;
+
+CASE etGr01Home OF
+
+	ET_Gr01Home_eWaitExecute:
+		bBusy := FALSE;                                     		(* Program not busy *)
+		bError := FALSE;                                    		(* Program not error *)
+
+		IF bExecute
+		THEN
+			bDone := FALSE;                                 	(* Program done, in position *)
+			bBusy := TRUE;                                  	(* Program busy *)
+
+			byBusyFlag := 0;
+			byDoneFlag := 0;
+
+			tonWatchdog(IN := FALSE);
+
+			etGr01Home := ET_Gr01Home_eWaitAxisStatus;		(* Next step *)
+		END_IF;
+
+	ET_Gr01Home_eWaitAxisStatus:
+		IF Gr01Control.bAllAxisCtrlEnabled
+            	     AND bReleaseNextStep
+		THEN
+			etGr01Home := ET_Gr01Home_eGetProcessPara;         		(* Next step *)
+		END_IF;
+
+	ET_Gr01Home_eGetProcessPara:
+		IF bgGr00HomeNotInCrashGr01
+		THEN
+			stgGr01HMI.stHMITOPLC.rPipeDiameter := REAL_TO_UINT(arrGr00ProcessPara[0,0]);
+			stgGr01HMI.stHMITOPLC.lrAxisSawBowHomePos := MIN(stgGr01HMI.stHMITOPLC.rPipeDiameter
+												  			   + stgGr01HMI.stHMITOPLC.lrSafeDistSawBandToPipe,
+									  			  			   Gr01Control.fbAxisSawBow.lrSoftLimitMax - 0.5);
+
+			etGr01Home := ET_Gr01Home_eSawbandStop;         		(* Next step *)
+		END_IF
+
+	ET_Gr01Home_eSawbandStop:
+		Gr01Home.fbSawband.bExecute := TRUE;
+
+		IF Gr01Home.fbSawband.bBusy
+		THEN
+			etGr01Home := ET_Gr01Home_eWfSawbandStopped;         		(* Next step *)
+
+		ELSIF Gr01Home.fbSawband.bError
+		THEN
+			Gr01Home.fbSawband.bExecute := FALSE;
+
+			etGr01Home := ET_Gr01Home_eError;         		(* Next step *)
+
+		END_IF
+
+	ET_Gr01Home_eWfSawbandStopped:
+		IF NOT Gr01Home.fbSawband.bBusy
+		     AND NOT Gr01Home.fbSawband.bError
+		     AND bReleaseNextStep
+		THEN
+			Gr01Home.fbSawband.bExecute := FALSE;
+
+			etGr01Home := ET_Gr01Home_eAxisSawBow;		(* Next step *)
+
+		ELSIF Gr01Home.fbSawband.bError
+		THEN
+			Gr01Home.fbSawband.bExecute := FALSE;
+
+			etGr01Home := ET_Gr01Home_eError;         					(* Next step *)
+
+		END_IF
+
+	ET_Gr01Home_eAxisSawBow:
+		Gr01Home.fbAxisSawBow.bExecute := TRUE;
+		Gr01Home.fbAxisSawBow.lrHomePosition := Gr01Control.fbAxisSawBow.lrSoftLimitMax - 0.5;
+		Gr01Home.fbAxisSawBow.lrHomeVelo := stgGr01HMI.stHMITOPLC.lrAxisSawBowAutoVelo;
+
+		IF Gr01Home.fbAxisSawBow.bBusy
+		THEN
+			etGr01Home := ET_Gr01Home_eWfAxisSawBow;         		(* Next step *)
+
+		ELSIF Gr01Home.fbAxisSawBow.bError
+		THEN
+			Gr01Home.fbAxisSawBow.bExecute := FALSE;
+
+			etGr01Home := ET_Gr01Home_eError;         		(* Next step *)
+
+		END_IF
+
+	ET_Gr01Home_eWfAxisSawBow:
+		IF NOT Gr01Home.fbAxisSawBow.bBusy
+		     AND NOT Gr01Home.fbAxisSawBow.bError
+		     AND bReleaseNextStep
+		THEN
+			Gr01Home.fbAxisSawBow.bExecute := FALSE;
+
+			bgGr01HomeNotInCrashGr05 := TRUE;
+
+			etGr01Home := ET_Gr01Home_eAxisAngle;		(* Next step *)
+
+		ELSIF Gr01Home.fbAxisSawBow.bError
+		THEN
+			Gr01Home.fbAxisSawBow.bExecute := FALSE;
+
+			etGr01Home := ET_Gr01Home_eError;         					(* Next step *)
+
+		END_IF
+
+	ET_Gr01Home_eAxisAngle:
+		Gr01Home.fbAxisAngle.bExecute := TRUE;
+		Gr01Home.fbAxisAngle.lrHomePosition := stgGr01HMI.stHMITOPLC.lrAxisAngleHomePos;
+		Gr01Home.fbAxisAngle.lrHomeVelo := stgGr01HMI.stHMITOPLC.lrAxisAngleHomeVelo;
+
+		IF Gr01Home.fbAxisAngle.bBusy
+		THEN
+			etGr01Home := ET_Gr01Home_eWfAxisAngle;         		(* Next step *)
+
+		ELSIF Gr01Home.fbAxisAngle.bError
+		THEN
+			Gr01Home.fbAxisAngle.bExecute := FALSE;
+
+			etGr01Home := ET_Gr01Home_eError;         		(* Next step *)
+
+		END_IF;
+
+	ET_Gr01Home_eWfAxisAngle:
+		IF NOT Gr01Home.fbAxisAngle.bBusy
+		     AND NOT Gr01Home.fbAxisAngle.bError
+		     AND bReleaseNextStep
+		THEN
+			Gr01Home.fbAxisAngle.bExecute := FALSE;
+
+			etGr01Home := ET_Gr01Home_eWfFreeToMove;		(* Next step *)
+
+		ELSIF Gr01Home.fbAxisAngle.bError
+		THEN
+			Gr01Home.fbAxisAngle.bExecute := FALSE;
+
+			etGr01Home := ET_Gr01Home_eError;         					(* Next step *)
+
+		END_IF
+
+	ET_Gr01Home_eWfFreeToMove:
+		IF bgGr05HomeNotInCrashGr01
+		     AND bReleaseNextStep
+		THEN
+			etGr01Home := ET_Gr01Home_eAxisSawBowMoveHomePos;              (* Next step *)
+		END_IF
+
+	ET_Gr01Home_eAxisSawBowMoveHomePos:
+		Gr01Control.fbAxisSawBow.bExeMoveAbs := TRUE;
+		Gr01Control.fbAxisSawBow.lrTargetPosition := stgGr01HMI.stHMITOPLC.lrAxisSawBowHomePos;
+		Gr01Control.fbAxisSawBow.lrAutoVelocity := stgGr01HMI.stHMITOPLC.lrAxisSawBowHomeVelo;
+
+		IF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMoveAbs.bBusy
+		THEN
+			etGr01Home := ET_Gr01Home_eWfAxisSawBowInHomePos;              (* Next step *)
+
+		ELSIF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMoveAbs.bError
+		THEN
+			Gr01Control.fbAxisSawBow.bExeMoveAbs := FALSE;
+
+			etGr01Home := ET_Gr01Home_eError;         					(* Next step *)
+
+		END_IF;
+
+	ET_Gr01Home_eWfAxisSawBowInHomePos:
+		IF Gr01Control.fbAxisSawBow.fbMoveAuto.bInPosition
+		     AND bReleaseNextStep
+		THEN
+			Gr01Control.fbAxisSawBow.bExeMoveAbs := FALSE;
+
+			etGr01Home := ET_Gr01Home_eDone;              (* Next step *)
+
+		ELSIF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMoveAbs.bError
+		THEN
+			Gr01Control.fbAxisSawBow.bExeMoveAbs := FALSE;
+
+			etGr01Home := ET_Gr01Home_eError;         					(* Next step *)
+
+		END_IF;
+
+	ET_Gr01Home_eDone:
+		bDone := TRUE;                                     		(* Program done, in position *)
+		bBusy := FALSE;                                     		(* Program not busy *)
+
+		etGr01Home := ET_Gr01Home_eNoExecute;            	(* Next step *)
+
+	ET_Gr01Home_eError:
+		bDone := FALSE;                                     		(* Program done, in position *)
+		bError := TRUE;                                     		(* Program error *)
+		bBusy := FALSE;                                     		(* Program not busy *)
+	
+		etGr01Home := ET_Gr01Home_eNoExecute;           	(* Next step *)
+
+	ET_Gr01Home_eNoExecute:
+		IF NOT bExecute
+		THEN
+			bgGr01HomeCompleted := bDone;
+
+			bDone := FALSE;                                 	(* Program done *)
+			bBusy := FALSE;                                		(* Program not busy *)
+			bError := FALSE;                                		(* Program not error *)
+
+			etGr01Home := ET_Gr01Home_eWaitExecute;       (* Next step *)
+
+		END_IF;
+
+END_CASE;
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Gr01HomeProcedure">
+      <LineId Id="48" Count="232" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

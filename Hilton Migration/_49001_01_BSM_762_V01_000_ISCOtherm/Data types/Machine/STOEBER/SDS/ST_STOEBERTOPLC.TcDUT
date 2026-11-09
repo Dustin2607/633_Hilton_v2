@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_STOEBERTOPLC" Id="{6bc2e220-3745-44e2-b02d-1a56a500cbf7}">
+    <Declaration><![CDATA[(* Communikation structure from nc to plc *)
+
+TYPE ST_STOEBERTOPLC :
+STRUCT
+	dnI88Speed							:DINT;
+	dnI203CurrentPosition					:DINT;
+	nE90MMotor							:INT;
+	nE100MMotor							:INT;
+	unI200PosiStatusWord					:UINT;
+	nD200SpeedReferenceValueStatusWord	:UINT;
+	byE200DeviceStatusByte				:BYTE;
+	byI201MotionStatusByte				:BYTE;
+	byI90ErrorCode						:BYTE;
+	byDummy1							:BYTE;
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

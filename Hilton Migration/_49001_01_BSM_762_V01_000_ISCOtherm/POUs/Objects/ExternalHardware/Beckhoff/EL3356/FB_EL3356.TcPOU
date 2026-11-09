@@ -1,0 +1,226 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_EL3356" Id="{99ac657a-d875-4f91-8fed-675255e29826}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_EL3356
+(*
+
+The function block used to operating of EL3356
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			15.11.2017
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;
+	nTerminalNr					:UINT;
+	stTerminalState				:ST_TerminalState;
+	stChannelState				:ST_EL3356ChannelState;
+	bSetCoeParaToDefault		:BOOL;
+	bReadCoePara				:BOOL;
+	bWriteCoePara				:BOOL;
+	bStartManualCalib				:BOOL;
+	bDisableCalibration			:BOOL;
+	bInputFreeze					:BOOL;
+	bTare						:BOOL;
+	bZeroBalance				:BOOL;
+	bCalibration					:BOOL;
+	bTaring						:BOOL;
+	bTaringEEProm				:BOOL;
+	rValue						:REAL;						(* Current value *)
+	stCoeWrite					:ST_EL3356CoeInfo;
+	rOffset						:REAL;						(* [technical unit]  *)
+	usiPrecision					:USINT := 2;
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bDeviceOk					:BOOL;
+	sDeviceStatus				:STRING(255);
+	stCoeRead					:ST_EL3356CoeInfo;
+	stChannelCtrl					:ST_EL3356ChannelCtrl;
+	lrGrossWeightRV				:LREAL;			(* Raw Value *)
+	lrGrossWeightPV				:LREAL;			(* Judgment Value *)
+	lrNetWeightRV				:LREAL;			(* Raw Value *)
+	lrNetWeightPV				:LREAL;			(* Judgment Value *)
+	lrTareWeightRV				:LREAL;			(* Raw Value *)
+	lrTareWeightPV				:LREAL;			(* Judgment Value *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	bTerminalOK					:BOOL;
+	sTerminalStatus				:STRING;
+	bCoeAccessOK				:BOOL;
+	bChannelOK					:BOOL;
+	bCalibrationInProgress			:BOOL;
+	udnCntCalibrations			:UDINT;
+
+	sAmsNetAdr					:T_AmsNetId;
+	wCoeData					:WORD;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbTerminalDiagnosis			:FB_TerminalDiagnosis;
+	fbChannelDiagnosis			:FB_EL3356ChannelDiagnosis;
+	fbCoe						:FB_EL3356CoE;
+	fbToggleBit					:FB_ToggleBit;
+
+	fbEcCoESdoWrite				:FB_EcCoESdoWrite;
+
+	rtZeroBalance				:R_TRIG;
+	rtCalibration					:R_TRIG;
+	rtTaring						:R_TRIG;
+	rtTaringEEProm				:R_TRIG;
+	rtCalibInProgress				:R_TRIG;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	bDeviceOk := TRUE;
+	lrGrossWeightRV := 0.0;				(* Raw Value *)
+	lrGrossWeightPV := 0.0;				(* Judgment Value *)
+	lrNetWeightRV := 0.0;				(* Raw Value *)
+	lrNetWeightPV := 0.0;				(* Judgment Value *)
+	lrTareWeightRV := 0.0;				(* Raw Value *)
+	lrTareWeightPV := 0.0;				(* Judgment Value *)
+	RETURN;
+END_IF
+
+(*Terminal Diagnosis*)
+fbTerminalDiagnosis(
+	stTerminalState := stTerminalState,
+	bTerminalOK => bTerminalOK,
+	sTerminalStatus => sTerminalStatus
+);
+
+(*Channel Diagnosis*)
+fbChannelDiagnosis(
+	stChannelState := stChannelState,
+	bCalibrationInProgress => bCalibrationInProgress,
+	bChannelOK => bChannelOK
+);
+
+(*CoE Settings *)
+fbCoE(
+	stAdsAddr:= stTerminalState.stAdsAddr,
+	stCoeWrite := stCoeWrite,
+	bSetCoeParametersToDefault := bSetCoeParaToDefault,
+	bReadCoeParameters := bReadCoePara,
+	bWriteCoeParameters := bWriteCoePara,
+	bCoeAccessOK => bCoeAccessOK,
+	stCoeRead => stCoeRead
+);
+
+(* RMB Command *)
+rtZeroBalance(CLK:=bZeroBalance);
+rtCalibration(CLK:=bCalibration);
+rtTaring(CLK:=bTaring);
+rtTaringEEProm(CLK:=bTaringEEProm);
+
+(*Calibrations*)
+rtCalibInProgress(CLK:= bCalibrationInProgress);
+udnCntCalibrations := SEL(rtCalibInProgress.Q , udnCntCalibrations, udnCntCalibrations + 1);
+
+(* Measure *)
+
+
+(* ToggleBit *)
+fbToggleBit(
+	bToggle:= stChannelState.bToggle ,
+);
+
+IF bCoeAccessOK
+     AND bTerminalOK
+     AND bChannelOK
+THEN
+	bDeviceOk := TRUE;
+	sDeviceStatus:= '';
+ELSE
+	bDeviceOK:= FALSE;
+	sDeviceStatus:= UINT_TO_STRING(nTerminalNr);
+	sDeviceStatus:= CONCAT (sDeviceStatus, '. ');
+END_IF
+
+lrGrossWeightRV := rValue;
+lrGrossWeightPV := F_LRealRound(lrGrossWeightRV + rOffset, usiPrecision);
+(*lrNetWeightRV := REAL_TO_LREAL(fbMeasure.rGrossWeight);
+lrNetWeightPV := F_LRealRound((rNetWeightRV + rOffset) * 2.0, usiPrecision);
+lrTareWeightRV := REAL_TO_LREAL(fbMeasure.rGrossWeight);
+lrTareWeightPV := F_LRealRound((rTareWeightRV + rOffset) * 2.0, usiPrecision);*)
+
+(*Coe parameter administration*)
+sAmsNetAdr := F_CreateAmsNetId(nIds:=stTerminalState.stAdsAddr.netId );
+(*++++++++++++++ CoE communication ++++++++++++++++++++++*)
+wCoeData := 16#0101; (* Command zero balance*)
+fbEcCoESdoWrite(
+	sNetId		:= sAmsNetAdr,
+	nSlaveAddr 	:= stTerminalState.stAdsAddr.port,
+	nSubIndex 	:= 16#01,
+	nIndex 		:= 16#FB00,
+	pSrcBuf 	:= ADR(wCoeData),
+	cbBufLen 	:= SIZEOF(wCoeData),
+	bExecute 	:= rtZeroBalance.Q,
+	tTimeout 	:= t#5s
+);
+
+wCoeData := 16#0102; (* calibration*)
+fbEcCoESdoWrite(
+	sNetId		:= sAmsNetAdr,
+	nSlaveAddr 	:= stTerminalState.stAdsAddr.port,
+	nSubIndex 	:= 16#01,
+	nIndex 		:= 16#FB00,
+	pSrcBuf 	:= ADR(wCoeData),
+	cbBufLen 	:= SIZEOF(wCoeData),
+	bExecute 	:= rtCalibration.Q,
+	tTimeout 	:= t#5s
+);
+
+wCoeData := 16#0001; (* taring*)
+fbEcCoESdoWrite(
+	sNetId		:= sAmsNetAdr,
+	nSlaveAddr 	:= stTerminalState.stAdsAddr.port,
+	nSubIndex 	:= 16#01,
+	nIndex 		:= 16#FB00,
+	pSrcBuf 	:= ADR(wCoeData),
+	cbBufLen 	:= SIZEOF(wCoeData),
+	bExecute 	:= rtTaringEEProm.Q,
+	tTimeout 	:= t#5s
+);
+
+wCoeData := 16#0002; (* taringEEProm*)
+fbEcCoESdoWrite(
+	sNetId		:= sAmsNetAdr,
+	nSlaveAddr 	:= stTerminalState.stAdsAddr.port,
+	nSubIndex 	:= 16#01,
+	nIndex 		:= 16#FB00,
+	pSrcBuf 	:= ADR(wCoeData),
+	cbBufLen 	:= SIZEOF(wCoeData),
+	bExecute 	:= rtTaringEEProm.Q,
+	tTimeout 	:= t#5s
+);
+
+(* Output data to terminal*)
+stChannelCtrl.bStartCalibration := bStartManualCalib;
+stChannelCtrl.bDisableCalibration := bDisableCalibration;
+stChannelCtrl.bInputFreeze := bInputFreeze ;
+stChannelCtrl.bTare:= bTare;
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_EL3356">
+      <LineId Id="85" Count="130" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,513 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="Gr01Control" Id="{2dac79ca-e47b-4d2d-839b-3f84db7e801e}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM Gr01Control
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Enable Gr01Control *)
+
+	(* Instances *)
+	fbAxisSawBow				:FB_Gr01AxisSawBow;
+	fbAxisAngle					:FB_Gr01AxisAngle;
+
+	fbSawband			 		:FB_Gr01Sawband;
+
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	bAllAxisCtrlEnabled			:BOOL;						(* All axis have controller enabled *)
+	bAllAxisStandStill				:BOOL;						(* All axis stand still *)
+	bAllAxisNotMoving			:BOOL;						(* All axis not moving *)
+	bAllAxisReferenced			:BOOL;						(* All axis referenced *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbAlarm						:FB_Gr01Alarm;
+	fbSafety						:FB_Gr01Safety;
+	fbSignals					:FB_Gr01Signals;
+	fbUtility						:FB_Gr01Utility;
+	rtBtnStart						:R_TRIG;
+
+END_VAR
+VAR CONSTANT
+	nFatalErrorMaxIdx				:INT := 0;						(* Maximal index of  using alarms *)
+	nErrorMaxIdx					:INT := 19;					(* Maximal index of  using alarms *)
+	nWarningMaxIdx				:INT := 0;						(* Maximal index of  using alarms *)
+	nMessageMaxIdx				:INT := 1;						(* Maximal index of  using alarms *)
+	nHintMaxIdx					:INT := 0;						(* Maximal index of  using alarms *)
+
+	dnFatalErrorBaseIdentNo		:DINT := 11000;				(* Fatal error identification number *)
+	dnErrorBaseIdentNo			:DINT := 11100;				(* Error identification number *)
+	dnWarningBaseIdentNo		:DINT := 11200;				(* Warning identification number *)
+	dnMessageBaseIdentNo		:DINT := 11300;				(* Message identification number *)
+	dnHintBaseIdentNo			:DINT := 11400;				(* Hint identification number *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	RETURN;
+END_IF;
+
+A_Utility();
+A_Safety();
+A_Axis();
+A_Sawband();
+A_Signals();
+A_Alarm();
+]]></ST>
+    </Implementation>
+    <Action Name="A_Alarm" Id="{e9f90f32-b3c1-41b6-ad3f-b8525a491730}">
+      <Implementation>
+        <ST><![CDATA[
+(* Collect and execute input alarms *)
+fbAlarm.stAlarmIn.arbError[0].bActive := NOT binGr01LightCurtainOK
+                                                		      AND (Gr01Home.fbProcedure.bBusy
+                                                      				OR Gr01Auto.fbProcedure.bBusy);
+fbAlarm.stAlarmIn.arbError[0].dnCode := dnErrorBaseIdentNo + 0;
+
+fbAlarm.stAlarmIn.arbError[1].bActive := NOT binGr01SawbandRelease
+								    AND bgGr00ModeAutomatic
+								    AND bgGr00MachineRunning;
+fbAlarm.stAlarmIn.arbError[1].dnCode := dnErrorBaseIdentNo + 1;
+
+fbAlarm.stAlarmIn.arbError[2].bActive := FALSE;
+fbAlarm.stAlarmIn.arbError[2].dnCode := dnErrorBaseIdentNo + 2;
+
+fbAlarm.stAlarmIn.arbError[3].bActive := FALSE;
+fbAlarm.stAlarmIn.arbError[3].dnCode := dnErrorBaseIdentNo + 3;
+
+fbAlarm.stAlarmIn.arbError[4].bActive := fbAxisSawBow.bErrorTerminal;
+fbAlarm.stAlarmIn.arbError[4].dnCode := dnErrorBaseIdentNo + 4;
+
+fbAlarm.stAlarmIn.arbError[5].bActive := fbAxisSawBow.fbController.bErrorInit;
+fbAlarm.stAlarmIn.arbError[5].dnCode := dnErrorBaseIdentNo + 5;
+
+fbAlarm.stAlarmIn.arbError[6].bActive := fbAxisSawBow.bErrorCtrlEnabled;
+fbAlarm.stAlarmIn.arbError[6].dnCode := dnErrorBaseIdentNo + 6;
+
+fbAlarm.stAlarmIn.arbError[7].bActive := fbAxisSawBow.fbController.bError OR fbAxisSawBow.fbMoveManual.bError OR fbAxisSawBow.fbMoveAuto.bError;
+fbAlarm.stAlarmIn.arbError[7].dnCode := dnErrorBaseIdentNo + 7;
+
+fbAlarm.stAlarmIn.arbError[8].bActive := fbAxisAngle.bErrorTerminal;
+fbAlarm.stAlarmIn.arbError[8].dnCode := dnErrorBaseIdentNo + 8;
+
+fbAlarm.stAlarmIn.arbError[9].bActive := fbAxisAngle.fbController.bErrorInit;
+fbAlarm.stAlarmIn.arbError[9].dnCode := dnErrorBaseIdentNo + 9;
+
+fbAlarm.stAlarmIn.arbError[10].bActive := fbAxisAngle.bErrorCtrlEnabled;
+fbAlarm.stAlarmIn.arbError[10].dnCode := dnErrorBaseIdentNo + 10;
+
+fbAlarm.stAlarmIn.arbError[11].bActive := fbAxisAngle.fbController.bError OR fbAxisAngle.fbMoveManual.bError OR fbAxisAngle.fbMoveAuto.bError;
+fbAlarm.stAlarmIn.arbError[11].dnCode := dnErrorBaseIdentNo + 11;
+
+fbAlarm.stAlarmIn.arbError[12].bActive := fbSawband.bErrorTerminal;
+fbAlarm.stAlarmIn.arbError[12].dnCode := dnErrorBaseIdentNo + 12;
+
+fbAlarm.stAlarmIn.arbError[13].bActive := fbSawband.fbController.bErrorInit;
+fbAlarm.stAlarmIn.arbError[13].dnCode := dnErrorBaseIdentNo + 13;
+
+fbAlarm.stAlarmIn.arbError[14].bActive := fbSawband.bErrorCtrlEnabled;
+fbAlarm.stAlarmIn.arbError[14].dnCode := dnErrorBaseIdentNo + 14;
+
+fbAlarm.stAlarmIn.arbError[15].bActive := fbSawband.fbController.bError OR fbSawband.fbMoveManual.bError OR fbSawband.fbMoveAuto.bError;
+fbAlarm.stAlarmIn.arbError[15].dnCode := dnErrorBaseIdentNo + 15;
+
+fbAlarm.stAlarmIn.arbError[16].bActive := fbSawband.bErrorSawbandNOK;
+fbAlarm.stAlarmIn.arbError[16].dnCode := dnErrorBaseIdentNo + 16;
+
+fbAlarm.stAlarmIn.arbError[17].bActive := fbSawband.bErrorSawbandBroken;
+fbAlarm.stAlarmIn.arbError[17].dnCode := dnErrorBaseIdentNo + 17;
+
+fbAlarm.stAlarmIn.arbError[18].bActive := fbSawband.bErrorSpeedNoConstant;
+fbAlarm.stAlarmIn.arbError[18].dnCode := dnErrorBaseIdentNo + 18;
+
+fbAlarm.stAlarmIn.arbError[19].bActive := (* bgGr00MachineRunning
+							AND fbSawband.bCtrlEnabled
+							AND fbSawband.bSpeedReached
+							AND *) NOT fbSafety.bPipeNotInCrashArea;  (* 20260219 ES/KG *)
+
+fbAlarm.stAlarmIn.arbError[19].dnCode := dnErrorBaseIdentNo + 19;
+
+fbAlarm.stAlarmIn.arbWarning[0].bActive := fbSawband.bErrorVacuumCleanerNOK;
+fbAlarm.stAlarmIn.arbWarning[0].dnCode := dnWarningBaseIdentNo + 0;
+
+fbAlarm.stAlarmIn.arbMessage[0].bActive := NOT binGr01LightCurtainOK
+							      AND NOT fbAlarm.stAlarmIn.arbError[0].bActive
+							      AND NOT fbAlarm.stAlarmOut.arbError[0].bActive;
+fbAlarm.stAlarmIn.arbMessage[0].dnCode := dnMessageBaseIdentNo + 0;
+
+fbAlarm.stAlarmIn.arbMessage[1].bActive := NOT binGr01SawbandRelease;
+fbAlarm.stAlarmIn.arbMessage[1].dnCode := dnMessageBaseIdentNo + 1;
+
+(* Execute utility *)
+fbAlarm(
+	etMachineMode := etgGr00MachineMode,
+	etMachineState := etgGr00MachineState,
+	bNoEStop := bgGr00NoEmergencyStop,
+	bConfirmAlarm := bgGr00ConfirmAlarm,
+	dtDateTime := stgGr00DateTime.dtDateTime,
+	nFatalErrorMaxIdx := nFatalErrorMaxIdx,
+	nErrorMaxIdx := nErrorMaxIdx,
+	nWarningMaxIdx := nWarningMaxIdx,
+	nMessageMaxIdx := nMessageMaxIdx,
+	nHintMaxIdx := nHintMaxIdx,
+	bMoveInterrupted := bgGr01MoveInterrupted,
+	bHomeCompleted := bgGr01HomeCompleted,
+	stAlarmOut => stgGr01Alarm.stControl
+);
+
+
+
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Axis" Id="{e1fcb53e-2fd3-4612-85cf-3d8298151cc6}">
+      <Implementation>
+        <ST><![CDATA[
+(* Enable axis saw bow *)
+stgGr01HMI.stHMITOPLC.lrAxisSawBowNoRefVelo := 10;
+
+fbAxisSawBow(
+	bEnable := TRUE,
+	etMachineMode := etgGr00MachineMode,
+	etMachineState := etgGr00MachineState,
+	bNoEStop := bgGr00NoEmergencyStop,
+	bPowerSupplyOn := bgGr00PowerSupplyOk,
+	bSafetyOK := bgGr01LightCurtainOK
+			        AND bgGr00AllDoorsClosedLocked,
+	bMachineStandstill := bgGr00MachineStandstill,
+	bCtrlInterrupt := FALSE,
+	bMoveRelease := TRUE,
+	bMoveInterrupt := FALSE,
+	bSignalReference := NOT binGr01AxisSawBowLimitMax,
+	bHWSignalLimitMax := NOT binGr01AxisSawBowLimitMax,
+	bHWSignalLimitMin := NOT binGr01AxisSawBowLimitMin,
+	lrSoftLimitMax := stgGr01HMI.stHMITOPLC.lrAxisSawBowSoftLimitMax,
+	lrSoftLimitMin := stgGr01HMI.stHMITOPLC.lrAxisSawBowSoftLimitMin,
+	bTipPlus := stgGr01HMI.stHMITOPLC.bBtnAxisSawBowPlus,
+	bTipMinus := stgGr01HMI.stHMITOPLC.bBtnAxisSawBowMinus,
+	lrTipDistance:= ,
+	bPlusRelease := TRUE,
+	bMinusRelease := TRUE, (*stgGr00HMI.stHMITOPLC.bSafetyInterlockOff*)
+	lrManualVelocity := stgGr01HMI.stHMITOPLC.lrAxisSawBowManualVelo,
+	lrVelocityNoRef := stgGr01HMI.stHMITOPLC.lrAxisSawBowNoRefVelo,
+	bVelocityLimitEn := FALSE,
+	lrAcceleration := 100.0,
+	lrDeceleration := 100.0,
+	lrJerk := 100.0,
+	bEngineTorqueLimitEn := FALSE,
+	lrEngineTorque := 200.0,
+	bWithAbsoluteEncoder := FALSE,
+	lrOriginShift := stgGr01HMI.stHMITOPLC.lrAxisSawBowOriginShiftPos,
+	dnRatioNumerator := 1,
+	udnRatioDenominator := 1,
+	bVeloForceCtrlEn := FALSE,
+	lrOverride := fbUtility.rActOverride,
+	lrExtOverride := 0.0,
+	nSetSawingOverride := ninGr01SawingOverride,
+	rSetSawingOverride := stgGr01HMI.stHMITOPLC.rSawingOverride,
+	bConfirmAlarm := bgGr00ConfirmAlarm,
+	tControllerOff := tgGr01ControllerOff,
+	tAdsTimeOut := DEFAULT_ADS_TIMEOUT,
+	bHomeCompleted := bgGr01HomeCompleted,
+	Drive := igGr01DriveSawBow,
+	Axis := igGr01AxisSawBow,
+	lrActPosition => stgGr01HMI.stPLCTOHMI.lrAxisSawBowActPos,
+	lrActVelocity => stgGr01HMI.stPLCTOHMI.lrAxisSawBowActVelo,
+	lrActForce => stgGr01HMI.stPLCTOHMI.lrAxisSawBowActForce
+);
+
+(* Enable Axis angle *)
+stgGr01HMI.stHMITOPLC.lrAxisAngleNoRefVelo := 10;
+
+fbAxisAngle(
+	bEnable := TRUE,
+	lrScalingNum := lrgGr01AxisAnglePath,
+	udnScalingDenom	 := udngGr01AxisAngleInc,
+	etMachineMode := etgGr00MachineMode,
+	etMachineState := etgGr00MachineState,
+	bNoEStop := bgGr00NoEmergencyStop,
+	bPowerSupplyOn := bgGr00PowerSupplyOk,
+	bSafetyOK := bgGr01LightCurtainOK
+			        AND bgGr00AllDoorsClosedLocked,
+	bMachineStandstill := bgGr00MachineStandstill,
+	bCtrlInterrupt := FALSE,
+	bMoveRelease := TRUE,
+	bMoveInterrupt := FALSE,
+	bHWSignalLimitMax := NOT binGr01AxisAngleLimitMax,
+	bHWSignalLimitMin := NOT binGr01AxisAngleLimitMin,
+	lrSoftLimitMax := stgGr01HMI.stHMITOPLC.lrAxisAngleSoftLimitMax,
+	lrSoftLimitMin := stgGr01HMI.stHMITOPLC.lrAxisAngleSoftLimitMin,
+	bTipPlus := stgGr01HMI.stHMITOPLC.bBtnAxisAnglePlus,
+	bTipMinus := stgGr01HMI.stHMITOPLC.bBtnAxisAngleMinus,
+	bPlusRelease := TRUE,
+	bMinusRelease:= TRUE,	(*stgGr00HMI.stHMITOPLC.bSafetyInterlockOff*)
+	lrManualVelocity := stgGr01HMI.stHMITOPLC.lrAxisAngleManualVelo,
+	lrVelocityNoRef := stgGr01HMI.stHMITOPLC.lrAxisAngleNoRefVelo,
+	bVelocityLimitEn := FALSE,
+	lrAcceleration := 100.0,
+	lrDeceleration := 100.0,
+	lrJerk := 100.0,
+	bEngineTorqueLimitEn := FALSE,
+	lrEngineTorque := 200.0,
+	bWithAbsoluteEncoder := TRUE,
+	udnIncEnc := udninGr01IncAxisAngle,
+	lrOriginShift := stgGr01HMI.stHMITOPLC.lrAxisAngleOriginShiftPos,
+	lrTaskCycle := lrgActCycleTime,
+	lrOverride := fbUtility.rActOverride,
+	bConfirmAlarm := bgGr00ConfirmAlarm,
+	tControllerOff := tgGr01ControllerOff,
+	tAdsTimeOut := DEFAULT_ADS_TIMEOUT,
+	bHomeCompleted := bgGr01HomeCompleted,
+	Drive := igGr01DriveAngle,
+	Axis := igGr01AxisAngle,
+	lrActPosition => stgGr01HMI.stPLCTOHMI.lrAxisAngleActPos,
+	lrActVelocity => stgGr01HMI.stPLCTOHMI.lrAxisAngleActVelo,
+);
+
+
+
+
+
+
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Safety" Id="{fb2b49ed-022e-4de4-a5f8-c1ee5bdd8a09}">
+      <Implementation>
+        <ST><![CDATA[
+(* Execute safety *)
+fbSafety(
+	bLightCurtain := binGr01LightCurtainOK,
+	bConfirmLightCurtain := (bgGr00ConfirmAlarm
+			                            OR etgGr00MachineMode = ET_MachineMode_eManual
+			                            OR etgGr00MachineMode = ET_MachineMode_eHome
+			                            OR etgGr00MachineMode = ET_MachineMode_eAutomatic
+			                            OR stgGr00HMI.stHMITOPLC.bSafetyInterlockOff)
+					         AND NOT stgGr01Alarm.stControl.arbError[0].bActive,
+	tLightCurtainDelay := tgGr01LightCurtainDelay,
+	bLightCurtainOK => bgGr01LightCurtainOK,
+	bConfirmedLightCurtain => boutGr01ConfLightCurtain,
+	bNotInCrashArea => bgGr01NotInCrashArea
+);
+
+bgGr01SafetyActive := fbAxisSawBow.bSafetyLock
+				        OR fbAxisAngle.bSafetyLock;
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Sawband" Id="{96a1aa51-3ac5-4b37-a51d-5bd0b216fe25}">
+      <Implementation>
+        <ST><![CDATA[
+(* Enable sawband *)
+fbSawband(
+	bEnable := TRUE,
+	lrScalingNum := lrgGr01SawbandDistance,
+	udnScalingDenom := udngGr01SawbandInc,
+	etMachineMode := etgGr00MachineMode,
+	etMachineState := etgGr00MachineState,
+	bNoEStop := bgGr00NoEmergencyStop,
+	bPowerSupplyOn := bgGr00PowerSupplyOk,
+	bSafetyOK := bgGr01LightCurtainOK
+			        AND bgGr00AllDoorsClosedLocked,
+	bAirPressureOK := bgGr00AirPressureOK,
+	bMachineStandstill := bgGr00MachineStandstill,
+	bCtrlInterrupt := FALSE,
+	bMoveRelease := TRUE,
+	bMoveInterrupt := FALSE,
+	bTipPlus := stgGr01HMI.stHMITOPLC.bBtnSawbandPlus,
+	bTipMinus := FALSE(*stgGr01HMI.stHMITOPLC.bBtnSawbandMinus*),
+	bPlusRelease := TRUE,
+	bMinusRelease := TRUE,
+	bHandSawbandAirOn := stgGr01HMI.stHMITOPLC.bBtnSawbandAirOn,
+	bHandVacuumCleanerOn := stgGr01HMI.stHMITOPLC.bBtnVacuumCleanerOn,
+	bExtOverrideEn := FALSE,
+	lrManualSpeed := stgGr01HMI.stHMITOPLC.rSawbandManualSpeed / 3.28084,
+	lrAutoSpeed := stgGr01HMI.stHMITOPLC.rSawbandAutoSpeed  / 3.28084,
+	bSpeedLimitEn := TRUE,
+	lrSpeedMin := 0, (* m/min *)
+	lrSpeedMax := 400, (* m/min  SY 650*)
+	lrAcceleration := 100.0,
+	lrDeceleration := 100.0,
+	lrJerk := 100.0,
+	bEngineTorqueLimitEn := FALSE,
+	lrEngineTorque := 200.0,
+	bSawbandMotorNOK := binGr01SawbandMotorNOK,
+	bSawbandBroken := NOT binGr01SawbandNoBroken,
+	bVacuumCleanerMotorNOK := binGr01VacuumCleanerMotorNOK,
+	udnIncEnc := udninGr01CounterSawbandSpeed,
+	lrTaskCycle := lrgActCycleTime,
+	bConfirmAlarm := bgGr00ConfirmAlarm,
+	tSawbandAirOffDelay := tgGr01SawbandAirOffDelay,
+	tVacuumCleanerOffDelay := tgGr01VacuumCleanerOffDelay,
+	tSawbandReadyDelay := tgGr01SawbandReadyDelay,
+	tSpeedNoConstant := tgGr01SpeedNoConstant,
+	tControllerOff := tgGr01ControllerOff,
+	tAdsTimeOut := DEFAULT_ADS_TIMEOUT,
+	bHomeCompleted := bgGr01HomeCompleted,
+	Drive := igGr01DriveSawband,
+	Axis := igGr01AxisSawband,
+	lrActSpeed => stgGr01HMI.stPLCTOHMI.lrSawbandActSpeed,
+	bSawbandAirOn => boutGr01SawbandAirOn,
+	bVacuumCleanerOn => boutGr01VacuumCleanerOn
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Signals" Id="{970ec869-7b46-429c-a071-32fe1da01a64}">
+      <Implementation>
+        <ST><![CDATA[
+(* Execute signals *)
+fbSignals(
+	etMachineMode := etgGr00MachineMode,
+	etMachineState := etgGr00MachineState,
+	bMachineRunning := bgGr00MachineRunning,
+	bExecutedProcess := fbUtility.arbExeProcess[1]
+					      OR fbUtility.arbExeProcess[2]
+					      OR fbUtility.arbExeProcess[3],
+	stBlinker := stgGr00Blinker,
+	bBulbBtnStart => boutGr01BulbBtnStart,
+	bBulbBtnStop => boutGr01BulbBtnStop,
+);
+
+(* Detect all axis controller enabled *)
+bAllAxisCtrlEnabled := F_ChkAllAxisEnabled(
+	bEnable := TRUE,
+	bEnabledAxis1 := Gr01Control.fbAxisSawBow.bCtrlEnabled,
+	bEnabledAxis2 := Gr01Control.fbAxisAngle.bCtrlEnabled,
+	bEnabledAxis3 := TRUE,
+	bEnabledAxis4 := TRUE,
+	bEnabledAxis5 := TRUE,
+	bEnabledAxis6 := TRUE,
+	bEnabledAxis7 := TRUE,
+	bEnabledAxis8 := TRUE,
+	bEnabledAxis9 := TRUE,
+	bEnabledAxis10 := TRUE
+);
+
+(* Detect all axis stand still *)
+bAllAxisStandStill := F_ChkAllAxisStandStill(
+	bEnable := TRUE,
+	bAxis1StandStill := igGr01AxisSawBow.stAxisStatus.bStandStill,
+	bAxis2StandStill := igGr01AxisAngle.stAxisStatus.bStandStill,
+	bAxis3StandStill := TRUE,
+	bAxis4StandStill := TRUE,
+	bAxis5StandStill := TRUE,
+	bAxis6StandStill := TRUE,
+	bAxis7StandStill := TRUE,
+	bAxis8StandStill := TRUE,
+	bAxis9StandStill := TRUE,
+	bAxis10StandStill := TRUE,
+);
+
+(* Detect all axis not moving *)
+bAllAxisNotMoving := F_ChkAllAxisNotMoving(
+	bEnable := TRUE,
+	bAxis1NotMoving := igGr01AxisSawBow.stNcToPlc.stBaseDevice.stCommandPositioning.bNotMoving
+					   AND igGr01AxisSawBow.stNcToPlc.stBaseDevice.stCommandPositioning.dnActVelocity = 0,
+	bAxis2NotMoving := igGr01AxisAngle.stNcToPlc.stBaseDevice.stFastRefereneValue.nMotorSpeed = 0,
+	bAxis3NotMoving := TRUE,
+	bAxis4NotMoving := TRUE,
+	bAxis5NotMoving := TRUE,
+	bAxis6NotMoving := TRUE,
+	bAxis7NotMoving := TRUE,
+	bAxis8NotMoving := TRUE,
+	bAxis9NotMoving := TRUE,
+	bAxis10NotMoving := TRUE
+);
+
+(* Detect all axis referenced *)
+bAllAxisReferenced := F_ChkAllAxisReferenced(
+	bEnable := TRUE,
+	bReferencedAxis1 := Gr01Control.fbAxisSawBow.bReferenced,
+	bReferencedAxis2 := Gr01Control.fbAxisAngle.bReferenced,
+	bReferencedAxis3 := TRUE,
+	bReferencedAxis4 := TRUE,
+	bReferencedAxis5 := TRUE,
+	bReferencedAxis6 := TRUE,
+	bReferencedAxis7 := TRUE,
+	bReferencedAxis8 := TRUE,
+	bReferencedAxis9 := TRUE,
+	bReferencedAxis10 := TRUE
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Utility" Id="{a99fa86f-8295-4f3e-9137-945607a2d57f}">
+      <Implementation>
+        <ST><![CDATA[
+(* Execute utility *)
+
+(* Start program *)
+rtBtnStart(CLK := binGr00PushBtnStart OR stgGr00HMI.stHMITOPLC.bBtnStart);
+
+fbUtility.arbStartProcess[1] := rtBtnStart.Q
+						 AND etgGr00MachineState = ET_MachineState_eAutoExe;
+fbUtility.arbStopProcess[1] := etgGr00MachineState <> ET_MachineState_eAutoExe;
+fbUtility.arbSteppingProcess[1] := stgGr01HMI.stHMITOPLC.bBtnSteppingProcess;
+arbgGr01StartProcess[1] := fbUtility.arbExeProcess[1];
+
+fbUtility(
+	etMachineMode := etgGr00MachineMode,
+	etMachineState := etgGr00MachineState,
+	bAutoCompleted := bgGr00AutoCompleted
+					  AND bgGr01AutoCompleted
+					  AND bgGr02AutoCompleted
+					  AND bgGr05AutoCompleted
+					  AND bgGr00MachineStandstill
+					  AND etgGr00MachineState <> ET_MachineState_eAutoExe,
+	bHomeCompleted := bgGr01HomeCompleted,
+	bExeCounter := bgGr01AutoCompleted,
+	bLaserOnOff := stgGr01HMI.stHMITOPLC.bBtnLaserOn,
+	bStartTime := Gr01Control.fbUtility.arbStartProcess[1]
+				OR Gr01Control.fbUtility.arbStartProcess[2]
+				OR Gr01Control.fbUtility.arbStopProcess[3],
+	bStopTime := bgGr01AutoCompleted
+				OR fbUtility.arbStopProcess[1]
+				OR fbUtility.arbStopProcess[2]
+				OR fbUtility.arbStopProcess[3],
+	bLifetimeOn := NOT fbSawband.bNotMoving,
+	bResetLifetimeAll := FALSE,
+	bResetLifetime := stgGr01HMI.stHMITOPLC.bResetLifetime,
+	sLifetimeFilePath := sgGr01LifetimeFilePath,
+	sLifetimeFileName := sgGr01LifetimeFileName,
+	bPipeIdentify := NOT binGr01PipeNoIdentify,
+	rGlobalOverride := rgGr00Override,
+	rLocalOverride := stgGr01HMI.stHMITOPLC.rOverride,
+	lrLifetimeAll => stgGr01HMI.stPLCTOHMI.lrLifetime,
+	lrLifetimeAfterReset => stgGr01HMI.stPLCTOHMI.lrLifetimeAfterReset,
+	lrLifetimeAfterTrunOn => stgGr01HMI.stPLCTOHMI.lrLifetimeAfterTurnOn,
+	udnCounterTotal := stgGr01HMI.stPLCTOHMI.udnCounterTotal,
+	bLaserOn => boutGr01LaserOn,
+	bPipePresent => bgGr01PipePresent
+);]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="Gr01Control">
+      <LineId Id="46" Count="11" />
+    </LineIds>
+    <LineIds Name="Gr01Control.A_Alarm">
+      <LineId Id="0" Count="101" />
+    </LineIds>
+    <LineIds Name="Gr01Control.A_Axis">
+      <LineId Id="0" Count="108" />
+    </LineIds>
+    <LineIds Name="Gr01Control.A_Safety">
+      <LineId Id="0" Count="18" />
+    </LineIds>
+    <LineIds Name="Gr01Control.A_Sawband">
+      <LineId Id="0" Count="52" />
+    </LineIds>
+    <LineIds Name="Gr01Control.A_Signals">
+      <LineId Id="0" Count="73" />
+    </LineIds>
+    <LineIds Name="Gr01Control.A_Utility">
+      <LineId Id="0" Count="45" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

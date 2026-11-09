@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_VFDTOPLC" Id="{2cfb99da-0c64-433a-96f9-3609a4bbf5da}">
+    <Declaration><![CDATA[TYPE ST_VFDTOPLC :
+STRUCT
+	bEnabled						:BOOL;			(* The drive is on. *)
+	bOperational						:BOOL;			(* The drive is ready for operation. *)
+	bBrakeError						:BOOL;			(* Brake device error *)
+	bDummy							:BOOL;
+	nCurrentMotorSpeed				:INT;			(* Current motor speed *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

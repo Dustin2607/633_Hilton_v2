@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_BaseDeviceOut" Id="{faa69406-72e3-47ae-ab8c-8a9aba439112}">
+    <Declaration><![CDATA[TYPE ST_BaseDeviceOut :
+STRUCT
+
+	bEnable						:BOOL;			(* Enable controller *)
+	bFaultReset					:BOOL;			(* Acknowledgment for faults of the device state machine. *)
+	bQuickStop					:BOOL;			(* Brakes the motor *)
+	bFeedEnablePlus				:BOOL;			(* Feed enable plus *)
+	bFeedEnableMinus			:BOOL;			(* Feed enable minus *)
+	bHomingSensor				:BOOL;			(* Referencing cam signal or homing sensor *)
+	bToggleBit 					:BOOL;			(* Handshake bit. *)
+	nTorqueLimit					:INT;			(* Value of torque limit (absolute value) *)
+
+	(* Command Positioning *)
+	stCommandPositioning			:ST_CommandPositioningFROMPLC;
+
+	(* Fast Referene Value *)
+	stFastRefereneValue			:ST_FastRefereneValueFROMPLC;
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

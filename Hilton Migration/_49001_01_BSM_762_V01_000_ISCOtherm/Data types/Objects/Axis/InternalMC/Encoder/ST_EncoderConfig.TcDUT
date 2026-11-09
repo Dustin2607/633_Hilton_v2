@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_EncoderConfig" Id="{d1651f97-6351-414c-bffe-48db2b26fb46}">
+    <Declaration><![CDATA[TYPE ST_EncoderConfig :
+STRUCT
+	
+	wEncoderID					:WORD := 0; 				(* Encoder ID number *)
+	lrTaskCycle					:LREAL := 0.002; 			(* Cycle time of the task which is defined for NC [sec] *)
+	bCountDirInv					:BOOL := FALSE;			(* Counting direction inverted if TRUE *)
+	udnScalingDenom				:UDINT := 1;	  			(* Denominator for the conversion factor at the conversion of bus data to technical units [INC] *)
+	lrScalingNum					:LREAL := 1.0;  			(* Numerator for the conversion factor at the conversion of bus data to technical units [technical units] *)
+														(* The technical units dependent on denominator and numerator.*)
+	lrModuloFactor 				:LREAL := 360.0; 			(* The "distance" represented by one rotation [technical units] *) 
+	dwModuloValue				:DWORD := 0; 			(* Maximum encoder modulo value e.g 1048576 [inc] *)
+	etScalingMethod				:ET_ScalingMethod := ET_ScalingMethod_eSMLinear; (* Scaling method: linear or rotary *)
+	bSWLimitMaxEn				:BOOL := FALSE;			(* Activation and deactivation of the monitoring of the maximum end position. *)
+	lrSWPosLimitMax				:LREAL := 0.0;				(* Location of the maximum end position [technical units] *)
+	bSWLimitMinEn 				:BOOL := FALSE;			(* Activation and deactivation of the monitoring of the minimum end position. *)
+	lrSWPosLimitMin				:LREAL := 0.0;				(* Location of the minimum end position [technical units] *)
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

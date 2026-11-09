@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_Gr01HMITOPLC" Id="{65ba3cf3-b9a3-4ff6-9767-55310a3753a9}">
+    <Declaration><![CDATA[TYPE ST_Gr01HMITOPLC :
+STRUCT
+	bBtnStart								:BOOL; 											(* Button start *)
+	bBtnStop								:BOOL; 											(* Button stop *)
+	bBtnSteppingProcess					:BOOL; 											(* Stepping process *)
+	rOverride							:REAL;											(* Override 0 - 100 [%]  *)
+	bResetLifetime						:BOOL;											(* Reset life time *)
+         bResetCounterUser			   		:BOOL;											(* Reset counter user *)
+	bBtnAxisSawBowPlus					:BOOL;											(* Button move axis saw bow plus *)
+	bBtnAxisSawBowMinus					:BOOL;											(* Button move axis saw bow minus *)
+	bBtnAxisAnglePlus					:BOOL;											(* Button move axis angle plus *)
+	bBtnAxisAngleMinus					:BOOL;											(* Button move axis angle minus *)
+	bBtnSawbandPlus						:BOOL;											(* Button saw band plus *)
+	bBtnSawbandMinus					:BOOL;											(* Button saw band minus *)
+	bBtnSawbandAirOn					:BOOL;											(* On sawband air *)
+	bBtnSawbandAirOff					:BOOL;											(* Off sawband air *)
+	bBtnLaserOn							:BOOL;											(* On laser *)
+	bBtnLaserOff							:BOOL;											(* Off laser *)
+	bBtnVacuumCleanerOn				:BOOL;											(* Vacuum cleaner on *)
+	bBtnVacuumCleanerOff					:BOOL;											(* Vacuum cleaner off *)
+	lrAxisSawBowTipDistance				:LREAL;											(* Tip distance axis saw bow [mm] *)
+	lrAxisSawBowOriginShiftPos			:LREAL;											(* Origin shift position axis saw bow [mm] *)
+	lrAxisSawBowHomePos				:LREAL;											(* Home position axis saw bow [mm] *)
+	lrAxisSawBowSoftLimitMax				:LREAL;											(* Software limit maximum axis saw bow [mm] *)
+	lrAxisSawBowSoftLimitMin				:LREAL;											(* Software limit minimum axis saw bow [mm] *)
+	lrAxisSawBowNoRefVelo				:LREAL;											(* No reference velocity axis saw bow [%] *)
+	lrAxisSawBowManualVelo				:LREAL;											(* Manual velocity axis saw bow [%] *)
+	lrAxisSawBowHomeVelo				:LREAL;											(* Home velocity axis saw bow [%] *)
+	lrAxisSawBowAutoVelo					:LREAL;											(* Auto velocity axis saw bow [%] *)
+	lrAxisAngleTipDistance				:LREAL;											(* Tip distance axis angle [mm] *)
+	lrAxisAngleOriginShiftPos				:LREAL;											(* Origin shift position axis angle [mm] *)
+	lrAxisAngleHomePos					:LREAL;											(* Home position axis angle [mm] *)
+	lrAxisAngleSoftLimitMax				:LREAL;											(* Software limit maximum axis angle [mm] *)
+	lrAxisAngleSoftLimitMin					:LREAL;											(* Software limit minimum axis angle [mm] *)
+	lrAxisAngleNoRefVelo					:LREAL;											(* No reference velocity axis angle [%] *)
+	lrAxisAngleManualVelo					:LREAL;											(* Manual velocity axis angle [%] *)
+	lrAxisAngleHomeVelo					:LREAL;											(* Home velocity axis angle [%] *)
+	lrAxisAngleAutoVelo					:LREAL;											(* Auto velocity axis angle [%] *)
+	rSawbandManualSpeed				:REAL;											(* Manual speed sawband [upm] *)
+	rSawbandAutoSpeed					:REAL;											(* Auto speed sawband [upm] *)
+	rSawingOverride						:REAL;											(* Sawing override 0 - 100 [%]  *)
+	rPipeDiameter						:REAL;											(* Pipe diameter [mm] *)
+	lrActSawingAngle						:LREAL;											(* Actual angle of sawing [mm] *)
+	lrSafetyDistance						:LREAL;											(* Safety distance [mm] *)
+	lrSafeDistSawBandToPipe				:LREAL;											(* Safety distance sawband to pipe[mm] *)
+	lrSawBandThickness					:LREAL;											(* Sawband thickness [mm] *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

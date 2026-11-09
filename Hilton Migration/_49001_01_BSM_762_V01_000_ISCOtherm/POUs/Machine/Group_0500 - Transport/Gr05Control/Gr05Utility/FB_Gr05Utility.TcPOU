@@ -1,0 +1,226 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Gr05Utility" Id="{78f2ee80-66f9-4ffe-af51-a929890fcf7b}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Gr05Utility
+(*
+
+The function block used to control general utility of the machine.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			28.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	etMachineMode				:ET_MachineMode;			(* Machine mode *)
+	etMachineState				:ET_MachineState;			(* Machine state *)
+	bStartProcess				:BOOL;						(* Start process *)
+	bStopProcess				:BOOL;						(* Stop process *)
+	bSteppingProcess			:BOOL;						(* Stepping process *)
+	bAutoCompleted				:BOOL;						(* Process completed *)
+	bExeCounter					:BOOL;						(* Execute counter *)
+	bStartTime					:BOOL;						(* Start measurement of cylce time *)
+	bStopTime					:BOOL;						(* Stop measurement of cylce time *)
+	bLifetimeOn					:BOOL;						(* Lifetime on *)
+	bResetLifetimeAll				:BOOL; 						(* Reset all counters *)
+	bResetLifetime				:BOOL;						(* Reset counter *)
+	sLifetimeFilePath				:STRING;					(* File path for life time *)
+	sLifetimeFileName			:STRING;					(* File name for life time *)
+	bPipeEndEdgeIdentify			:BOOL;						(* Pipe end edge identify *)
+	bPipeBeginEdgeIdentify		:BOOL;						(* Pipe begin edge identify *)
+	rGlobalOverride				:REAL;						(* Global override *)
+	tAdsTimeOut 					:TIME := t#2s;					(* Timout for ads commands *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bExeProcess					:BOOL;						(* Execute process *)
+	rActOverride					:REAL;						(* Actual override *)
+	lrLifetimeAll					:LREAL;						(* Lifetime all *)
+	lrLifetimeAfterReset			:LREAL;						(* Lifetime after reset *)
+	lrLifetimeAfterTrunOn			:LREAL;						(* Lifetime after turn on *)
+	bPipeEndPresent				:BOOL;						(* End of pipe present *)
+	bPipeBeginPresent			:BOOL;						(* Begin of pipe present *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	bHomeCompleted				:BOOL;						(* Execute process *)
+	rLocalOverride				:REAL;						(* Actual override *)
+	udnCounterTotal				:UDINT;						(* Counter *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	arudnCounterTotal				:ARRAY[0..1] OF UDINT;			(* Counter *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbStartProcess				:FB_StartProcess;
+	fbOverride					:FB_Override;
+	fbOverrideSelection			:FB_OverrideSelection;
+	fbLifetime					:FB_TimeHoursCounter;		(* Machine lifetime *)
+	arfbCounter					:ARRAY[0..1] OF FB_Counter;
+	arfbCylceTime				:ARRAY[0..1] OF FB_Timer;
+	fbPipeBeginIdentify			:FB_SignalHandlingEdge;
+	fbPipeEndIdentify				:FB_SignalHandlingEdge;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+A_StartProcess();
+A_Override();
+A_Counter();
+A_CycleTime();
+A_PipeIdentify();
+
+]]></ST>
+    </Implementation>
+    <Action Name="A_Counter" Id="{aca08eee-ff52-4a22-83c8-5d2c258beaf5}">
+      <Implementation>
+        <ST><![CDATA[
+(* Hours counter *)
+fbLifetime(
+	bEnable := TRUE,
+	bDeleteAll := bResetLifetimeAll,
+	sAmsNetId := sgAmsNetId,
+	bCount := bLifetimeOn,
+	bSave := FALSE,
+	bReset := bResetLifetime,
+	sFilePath := sLifetimeFilePath,
+	sFileName := sLifetimeFileName,
+	tSaveIntervall := t#8m,
+	tTimeout := tAdsTimeOut,
+	lrAllOverHours => lrLifetimeAll,
+	lrAfterResetHours => lrLifetimeAfterReset,
+	lrNoRetainHours => lrLifetimeAfterTrunOn,
+ );
+
+(* Counter *)
+arfbCounter[0](
+	bEnable := TRUE,
+	bExecute := bExeCounter,
+	bReset := arfbCounter[0].bOverflow,
+	udnCounter := udnCounterTotal
+);
+
+arfbCounter[1](
+	bEnable := TRUE,
+	bExecute := bExeCounter,
+	bReset := arfbCounter[1].bOverflow,
+	udnCounter := arudnCounterTotal[1]
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_CycleTime" Id="{4bff5c10-6a7d-494c-92ba-5f24c69ccb37}">
+      <Implementation>
+        <ST><![CDATA[
+(* Cylce time *)
+arfbCylceTime[0](
+	bEnable := TRUE,
+	bReset := FALSE,
+	bStartStop := bStartTime
+			        AND bgGr00ModeAutomatic,
+	bStop := bStopTime
+		        OR bgGr00MachineStandstill,
+	tMaxTime := t#480m,
+	stRefTime => ,
+	stActTime => ,
+	stRestTime =>
+);
+
+arfbCylceTime[1](
+	bEnable := TRUE,
+	bReset := FALSE,
+	bStartStop := bStartTime
+			        AND bgGr00ModeAutomatic,
+	bStop := bStopTime
+		        OR bgGr00MachineStandstill,
+	tMaxTime := t#480m,
+	stRefTime => ,
+	stActTime => ,
+	stRestTime =>
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Override" Id="{0d3259fc-8545-4360-8276-231995e34fb8}">
+      <Implementation>
+        <ST><![CDATA[
+(* Override control *)
+fbOverrideSelection(
+	bEnable := TRUE,
+	rGlobalOverride := rGlobalOverride,
+	rLocalOverride := rLocalOverride
+);
+
+fbOverride(
+	bEnable := TRUE,
+	bBypassAccDec := etMachineMode = ET_MachineMode_eManual,
+	rSetOverride := fbOverrideSelection.rActOverride,
+	rAcc := rgGr05AdsOverrideAcc,
+	rDec := rgGr00AdsOverrideDec,
+	rActOverride => rActOverride
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_PipeIdentify" Id="{e859a2fc-5c65-4bc4-8959-88b432cf4aa9}">
+      <Implementation>
+        <ST><![CDATA[
+fbPipeEndIdentify(
+	bEnable := TRUE,
+	bIn := bPipeEndEdgeIdentify,
+	tDelay := t#0s,
+	bOut => bPipeEndPresent
+);
+
+fbPipeBeginIdentify(
+	bEnable := TRUE,
+	bIn := bPipeBeginEdgeIdentify,
+	tDelay := t#0s,
+	bOut => bPipeBeginPresent
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_StartProcess" Id="{949e378e-212b-4eb0-bdb3-630f29b303d1}">
+      <Implementation>
+        <ST><![CDATA[
+(* Start auto process *)
+fbStartProcess(
+	bEnable := etMachineMode = ET_MachineMode_eAutomatic
+			    OR etMachineMode = ET_MachineMode_eCycle
+			    OR etMachineMode = ET_MachineMode_eStepping,
+	bStart := bStartProcess,
+	bStop := bStopProcess,
+	bDone := bAutoCompleted,
+	bStepping := bSteppingProcess,
+	bHomeCompleted := bHomeCompleted,
+	bStartProcess => bExeProcess
+);]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_Gr05Utility">
+      <LineId Id="71" Count="7" />
+    </LineIds>
+    <LineIds Name="FB_Gr05Utility.A_Counter">
+      <LineId Id="0" Count="31" />
+    </LineIds>
+    <LineIds Name="FB_Gr05Utility.A_CycleTime">
+      <LineId Id="0" Count="26" />
+    </LineIds>
+    <LineIds Name="FB_Gr05Utility.A_Override">
+      <LineId Id="0" Count="15" />
+    </LineIds>
+    <LineIds Name="FB_Gr05Utility.A_PipeIdentify">
+      <LineId Id="0" Count="13" />
+    </LineIds>
+    <LineIds Name="FB_Gr05Utility.A_StartProcess">
+      <LineId Id="0" Count="12" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

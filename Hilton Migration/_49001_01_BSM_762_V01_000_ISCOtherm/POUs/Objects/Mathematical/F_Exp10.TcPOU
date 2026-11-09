@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_Exp10" Id="{ca07bca3-a4da-4c89-9400-b46b8b491315}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_Exp10 : REAL
+VAR_INPUT
+	X : REAL;
+END_VAR
+
+
+(*
+version 1.0	 2 dec 2007
+programmer 	hugo
+tested by		tobias
+
+this function calculates the exponent to the basis 10
+exp10(3) = 1000
+
+*)]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[F_Exp10 := EXP(X * 2.30258509299405);]]></ST>
+    </Implementation>
+    <LineIds Name="F_Exp10">
+      <LineId Id="15" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

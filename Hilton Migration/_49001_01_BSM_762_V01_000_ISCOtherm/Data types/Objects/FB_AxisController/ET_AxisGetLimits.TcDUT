@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_AxisGetLimits" Id="{2001d6a1-d0e8-464b-b1aa-c0e89c6f3a23}">
+    <Declaration><![CDATA[TYPE ET_AxisGetLimits :
+(
+	ET_AxisGetLimits_eWaitExecute := 0,
+	ET_AxisGetLimits_eReadVeloMax,
+	ET_AxisGetLimits_eWfReadVeloMax,
+	ET_AxisGetLimits_eReadAccMax,
+	ET_AxisGetLimits_eWfReadAccMax,
+	ET_AxisGetLimits_eReadDecMax,
+	ET_AxisGetLimits_eWfReadDecMax,
+	ET_AxisGetLimits_eReadJerkMax,
+	ET_AxisGetLimits_eWfReadJerkMax,
+	ET_AxisGetLimits_eReadSoftLimitMax,
+	ET_AxisGetLimits_eWfReadSoftLimitMax,
+	ET_AxisGetLimits_eReadSoftLimitMin,
+	ET_AxisGetLimits_eWfReadSoftLimitMin,
+	ET_AxisGetLimits_eDone := 197,
+	ET_AxisGetLimits_eError := 198,
+	ET_AxisGetLimits_eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

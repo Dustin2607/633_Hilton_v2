@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_PERIPHERYTOPLC" Id="{4673ef6f-d03a-4126-8f97-fb10b8aa8fc2}">
+    <Declaration><![CDATA[TYPE ST_PERIPHERYTOPLC :
+STRUCT
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

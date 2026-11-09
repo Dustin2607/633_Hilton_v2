@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <GVL Name="GVL_Gr0500" Id="{e3fb9a42-3e2f-4305-ba38-b5ceaf360a39}">
+    <Declaration><![CDATA[{attribute 'Tc2GvlVarNames'}
+VAR_GLOBAL
+	bgGr05StartProcess				:BOOL;						(* Start process *)
+	bgGr05LightCurtainOK				:BOOL;						(* Light curtain ok / Freigabe Lichtschranke i.o *)
+	bgGr05HomeNotInCrashGr01		:BOOL;						(* Home not in crash for Gr01 output *)
+	bgGr05HomeNotInCrashGr02		:BOOL;						(* Home not in crash for Gr02 output *)
+	bgGr05SafetyCompleted			:BOOL;						(* Safety completed *)
+	bgGr05ManualCompleted			:BOOL;						(* Manual completed *)
+	bgGr05HomeCompleted			:BOOL;						(* Home completed / Grundsrellung ausgeführt *)
+	bgGr05AutoCompleted				:BOOL;						(* Automatic completed / Automatik beendet *)
+	bgGr05MoveInterrupted			:BOOL;						(* Move interrupted / Bewegung unterbrochen *)
+	bgGr05WritePersistent				:BOOL;						(* Write persisten data *)
+	bgGr05SafetyActive				:BOOL;						(* Safety active *)
+	bgGr05SawingReq 				:BOOL;						(* Req from Gr05 to Gr01 *)
+	bgGr05AngleReq 					:BOOL;						(* Req from Gr05 to Gr01 *)
+	bgGr05TransportAck 				:BOOL;						(* Ack from Gr05 to Gr01 *)
+	bgGr05PipeEndPresent			:BOOL;						(* End of pipe present *)
+	bgGr05PipeBeginPresent			:BOOL;						(* Begin of pipe present *)
+	lrgGr05SafetyDistance				:LREAL;						(* *)
+END_VAR
+]]></Declaration>
+  </GVL>
+</TcPlcObject>

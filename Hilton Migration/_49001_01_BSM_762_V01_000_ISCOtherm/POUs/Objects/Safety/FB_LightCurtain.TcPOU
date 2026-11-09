@@ -1,0 +1,101 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_LightCurtain" Id="{2b420931-5eb5-418b-9ce8-791a17b3db8a}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_LightCurtain
+(*
+
+The function block used to control light Curtain.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			23.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable					:BOOL;						(* Enable FB signal *)
+	bIn						:BOOL;						(* Input signal *)
+	bInConf					:BOOL;						(* Confirm *)
+	tTimeOut					:TIME := t#1s;					(* Timeout *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bOut					:BOOL;						(* Air pressure ok *)
+	bOutConf					:BOOL;
+	bError					:BOOL;						(* Error by no air pressure *)
+	udnErrorNo				:UDINT;
+	udnMessageNo			:UDINT;
+	sMsg					:STRING;
+END_VAR
+VAR_IN_OUT
+
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	bFirstTime				:BOOL;						(* First cycle *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	tonWatchDog				:TON;						(* Timer to delay *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	bOut := TRUE;
+	bError := FALSE;
+	udnErrorNo := 0;
+	udnMessageNo := 0;
+	sMsg := '';
+	tonWatchDog(IN := FALSE,
+	             		 PT := tTimeOut);
+	bFirstTime := FALSE;
+	RETURN;
+END_IF;
+
+IF NOT bFirstTime
+THEN
+	bError := FALSE;
+	udnErrorNo := 0;
+	udnMessageNo := 0;
+	sMsg := '';
+	tonWatchDog(IN := FALSE,
+				PT := tTimeOut);
+	bFirstTime := TRUE;
+END_IF;
+
+(* Timer starts when came rising edge of signal *)
+tonWatchDog(
+	IN := bIn,
+	PT := tTimeOut
+);
+
+bOut := tonWatchDog.Q;
+bError := NOT bIn;
+
+bOutConf := bInConf AND bError;
+
+IF bError
+THEN
+	udnErrorNo := 1;
+	sMsg := 'Light Curtain not ok';
+    
+ELSIF bOut
+THEN
+	udnErrorNo := 0;
+	sMsg := 'Light curtain ok';
+END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_LightCurtain">
+      <LineId Id="46" Count="44" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

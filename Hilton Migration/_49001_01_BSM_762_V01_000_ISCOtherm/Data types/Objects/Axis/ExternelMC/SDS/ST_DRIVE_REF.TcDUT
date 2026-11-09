@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_DRIVE_REF" Id="{0e37c816-8037-4311-8181-f6f634d3f63d}">
+    <Declaration><![CDATA[TYPE ST_DRIVE_REF : FB_STOEBERSDS_Drive_REF;
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

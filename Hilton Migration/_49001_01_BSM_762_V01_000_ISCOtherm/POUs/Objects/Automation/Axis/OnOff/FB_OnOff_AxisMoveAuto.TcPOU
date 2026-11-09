@@ -1,0 +1,254 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_OnOff_AxisMoveAuto" Id="{47e4c39f-254e-409d-b155-088f1e9f6de6}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_OnOff_AxisMoveAuto
+(*
+
+The function block used to auto control of axis.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			22.09.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Signal FB enable *)
+	etMachineMode				:ET_MachineMode;			(* Machine mode *)
+	etMachineState				:ET_MachineState;			(* Machine state *)
+	bCtrlEnabled					:BOOL;						(* Controller enabled *)
+	bReset						:BOOL;						(* Reset *)
+	bExeMoveAbs				:BOOL;						(* Execute move absolut *)
+	bSuperImposedOn			:BOOL;						(* Switch SuperImposed on / off *)
+	bExeMoveVelo				:BOOL;						(* Execute move velo *)
+	bExeStop					:BOOL;						(* Execute stop *)
+	lrPosition						:LREAL;						(* Target position *)
+	lrVelocity						:LREAL;						(* Target velocity *)
+	tControllerOff					:TIME := t#60s;				(* Time to switch controller off *)
+	stControllerConfig				:ST_VeloControllerConfig;				(* Controller configuration *)
+	pAxis						:POINTER TO ST_AXIS_REF_V2;				(* The AXIS_REF data type  is an interface between the PLC and the NC and contains axis information *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bInPosition					:BOOL;						(* Target position is reached *)
+	bInVelocity					:BOOL;						(* Target velocity is reached *)
+	bStopped					:BOOL;						(* Target stopped *)
+	bControllerOff					:BOOL;						(* Switch controller off *)
+	bMoveToPlus				:BOOL;						(* Move to plus *)
+	bMoveToMinus				:BOOL;						(* Move to minus *)
+	bError						:BOOL;						(* Program error *)
+	udnErrorNo					:UDINT;						(* Error number *)
+END_VAR
+VAR_IN_OUT
+	bHomeCompleted				:BOOL;						(* Home completed *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	bFirstTime					:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbMoveAbs					:FB_OnOff_MoveAbsolut;
+	fbMoveVelo					:FB_OnOff_MoveVelocity;
+	fbStop						:FB_OnOff_Stop;
+	fbPositionController			:FB_PositionController;
+	fbStateIdle					:FB_SignalWatchdog;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable								(* Signal FB enable *)
+THEN
+	(* The function block MoveAbsolute starts positioning to an absolute target position and monitors the axis movement over the whole travel path.  *)
+	fbMoveAbs(
+		bExecute := FALSE,
+		pAxis := pAxis,
+		bDone => bInPosition
+	);
+
+	(* The function block MoveVelocity starts a continuous movement with specified velocity and direction.  *)
+	fbMoveVelo(
+		bExecute := FALSE,
+		pAxis := pAxis,
+		bInVelocity => bInVelocity
+	 );
+
+	(* The function block Stop stops an axis with a defined braking ramp and blocks the axis for any motion commands.  *)
+	fbStop(
+		bExecute := FALSE,
+		pAxis := pAxis,
+		bDone => bStopped
+	);
+
+	fbStateIdle(
+		bEnable := FALSE,
+		tWatchdog := tControllerOff
+	);
+
+	bMoveToPlus := FALSE;
+	bMoveToMinus := FALSE;
+
+	bControllerOff := FALSE;
+
+	bFirstTime := FALSE;
+
+	RETURN;
+END_IF;
+
+IF NOT bFirstTime
+THEN
+
+	bFirstTime := TRUE;
+END_IF;
+
+IF bReset
+     AND bError
+THEN
+	(* The function block MoveAbsolute starts positioning to an absolute target position and monitors the axis movement over the whole travel path.  *)
+	fbMoveAbs(
+		bExecute := FALSE,
+		pAxis := pAxis,
+		bDone => bInPosition
+	);
+
+	(* The function block MoveVelocity starts a continuous movement with specified velocity and direction.  *)
+	fbMoveVelo(
+		bExecute := FALSE,
+		pAxis := pAxis,
+		bInVelocity => bInVelocity
+	 );
+
+	(* The function block Stop stops an axis with a defined braking ramp and blocks the axis for any motion commands.  *)
+	fbStop(
+		bExecute := FALSE,
+		pAxis := pAxis,
+		bDone => bStopped
+	);
+
+	bMoveToPlus := FALSE;
+	bMoveToMinus := FALSE;
+END_IF;
+
+IF bCtrlEnabled
+     AND (etMachineMode = ET_MachineMode_eAutomatic
+		OR etMachineMode = ET_MachineMode_eStepping
+		OR etMachineMode = ET_MachineMode_eHome)
+    AND etMachineState <> ET_MachineState_eIdle
+    AND etMachineState <> ET_MachineState_eUndefined
+THEN
+	(* The function block MoveAbsolute starts positioning to an absolute target position and monitors the axis movement over the whole travel path.  *)
+	fbMoveAbs(
+		bExecute := bExeMoveAbs,
+		lrPosition := lrPosition,
+		bSuperImposed := bSuperImposedOn,
+		pAxis := pAxis,
+		bDone => bInPosition
+	);
+
+	(* The function block MoveVelocity starts a continuous movement with specified velocity and direction.  *)
+	fbMoveVelo(
+		bExecute := bExeMoveVelo,
+		lrVelocity	 := lrVelocity,
+		pAxis := pAxis,
+		bInVelocity => bInVelocity
+	 );
+
+	A_Controller();
+
+	pAxis^.stPosition.lrSetPos := LIMIT(
+		pAxis^.stLimitSwitches.lrSWPosLimitMin,
+		pAxis^.stPosition.lrSetPos ,
+		pAxis^.stLimitSwitches.lrSWPosLimitMax
+	);
+
+	bMoveToPlus := NOT pAxis^.stAxisCtrl.bQuickStop
+				      AND (fbMoveAbs.bMoveToPlus
+						OR fbMoveVelo.bMoveToPlus);
+
+	bMoveToMinus := NOT pAxis^.stAxisCtrl.bQuickStop
+				         AND (fbMoveAbs.bMoveToMinus
+						   OR fbMoveVelo.bMoveToMinus);
+
+ELSE
+	(* The function block MoveAbsolute starts positioning to an absolute target position and monitors the axis movement over the whole travel path.  *)
+	fbMoveAbs(
+		bExecute := FALSE,
+		pAxis := pAxis,
+		bDone => bInPosition
+	);
+
+	(* The function block MoveVelocity starts a continuous movement with specified velocity and direction.  *)
+	fbMoveVelo(
+		bExecute := FALSE,
+		pAxis := pAxis,
+		bInVelocity => bInVelocity
+	 );
+
+	bMoveToPlus := FALSE;
+	bMoveToMinus := FALSE;
+
+END_IF;
+
+fbStateIdle(
+	bEnable := etMachineMode = ET_MachineMode_eAutomatic
+			    OR etMachineMode = ET_MachineMode_eStepping
+		  	    OR etMachineMode = ET_MachineMode_eHome,
+	bIn := etMachineState <> ET_MachineState_eIdle
+		  AND etMachineState <> ET_MachineState_eUndefined,
+	tWatchdog := tControllerOff
+);
+
+bControllerOff := NOT fbStateIdle.bOut
+			    AND (etMachineMode = ET_MachineMode_eAutomatic
+				        OR etMachineMode = ET_MachineMode_eStepping
+				        OR etMachineMode = ET_MachineMode_eHome);
+
+(* The function block Stop stops an axis with a defined braking ramp and blocks the axis for any motion commands.  *)
+fbStop(
+	bExecute := bExeStop,
+	pAxis := pAxis,
+	bDone => bStopped
+);
+
+pAxis^.stAxisStates.bNotMoving := NOT bMoveToPlus
+							    AND NOT bMoveToMinus;
+
+bError :=  fbMoveAbs.bError
+		OR fbMoveVelo.bError
+		OR fbStop.bError;]]></ST>
+    </Implementation>
+    <Action Name="A_Controller" Id="{28918539-aa95-4932-a1df-cd9a26f5894c}">
+      <Implementation>
+        <ST><![CDATA[
+fbPositionController (
+	bEnable := TRUE,
+	dnSetPos := pAxis^.stPosition.dnSetPos,
+	stCtrlCfg := stControllerConfig,
+(*	lrPosMin := ,
+	lrPosMax := ,*)
+	pAxis := pAxis,
+	lrVeloOut => ,
+	lrProcessErr => ,
+	bVeloMin => ,
+	bVeloMax =>
+);
+]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_OnOff_AxisMoveAuto">
+      <LineId Id="63" Count="159" />
+    </LineIds>
+    <LineIds Name="FB_OnOff_AxisMoveAuto.A_Controller">
+      <LineId Id="0" Count="13" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

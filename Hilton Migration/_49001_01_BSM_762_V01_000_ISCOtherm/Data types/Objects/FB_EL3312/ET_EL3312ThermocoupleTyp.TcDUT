@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_EL3312ThermocoupleTyp" Id="{d428b0b5-2196-41f5-a063-a62405b011cb}">
+    <Declaration><![CDATA[TYPE ET_EL3312ThermocoupleTyp :
+(
+	ET_EL3312ThermocoupleTyp_eK := 0,				(* Typ: K -200°C bis 1370°C *)
+	ET_EL3312ThermocoupleTyp_eJ := 1,				(* Typ: J -100°C bis 1200°C *)
+	ET_EL3312ThermocoupleTyp_eL := 2,				(* Typ: L 0°C bis 900°C *)
+	ET_EL3312ThermocoupleTyp_eE := 3,				(* Typ: E -100°C bis 1000°C *)
+	ET_EL3312ThermocoupleTyp_eT := 4,				(* Typ: T -200°C bis 400°C *)
+	ET_EL3312ThermocoupleTyp_eN := 5,				(* Typ: N -100°C bis 1300°C *)
+	ET_EL3312ThermocoupleTyp_eU := 6,				(* Typ: U 0°C bis 600°C *)
+	ET_EL3312ThermocoupleTyp_eB := 7,				(* Typ: B 600°C bis 1800°C *)
+	ET_EL3312ThermocoupleTyp_eR := 8,				(* Typ: R 0°C bis 1767°C *)
+	ET_EL3312ThermocoupleTyp_eS := 9,				(* Typ: S 0°C bis 1760°C *)
+	ET_EL3312ThermocoupleTyp_eC := 10,				(* Typ: C 0°C bis 2320°C *)
+	ET_EL3312ThermocoupleTyp_e30mV := 100,			(* +/-30 mV (1uV resolution) *)
+	ET_EL3312ThermocoupleTyp_e60mV := 101,			(* +/-60 mV (2uV resolution) *)
+	ET_EL3312ThermocoupleTyp_e75mV := 102,			(* +/-75 mV (4uV resolution) *)
+	ET_EL3312ThermocoupleTyp_eNoConn := 999		(* No connected *)
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

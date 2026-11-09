@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_ToolStatus" Id="{30d3deb3-62f4-415a-8742-e7b827278183}">
+    <Declaration><![CDATA[TYPE ET_ToolStatus :
+(
+	ET_ToolStatus_eOk,
+	ET_ToolStatus_eNOk,
+	ET_ToolStatus_eLifettimeExceeded
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

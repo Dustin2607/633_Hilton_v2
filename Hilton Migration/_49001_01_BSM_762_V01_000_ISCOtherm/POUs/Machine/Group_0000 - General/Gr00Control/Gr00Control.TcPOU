@@ -1,0 +1,379 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="Gr00Control" Id="{4c0fbbfe-2962-4305-afe2-b9d082da3bf3}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM Gr00Control
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable					:BOOL;						(* Enable Gr00Control *)
+
+	fbProgram				:FB_Gr00Program;
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbAlarm					:FB_Gr00Alarm;
+	fbSafety					:FB_Gr00Safety;
+	fbSignals				:FB_Gr00Signals;
+	fbUtility					:FB_Gr00Utility;
+	fbPeriphery				:FB_Gr00Periphery;
+
+	ftClampsChecked			:F_TRIG;
+	tonClampsChecked		:TON;
+	fbMachineStandstill		:FB_SignalHandlingDelay;
+
+	fbStartHMI				:NT_StartProcess;
+	tonStartHmi				:TON;
+
+END_VAR
+VAR CONSTANT
+	nFatalErrorMaxIdx				:INT := 1;						(* Maximal index of  using alarms *)
+	nErrorMaxIdx					:INT := 12;					(* Maximal index of  using alarms *)
+	nWarningMaxIdx				:INT := 0;						(* Maximal index of  using alarms *)
+	nMessageMaxIdx				:INT := 4;						(* Maximal index of  using alarms *)
+	nHintMaxIdx					:INT := 0;						(* Maximal index of  using alarms *)
+
+	dnFatalErrorBaseIdentNo		:DINT := 01000;				(* Fatal error identification number *)
+	dnErrorBaseIdentNo			:DINT := 01100;				(* Error identification number *)
+	dnWarningBaseIdentNo		:DINT := 01200;				(* Warning identification number *)
+	dnMessageBaseIdentNo		:DINT := 01300;				(* Message identification number *)
+	dnHintBaseIdentNo			:DINT := 01400;				(* Hint identification number *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	RETURN;
+END_IF;
+
+A_Periphery();
+A_Utility();
+A_Program();
+A_Safety();
+A_Signals();
+A_Alarm();
+A_HMI();
+
+]]></ST>
+    </Implementation>
+    <Action Name="A_Alarm" Id="{9e1d66c5-72aa-4507-8507-8a9cad4c736c}">
+      <Implementation>
+        <ST><![CDATA[
+(* Collect and execute input alarms *)
+fbAlarm.stAlarmIn.arbFatalError[0].bActive := fbSafety.fbNoEmergencyStop.bError;
+fbAlarm.stAlarmIn.arbFatalError[0].dnCode := dnFatalErrorBaseIdentNo + 0;
+
+fbAlarm.stAlarmIn.arbError[0].bActive := NOT binGr00LightCurtainOK
+                                                		      AND (Gr01Home.fbProcedure.bBusy
+                                                      				OR Gr01Auto.fbProcedure.bBusy);
+fbAlarm.stAlarmIn.arbError[0].dnCode := dnErrorBaseIdentNo + 0;
+
+fbAlarm.stAlarmIn.arbError[1].bActive := fbSafety.fbAirPressure.bError;
+fbAlarm.stAlarmIn.arbError[1].dnCode := dnErrorBaseIdentNo + 1;
+
+fbAlarm.stAlarmIn.arbError[2].bActive := FALSE;
+fbAlarm.stAlarmIn.arbError[2].dnCode := dnErrorBaseIdentNo + 2;
+
+fbAlarm.stAlarmIn.arbError[4].bActive := NOT fbSafety.bFieldbusMasterOK AND fbSafety.fbFieldbus.bInit;
+fbAlarm.stAlarmIn.arbError[4].dnCode := dnErrorBaseIdentNo + 4;
+
+fbAlarm.stAlarmIn.arbError[5].bActive := fbSafety.bFieldbusBrake;
+fbAlarm.stAlarmIn.arbError[5].dnCode := dnErrorBaseIdentNo + 5;
+
+fbAlarm.stAlarmIn.arbError[6].bActive := fbSafety.fbTemperatur.bError;
+fbAlarm.stAlarmIn.arbError[6].dnCode := dnErrorBaseIdentNo + 6;
+
+fbAlarm.stAlarmIn.arbError[7].bActive := NOT fbSafety.arbPowerSupplyOn[1];
+fbAlarm.stAlarmIn.arbError[7].dnCode := dnErrorBaseIdentNo + 7;
+
+fbAlarm.stAlarmIn.arbError[8].bActive :=NOT fbSafety.arbPowerSupplyOn[2];
+fbAlarm.stAlarmIn.arbError[8].dnCode := dnErrorBaseIdentNo + 8;
+
+fbAlarm.stAlarmIn.arbError[9].bActive := NOT fbSafety.arbPowerSupplyOn[3];
+fbAlarm.stAlarmIn.arbError[9].dnCode := dnErrorBaseIdentNo + 9;
+
+fbAlarm.stAlarmIn.arbError[10].bActive := FALSE(*SystemInfo.bootDataFlags.5*);
+fbAlarm.stAlarmIn.arbError[10].dnCode := dnErrorBaseIdentNo + 10;
+
+fbAlarm.stAlarmIn.arbError[11].bActive := fbProgram.fbRead.bError
+								      AND  fbProgram.fbRead.udnErrorNo <> 31;
+fbAlarm.stAlarmIn.arbError[11].dnCode := dnErrorBaseIdentNo + 11;
+
+fbAlarm.stAlarmIn.arbError[12].bActive := fbProgram.fbRead.bError
+								      AND  fbProgram.fbRead.udnErrorNo = 31;
+fbAlarm.stAlarmIn.arbError[12].dnCode := dnErrorBaseIdentNo + 12;
+
+fbAlarm.stAlarmIn.arbWarning[0].bActive := fbSafety.fbTemperatur.bWarning;
+fbAlarm.stAlarmIn.arbWarning[0].dnCode := dnWarningBaseIdentNo + 0;
+
+fbAlarm.stAlarmIn.arbMessage[0].bActive := fbSafety.fbAirPressure.udnMessageNo = 1;
+fbAlarm.stAlarmIn.arbMessage[0].dnCode := dnMessageBaseIdentNo + 0;
+
+fbAlarm.stAlarmIn.arbMessage[1].bActive := stgGr00HMI.stHMITOPLC.bSafetyInterlockOff;
+fbAlarm.stAlarmIn.arbMessage[1].dnCode := dnMessageBaseIdentNo + 1;
+
+fbAlarm.stAlarmIn.arbMessage[2].bActive := NOT binGr00LightCurtainOK
+                                            				      AND NOT fbAlarm.stAlarmIn.arbError[0].bActive
+                                            				      AND NOT stgGr00Alarm.stControl.arbError[0].bActive;
+fbAlarm.stAlarmIn.arbMessage[2].dnCode := dnMessageBaseIdentNo + 2;
+
+fbAlarm.stAlarmIn.arbMessage[4].bActive := NOT binGr00AllDoorsClosed;
+fbAlarm.stAlarmIn.arbMessage[4].dnCode := dnMessageBaseIdentNo + 4;
+
+(* Execute utility *)
+fbAlarm(
+	etMachineMode := etgGr00MachineMode,
+	etMachineState := etgGr00MachineState,
+	bNoEStop := bgGr00NoEmergencyStop,
+	bConfirmAlarm := bgGr00ConfirmAlarm,
+	dtDateTime := stgGr00DateTime.dtDateTime,
+	nFatalErrorMaxIdx := nFatalErrorMaxIdx,
+	nErrorMaxIdx := nErrorMaxIdx,
+	nWarningMaxIdx := nWarningMaxIdx,
+	nMessageMaxIdx := nMessageMaxIdx,
+	nHintMaxIdx := nHintMaxIdx,
+	bMoveInterrupted := bgGr00MoveInterrupted,
+	bHomeCompleted := bgGr00HomeCompleted,
+	stAlarmOut => stgGr00Alarm.stControl
+);
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_HMI" Id="{52b6ef1a-3355-4453-ad8d-615718e73350}">
+      <Implementation>
+        <ST><![CDATA[(*Starting the HMI*)
+
+tonStartHmi(IN:=TRUE, PT:= T#2s);
+
+fbStartHMI(
+		PATHSTR   := 'C:\Riex\HMI\App.exe',
+    		DIRNAME   :='C:\Riex\HMI\',
+    		START     := tonStartHmi.Q,
+		TMOUT     := T#5s
+		);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Periphery" Id="{d284a39b-5cf8-4285-afe2-8f96795b98ff}">
+      <Implementation>
+        <ST><![CDATA[
+(* Periphery *)
+fbPeriphery(
+	bEnable := TRUE,
+	Periphery := Periphery
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Program" Id="{06119292-beaf-4c1a-a2d0-65663499f013}">
+      <Implementation>
+        <ST><![CDATA[
+(* Execute program *)
+fbProgram(
+	sPath := sgGr00PrgPath,
+	sName := sgGr00PrgName,
+	sSuffix := sgGr00PrgSuffix
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Safety" Id="{dc1ab9b3-6c40-4fa4-a8f1-b44e986ccef7}">
+      <Implementation>
+        <ST><![CDATA[
+bgGr00DoorsUnlockRelease := bgGr00ModeManual
+						        OR
+							(bgGr00ModeHome
+							 AND NOT bgGr00MachineRunning)
+						        OR
+							(bgGr00ModeAutomatic
+							 AND NOT bgGr00MachineRunning);
+
+(* Execute safety *)
+fbSafety(
+	etMachineMode := etgGr00MachineMode,
+	etMachineState := etgGr00MachineState,
+	bNoEStop := binGr00NoEmergencyStop,
+	bConfirmEStop := FALSE,
+	bMachineRunning := bgGr00MachineRunning,
+	arbPowerSupplyOn := arbinGr00PowerSupplyOn,
+	bLightCurtain := binGr00LightCurtainOK,
+	bConfirmLightCurtain := (bgGr00ConfirmAlarm
+						OR etgGr00MachineMode = ET_MachineMode_eManual
+						OR etgGr00MachineMode = ET_MachineMode_eHome
+						OR etgGr00MachineMode = ET_MachineMode_eAutomatic
+						OR stgGr00HMI.stHMITOPLC.bSafetyInterlockOff)
+						AND NOT stgGr00Alarm.stControl.arbError[0].bActive,
+	bAirPressure := binGr00AirPressureOK,
+	arbDoorsClosed := arbinGr00DoorsClosed,
+	bDoorsClosed := binGr00AllDoorsClosed,
+	bDoorsLocked := binGr00AllDoorsLocked,
+	bTemperatur := binGr00TempOK,
+	stFieldbusStatus := stinGr00FieldbusStatus,
+	tFieldbusMasterStartUp := tgGr00FieldbusMasterStartUp,
+	tPowerSupplyOn := tgGr00PowerSupplyOn,
+	tPowerSupplyOff := tgGr00PowerSupplyOff,
+	tAirPressureOnDelay := tgGr00AirPressureOnDelay,
+	tAirPresentDelay := tgGr00AirPressureDelay,
+	tAirPressureBuildUp := tgGr00AirPressureBuildUp,
+	tLightCurtainDelay := tgGr00LightCurtainDelay,
+	tAdsTimeOut := DEFAULT_ADS_TIMEOUT,
+	bNoEmergencyStop => bgGr00NoEmergencyStop,
+	bAirPressureOK => bgGr00AirPressureOK,
+	bAirPressureOn => boutGr00AirPressureOn,
+	bPowerSupplyOk => bgGr00PowerSupplyOk,
+	bLightCurtainOK => bgGr00LightCurtainOK,
+	bConfirmedLightCurtain => boutGr00ConfLightCurtain,
+	bAllDoorsLock => boutGr00AllDoorsLock,
+	bAllDoorsClosed => bgGr00AllDoorsClosed,
+	bAllDoorsClosedLocked => bgGr00AllDoorsClosedLocked
+);
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Signals" Id="{df5f06c6-90f9-4e31-b226-ffcd4e064047}">
+      <Implementation>
+        <ST><![CDATA[
+(* Collect and execute input signals *)
+fbSignals.stAlarm.bFatalError := stgGr00Alarm.stControl.bFatalError OR stgGr00Alarm.stManual.bFatalError OR stgGr00Alarm.stHome.bFatalError OR stgGr00Alarm.stAuto.bFatalError
+							OR stgGr01Alarm.stControl.bFatalError OR stgGr01Alarm.stManual.bFatalError OR stgGr01Alarm.stHome.bFatalError OR stgGr01Alarm.stAuto.bFatalError
+							OR stgGr02Alarm.stControl.bFatalError OR stgGr02Alarm.stManual.bFatalError OR stgGr02Alarm.stHome.bFatalError OR stgGr02Alarm.stAuto.bFatalError
+							OR stgGr05Alarm.stControl.bFatalError OR stgGr05Alarm.stManual.bFatalError OR stgGr05Alarm.stHome.bFatalError OR stgGr05Alarm.stAuto.bFatalError;
+fbSignals.stAlarm.bError := stgGr00Alarm.stControl.bError OR stgGr00Alarm.stManual.bError OR stgGr00Alarm.stHome.bError OR stgGr00Alarm.stAuto.bError
+						OR stgGr01Alarm.stControl.bError OR stgGr01Alarm.stManual.bError OR stgGr01Alarm.stHome.bError OR stgGr01Alarm.stAuto.bError
+						OR stgGr02Alarm.stControl.bError OR stgGr02Alarm.stManual.bError OR stgGr02Alarm.stHome.bError OR stgGr02Alarm.stAuto.bError
+						OR stgGr05Alarm.stControl.bError OR stgGr05Alarm.stManual.bError OR stgGr05Alarm.stHome.bError OR stgGr05Alarm.stAuto.bError;
+fbSignals.stAlarm.bWarning := stgGr00Alarm.stControl.bWarning OR stgGr00Alarm.stManual.bWarning OR stgGr00Alarm.stHome.bWarning OR stgGr00Alarm.stAuto.bWarning
+		        					OR stgGr01Alarm.stControl.bWarning OR stgGr01Alarm.stManual.bWarning OR stgGr01Alarm.stHome.bWarning OR stgGr01Alarm.stAuto.bWarning
+		        					OR stgGr02Alarm.stControl.bWarning OR stgGr02Alarm.stManual.bWarning OR stgGr02Alarm.stHome.bWarning OR stgGr02Alarm.stAuto.bWarning
+		        					OR stgGr05Alarm.stControl.bWarning OR stgGr05Alarm.stManual.bWarning OR stgGr05Alarm.stHome.bWarning OR stgGr05Alarm.stAuto.bWarning;
+fbSignals.stAlarm.bMessage := stgGr00Alarm.stControl.bMessage OR stgGr00Alarm.stManual.bMessage OR stgGr00Alarm.stHome.bMessage OR stgGr00Alarm.stAuto.bMessage
+		        					OR stgGr01Alarm.stControl.bMessage OR stgGr01Alarm.stManual.bMessage OR stgGr01Alarm.stHome.bMessage OR stgGr01Alarm.stAuto.bMessage
+		        					OR stgGr02Alarm.stControl.bMessage OR stgGr02Alarm.stManual.bMessage OR stgGr02Alarm.stHome.bMessage OR stgGr02Alarm.stAuto.bMessage
+		        					OR stgGr05Alarm.stControl.bMessage OR stgGr05Alarm.stManual.bMessage OR stgGr05Alarm.stHome.bMessage OR stgGr05Alarm.stAuto.bMessage;
+fbSignals.stAlarm.bHint := stgGr00Alarm.stControl.bHint OR stgGr00Alarm.stManual.bHint OR stgGr00Alarm.stHome.bHint OR stgGr00Alarm.stAuto.bHint
+	       					OR stgGr01Alarm.stControl.bHint OR stgGr01Alarm.stManual.bHint OR stgGr01Alarm.stHome.bHint OR stgGr01Alarm.stAuto.bHint
+	       					OR stgGr02Alarm.stControl.bHint OR stgGr02Alarm.stManual.bHint OR stgGr02Alarm.stHome.bHint OR stgGr02Alarm.stAuto.bHint
+	       					OR stgGr05Alarm.stControl.bHint OR stgGr05Alarm.stManual.bHint OR stgGr05Alarm.stHome.bHint OR stgGr05Alarm.stAuto.bHint;
+
+(* Execute signals *)
+fbSignals(
+	etMachineMode := etgGr00MachineMode,
+	etMachineState := etgGr00MachineState,
+	bMachineRunning := bgGr00MachineRunning,
+	stBlinker => stgGr00Blinker,
+	bBulbBtnStart => boutGr00BulbBtnStart,
+	bBulbBtnStop => boutGr00BulbBtnStop,
+	bBulbBtnHome => boutGr00BulbBtnHome,
+	bBulbGreen => boutGr00BulbGreen,
+	bBulbRed => boutGr00BulbRed,
+	bBulbYellow => boutGr00BulbYellow,
+	bHorn => boutGr00Horn
+);
+
+(* Signal button bulb "reset" / Signallampe "Reset" *)
+boutGr00BulbBtnReset := binGr00NoEmergencyStop OR stgGr00Blinker.Q1;]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Utility" Id="{c04b8c10-afbb-40bb-b77e-3f22fc794919}">
+      <Implementation>
+        <ST><![CDATA[
+(* Execute utility *)
+fbUtility(
+	bSignalStart := binGr00PushBtnStart OR stgGr00HMI.stHMITOPLC.bBtnStart,
+	bSignalStop :=NOT binGr00PushBtnStop OR stgGr00HMI.stHMITOPLC.bBtnStop,
+	bSignalAbort := fbSignals.stAlarm.bFatalError
+				     OR fbSignals.stAlarm.bError,
+	bSignalHome := binGr00PushBtnHome,
+	bSignalReference := binGr00PushBtnRef OR stgGr00HMI.stHMITOPLC.bBtnForceRef,
+	bSignalReset := binGr00PushBtnReset OR stgGr00HMI.stHMITOPLC.bBtnReset,
+	bSignalMachinePurge := stgGr00HMI.stHMITOPLC.bBtnMachinePurge,
+	bAutoStartRelease := binGr01SawbandRelease
+					       AND bgGr05PipeEndPresent
+					       AND (stgGr05HMI.stHMITOPLC.bCylinderPosActive
+							  OR stgGr05HMI.stPLCTOHMI.arlrAxisClampActPos[2] < ABS(99999.0))
+					       AND NOT stgGr05Alarm.stAuto.arbWarning[0].bActive,
+	bHomeStartRelease := (stgGr05HMI.stHMITOPLC.bCylinderPosActive
+							  OR stgGr05HMI.stPLCTOHMI.arlrAxisClampActPos[2] < ABS(99999.0)),
+	bAutoToHome := NOT stgGr05Alarm.stAuto.arbWarning[0].bActive,
+	bHomeCompleted := bgGr00HomeCompleted
+					     AND bgGr01HomeCompleted
+					     AND bgGr02HomeCompleted
+					     AND bgGr05HomeCompleted,
+	bAutoCompleted := bgGr00AutoCompleted
+					  AND bgGr01AutoCompleted
+					  AND bgGr02AutoCompleted
+					  AND bgGr05AutoCompleted,
+	bAllDoorsClosed := binGr00AllDoorsClosed,
+	bAllDoorsLocked := bgGr00AllDoorsClosedLocked,
+	bLightCurtainOk := bgGr00LightCurtainOK,
+	etMachineModeReq := stgGr00HMI.stHMITOPLC.etMachineMode,
+	bExeCounter := bgGr00AutoCompleted
+					  AND bgGr01AutoCompleted
+					  AND bgGr02AutoCompleted
+					  AND bgGr05AutoCompleted,
+	bResetCounterUser := stgGr00HMI.stHMITOPLC.bResetCounterUser,
+	bStartTime := Gr01Control.fbUtility.arbStartProcess[1]
+				OR Gr01Control.fbUtility.arbStartProcess[2]
+				OR Gr01Control.fbUtility.arbStartProcess[3],
+	bStopTime := bgGr01AutoCompleted
+				OR Gr01Control.fbUtility.arbStopProcess[1]
+				OR Gr01Control.fbUtility.arbStopProcess[2]
+				OR Gr01Control.fbUtility.arbStopProcess[3],
+	bLifetimeOn := TRUE,
+	bResetLifetimeAll := FALSE,
+	sLifetimeFilePath := sgGr00MachineLifetimeFilePath,
+	sLifetimeFileName := sgGr00MachineLifetimeFileName,
+	bWritePersistent :=  bgGr00WritePersistent
+					  OR  bgGr01WritePersistent
+					  OR  bgGr02WritePersistent
+					  OR  bgGr05WritePersistent,
+	bDownTraceDataExe := FALSE,
+	rGlobalOverride := stgGr00HMI.stHMITOPLC.rOverride,
+	udnCounterTotal := stgGr00HMI.stPLCTOHMI.udnCounterTotal,
+	udnCounterUser := stgGr00HMI.stPLCTOHMI.udnCounterUser,
+	tAdsTimeOut := DEFAULT_ADS_TIMEOUT,
+	etMachineMode => etgGr00MachineMode,
+	etMachineState => etgGr00MachineState,
+	bModeAutomatic => bgGr00ModeAutomatic,
+	bModeHome => bgGr00ModeHome,
+	bModeManual => bgGr00ModeManual,
+	bMachineRunning => bgGr00MachineRunning,
+	bMachineStandstill => bgGr00MachineStandstill,
+	bMachinePurge => bgGr00MachinePurge,
+	bConfirmAlarm => bgGr00ConfirmAlarm,
+	rActOverride => rgGr00Override,
+	lrLifetimeAll => stgGr00HMI.stPLCTOHMI.lrMachineLifetime,
+	lrLifetimeAfterTrunOn => stgGr00HMI.stPLCTOHMI.lrMachineLifetimeAfterTurnOn,
+	lrActCycleTime => lrgActCycleTime,
+	dwCycleTime => stgGr00HMI.stPLCTOHMI.dwCycleTime
+);]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="Gr00Control">
+      <LineId Id="44" Count="13" />
+    </LineIds>
+    <LineIds Name="Gr00Control.A_Alarm">
+      <LineId Id="0" Count="78" />
+    </LineIds>
+    <LineIds Name="Gr00Control.A_HMI">
+      <LineId Id="0" Count="9" />
+    </LineIds>
+    <LineIds Name="Gr00Control.A_Periphery">
+      <LineId Id="0" Count="5" />
+    </LineIds>
+    <LineIds Name="Gr00Control.A_Program">
+      <LineId Id="0" Count="6" />
+    </LineIds>
+    <LineIds Name="Gr00Control.A_Safety">
+      <LineId Id="0" Count="48" />
+    </LineIds>
+    <LineIds Name="Gr00Control.A_Signals">
+      <LineId Id="0" Count="39" />
+    </LineIds>
+    <LineIds Name="Gr00Control.A_Utility">
+      <LineId Id="0" Count="70" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,129 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_Gr05Auto" Id="{d2837d9d-4966-4d96-a368-19cb51fe76a7}">
+    <Declaration><![CDATA[TYPE ET_Gr05Auto :
+(
+	ET_Gr05Auto_eWaitExecute := 0,
+	ET_Gr05Auto_eWaitAxisStatus,
+	ET_Gr05Auto_eClamp1Close,
+	ET_Gr05Auto_ChkPipeBeginEdge,
+	ET_Gr05Auto_eAxisClamp1InPipeBeginPos,
+	ET_Gr05Auto_eClamp2Open,
+	ET_Gr05Auto_eAxisClamp1MoveVeloPipeBegin,
+	ET_Gr05Auto_eWfAxisClamp1MoveVeloPipeBegin,
+	(*ET_Gr05Auto_eAxisClamp1InPipeBeginPos,*)
+	ET_Gr05Auto_eGetClamp1ActPos,
+	ET_Gr05Auto_eWfPipeBeginNoDetectedError,
+	ET_Gr05Auto_eWfPipeBeginNoDetectedWarrning,
+	ET_Gr05Auto_eEnd,
+	ET_Gr05Auto_eSawbandStart,
+	ET_Gr05Auto_eAxisClamp1MoveToSawBandPos,
+	ET_Gr05Auto_eAxisClamp1InSawBandPos,
+	ET_Gr05Auto_eAxisClamp2MoveToSawBandPos,
+	ET_Gr05Auto_eAxisClamp2InSawBandPos,
+	ET_Gr05Auto_eGetClamp1ActPos_01,
+	ET_Dummy_01A,
+	ET_Dummy_01B,
+	ET_Gr05Auto_eAxisClamp2MoveSawPos,
+	ET_Gr05Auto_eAxisClamp2InSawPos,
+	ET_Gr05Auto_eGetProcessPara,
+	ET_Gr05Auto_eChkProcessEnd,
+	ET_Gr05Auto_eClamp12Open,
+	(*ET_Gr05Auto_eEnd,*)
+	ET_Gr05Auto_eWfSlideUp,
+	ET_Gr05Auto_eGetClamp2ActPos,
+	ET_Gr05Auto_eCollisionDetectedErr,
+	ET_Gr05Auto_eChkWorkArea,
+
+	ET_Gr05Auto_ChkPipeEndDetected,
+	(*ET_Gr05Auto_eClamp12Open,*)
+	ET_Gr05Auto_eClamp2Close,
+	ET_Gr05Auto_eClamp2CloseErr,
+	ET_Gr05Auto_eClamp1Open,
+	ET_Gr05Auto_eClamp1OpenErr,
+	ET_Gr05Auto_eAxisClamp1MoveAbsPipeEnde,
+	ET_Gr05Auto_eAxisClamp1MoveAbsPipeEndeErr,
+
+	ET_Gr05Auto_eWfAxisClamp1MoveAbsPipeEnde,(*pipe end detected*)
+
+	ET_Gr05Auto_eGetClamp1ActPos_03,
+	ET_Gr05Auto_eClamp1Close3,
+	ET_Gr05Auto_eChkAdjustSawingLength,
+	(*ET_Gr05Auto_eChkProcessEnd,*)
+	ET_Gr05Auto_NurWennlrActRemoveLength_0,
+	ET_Gr05Auto_eClamp2Open3,
+	ET_Gr05Auto_eAxisClamp2MoveToPos2,
+	ET_Gr05Auto_eAxisClamp2InPos2,
+	ET_Gr05Auto_eAxisClamp1MoveToPos2,
+	ET_Gr05Auto_eAxisClamp1InPos2,
+	ET_Gr05Auto_eSawingLengthCorrection,
+	(*ET_Gr05Auto_ChkPipeEndDetected,*)
+
+
+	ET_Gr05Auto_eAxisClamp1Stop,
+	ET_Gr05Auto_eWfAxisClamp1Stop,
+	ET_Gr05Auto_eGetClamp1ActPos_04,
+	ET_Gr05Auto_eChkNextSawingAngle,
+
+	ET_Gr05Auto_eAxisClamp1MoveVeloPipeEnd,
+	ET_Gr05Auto_eWfAxisClamp1MoveVeloPipeEnd,
+	ET_Gr05Auto_eAxisClamp1InPipeEndPos,
+	ET_Gr05Auto_eWfPipeEndNoDetectedErr,
+	ET_Gr05Auto_eAxisClamp1Stop_2,
+	ET_Gr05Auto_eAxisClamp1StopErr_2,
+	ET_Gr05Auto_eWfAxisClamp1Stop_2,
+	ET_Gr05Auto_eWfAxisClamp1StopErr_2,
+
+	ET_Gr05Auto_ChkNextSawingLenght,
+	ET_Gr05Auto_eGetClamp1ActPos_05,
+	ET_Gr05Auto_eAngleReq,
+	ET_Gr05Auto_eAngleAck,
+	Dummy_03,
+	(*ET_Gr05Auto_eChkProcessEnd,*)
+
+
+	ET_Gr05Auto_eAxisClamp1StopErr,
+
+	(*ET_Gr05Auto_eGetClamp1ActPos_03,*)
+	ET_Gr05Auto_eWfAxisClamp1MoveAbsPipeEndeErr,
+
+
+
+	ET_Gr05Auto_eClamp1Close2,
+	ET_Gr05Auto_eClamp2Open1,
+	ET_Gr05Auto_eAxisClamp1MoveToPos,
+	ET_Gr05Auto_eAxisClamp1InPos,
+	ET_Gr05Auto_eAxisClamp2MoveToPos,
+	ET_Gr05Auto_eAxisClamp2InPos,
+	ET_Gr05Auto_eGetClamp1ActPos_02,
+	ET_Dummy_02A,
+	ET_Dummy_02B,
+	ET_Gr05Auto_eChkAxisClamp1MoveToBackPos,
+	ET_Gr05Auto_eClamp2Slide,
+	ET_Gr05Auto_eClamp2Err,
+	ET_Gr05Auto_eSlideUpErr,
+
+	ET_Gr05Auto_eAxisClamp1MoveToBackPos,
+	ET_Gr05Auto_eAxisClamp1MoveToBackPosErr,
+	ET_Gr05Auto_eAxisClamp1InBackPos,
+	ET_Gr05Auto_eGetClamp1ActPos_06,
+	(*ET_Gr05Auto_eChkProcessEnd,*)
+	ET_Gr05Auto_eAxisClamp1InBackPosErr,
+
+
+	ET_Gr05Auto_eSawingReq,
+	ET_Gr05Auto_eSawingAck,
+	ET_Gr05Auto_eWfTransportReq,
+	ET_Gr05Auto_eTransportAck,
+	ET_Gr05Auto_eSlideDown,
+	ET_Gr05Auto_eSlideDownErr,
+	ET_Gr05Auto_eRemovalBandErr,
+
+	ET_Gr05Auto_eInterrupted := 196,
+	ET_Gr05Auto_eDone := 197,
+	ET_Gr05Auto_eError := 198,
+	ET_Gr05Auto_eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

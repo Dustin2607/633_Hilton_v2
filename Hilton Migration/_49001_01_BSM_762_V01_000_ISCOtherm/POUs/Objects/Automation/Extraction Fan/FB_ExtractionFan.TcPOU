@@ -1,0 +1,260 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_ExtractionFan" Id="{dbbd56d0-29cd-45e0-9205-58ef0e031245}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ExtractionFan
+(*
+
+The function block used to control extraction fan.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			07.09.2018
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+xx.xx.xxxx			1.01									
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable							:BOOL;						(* Function block enable *)
+	bNoEStop						:BOOL;						(* No ermergency Stop / Keine Notaus *)
+	bPowerSupplyOn					:BOOL;						(* Power supply on / Leitung eingeschaltet *)
+	bLightCurtainOK					:BOOL;						(* Light curtain ok / Freigabe Lichtschranke i.o *)
+	bReset							:BOOL;						(* Controller reset *)
+	bAutoHand						:BOOL;						(* Auto := TRUE, Hand := FALSE *)
+	bHandOn						:BOOL;						(* Heater on/off in manual mode with rising edge *)
+	bAutoOn							:BOOL;						(* Heater on/off in auto mode rising edge *)
+	bAutoOff							:BOOL;						(* Heater off in auto mode with rising edge *)
+	bReleaseOn						:BOOL;						(* Release on *)
+	bCtrlInterrupt						:BOOL;						(* Control interrupt *)
+	lrSPPower						:LREAL;						(* Setpoint of power 0 - 100 % *)
+	bEnAutoCtrlOff					:BOOL := FALSE;				(* Auto off enable*)
+	tCtrlPowerOff						:TIME := t#90s;				(* Time to switch controller power off *)
+	tCtrlPowerOn						:TIME := t#90s;				(* Time to switch controller power on *)
+	lrPowerMin						:LREAL;						(* Power minimum *)
+	lrPowerMax						:LREAL;						(* Power maximum *)
+	lrSetTemp						:LREAL;						(* Set temperature *)
+	lrActTemp						:LREAL;						(* Actual temperature *)
+	lrMaxTemp						:LREAL;						(* Maximal temperature *)
+	tReadyDelay						:TIME := T#5s;				(* Ready delay*)
+	tTimeOut							:TIME := T#5s;				(* TimeOut *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bPowerOn						:BOOL;						(* Power on *)
+	unCVPower						:UINT;						(* Current value of power 0 - 10 V *)
+	bReady 							:BOOL;						(* Heater ready *)
+	bError							:BOOL;						(* Program error  *)
+	udnErrorNo						:UDINT;						(* Error number *)
+	sErrorMsg						:STRING; 					(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	bReleasePowerOn				:BOOL;
+
+	bFirstTime						:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	tonWatchDog						:TON;
+	tonPowerSupplyOn				:TON;
+	fbCtrlPowerOff					:FB_SignalHandlingDelay;
+	fbCtrlPowerOn					:FB_SignalHandlingDelay;
+	fbScalingSP						:FB_Scaling;
+	fbReadyDelay					:FB_SignalHandlingDelay;
+
+	rtHandOn						:R_TRIG;
+	rtAutoOn							:R_TRIG;
+	rtAutoOff							:R_TRIG;
+END_VAR
+VAR CONSTANT
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+	bPowerOn := FALSE;				(* Power on *)
+ 	unCVPower := 0;					(* Current value of power 0 - 100 % *)
+	bReady := TRUE;				(* Heater enabled *)
+	bError := FALSE;					(* Program error  *)
+	udnErrorNo := 0;					(* Error number *)
+	sErrorMsg := ''; 					(* Error message *)
+	tonWatchDog(IN := FALSE);
+
+	bFirstTime := FALSE;
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+	bReleasePowerOn := TRUE;
+
+	bPowerOn := FALSE;				(* Powr on *)
+ 	unCVPower := 0;					(* Current value of power 0 - 100 % *)
+	bReady := FALSE;				(* Heater enabled *)
+
+	bFirstTime := TRUE;
+END_IF
+
+(* Controller automatic off *)
+fbCtrlPowerOff(
+	bEnable := TRUE,
+	bIn := bEnAutoCtrlOff
+		  AND bAutoHand					(* Automatic *)
+		  AND bPowerOn,
+	tDelay := tCtrlPowerOff
+);
+
+fbCtrlPowerOn(
+	bEnable := TRUE,
+	bIn := NOT bPowerOn					(* Ctrl disabled *)
+		  AND NOT bReleasePowerOn,
+	tDelay := tCtrlPowerOn
+);
+
+IF NOT bNoEStop
+     OR NOT bPowerSupplyOn
+     OR NOT bLightCurtainOK
+     OR bError
+     OR bCtrlInterrupt
+     OR fbCtrlPowerOff.bOut
+THEN
+	bReleasePowerOn := FALSE;
+	bPowerOn := FALSE;
+
+ELSIF fbCtrlPowerOn.bOut
+THEN
+	bReleasePowerOn := TRUE;
+END_IF
+
+IF bReset
+     AND bError
+THEN
+	udnErrorNo := 0;					(* Error number *)
+	sErrorMsg := ''; 					(* Error message *)
+	tonWatchDog(IN := FALSE);
+
+END_IF
+
+(* Check inputs  *)
+rtHandOn(CLK := bHandOn);
+rtAutoOn(CLK := bAutoOn AND bReleaseOn AND bReleasePowerOn);
+rtAutoOff(CLK := bAutoOff);
+
+(* Check operating mode *)
+IF bAutoHand					(* Automatic *)
+THEN
+	IF rtAutoOff.Q
+	THEN
+		bPowerOn := FALSE;
+
+	ELSIF rtAutoOn.Q
+		    AND bReleasePowerOn
+	THEN
+		bPowerOn := TRUE;
+
+		fbCtrlPowerOff(bEnable := FALSE);
+		fbCtrlPowerOn(bEnable := FALSE);
+	END_IF;
+
+ELSE						(* Manual *)
+	IF rtHandOn.Q
+	THEN
+		IF bPowerOn
+		THEN
+			bPowerOn := FALSE;
+
+		ELSIF bReleaseOn
+			   AND bReleasePowerOn
+		THEN
+			bPowerOn := TRUE;
+		END_IF
+	END_IF
+
+END_IF;
+
+(* Timer starts when cylinder is not  in base and work position *)
+tonWatchDog(
+	IN := bPowerOn
+		 AND bPowerSupplyOn
+		 AND NOT bReady,
+	PT := SEL(bAutoHand, tTimeOut, tTimeOut + tReadyDelay)
+);
+
+(* Error if cylinder does not reach base or work position*)
+IF tonWatchDog.Q
+   AND NOT bError
+THEN
+	IF bPowerOn AND NOT bReady
+	THEN
+		udnErrorNo := 1; 								(* Set error number *)
+		sErrorMsg := 'Not ready error';
+	END_IF
+END_IF
+
+tonPowerSupplyOn(
+	IN := bNoEStop
+		AND NOT bPowerSupplyOn,
+	PT := t#3s
+);
+
+IF tonPowerSupplyOn.Q
+THEN
+	udnErrorNo := 2; 								(* Set error number *)
+	sErrorMsg := 'Power supply error';
+END_IF
+(*
+IF lrSetTemp > 0
+     AND lrActTemp > lrMaxTemp
+THEN
+	udnErrorNo := 2; 								(* Set error number *)
+	sErrorMsg := 'Temperatur over range';
+END_IF
+*)
+
+bError := udnErrorNo <> 0;
+
+fbReadyDelay(
+	bEnable := TRUE,
+	bIn := bPowerOn,
+	tDelay := tReadyDelay
+);
+
+IF lrSetTemp <> 0
+     AND bAutoHand 			(* Automatic *)
+THEN
+	bReady := bPowerOn
+			   AND lrActTemp >= lrSetTemp;
+ELSE
+	bReady := fbReadyDelay.bOut;
+END_IF
+
+(* Scaling power *)
+fbScalingSP(
+	bEnable := TRUE,
+	lrInput := lrSPPower, (* [%] *)
+	lrXLowLimit := 0, (* [%] *)
+	lrXUpperLimit := 100, (* [%] *)
+	lrYLowLimit := lrPowerMin, (* 16#0000 = 0 [V] *)
+	lrYUpperLimit := lrPowerMax, (* 16#7FFF = 10 [V] *)
+	usiPrecision := 2
+);
+unCVPower := LREAL_TO_UINT(fbScalingSP.lrOutputPV);
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ExtractionFan">
+      <LineId Id="79" Count="170" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

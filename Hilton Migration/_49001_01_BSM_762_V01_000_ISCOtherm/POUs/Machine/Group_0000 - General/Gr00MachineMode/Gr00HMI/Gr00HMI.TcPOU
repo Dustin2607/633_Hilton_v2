@@ -1,0 +1,74 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="Gr00HMI" Id="{5d587a48-5756-4bf8-990f-3e4f77d60e39}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM Gr00HMI
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable					:BOOL;						(* Enable Gr00HMI *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	RETURN;
+END_IF;
+
+A_GetHMIVar();
+A_SetHMIVar();]]></ST>
+    </Implementation>
+    <Action Name="A_GetHMIVar" Id="{1dedd812-434c-4d75-b9c2-da7132f33bc0}">
+      <Implementation>
+        <ST><![CDATA[
+(* Collect hmi signals *)
+;]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_SetHMIVar" Id="{329b484e-c708-43bb-8124-24f20bcd22c8}">
+      <Implementation>
+        <ST><![CDATA[
+(* Collect hmi signals *)
+stgGr00HMI.stPLCTOHMI.etMachineMode := etgGr00MachineMode;
+stgGr00HMI.stPLCTOHMI.etMachineState := etgGr00MachineState;
+stgGr00HMI.stPLCTOHMI.bHomeCompleted := bgGr00HomeCompleted;
+stgGr00HMI.stPLCTOHMI.wBtnStartStatus.0 := bgGr00MachineRunning;
+stgGr00HMI.stPLCTOHMI.wBtnStopStatus.0 := bgGr00MachineStandstill;
+stgGr00HMI.stPLCTOHMI.wBtnResetStatus.0 := Gr00Control.fbSignals.stAlarm.bFatalError
+                                                 					OR Gr00Control.fbSignals.stAlarm.bError
+                                                					OR Gr00Control.fbSignals.stAlarm.bWarning;
+stgGr00HMI.stPLCTOHMI.wBtnForceRefStatus.0 := Gr00Control.fbUtility.bSignalReference;
+stgGr00HMI.stPLCTOHMI.bMachineRunning := bgGr00MachineRunning;
+stgGr00HMI.stPLCTOHMI.bModeAutomatic := bgGr00ModeAutomatic;
+stgGr00HMI.stPLCTOHMI.bModeHome := bgGr00ModeHome;
+stgGr00HMI.stPLCTOHMI.bModeManual := bgGr00ModeManual;
+stgGr00HMI.stPLCTOHMI.wAlarmStatus.0 := Gr00Control.fbSignals.stAlarm.bFatalError;
+stgGr00HMI.stPLCTOHMI.wAlarmStatus.1 := Gr00Control.fbSignals.stAlarm.bError;
+stgGr00HMI.stPLCTOHMI.wAlarmStatus.2 := Gr00Control.fbSignals.stAlarm.bWarning;
+stgGr00HMI.stPLCTOHMI.wAlarmStatus.3 := Gr00Control.fbSignals.stAlarm.bMessage;
+stgGr00HMI.stPLCTOHMI.wAlarmStatus.4 := Gr00Control.fbSignals.stAlarm.bHint;
+stgGr00HMI.stPLCTOHMI.wLampStatus.0 := boutGr00BulbGreen;
+stgGr00HMI.stPLCTOHMI.wLampStatus.1 := boutGr00BulbYellow;
+stgGr00HMI.stPLCTOHMI.wLampStatus.2 := boutGr00BulbRed;]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="Gr00HMI">
+      <LineId Id="17" Count="6" />
+    </LineIds>
+    <LineIds Name="Gr00HMI.A_GetHMIVar">
+      <LineId Id="0" Count="2" />
+    </LineIds>
+    <LineIds Name="Gr00HMI.A_SetHMIVar">
+      <LineId Id="0" Count="22" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_LimitSwitches" Id="{d652a7e8-498d-49b9-87c8-6c474337faad}">
+    <Declaration><![CDATA[TYPE ST_LimitSwitches :
+STRUCT
+	(* Software limit switch maximum *)
+	bSWLimitMaxEn				:BOOL;			(* Enable maximum limit switche *)  	
+	lrSWPosLimitMax				:LREAL;			(* Position of maximum limit switche [mm] *)
+	bSWLimitMaxActive			:BOOL;			(* Maximum limit switche is active *)
+	
+	(* Hardware limit switch maximum *)
+	bHWLimitMax					:BOOL;			(* Hardware limit switch maximum end of range *)
+	bHWLimitMaxRev				:BOOL;			(* Hardware limit switch maximum revers *)  
+	
+	(* Software limit switch minimum *)
+	bSWLimitMinEn 				:BOOL;			(* Enable minimum limit switche *)
+	lrSWPosLimitMin				:LREAL;			(* Position of minimum limit switche [mm] *)
+	bSWLimitMinActive			:BOOL;			(* Minimum limit switche is active *)
+	
+	(* Hardware limit switch minimum *)
+	bHWLimitMin					:BOOL;			(* Hardware limit switch minimum end of range *)
+	bHWLimitMinRev				:BOOL;			(* Hardware limit switch minimum revers *) 
+	
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

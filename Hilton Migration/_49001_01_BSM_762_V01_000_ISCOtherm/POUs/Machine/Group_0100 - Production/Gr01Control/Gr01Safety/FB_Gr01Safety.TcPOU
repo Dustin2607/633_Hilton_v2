@@ -1,0 +1,103 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Gr01Safety" Id="{95c209d4-0013-4f31-8fa1-56cd34135c26}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Gr01Safety
+(*
+
+The function block used to control genaeral safety of the machine.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			28.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	etMachineMode				:ET_MachineMode;			(* Machine mode *)
+	etMachineState				:ET_MachineState;			(* Machine state *)
+	bLightCurtain					:BOOL;						(* Light curtain ok / Freigabe Lichtschranke i.o *)
+	bConfirmLightCurtain			:BOOL;						(* Confirm light Curtain input signal *)
+	tLightCurtainDelay				:TIME := t#1s;					(* After time light Curtain safe *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bLightCurtainOK				:BOOL;						(* Light curtain ok / Freigabe Lichtschranke i.o *)
+	bConfirmedLightCurtain			:BOOL;						(* Confirmed light Curtain signal *)
+	bNotInCrashArea				:BOOL;						(* Axis not in crash area with *)
+	bPipeNotInCrashArea			:BOOL;						(* Axis not in crash with pipe *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbLightCurtain					:FB_LightCurtain;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+A_LightCurtain();
+A_SafetyArea();
+]]></ST>
+    </Implementation>
+    <Action Name="A_LightCurtain" Id="{25805664-910a-404c-985f-4e5f73bc8df8}">
+      <Implementation>
+        <ST><![CDATA[
+(* Light Curtain control *)
+fbLightCurtain(
+	bEnable := TRUE,
+	bIn := bLightCurtain,
+	bInConf := bConfirmLightCurtain,
+	tTimeOut := tLightCurtainDelay,
+	bOut => bLightCurtainOK,
+	bOutConf => bConfirmedLightCurtain
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_SafetyArea" Id="{a73e2403-f08d-466f-9f07-788ce423a974}">
+      <Implementation>
+        <ST><![CDATA[
+(* Safety area *)
+
+bNotInCrashArea := FALSE;
+
+IF FALSE
+THEN
+	bNotInCrashArea := TRUE;
+END_IF;
+
+IF bgGr01PipePresent
+     (* AND NOT bgGr00ModeAutomatic*) 	(* 20260219 ES/KG *)
+     AND MAX(0, stgGr01HMI.stPLCTOHMI.lrAxisSawBowActPos - lrgGr01DistSawbandPipe) > stgGr01HMI.stHMITOPLC.rPipeDiameter
+     AND igGr01AxisSawBow.stNcToPlc.stBaseDevice.stCommandPositioning.dnActVelocity < 0
+THEN
+	bPipeNotInCrashArea := FALSE;
+ELSE
+	bPipeNotInCrashArea := TRUE;
+END_IF;]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_Gr01Safety">
+      <LineId Id="46" Count="3" />
+    </LineIds>
+    <LineIds Name="FB_Gr01Safety.A_LightCurtain">
+      <LineId Id="0" Count="9" />
+    </LineIds>
+    <LineIds Name="FB_Gr01Safety.A_SafetyArea">
+      <LineId Id="0" Count="18" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

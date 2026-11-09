@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_YASKAWATOPLC" Id="{3dea4cff-81a7-47d3-9656-af58605139fc}">
+    <Declaration><![CDATA[TYPE ST_YASKAWATOPLC :
+STRUCT
+	bOperatingRunning						:BOOL;					(* Operating running. *)
+	bServoIsOn								:BOOL;					(* Servo is on. *)
+	bTopMasterJob							:BOOL;					(* Top master job. *)
+	bAlarmErrorOccured						:BOOL;					(* Alarm error occured. *)
+	bReducedSpeed							:BOOL;					(* Reduced speed *)
+	bRemoteModeSelected					:BOOL;					(* Remote mode selected. *)
+	bPlayModeSelected						:BOOL;					(* Play mode selected. *)
+	bTeachModeSelected						:BOOL;					(* Teach mode selected. *)
+
+	bHold									:BOOL;					(* Hold. *)
+
+	bInHome									:BOOL;					(* OUT - Robot in home position. *)
+	bInHeatingStationArea						:BOOL;					(* OUT - Robot in heating station area. *)
+	bInFlushStationArea						:BOOL;					(* OUT - Robot in flush station area. *)
+	bInLeftStationArea							:BOOL;					(* OUT - Robot in left station area. *)
+	bInRightStationArea						:BOOL;					(* OUT - Robot in right station area. *)
+
+	bPrgDone								:BOOL;					(* OUT - Program done. *)
+	bPrgError								:BOOL;					(* OUT - Program done. *)
+	bNotMoving								:BOOL;					(* OUT - Robot running. *)
+	bNotInCrashAreaMachine					:BOOL;					(* OUT - Robot not in crash area with machine. *)
+
+	bWeldingToBase							:BOOL;					(* OUT - Welding to base. *)
+	bWeldingToWork							:BOOL;					(* OUT - Welding to work.*)
+	bWeldingShoeUp							:BOOL;					(* OUT - Welding shoe move up. *)
+	bWeldingShoeDown						:BOOL;					(* OUT - Welding shoe move down.*)
+	bWeldingHeadUnlock						:BOOL;					(* OUT - Welding head unlock. *)
+	bWeldingHeadLock						:BOOL;					(* OUT - Welding head lock. *)
+	bGripperTongsOpen						:BOOL;					(* OUT - Gripper tongs open. *)
+	bGripperTongsClose						:BOOL;					(* OUT - Gripper tongs close. *)
+
+	unTargetForce							:UINT;					(* OUT - Target force [N] *)
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

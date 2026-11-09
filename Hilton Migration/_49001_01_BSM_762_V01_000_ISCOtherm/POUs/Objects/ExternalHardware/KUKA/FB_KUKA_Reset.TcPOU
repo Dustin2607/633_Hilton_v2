@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_KUKA_Reset" Id="{b4ca5513-0021-4bce-8736-27fa13e79eac}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_KUKA_Reset
+(*
+
+The function block used to reset the kuka message.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			18.11.2016
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bReset						:BOOL;		(* Execut the function block *)
+	bExtReset					:BOOL;
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bDone						:BOOL;			(* Status = TRUE indicates that the axis is ready for operation. *)
+	bError						:BOOL;			(* Error *)
+	udnErrorNo					:UDINT;			(* Error number *)
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	Kuka						:ST_KUKA_REF;
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtExecute						:R_TRIG;
+	rtExtReset					:R_TRIG;
+	rtDrivesOk					:R_TRIG;
+	tonConfMess					:TON;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+rtExecute(CLK := bReset);
+rtExtReset(CLK := bExtReset
+			       AND Kuka.KukaToPlc.bStopMess);
+rtDrivesOk(CLK := Kuka.KukaToPlc.bPeriRdy
+	   		        AND Kuka.PlcToKuka.bDrivesOff
+			        AND Kuka.KukaToPlc.bStopMess);
+
+tonConfMess(
+	IN := Kuka.PlcToKuka.bConfMess,
+	PT := t#100ms
+);
+
+IF rtExecute.Q
+     OR rtExtReset.Q
+     OR rtDrivesOk.Q
+THEN
+	Kuka.PlcToKuka.bConfMess := TRUE;
+
+ELSIF tonConfMess.Q
+	   OR NOT Kuka.KukaToPlc.bStopMess
+THEN
+	Kuka.PlcToKuka.bConfMess := FALSE;
+END_IF;
+(*
+IF NOT Kuka.KukaToPlc.bStopMess       (* Error *)
+THEN
+	Kuka.PlcToKuka.bConfMess := FALSE;
+END_IF;
+*)
+
+bDone := bReset
+		AND NOT Kuka.KukaToPlc.bStopMess;        (* Error *)]]></ST>
+    </Implementation>
+    <LineIds Name="FB_KUKA_Reset">
+      <LineId Id="44" Count="32" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,596 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_VFD_SpindlePreheat" Id="{6b7e7bba-c1e8-41c5-a573-7139ab209571}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_VFD_SpindlePreheat
+(*
+
+The function block used to start spindle preheat procedure.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			26.06.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Enable FB signal *)
+	bNoEmergencyStop			:BOOL;						(* NotAus signal *)
+	bExecute					:BOOL;						(* Spindle start *)
+	bInterrupt						:BOOL;						(* Interrupt *)
+	bPlusRelease				:BOOL;						(* Plus move release *)
+	bMinusRelease				:BOOL;						(* Minus move release *)
+	bReset						:BOOL;						(* Reset procedure*)
+	bCtrlEnabled					:BOOL;						(* Controller enabled *)
+	bSetNewSpdlPreheat			:BOOL;						(* Set new spindle preheat *)
+	bSetDailyPreheat				:BOOL;						(* Set daily preheat *)
+	tSetPeriod					:TIME;						(* Set period time *)
+	lrToolLimitMax				:LREAL;						(* Max rpm [U/min]  *)
+	lrSpeedLimitMax				:LREAL;						(* Max rpm [U/min]  *)
+	bRpmIsZero					:BOOL;						(* Spindle standstill *)
+	bRpmReached				:BOOL;						(* Spindle speed reached *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bValid						:BOOL;						(* Preheat valid *)
+	unSpindleDurationPercent		:UINT;						(* Actual spindle duration in percent*)
+	bControlerOn					:BOOL;						(* Controler on *)
+	bDone						:BOOL;						(* Program done *)
+	bBusy						:BOOL;						(* Program busy *)
+	bError						:BOOL;						(* Program error *)
+	udnErrorNo					:UDINT;						(* Error number *)
+	sErrorMsg					:STRING;
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	Axis							:ST_VFD_AXIS_REF;					(* The AXIS_REF data type  is an interface between the PLC and the NC and contains axis information *)
+	arstPhasesNewSpdl			:ARRAY [1..ungGr05MaxPhasesNewSpdl] OF ST_SpindlePreheat; 				(* Starting new spindel phases *)
+	arstPhasesDailyPreheat		:ARRAY [1..ungGr05MaxPhasesDailyPreheat] OF ST_SpindlePreheat; 			(* Starting daily preheat phases *)
+END_VAR
+VAR
+	(* Enummerations *)
+	etSpindlePreheat				:ET_SpindlePreheat;				(* Spindle  mode enum variable *)
+
+	(* Variables *)
+	otstTime						:OTSTRUCT;						(* Time in OTSTRUCT *)
+	unPhase						:UINT;							(* Phase counter *)
+	lrSpdlTimeAsHour				:LREAL;							(* The running time of spindle procedures [h] *)
+	lrStartSpdlProcTimeAsHour		:LREAL;							(* Start time of spindle procedure [h] *)
+	lrSystemNewTimeAsHour 		:LREAL; 							(* System Time [h] *)
+	lrPeriodAsHour				:LREAL; 							(* Period Time [h] *)
+	lrWeekAsHour				:LREAL;							(* Week [h] *)
+	lrDayAsHour					:LREAL;							(* Day [h] *)
+	lrHour						:LREAL;							(* Hour [h] *)
+	lrMinuteAsHour				:LREAL;							(* Minute Time [h] *)
+	lrSecondAsHour				:LREAL;							(* Second Time [h] *)
+	lrMillisecondAsHour			:LREAL;							(* Millisecond Time [h] *)
+
+	bNewSpdl					:BOOL; 							(* New spindel phases *)
+	bDailyPreheat				:BOOL; 							(* Daily preheat phases *)
+
+	bFirstTime					:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbGetSystemTime				:GETSYSTEMTIME;				(* Detects System time *)
+	rtReset						:R_TRIG; 						(* Positive edge for reset procedure *)
+	rtExecute						:R_TRIG;							(* Positive edge for execute *)
+	tonDuration					:TON;
+	fbMoveVelo					:FB_VFD_MoveVelocity;
+	fbStop						:FB_VFD_Stop;
+	tonCtrlEnabled				:TON;
+	rtSetNewSpdlPreheat			:R_TRIG;							(* Set new spindle preheat *)
+	rtSetDailyPreheat				:R_TRIG;							(* Set daily preheat *)
+END_VAR
+VAR PERSISTENT
+	lrSystemOldTimeAsHour 		:LREAL; 						(* System Time [h] *)
+	bProcInterrupted				:BOOL;						(* Statring procedure interupted *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable						(* Signal FB enable *)
+THEN
+	bValid := FALSE;;					(* Preheat valid *)
+	bControlerOn := FALSE;			(* Controler off *)
+	bDone := FALSE;					(* Program done *)
+	bBusy := FALSE;                                  	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;                                 		(* Error number *)
+
+	tonCtrlEnabled(IN := FALSE);
+
+	bFirstTime := FALSE;
+
+	RETURN;
+END_IF;
+
+(* Calculate system time *)
+fbGetSystemTime();
+lrSystemNewTimeAsHour := UINT64_TO_LREAL(IN := ULARGE_INTEGER(
+	dwHighPart := fbGetSystemTime.timeHiDW,
+	dwLowPart := fbGetSystemTime.timeLoDW))
+	/ 10				(* Calculate into mycro seconds *)
+	/ 1000			(* Calculate into millis econds *)
+	/ 1000			(* Calculate into seconds *)
+	/ 60				(* Calculate into minutes *)
+	/ 60;				(* Calculate into hours *)
+
+(* Calculate period time *)
+otstTime := TIME_TO_OTSTRUCT(TIN := tSetPeriod);
+
+lrWeekAsHour := otstTime.wWeek * 168.0;						(* Calculate into hours*)
+lrDayAsHour := otstTime.wDay * 24.0;							(* Calculate into hours *)
+lrHour := otstTime.wHour ;
+lrMinuteAsHour := otstTime.wMinute  / 60.0;						(* Calculate into hours *)
+lrSecondAsHour := otstTime.wSecond / 3600.0;					(* Calculate into hours *)
+lrMillisecondAsHour := otstTime.wMilliseconds / 3600000.0 ;		(* Calculate into hours *)
+
+lrPeriodAsHour :=  lrWeekAsHour							(* Calculate period *)
+				+ lrDayAsHour
+				+ lrHour
+				+ lrMinuteAsHour
+		 		+ lrSecondAsHour
+				+ lrMillisecondAsHour;
+
+(* Save last time activated of spindle *)
+IF NOT Axis.bNotMoving			(* Axis moving *)
+    (*AND Axis.nCurrentMotorSpeed <> 0 *)
+    AND NOT bProcInterrupted
+    AND NOT bBusy
+THEN
+	lrSystemOldTimeAsHour := lrSystemNewTimeAsHour;
+END_IF
+
+rtSetNewSpdlPreheat(CLK := bSetNewSpdlPreheat);
+rtSetDailyPreheat(CLK := bSetDailyPreheat);
+
+IF rtSetNewSpdlPreheat.Q
+THEN
+	lrSystemOldTimeAsHour := 0.0;
+ELSIF rtSetDailyPreheat.Q
+	    AND lrSystemOldTimeAsHour <> 0
+THEN
+	lrSystemOldTimeAsHour := 1.0;
+END_IF
+
+rtReset (CLK := bReset);											(* Positive edge for reset procedure*)
+IF rtReset.Q
+     AND bError
+THEN
+	bControlerOn := FALSE;				(* Controler off *)
+	bDone := FALSE;					(* Program done *)
+	bBusy := FALSE;                                  	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;                                 		(* Error number *)
+
+	(* The function block MC_MoveVelocity starts a continuous movement with specified velocity and direction.  *)
+	fbMoveVelo(
+		bExecute := FALSE,
+		Axis := Axis,
+	 );
+
+	(* The function block MC_Stop stops an axis with a defined braking ramp and blocks the axis for any motion commands.  *)
+	fbStop(
+		bExecute := FALSE,
+		Axis := Axis,
+	);
+
+	tonDuration(IN:= FALSE);
+
+	etSpindlePreheat := ET_SpindlePreheat_eWaitExecute;       			(* Next step *)
+
+END_IF
+
+(* Positive edge for execute *)
+rtExecute(CLK := bExecute);
+IF rtExecute.Q
+THEN
+	tonCtrlEnabled(IN := FALSE);
+
+	bControlerOn := bMinusRelease
+     				   AND bPlusRelease
+     				   AND bNoEmergencyStop
+     				   AND NOT bInterrupt;
+
+	IF lrSystemNewTimeAsHour - lrSystemOldTimeAsHour < lrPeriodAsHour
+	THEN
+		bControlerOn := FALSE;
+		bValid := TRUE;
+	ELSE
+		bValid := FALSE;
+	END_IF
+
+	RETURN;
+ELSE
+	tonCtrlEnabled(IN := bControlerOn
+					   AND NOT bCtrlEnabled,
+				   PT := t#3s);
+
+	IF NOT bControlerOn
+	     OR NOT bCtrlEnabled
+	THEN
+		bBusy := FALSE;                                 	(* Program not busy *)
+
+		IF tonCtrlEnabled.Q
+		THEN
+			bControlerOn := FALSE;
+		END_IF
+
+		RETURN;
+	ELSE
+		tonCtrlEnabled(IN := FALSE);
+	END_IF
+END_IF;
+
+IF NOT bCtrlEnabled
+     OR NOT bNoEmergencyStop
+     OR NOT bMinusRelease
+     OR NOT bPlusRelease
+     OR bInterrupt
+THEN
+	bControlerOn := FALSE;			(* Controler off *)
+
+	(* Interrupt only when procedure has been busy  *)
+	IF bBusy
+	     AND NOT bProcInterrupted
+	THEN
+		bBusy := FALSE;                                 	(* Program not busy *)
+		bProcInterrupted := TRUE;
+	END_IF
+
+	IF Axis.bNotMoving			(* Axis not moving *)
+	THEN
+		unSpindleDurationPercent := 0;
+	END_IF
+
+	bFirstTime := FALSE;
+
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+	bDone := FALSE;                                	(* Program done *)
+	bBusy := FALSE;                                 	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;                                 		(* Error number *)
+
+	(* The function block MC_MoveVelocity starts a continuous movement with specified velocity and direction.  *)
+	fbMoveVelo(
+		bExecute := FALSE,
+		Axis := Axis,
+	 );
+
+	(* The function block MC_Stop stops an axis with a defined braking ramp and blocks the axis for any motion commands.  *)
+	fbStop(
+		bExecute := FALSE,
+		Axis := Axis,
+	);
+
+	tonDuration(IN:= FALSE);
+
+	etSpindlePreheat := ET_SpindlePreheat_eWaitExecute;       			(* Next step *)
+
+	bFirstTime := TRUE;
+END_IF;
+
+IF bBusy
+     (*AND Axis.nCurrentMotorSpeed <> 0*)
+     AND NOT Axis.bNotMoving			(* Axis moving *)
+THEN
+	IF lrSystemNewTimeAsHour - lrStartSpdlProcTimeAsHour >= lrSpdlTimeAsHour
+	THEN
+		lrStartSpdlProcTimeAsHour := lrSystemNewTimeAsHour;
+		IF unSpindleDurationPercent < 100
+		THEN
+			unSpindleDurationPercent := unSpindleDurationPercent + 1;
+		ELSE
+			unSpindleDurationPercent := 100;
+		END_IF
+	END_IF
+ELSE
+	IF Axis.bNotMoving			(* Axis not moving *)
+	THEN
+		unSpindleDurationPercent := 0;
+	END_IF
+END_IF
+
+CASE etSpindlePreheat OF
+
+	ET_SpindlePreheat_eWaitExecute:
+		bBusy := FALSE;                                     		(* Program not busy *)
+		bError := FALSE;                                    		(* Program not error *)
+
+		bNewSpdl := FALSE; 					(* New spindel phases *)
+		bDailyPreheat := FALSE; 				(* Daily preheat phases *)
+
+		IF bControlerOn
+		    AND bCtrlEnabled
+		THEN
+			bDone := FALSE;						(* Command done *)
+			bBusy := TRUE;						(* Command busy *)
+			bError := FALSE;						(* Command error  *)
+			udnErrorNo := 0;						(* Error number *)
+			sErrorMsg := ''; 						(* Error message *)
+
+			tonDuration(IN:= FALSE);
+			lrSpdlTimeAsHour := 0.0;
+
+			(* New spindle starting procedure *)
+			IF lrSystemOldTimeAsHour = 0
+			THEN
+
+				FOR unPhase := 1 TO ungGr05MaxPhasesNewSpdl
+				DO
+					(* Convert  duration time to OTSTRUCT*)
+					arstPhasesNewSpdl[unPhase].otstDuration := TIME_TO_OTSTRUCT(TIN := arstPhasesNewSpdl[unPhase].tDuration);
+
+					(* Calculate period time *)
+					lrWeekAsHour := arstPhasesNewSpdl[unPhase].otstDuration.wWeek * 168.0;						(* Calculate into hours*)
+					lrDayAsHour := arstPhasesNewSpdl[unPhase].otstDuration.wDay * 24.0;							(* Calculate into hours *)
+					lrHour := arstPhasesNewSpdl[unPhase].otstDuration.wHour;
+					lrMinuteAsHour := arstPhasesNewSpdl[unPhase].otstDuration.wMinute  / 60.0;						(* Calculate into hours *)
+					lrSecondAsHour := arstPhasesNewSpdl[unPhase].otstDuration.wSecond / 3600.0;					(* Calculate into hours *)
+					lrMillisecondAsHour := arstPhasesNewSpdl[unPhase].otstDuration.wMilliseconds / 3600000.0 ;			(* Calculate into hours *)
+
+					lrSpdlTimeAsHour :=  lrSpdlTimeAsHour														(* Calculate period *)
+									      + lrWeekAsHour
+									      + lrDayAsHour
+							 	    	      + lrHour
+									      + lrMinuteAsHour
+							 	    	      + lrSecondAsHour
+									      + lrMillisecondAsHour;
+
+					(* Set Limited Override *)
+					arstPhasesNewSpdl[unPhase].dwOverride := LIMIT(
+						0,														(* Min 0 [%]  override*)
+						arstPhasesNewSpdl[unPhase].dwOverride,					(* Current [%] override*)
+						100														(* Max 100 [%] override *)
+					);
+
+					(* Set Speed *)
+					arstPhasesNewSpdl[unPhase].dwSpeedRpm := (LREAL_TO_DWORD(lrToolLimitMax) * arstPhasesNewSpdl[unPhase].dwOverride)/100;				(* Current RPM [U/min] *)
+
+				END_FOR
+
+				lrSpdlTimeAsHour := lrSpdlTimeAsHour / 100.0; 				(* Normalized to [%]*)
+				lrStartSpdlProcTimeAsHour := lrSystemNewTimeAsHour;
+
+				unPhase := 1;
+				bBusy := TRUE;				(* Program Busy *)
+				bNewSpdl := TRUE; 					(* New spindel phases *)
+				bProcInterrupted := FALSE;
+
+				etSpindlePreheat := ET_SpindlePreheat_eStartNewSpindle;		(* Next step *)
+
+			(* Daily preheat starting procedure *)
+			ELSIF lrSystemNewTimeAsHour - lrSystemOldTimeAsHour > lrPeriodAsHour
+			THEN
+
+				FOR unPhase := 1 TO ungGr05MaxPhasesDailyPreheat
+				DO
+					(* Convert  duration time to OTSTRUCT*)
+					arstPhasesDailyPreheat[unPhase].otstDuration := TIME_TO_OTSTRUCT(TIN := arstPhasesDailyPreheat[unPhase].tDuration);
+
+					(* Calculate period time *)
+					lrWeekAsHour := arstPhasesDailyPreheat[unPhase].otstDuration.wWeek * 168.0;						(* Calculate into hours*)
+					lrDayAsHour := arstPhasesDailyPreheat[unPhase].otstDuration.wDay * 24.0;							(* Calculate into hours *)
+					lrHour := arstPhasesDailyPreheat[unPhase].otstDuration.wHour ;
+					lrMinuteAsHour := arstPhasesDailyPreheat[unPhase].otstDuration.wMinute  / 60.0;						(* Calculate into hours *)
+					lrSecondAsHour := arstPhasesDailyPreheat[unPhase].otstDuration.wSecond / 3600.0;					(* Calculate into hours *)
+					lrMillisecondAsHour := arstPhasesDailyPreheat[unPhase].otstDuration.wMilliseconds / 3600000.0 ;			(* Calculate into hours *)
+
+					lrSpdlTimeAsHour :=  lrSpdlTimeAsHour															(* Calculate period *)
+									     + lrWeekAsHour
+									     + lrDayAsHour
+							 	    	     + lrHour
+									     + lrMinuteAsHour
+							 	   	     + lrSecondAsHour
+									     + lrMillisecondAsHour;
+
+					(* Set Limited Override *)
+					arstPhasesDailyPreheat[unPhase].dwOverride := LIMIT(
+						0,														(* Min 0 [%]  override*)
+						arstPhasesDailyPreheat[unPhase].dwOverride,				(* Current [%] override*)
+						100														(* Max 100 [%] override *)
+					);
+
+					(* Set Speed *)
+					arstPhasesDailyPreheat[unPhase].dwSpeedRpm := (LREAL_TO_DWORD(lrToolLimitMax) * arstPhasesDailyPreheat[unPhase].dwOverride)/100;				(* Current RPM [U/min] *)
+
+				END_FOR
+
+				lrSpdlTimeAsHour := lrSpdlTimeAsHour / 100.0; 				(* Normalized to [%]*)
+				lrStartSpdlProcTimeAsHour := lrSystemNewTimeAsHour;
+
+				unPhase := 1;
+				bBusy := TRUE;				(* Program Busy *)
+				bDailyPreheat := TRUE; 				(* Daily preheat phases *)
+				bProcInterrupted := FALSE;
+
+				etSpindlePreheat := ET_SpindlePreheat_eStartDailyPreheat;		(* Next step *)
+
+			END_IF;
+		END_IF;
+
+	ET_SpindlePreheat_eStartNewSpindle:
+		fbMoveVelo.lrVelocity := arstPhasesNewSpdl[unPhase].dwSpeedRpm;				(* Set speed RPM [U/min] *)
+		tonDuration.PT := arstPhasesNewSpdl[unPhase].tDuration;							(* Set duration time *)
+
+		etSpindlePreheat := ET_SpindlePreheat_eStartSpindle;		(* Next step *)
+
+	ET_SpindlePreheat_eStartDailyPreheat:
+		fbMoveVelo.lrVelocity := arstPhasesDailyPreheat[unPhase].dwSpeedRpm;			(* Set speed RPM [U/min] *)
+		tonDuration.PT := arstPhasesDailyPreheat[unPhase].tDuration;						(* Set duration time *)
+
+		etSpindlePreheat := ET_SpindlePreheat_eStartSpindle;		(* Next step *)
+
+	ET_SpindlePreheat_eStartSpindle:
+		fbMoveVelo.bExecute := TRUE;
+
+		IF fbMoveVelo.bBusy
+		THEN
+			etSpindlePreheat := ET_SpindlePreheat_eWfStartSpindle;         		(* Next step *)
+
+		ELSIF fbMoveVelo.bError
+		THEN
+			fbMoveVelo.bExecute := FALSE;
+
+			etSpindlePreheat := ET_SpindlePreheat_eError;         		(* Next step *)
+
+		END_IF
+
+	ET_SpindlePreheat_eWfStartSpindle:
+		IF fbMoveVelo.bInVelocity
+		     AND NOT fbMoveVelo.bError
+		     AND bRpmReached
+		THEN
+			fbMoveVelo.bExecute := FALSE;
+
+			etSpindlePreheat := ET_SpindlePreheat_eWfStartSpindleProc;         		(* Next step *)
+
+		ELSIF fbMoveVelo.bError
+		THEN
+			fbMoveVelo.bExecute := FALSE;
+
+			etSpindlePreheat := ET_SpindlePreheat_eError;         		(* Next step *)
+
+		END_IF
+
+	ET_SpindlePreheat_eWfStartSpindleProc:
+		tonDuration(IN := TRUE);
+
+		IF tonDuration.Q
+		THEN
+			tonDuration(IN:= FALSE);
+
+			(* Phase incrementation *)
+			unPhase := unPhase + 1;
+
+			IF bNewSpdl
+			    AND unPhase <= ungGr05MaxPhasesNewSpdl
+			THEN
+				fbMoveVelo.lrVelocity := arstPhasesNewSpdl[unPhase].dwSpeedRpm;				(* Set speed RPM [U/min] *)
+				tonDuration.PT := arstPhasesNewSpdl[unPhase].tDuration;							(* Set duration time *)
+
+				etSpindlePreheat := ET_SpindlePreheat_eStartSpindle;
+
+			ELSIF bDailyPreheat
+				   AND unPhase <= ungGr05MaxPhasesDailyPreheat
+			THEN
+				fbMoveVelo.lrVelocity := arstPhasesDailyPreheat[unPhase].dwSpeedRpm;			(* Set speed RPM [U/min] *)
+				tonDuration.PT := arstPhasesDailyPreheat[unPhase].tDuration;						(* Set duration time *)
+
+				etSpindlePreheat := ET_SpindlePreheat_eStartSpindle;
+
+			ELSE
+				etSpindlePreheat := ET_SpindlePreheat_eSpindleStop;
+
+			END_IF
+		END_IF
+
+	ET_SpindlePreheat_eSpindleStop:
+		fbStop.bExecute := TRUE;
+		fbMoveVelo.lrVelocity := 0.0;
+
+		IF fbStop.bBusy
+		THEN
+			etSpindlePreheat := ET_SpindlePreheat_eWfSpindleStopped;         		(* Next step *)
+
+		ELSIF fbStop.bError
+		THEN
+			fbStop.bExecute := FALSE;
+
+			etSpindlePreheat := ET_SpindlePreheat_eError;         		(* Next step *)
+
+		END_IF
+
+	ET_SpindlePreheat_eWfSpindleStopped:
+		IF fbStop.bDone
+		     AND NOT fbStop.bError
+		     AND Axis.bNotMoving
+		     AND Axis.nSetMotorSpeed = 0
+		     AND bRpmIsZero
+		THEN
+			fbStop.bExecute := FALSE;
+
+			etSpindlePreheat := ET_SpindlePreheat_eDone;         		(* Next step *)
+
+		ELSIF fbStop.bError
+		THEN
+			fbStop.bExecute := FALSE;
+
+			etSpindlePreheat := ET_SpindlePreheat_eError;         		(* Next step *)
+
+		END_IF
+
+	ET_SpindlePreheat_eDone:
+		bValid := TRUE;						(* Preheat valid *)
+		bControlerOn := FALSE;				(* Controler off *)
+		bDone := TRUE;                                     		(* Program done, in position *)
+		bBusy := FALSE;                                     		(* Program not busy *)
+
+		(* Save last time activated of the starting procedure *)
+		lrSystemOldTimeAsHour := lrSystemNewTimeAsHour;
+
+		etSpindlePreheat := ET_SpindlePreheat_eNoExecute;            	(* Next step *)
+
+	ET_SpindlePreheat_eError:
+		bDone := FALSE;                                     		(* Program done, in position *)
+		bControlerOn := FALSE;				(* Controler off *)
+		bError := TRUE;                                     		(* Program error *)
+		bBusy := FALSE;                                     		(* Program not busy *)
+	
+		etSpindlePreheat := ET_SpindlePreheat_eNoExecute;           	(* Next step *)
+
+	ET_SpindlePreheat_eNoExecute:
+		IF NOT bExecute
+		THEN
+			bNewSpdl := FALSE; 				(* New spindel phases *)
+			bDailyPreheat := FALSE; 			(* Daily preheat phases *)
+
+			bControlerOn := FALSE;				(* Controler off *)
+			bDone := FALSE;                                 	(* Program done *)
+			bBusy := FALSE;                                		(* Program not busy *)
+			bError := FALSE;                                		(* Program not error *)
+		
+			etSpindlePreheat := ET_SpindlePreheat_eWaitExecute;       (* Next step *)
+		
+		END_IF;
+
+END_CASE;
+
+(* The function block MoveVelocity starts a continuous movement with specified velocity and direction.  *)
+fbMoveVelo(
+	lrVelocityMax := lrSpeedLimitMax,
+	Axis := Axis
+ );
+
+(* The function block Stop stops an axis with a defined braking ramp and blocks the axis for any motion commands.  *)
+fbStop(
+	Axis := Axis,
+);
+
+
+
+
+
+
+
+
+
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_VFD_SpindlePreheat">
+      <LineId Id="91" Count="494" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

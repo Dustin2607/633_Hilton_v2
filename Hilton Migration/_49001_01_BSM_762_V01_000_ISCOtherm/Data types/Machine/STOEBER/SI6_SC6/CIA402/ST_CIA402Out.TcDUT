@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_CIA402Out" Id="{56eba279-3e26-474e-9a9f-ffeb23adc09d}">
+    <Declaration><![CDATA[TYPE ST_CIA402Out :
+STRUCT
+
+	bSwitchOn 						:BOOL;			(* Switch on. *)
+	bEnableVoltage					:BOOL;			(* Enable voltage *)
+	bQuickStop						:BOOL;			(* Quick stop; 0 = request quick stop; 1 = do not request quick stop*)
+	bEnableOperation					:BOOL;			(* Enable operation *)
+	bFaultReset						:BOOL;			(* Fault reset 0, 1 = inactive; 0 -> 1 = active*)
+	bHalt							:BOOL;			(* Prerequisite: Jog, Profile position, Profile velocity or Profile torque operating modes *)
+	bOperatingModeSpecific			:BOOL;			(* Operating mode specific  *)
+	bAxisSelectorBit0 					:BOOL;			(* Prerequisite: A63 = 2: Parameter  *)
+	bAxisSelectorBit1 					:BOOL;			(* Prerequisite: A643 = 2: Parameter  *)
+													(*
+														00 bin = axis 1, 01 bin = axis 2, 10 bin = axis 3, 11 bin = axis 4
+													*)
+	bAxisDisable						:BOOL;			(* Prerequisite: A65 = 2: Parameter, 0 = do not disable axis; 1 = disable axis  *)
+	bOpenBrake						:BOOL;			(* Prerequisite: F06 = 2: Parameter; 0 = brake control through device control (prerequisite: F92[0] = 0: Internal (automatic)) or 0 = engage brake (prerequisite: F92[0] = 1: External (plc)), 1 = open brake*)
+	bSetReference					:BOOL;			(* Prerequisite: I111 = 2: Parameter, 0, 1 = inactive; 0 -> 1 = set reference without interrupting active movements; for controller-controlled operation, the controller must track the set position accordingly *)
+
+	bFeedEnablePlus					:BOOL;			(* Feed enable plus *)
+	bFeedEnableMinus				:BOOL;			(* Feed enable minus *)
+
+	(* Jog mode *)
+	stJogMode						:ST_JogModeFromPLC;
+
+	(* Position mode *)
+	stPositionMode					:ST_PositionModeFromPLC;
+
+	(* Velocity mode *)
+	stVelocityMode					:ST_VelocityModeFromPLC;
+
+	(* Torque mode *)
+	stTorqueMode					:ST_TorqueModeFromPLC;
+
+	(* Homing mode *)
+	stHomingMode					:ST_HomingModeFromPLC;
+
+
+	etModesOfOperation				:ET_ModesOfOperation;			(* Set operating mode. *)
+																	(*
+																		-1: Jog
+																		0: No mode assigned
+																		1: Profile position mode
+																		3: Profile velocity mode
+																		4: Profile torque mode
+																		6: Homing Mode
+																		7: Interpolated position mode
+																		8: Cyclic synchronous position mode
+																		9: Cyclic synchronous velocity mode
+																		10: Cyclic synchronous torque mode
+																	*)
+
+	nOverride						:INT;			(* Value of override 16384 = 100 %. *)
+	unMaxTorque						:UINT;			(* Maximum permissible torque/force *)
+	udnMaxAcceleration				:UDINT;			(* Maximum permissible acceleration in the Homing, Jog, Profile position and Profile velocity operating modes. *)
+	udnMaxDeceleration				:UDINT;			(* Maximum permissible deceleration in the Homing, Jog, Profile position and Profile velocity operating modes. *)
+	udnMaxJerk						:UDINT;			(* Maximum permitted jerk. *)
+	dnSoftwarePosLimitMin				:DINT;			(* Positions of the software position limitation minimum *)
+	dnSoftwarePosLimitMax			:DINT;			(* Positions of the software position limitation maximum *)
+
+	dwDigitalOutputs 					:DWORD;
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

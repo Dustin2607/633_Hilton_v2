@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_DwordToBitReal" Id="{0c1c280a-ba77-4e36-9578-76dae4150522}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_DwordToBitReal : REAL
+VAR_INPUT
+	dwIn : DWORD;
+END_VAR
+VAR
+	pt : POINTER TO REAL;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[pt := ADR(dwIn);
+F_DwordToBitReal := pt^;]]></ST>
+    </Implementation>
+    <LineIds Name="F_DwordToBitReal">
+      <LineId Id="7" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <GVL Name="GVL_Gr00IO" Id="{ef6e8546-689f-4fc0-aaf6-aef5ba56072a}">
+    <Declaration><![CDATA[{attribute 'Tc2GvlVarNames'}
+VAR_GLOBAL
+	(* Inputs / Eingänge *)
+	stinGr00FieldbusStatus						AT %I*:ST_FieldbusStatus;			(* State of the fieldbus / Status des Fieldbus *)
+
+	binGr00NoEmergencyStop  					AT %I*:BOOL;						(* DI10.0 No emergency stop / kein Notaus *)
+	binGr00AirPressureOK 						AT %I*:BOOL; 					(* DI100.0 Air pressure OK / Luftdruck i.O. *)
+	arbinGr00DoorsClosed						AT %I* :ARRAY [1..5] OF BOOL;		(* DI10.2 .. DIx.x Doors closed / Türe geschlossen*)
+	arbinGr00PowerSupplyOn					AT %I* :ARRAY [1..5] OF BOOL;		(* DI10.1, DI10.3 Power supply on / 24V DC vorhanden. *)
+	binGr00LightCurtainOK 						AT %I*:BOOL;						(* DIx.x Light curtain ok / Freigabe Lichtschranke i.o *)
+	binGr00TempOK 							AT %I*:BOOL;						(* DIx.x Temperature fuse OK / Temperatursicherung i.O. *)
+	binGr00AllDoorsClosed 					AT %I*:BOOL;						(* DIx.x All doors closed / Alle Türen geschlossen *)
+	binGr00AllDoorsLocked 					AT %I*:BOOL;						(* DIx.x All doors locked / Alle Türen verrigelt *)
+
+	binGr00PushBtnStart 						AT %I*:BOOL; 					(* DI0.5 Push button "Start" / Taste "Start" *)
+	binGr00PushBtnStop 						AT %I*:BOOL; 					(* DI0.6 Push button "Stop" / Taste "Stop" *)
+	binGr00PushBtnHome 						AT %I*:BOOL; 					(* DI0.7 Push button "Home" / Taster"Grundstellung" *)
+	binGr00PushBtnReset 						AT %I*:BOOL; 					(* DIx.x Push button "Reset" / Taste "Reset" *)
+	binGr00PushBtnRef						AT %I*:BOOL; 					(* DIx.x Push button "Ref" / Taste "Ref" *)
+
+	(* Outputs / Ausgänge *)
+	boutGr00AirPressureOn 					AT %Q*:BOOL; 					(* DQ100.0. Air pressure on / Luftdruck ein. *)
+	boutGr00ConfLightCurtain 					AT %Q*:BOOL; 					(* DQx.x Confirm light Curtain / Quitt Lichtschrank *)
+
+	boutGr00BulbBtnStart 						AT %Q*:BOOL; 					(* DQ0.5 Signal button bulb "start" / Signallampe "Start" *)
+	boutGr00BulbBtnStop 						AT %Q*:BOOL; 					(* DQ0.6 Signal button bulb "stop" / Signallampe "Stop" *)
+	boutGr00BulbBtnHome 					AT %Q*:BOOL; 					(* DQ0.7 Signal button bulb "home" / Signallampe "Grundstellung" *)
+	boutGr00BulbBtnReset						AT %Q*:BOOL;					(* DQx.x Signal button bulb "reset" / Signallampe "Reset" *)
+	boutGr00BulbBtnRef						AT %Q*:BOOL;					(* DQx.x Signal button bulb "ref" / Signallampe "Ref" *)
+
+	boutGr00BulbGreen 						AT %Q*:BOOL;					(* DQx.x Signal column bulb "automatic" / Signallampe "Automatik" *)
+	boutGr00BulbRed 							AT %Q*:BOOL; 					(* DQx.x Signal column bulb "stop" or "error" / Signallampe "Stop" oder "Fehler" *)
+	boutGr00BulbYellow 						AT %Q*:BOOL; 					(* DQx.x Signal column bulb "warning" or "message" / Signallampe "Warnung" oder "Message" *)
+	boutGr00BulbWhite 						AT %Q*:BOOL; 					(* DQx.x Signal column bulb "" / Signallampe "" *)
+	boutGr00Horn								AT %Q*:BOOL;					(* DQx.x Signal horn / Signal hupe  *)
+
+	boutGr00AllDoorsLock						AT %Q*:BOOL;					(* DQx.x All doors lock / Alle Türen verriegeln *)
+
+END_VAR
+]]></Declaration>
+  </GVL>
+</TcPlcObject>

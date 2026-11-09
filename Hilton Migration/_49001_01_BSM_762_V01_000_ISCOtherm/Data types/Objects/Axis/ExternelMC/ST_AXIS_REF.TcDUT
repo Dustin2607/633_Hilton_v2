@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_AXIS_REF" Id="{e66038bb-a2cd-46f8-a34e-1f7a95b2df3d}">
+    <Declaration><![CDATA[TYPE ST_AXIS_REF :
+STRUCT
+	sAdsAddr			:STRING(23);			(* AmsNetId of the EtherCAT master device.*)
+	unSlaveAddr			:UINT;				(* Address of the slave device.*)
+	bLockPDO			:BOOL;
+	bCmdInterrupted		:BOOL;
+	bHWLimitMax			:BOOL;
+	bHWLimitMin			:BOOL;
+	bSWLimitMax			:BOOL;
+	bSWLimitMin			:BOOL;
+	stNcToPlc			:ST_NCTOPLC;
+	stPlcToNc			:ST_PLCTONC;
+	stAxisStatus			:ST_STOEBER_AxisStatus;
+	fbReadStatusSDS		:FB_STOEBERSDS_ReadStatus;
+	fbReadStatusSI6		:FB_STOEBERSI6_ReadStatus;
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

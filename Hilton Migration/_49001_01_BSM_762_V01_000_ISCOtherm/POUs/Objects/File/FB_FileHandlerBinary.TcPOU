@@ -1,0 +1,339 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_FileHandlerBinary" Id="{b0b96ac1-923c-43ba-9727-c4dad6778fa8}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_FileHandlerBinary
+(*
+
+This function block is used to read and write binary datas in/from file.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			10.06.2013
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+
+VAR_INPUT
+	bEnable						:BOOL;					(* Enable FB *)
+	bExecute					:BOOL;					(* Execute operation *)
+	sFilePath					:STRING;				(* File path *)
+	sFileName					:STRING;				(* File name *)
+	sFileSuffix					:STRING := 'dat';			(* Suffix of file *)
+	bFileWrite					:BOOL;					(* Write file *)
+	bFileRead					:BOOL;					(* Read file *)
+	dwDataBuffer				:PVOID;				(* Contains the address of the buffer containing the data to be read/written ADR *)
+	udnDataBufLen				:UDINT;					(* Contains the number of bytes to be written SIZEOF *)
+	tTimeout						:TIME := t#1s;				(* States the time before the function is cancelled *)
+END_VAR
+VAR_OUTPUT
+	bBusy						:BOOL;					(* Program busy *)
+	bDone						:BOOL;					(* Program done *)
+	bError						:BOOL;					(* Program error *)
+	udnErrNo					:UDINT;					(* Error number *)
+END_VAR
+VAR_IN_OUT
+
+END_VAR
+VAR
+	(* Enummerations *)
+	enStep						: (eWaitExecute := 0, eChkFileName,  eChkBufLen, eFileOpen, eChkFileOpen, eFileWrite, eChkFileWrite, eFileRead, eChkFileRead, eFileClose, eChkFileClose, eDone, eError, eNotExecute);			(* Sequence state for open, read/write and close the file *)
+
+	(* Variables *)
+	bFirstTime					:BOOL;					(* First PLC cycle *)
+
+	dwMode						:DWORD;				(* Contains the mode in which the file is to be opened *)
+	sPathName					:STRING;				(* Contains the path and filename for the file to be opened *)
+	hFileHandle					:UINT;					(* File handle *)
+
+	unWriteCounter				:UINT;
+	unReadCounter				:UINT;
+
+	(* Instances *)
+	fbFileOpen					:FB_FileOpen;			(* File open *)
+	fbFileClose					:FB_FileClose;			(* File close *)
+	fbFileRead					:FB_FileRead;			(* File read *)
+	fbFileWrite					:FB_FileWrite;				(* File write *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable				(* Enable FB *)
+THEN
+	bFirstTime := FALSE;		(* First PLC cycle *)
+	bBusy := FALSE;			(* Program busy *)
+	bDone := FALSE;			(* Program done *)
+	bError := FALSE;			(* Program error *)
+	udnErrNo := 0;				(* Error number *)
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+	enStep := eWaitExecute;
+
+	bFirstTime := TRUE;
+END_IF
+
+
+(* Sequence state for open, read/write and close the file *)
+CASE enStep
+OF
+
+	eWaitExecute:
+		IF bExecute
+		THEN
+			fbFileOpen.bExecute := FALSE;			(* File open *)
+			fbFileClose.bExecute := FALSE;			(* File close *)
+			fbFileRead.bExecute := FALSE;			(* File read *)
+			fbFileWrite.bExecute := FALSE;			(* File write *)
+
+			bDone := FALSE;
+			bError := FALSE;
+			udnErrNo := 0;
+
+			IF bFileWrite
+			THEN
+				dwMode := FOPEN_MODEWRITE OR FOPEN_MODEBINARY;
+
+				enStep := eChkFileName;			(* Next step *)
+
+			ELSIF bFileRead
+			THEN
+				dwMode := FOPEN_MODEREAD OR FOPEN_MODEBINARY;
+
+				enStep := eChkFileName;			(* Next step *)
+
+			ELSE
+				RETURN;
+			END_IF
+
+			bBusy := TRUE;
+
+		END_IF
+
+	(* Check file name and path *)
+	eChkFileName:
+
+		sPathName := CONCAT(
+						sFilePath, CONCAT(
+									sFileName, CONCAT(
+												'.', sFileSuffix)));
+
+		IF sFilePath <> ''
+		     AND sFileName <> ''
+		     AND sFileSuffix <> ''
+		THEN
+			enStep := eChkBufLen;			(* Next step *)
+
+		ELSE
+			udnErrNo := eChkFileName;
+
+			enStep := eError;				(* Next step *)
+
+		END_IF
+
+
+	(* Check buffer lenght *)
+	eChkBufLen:
+		IF udnDataBufLen = 0
+		THEN
+			enStep := eDone;				(* Next step *)
+	
+		ELSE
+			enStep := eFileOpen;			(* Next step *)
+		
+		END_IF
+
+	(* Open the file *)
+	eFileOpen:
+		fbFileOpen.bExecute := TRUE;
+
+		enStep := eChkFileOpen;				(* Next step *)
+
+	(* Check open the file *)
+	eChkFileOpen:
+		IF NOT fbFileOpen.bBusy
+		THEN
+			IF NOT fbFileOpen.bError
+			THEN
+				fbFileOpen.bExecute := FALSE;
+				hFileHandle := fbFileOpen.hFile;
+
+				(* Choose write or read datas *)
+				IF fbFileOpen.nMode = (FOPEN_MODEWRITE OR FOPEN_MODEBINARY)
+				THEN
+					enStep := eFileWrite;			(* Next step *)
+	
+				ELSIF fbFileOpen.nMode = (FOPEN_MODEREAD OR FOPEN_MODEBINARY)
+				THEN
+					enStep := eFileRead;			(* Next step *)
+
+				ELSE
+					enStep := eFileClose;			(* Next step *)
+	
+				END_IF
+
+			ELSE
+				fbFileOpen.bExecute := FALSE;
+				udnErrNo := fbFileOpen.nErrId;
+	
+				enStep := eError;					(* Next step *)
+				
+			END_IF
+		END_IF
+
+	(* Write the file *)
+	eFileWrite:
+		fbFileWrite.bExecute := TRUE;
+
+		enStep := eChkFileWrite;				(* Next step *)
+
+	(* Check write the file *)
+	eChkFileWrite:
+		IF NOT fbFileWrite.bBusy
+		THEN
+			IF (fbFileWrite.cbWrite >= SIZEOF(dwDataBuffer))
+			    AND NOT fbFileWrite.bError
+			THEN
+				fbFileWrite.bExecute := FALSE;
+				unWriteCounter := unWriteCounter + 1;
+
+				enStep := eFileClose;				(* Next step *)
+
+			ELSIF  fbFileWrite.bError
+			THEN
+				fbFileWrite.bExecute := FALSE;
+				udnErrNo := fbFileWrite.nErrId;
+
+				enStep := eError;					(* Next step *)
+				
+			END_IF
+		END_IF
+
+	(* Read the file *)
+	eFileRead:
+		fbFileRead.bExecute := TRUE;
+
+		enStep := eChkFileRead;				(* Next step *)
+
+	(* Check read the file *)
+	eChkFileRead:
+		IF NOT fbFileRead.bBusy
+		THEN
+			IF (fbFileRead.cbRead >= SIZEOF(dwDataBuffer))
+			     AND NOT fbFileRead.bError
+			THEN
+				fbFileRead.bExecute := FALSE;
+				unReadCounter := unReadCounter + 1;
+	
+				enStep := eFileClose;				(* Next step *)
+
+			ELSIF  fbFileRead.bError
+			THEN
+				fbFileRead.bExecute := FALSE;
+				udnErrNo := fbFileRead.nErrId;
+	
+				enStep := eError;					(* Next step *)
+				
+			END_IF
+		END_IF
+
+	(* Close the file *)
+	eFileClose:
+		fbFileClose.bExecute := TRUE;
+
+		enStep := eChkFileClose;				(* Next step *)
+
+	(* Check close the file *)
+	eChkFileClose:
+		IF NOT fbFileClose.bBusy
+		THEN
+			IF NOT fbFileClose.bError
+			THEN
+				fbFileClose.bExecute := FALSE;
+				enStep := eDone;					(* Next step *)
+
+				IF bError
+				THEN
+					enStep := eError;				(* Next step *)
+				END_IF
+
+			ELSE
+				fbFileClose.bExecute := FALSE;
+				udnErrNo := fbFileClose.nErrId;
+	
+				enStep := eError;					(* Next step *)
+				
+			END_IF
+		END_IF
+
+	eDone:
+		bBusy := FALSE;
+		bDone := TRUE;
+		bError := FALSE;
+		udnErrNo := 0;
+
+		enStep := eNotExecute;					(* Next step *)
+
+	eError:
+		IF NOT bError
+		     AND hFileHandle <> 0
+		THEN
+			bDone := FALSE;
+			bError := TRUE;
+
+			enStep := eFileClose;					(* Next step *)
+
+		ELSE
+			bBusy := FALSE;
+			bDone := FALSE;
+			bError := TRUE;
+	
+			enStep := eNotExecute;					(* Next step *)
+		END_IF
+
+	eNotExecute:
+		IF NOT bExecute
+		THEN
+			bBusy := FALSE;
+			bDone := FALSE;
+			bError := FALSE;
+			udnErrNo := 0;
+
+			enStep := eWaitExecute;			(* Next step *)
+
+		END_IF
+
+END_CASE
+
+
+fbFileOpen(
+	sNetId := '',
+	sPathName := sPathName,
+	nMode := dwMode,
+	ePath := PATH_GENERIC,
+	tTimeout := tTimeout);
+fbFileClose(
+	sNetId := '',
+	hFile := hFileHandle,
+	tTimeout := tTimeout );
+fbFileWrite(
+	sNetId := '',
+	hFile := hFileHandle,
+	pWriteBuff := dwDataBuffer,
+	cbWriteLen := udnDataBufLen,
+	tTimeout := tTimeout);
+fbFileRead(
+	sNetId := '',
+	hFile := hFileHandle,
+	pReadBuff := dwDataBuffer,
+	cbReadLen := udnDataBufLen,
+	tTimeout := tTimeout);]]></ST>
+    </Implementation>
+    <LineIds Name="FB_FileHandlerBinary">
+      <LineId Id="57" Count="271" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

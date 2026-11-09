@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_JogModeFromPLC" Id="{7fbd4315-d051-42ce-a2b1-365a18089383}">
+    <Declaration><![CDATA[TYPE ST_JogModeFromPLC :
+STRUCT
+	bJogPositive					:BOOL;			(* 0 = inactive; 1 = active *)
+	bJogNegative				:BOOL;			(* 0 = inactive; 1 = active *)
+	dnJogStep					:DINT;			(* Jog step *)
+	lrVelocity						:LREAL;			(* Jog velocity *)
+	lrAcceleration					:LREAL;			(* Acceleration in the Jog. *)
+	lrDeceleration				:LREAL;			(* Deceleration in the Jog. *)
+	lrJerk						:LREAL;			(* Jerk  in the Jog. *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

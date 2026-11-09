@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="Gr05Coordinator" Id="{96c0a4b3-35d7-4d8f-bc56-6b5c01731525}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM Gr05Coordinator
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable					:BOOL;						(* Enable Group05 *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	RETURN;
+END_IF;
+
+Gr05Persistent(bEnable := TRUE);			(* Call Program *)
+Gr05Simulation(bEnable := TRUE);			(* Call Program *)
+Gr05MachineMode(bEnable := TRUE);		(* Call Program *)
+Gr05Control(bEnable := TRUE);				(* Call Program *)
+Gr05HMI(bEnable := TRUE);				(* Call Program *)]]></ST>
+    </Implementation>
+    <LineIds Name="Gr05Coordinator">
+      <LineId Id="17" Count="9" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

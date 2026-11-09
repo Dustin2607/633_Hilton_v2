@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="Gr01Coordinator" Id="{85077ebb-9cfe-483b-9094-5bd7cd229ad5}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM Gr01Coordinator
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable					:BOOL;						(* Enable Group01 *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	RETURN;
+END_IF;
+
+Gr01Persistent(bEnable := TRUE);			(* Call Program *)
+Gr01Simulation(bEnable := TRUE);			(* Call Program *)
+Gr01MachineMode(bEnable := TRUE);		(* Call Program *)
+Gr01Control(bEnable := TRUE);				(* Call Program *)
+Gr01HMI(bEnable := TRUE);				(* Call Program *)]]></ST>
+    </Implementation>
+    <LineIds Name="Gr01Coordinator">
+      <LineId Id="17" Count="9" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

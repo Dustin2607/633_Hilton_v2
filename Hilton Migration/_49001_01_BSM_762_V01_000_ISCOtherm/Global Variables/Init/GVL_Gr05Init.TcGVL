@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <GVL Name="GVL_Gr05Init" Id="{e0bfbb68-286b-4222-b6f5-4622a29493d0}">
+    <Declaration><![CDATA[{attribute 'Tc2GvlVarNames'}
+VAR_GLOBAL
+	lrgGr05Clamp1DistPipeBeginSawBand		:LREAL := 710.0;			(* Distance between Sensor [pipe begin] and saw band (CAD) *)
+	lrgGr05SearchDistPipeBegin				:LREAL := 500.0;			(* Search distance for the pipe begin  *)
+	lrgGr05SearchDistPipeEnd					:LREAL := 180;			(* Search distance for the pipe end for last cut. Leftover piece as a good part, rest is cut *)
+
+	lrgGr05Clamp1PipeSensorOffset				:LREAL := 205.0;			(* Pipe sensor position on axis clamp 1 (CAD) *)
+
+	lrgGr05Clamp2PipeBeginPos				:LREAL := 0.0;				(* Position for pipe begin sensor *)
+	lrgGr05Clamp2SawPos						:LREAL := 0.0;				(* Sawing position *)
+	lrgGr05Clamp2Width						:LREAL := 150.0;			(* Width of clamping 2 support  *)
+
+	lrgGr05RemovalBandSawBand				:LREAL := 500.0;			(* Distance from removal band to saw band *)
+
+	tgGr05SlideWaitInWork					:TIME := t#2s;				(* Slide wait in work *)
+
+	lrgGr05PipeClampWidth 					:LREAL := 120.0;			(* Pipe clamp width *)
+	lrgGr05SawbandGuideWidth				:LREAL := 100.0;			(* Sawband guide width *)
+
+END_VAR
+]]></Declaration>
+  </GVL>
+</TcPlcObject>

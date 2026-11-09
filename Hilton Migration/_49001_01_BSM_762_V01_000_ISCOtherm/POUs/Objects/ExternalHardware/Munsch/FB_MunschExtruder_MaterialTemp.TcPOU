@@ -1,0 +1,229 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_MunschExtruder_MaterialTemp" Id="{0147375a-49c0-4514-b3ec-f5ab1af4d7b0}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_MunschExtruder_MaterialTemp
+(*
+
+The function block used to control set material temperature on munschs extruder
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			18.10.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Enable FB signal *)
+	bExecute					:BOOL;						(* Execut the function block *)
+	nMaterialTemp				:INT;						(* Material temperatur *)
+	nMinMaterialTemp			:INT;						(* Minimal material temperatur *)
+	nMaxMaterialTemp			:INT;						(* Maximal material temperatur *)
+	nMaterialTempTolerance		:INT := 5;						(* Material temperatur tolerance*)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bMaterialTempAlarm			:BOOL;						(* Exceeded material temperature tolerance  *)
+	bDone						:BOOL;						(* Program done *)
+	bBusy						:BOOL;						(* Program busy *)
+	bError						:BOOL;						(* Error *)
+	udnErrorNo					:UDINT;
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	Munsch						:ST_MUNSCH_REF;
+END_VAR
+VAR
+	(* Enummerations *)
+	etMunschExtruder				:ET_MunschExtruder;
+
+	(* Variables *)
+	nWatchdog					:INT;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtExecute						:R_TRIG;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	bDone := FALSE;					(* Program done *)
+	bBusy := FALSE;                                  	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;                                 		(* Error number *)
+
+	RETURN;
+END_IF;
+
+(* Wait for triger *)
+rtExecute(CLK := bExecute);
+
+(* Send command *)
+CASE etMunschExtruder OF
+
+	ET_MunschExtruder_eWaitExecute:
+		IF rtExecute.Q
+		THEN
+			nWatchdog := 0;
+
+			Munsch.bSetAirTemp := FALSE;
+			Munsch.bSetMaterialTemp := TRUE;
+			Munsch.bStartHeat := FALSE;
+			Munsch.bStopHeat  := FALSE;
+			Munsch.bStartExtruding := FALSE;
+			Munsch.bStopExtruding  := FALSE;
+			Munsch.bReadStatus := FALSE;
+
+			etMunschExtruder := ET_MunschExtruder_eChkInterface;              (* Next step *)
+		END_IF
+
+	ET_MunschExtruder_eChkInterface:
+		nWatchdog := nWatchdog + 1;
+
+		IF NOT Munsch.bLockedInterface
+		THEN
+			bBusy := FALSE;                                     	(* Program not busy *)
+			bError := FALSE;                         		(* Program not error *)
+			udnErrorNo := 0;                         		(* Error number *)
+
+			IF Munsch.bSetMaterialTemp
+			THEN
+				nWatchdog := 0;
+				bDone:= FALSE;                               		(* Program done *)
+				bBusy := TRUE;                                  	(* Program busy *)
+	
+				Munsch.bLockedInterface := TRUE;
+				Munsch.bSendExe := FALSE;
+	
+				IF nMaterialTemp >= nMinMaterialTemp
+				     AND nMaterialTemp <= nMaxMaterialTemp
+				THEN
+					etMunschExtruder := ET_MunschExtruder_eSetCMD;              (* Next step *)
+				ELSE
+					udnErrorNo := 1;
+	
+					etMunschExtruder := ET_MunschExtruder_eError;              (* Next step *)
+				END_IF
+
+			ELSE
+				etMunschExtruder := ET_MunschExtruder_eError;             (* Next step *)
+			END_IF
+
+			Munsch.bSetMaterialTemp := FALSE;
+
+		ELSIF nWatchdog > 1000
+		THEN
+			Munsch.bSetMaterialTemp := FALSE;
+
+			etMunschExtruder := ET_MunschExtruder_eError;             (* Next step *)
+		END_IF
+
+	ET_MunschExtruder_eSetCMD:
+		Munsch.stMunschCmd.etCommand := ET_MUNSCH_CMD_SETMATERIALTEMP;
+		Munsch.stMunschCmd.nMaterialTemp := nMaterialTemp;
+
+		etMunschExtruder := ET_MunschExtruder_eExecuteCMD;              (* Next step *)
+
+	ET_MunschExtruder_eExecuteCMD:
+		nWatchdog := nWatchdog + 1;
+
+		Munsch.bSendExe := TRUE;
+
+		IF Munsch.bStringReceived
+		THEN
+			IF Munsch.stMunschRes.etResponse = ET_MUNSCH_RES_SETMATERIALTEMP
+			     AND Munsch.stMunschCmd.nMaterialTemp = Munsch.stMunschRes.nMaterialRefTemp
+			THEN
+				Munsch.bSendExe := FALSE;
+
+				nWatchdog := 0;
+				etMunschExtruder := ET_MunschExtruder_eSetREQ;              (* Next step *)
+			END_IF
+
+		ELSIF Munsch.bInterfaceError
+			    OR nWatchdog > 1000
+		THEN
+			Munsch.bSendExe := FALSE;
+
+			udnErrorNo := 2;                     (* Error number *)
+			etMunschExtruder := ET_MunschExtruder_eError;              (* Next step *)
+		END_IF
+
+	ET_MunschExtruder_eSetREQ:
+		Munsch.stMunschCmd.etCommand := ET_MUNSCH_CMD_REQMATERIALREFTEMP;
+
+		etMunschExtruder := ET_MunschExtruder_eExecuteREQ;              (* Next step *)
+
+	ET_MunschExtruder_eExecuteREQ:
+		nWatchdog := nWatchdog + 1;
+
+		Munsch.bSendExe := TRUE;
+
+		IF Munsch.bStringReceived
+		THEN
+			IF Munsch.stMunschRes.etResponse = ET_MUNSCH_RES_REQMATERIALREFTEMP
+			THEN
+				Munsch.nMaterialRefTemp := Munsch.stMunschRes.nMaterialRefTemp;
+
+				Munsch.bSendExe := FALSE;
+
+				nWatchdog := 0;
+				etMunschExtruder := ET_MunschExtruder_eDone;              (* Next step *)
+
+			END_IF
+
+		ELSIF Munsch.bInterfaceError
+			    OR nWatchdog > 1000
+		THEN
+			Munsch.bSendExe := FALSE;
+
+			udnErrorNo := 3;                     (* Error number *)
+			etMunschExtruder := ET_MunschExtruder_eError;              (* Next step *)
+		END_IF
+
+	ET_MunschExtruder_eError:
+		bBusy := FALSE;						(* Command busy *)
+		bError := TRUE;						(* Command error  *)
+
+		etMunschExtruder := ET_MunschExtruder_eNoExecute;
+
+	ET_MunschExtruder_eDone:
+		bDone := TRUE;						(* Command done *)
+		bBusy := FALSE;						(* Command busy *)
+
+		etMunschExtruder := ET_MunschExtruder_eNoExecute;
+
+	ET_MunschExtruder_eNoExecute:
+		IF NOT bExecute
+		THEN
+			(* Reset outputs *)
+			bDone := FALSE;						(* Command done *)
+			bBusy := FALSE;						(* Command busy *)
+			bError := FALSE;						(* Command error  *)
+
+			nWatchdog := 0;
+			Munsch.bLockedInterface := FALSE;
+
+			Munsch.stMunschCmd.etCommand := ET_MUNSCH_CMD_NOCMD;
+			Munsch.stMunschRes.etResponse := ET_MUNSCH_RES_NOCMD;
+
+			etMunschExtruder := ET_MunschExtruder_eWaitExecute;
+		END_IF
+END_CASE;
+
+bMaterialTempAlarm := Munsch.nMaterialActTemp > Munsch.nMaterialRefTemp + nMaterialTempTolerance
+					 OR Munsch.nMaterialActTemp > Munsch.nMaterialRefTemp - nMaterialTempTolerance;
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_MunschExtruder_MaterialTemp">
+      <LineId Id="50" Count="168" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

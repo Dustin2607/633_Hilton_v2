@@ -1,0 +1,111 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_TypePIW" Id="{e1edc300-5b38-4033-aa29-ab078adc0b0f}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_TypePIW
+(*
+Function block is a PI controller.
+The PID controller works according to the fomula CV = InSignal * (Kp + Ki * Integral(e)).
+The output limits are active.
+The controller  with Anti-Windup Hold stops the integrator when lrLimitMin or lrLimitMax is reached.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			03.06.2014
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+
+VAR_INPUT
+	(* Enummerations *)
+
+	(* Variables *)
+	bEnable								:BOOL := TRUE;					(* Enable FB *)
+	lrInSignal								:LREAL;							(* Input signal *)
+	lrKp									:LREAL := 0.005;					(* Tuning parameter, proportional part *)
+	lrTi									:LREAL := 1E32;					(* Tuning parameter, time of integral *)
+	lrTaskCycle							:LREAL := 1.0; 					(* Cycle time *)
+	bSetToZero 							:BOOL;							(* Integral setting to zero *)
+	lrLimitMin								:LREAL := -1E40;					(* Limit minimum *)
+	lrLimitMax							:LREAL := 1E40;					(* Limit maximum *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR
+VAR_OUTPUT
+	(* Enummerations *)
+
+	(* Variables *)
+	lrOutSignal							:LREAL;							(* Output signal *)
+	bLimitMin							:BOOL;							(* Limit minimum reached *)
+	bLimitMax							:BOOL;							(* Limit maximum reached *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbCompP							:FB_CompP;
+	fbCompI								:FB_CompI;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+(* Calculate  proportional *)
+fbCompP(
+	bEnable := bEnable,
+	lrInSignal := lrInSignal,
+	lrProportionalValue := lrKp,
+);
+
+(* Calculate integrator *)
+fbCompI(
+	bEnable := NOT(bLimitMin OR bLimitMin) AND lrTi > 0.001,
+	lrInSignal := lrInSignal,
+	lrIntegralValue := SEL(lrTi > 0, lrKp, lrKp / lrTi),
+	lrTaskCycle := lrTaskCycle,
+	bSetToZero := bSetToZero,
+	lrLimitMin := lrLimitMin,
+	lrLimitMax := lrLimitMax,
+	bLimitMin => bLimitMin,
+	bLimitMax => bLimitMax);
+
+lrOutSignal := fbCompP.lrOutSignal + fbCompI.lrOutSignal;
+
+(* Check limit the outputs and stops the integrator *)
+bLimitMin := FALSE;							(* Limit minimum reached *)
+bLimitMax := FALSE;							(* Limit maximum reached *)
+IF lrOutSignal <= lrLimitMin
+THEN
+	lrOutSignal := lrLimitMin;
+	bLimitMin := TRUE;						(* Limit minimum reached *)
+
+ELSIF  lrOutSignal >= lrLimitMax
+THEN
+	lrOutSignal := lrLimitMax;
+	bLimitMax := TRUE;						(* Limit minimum reached *)
+
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_TypePIW">
+      <LineId Id="65" Count="35" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

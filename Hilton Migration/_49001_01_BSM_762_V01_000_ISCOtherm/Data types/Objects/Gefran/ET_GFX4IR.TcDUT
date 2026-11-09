@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_GFX4IR" Id="{d93a5ca6-d618-4c6d-8f16-d5bfc15d230b}">
+    <Declaration><![CDATA[TYPE ET_GFX4IR :
+(
+	ET_GFX4IRState_eWaitExecute := 0,
+	ET_GFX4IRState_eCtrlOn,
+	ET_GFX4IRState_eCtrlOff,
+	ET_GFX4IRState_eDone := 197,
+	ET_GFX4IRState_eError := 198,
+	ET_GFX4IRState_eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

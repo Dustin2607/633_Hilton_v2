@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_FloorDN" Id="{8b99c97b-5694-4f49-8925-3631a92e51aa}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_FloorDN : DINT
+(*
+Rounding down function which returns the biggest double integer.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			20.01.2014
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	rInValue						:REAL;
+END_VAR
+VAR
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+F_FloorDN := REAL_TO_DINT(rInValue);
+
+IF DINT_TO_REAL(F_FloorDN) > rInValue
+THEN
+	F_FloorDN := F_FloorDN - 1;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="F_FloorDN">
+      <LineId Id="18" Count="6" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

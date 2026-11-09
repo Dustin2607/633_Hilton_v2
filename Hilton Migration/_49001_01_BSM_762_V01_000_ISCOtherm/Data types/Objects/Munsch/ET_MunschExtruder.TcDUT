@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_MunschExtruder" Id="{e5af4300-d0c4-40d4-8b49-2a2a2174b846}">
+    <Declaration><![CDATA[TYPE ET_MunschExtruder :
+(
+	ET_MunschExtruder_eWaitExecute := 0,
+	ET_MunschExtruder_eChkInterface,
+	ET_MunschExtruder_eSetCMD,
+	ET_MunschExtruder_eSetMaterialTemp,
+	ET_MunschExtruder_eSetAirTemp,
+	ET_MunschExtruder_eExecuteCMD,
+	ET_MunschExtruder_eSetREQ,
+	ET_MunschExtruder_eExecuteREQ,
+	ET_MunschExtruder_eDone := 197,
+	ET_MunschExtruder_eError := 198,
+	ET_MunschExtruder_eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

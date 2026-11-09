@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_AxisStates" Id="{75284d13-842b-4e73-b872-b7b719c97f8c}">
+    <Declaration><![CDATA[TYPE ST_AxisStates :
+STRUCT
+
+	bOperational 				:BOOL;			(* Axis is ready for operation. *)
+	bError					:BOOL;			(* Axis is in a fault state. *)
+	bQuickStop 				:BOOL;			(* Quick stop is queued/is being executed. *)
+	bHomed 				:BOOL;			(* Axis has been referenced / homed. *)
+	bHomingBusy			:BOOL;			(* Homing is running *)
+	bNotMoving 				:BOOL;			(* Axis is logically stationary. *)
+	bInPositionArea 			:BOOL;			(* Axis is in position window. *)
+	bInTargetPosition 			:BOOL;			(* Axis is at target position. *)
+	bHasJob				:BOOL;			(* Axis has instructions. *)
+	bPositiveDirection 		:BOOL;			(* Axis moving to logically larger values. *)
+	bNegativeDirection 		:BOOL;			(* Axis moving to logically smaller values. *)
+	bSoftLimitMinExceeded 	:BOOL;			(* Position software limit switch minimum is exceeded. *)
+	bSoftLimitMaxExceeded 	:BOOL;			(* Position software limit switch maximum is exceeded. *)
+	bConstantVelocity			:BOOL; 			(* Axis is in constant velocity *)
+	bAccelerating 			:BOOL;			(* Axis is in accelerating phase *)
+	bDecelerating 			:BOOL;			(* Axis is in decelerating phase *)
+	dwErrorCode 				:DWORD; 		(* Axis error code *)
+	wCommunicationState 		:WORD;			(* Communication handshake bit. *)
+	
+	
+	etMotionState				:ET_MC_MotionStates;	(* Motion state in the PLCopen state diagram *)
+	
+		
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

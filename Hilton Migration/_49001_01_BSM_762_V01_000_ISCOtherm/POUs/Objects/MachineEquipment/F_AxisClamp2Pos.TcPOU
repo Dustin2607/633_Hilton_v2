@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_AxisClamp2Pos" Id="{76cfcc8e-5258-4419-9567-184622269d84}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_AxisClamp2Pos : LREAL
+(*
+
+The function  used to generate position position dependent of diameter and angle.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			01.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable							:BOOL;						(* Function block enable *)
+	lrActClamp2Pos					:LREAL;
+	lrAngle							:LREAL;
+	lrRadius							:LREAL;
+	lrPipeClampWidth					:LREAL;
+	lrSawbandGuideWidth				:LREAL;
+END_VAR
+VAR
+	lrOffset : LREAL;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	F_AxisClamp2Pos := lrActClamp2Pos;
+	RETURN;
+END_IF
+
+lrAngle := LIMIT(-45, lrAngle, 45);
+
+
+
+F_AxisClamp2Pos := (TAN(ABS(lrAngle)) * (lrRadius + lrPipeClampWidth))
+				     + (lrSawbandGuideWidth / 2 / COS(ABS(lrAngle)))
+				     - (lrSawbandGuideWidth / 2);
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="F_AxisClamp2Pos">
+      <LineId Id="26" Count="14" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

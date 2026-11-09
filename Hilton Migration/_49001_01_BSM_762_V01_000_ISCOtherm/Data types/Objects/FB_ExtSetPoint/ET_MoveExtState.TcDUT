@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_MoveExtState" Id="{2ca47cdc-f071-4ad8-90c2-45cfb1cb07b4}">
+    <Declaration><![CDATA[TYPE ET_MoveExtState :
+(
+	ET_MoveExtState_eWaitExecute := 0,
+	ET_MoveExtState_eEnableExtSetPointGenerator := 5,
+	ET_MoveExtState_eDisableExtSetPointGenerator := 10,
+	ET_MoveExtState_eDone := 197,
+	ET_MoveExtState_eError := 198,
+	ET_MoveExtState_eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

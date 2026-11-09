@@ -1,0 +1,88 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Differential" Id="{b491d433-fd55-42a3-9fb5-f449cfb88c1d}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Differential
+(*
+Function block used to calculate differential
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			05.06.2014
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Enummerations *)
+	
+	(* Variables *)
+	bEnable								:BOOL := TRUE;					(* Enable FB *)
+
+	lrInSignal								:LREAL;							(* Input signal *)
+	lrDifferentialValue						:LREAL := 1.0;						(* Differential value *)
+	lrTaskCycle							:LREAL := 1.0; 					(* Cycle time *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+END_VAR
+VAR_OUTPUT
+	(* Enummerations *)
+	
+	(* Variables *)
+	lrOutSignal							:LREAL;							(* Output signal *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+END_VAR
+VAR
+	(* Enummerations *)
+	
+	(* Variables *)
+	bFirstTime							:BOOL;							(* First cycle *)
+
+	lrLastSignal							:LREAL;							(* Last signal *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	lrOutSignal := lrInSignal;
+
+	bFirstTime := FALSE;
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+	lrLastSignal := lrInSignal;
+	bFirstTime := TRUE;
+END_IF
+
+IF lrTaskCycle > 0.0
+THEN
+	lrOutSignal := lrDifferentialValue * (lrInSignal - lrLastSignal) / lrTaskCycle;
+ELSE
+	lrOutSignal := 0.0;
+END_IF
+lrLastSignal := lrInSignal;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Differential">
+      <LineId Id="57" Count="20" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

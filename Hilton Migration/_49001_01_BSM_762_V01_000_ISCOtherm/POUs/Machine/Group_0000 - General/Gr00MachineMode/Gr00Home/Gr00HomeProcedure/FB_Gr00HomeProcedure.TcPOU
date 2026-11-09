@@ -1,0 +1,238 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Gr00HomeProcedure" Id="{bdf8c6cb-6ee3-465d-a303-80baf7dc53b2}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Gr00HomeProcedure
+(*
+
+The function block used to initialize manual mode.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			28.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Enable FB signal *)
+	bExecute					:BOOL;						(* Home procedure execute *)
+	bReleaseNextStep			:BOOL;						(* Home procedure release next step *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bDone						:BOOL;						(* Program done *)
+	bBusy						:BOOL;						(* Program busy *)
+	bError						:BOOL;						(* Program error *)
+	udnErrorNo					:UDINT;						(* Error number *)
+
+	bErrorByProgramVerification	:BOOL; 						(* Error: Program verification / Fehler:  *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+	etGr00Home					:ET_Gr00Home;				(* Home mode enum variable *)
+
+	(* Variables *)
+	lrClamp2Pos					:LREAL;
+	unProcessCounter				:UINT;
+	i				:UINT;
+
+	bFirstTime					:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+	bDone := FALSE;					(* Program done *)
+	bBusy := FALSE;                                  	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;                                 		(* Error number *)
+
+	bFirstTime := FALSE;
+	RETURN;
+END_IF;
+
+IF NOT bFirstTime
+THEN
+	bDone := FALSE;                                	(* Program done *)
+	bBusy := FALSE;                                 	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;                                 		(* Error number *)
+
+	bErrorByProgramVerification := FALSE;
+	
+	etGr00Home := ET_Gr00Home_eWaitExecute;       			(* Next step *)
+
+	bFirstTime := TRUE;
+END_IF;
+
+CASE etGr00Home OF
+
+	ET_Gr00Home_eWaitExecute:
+		bBusy := FALSE;                                     		(* Program not busy *)
+		bError := FALSE;                                    		(* Program not error *)
+
+		IF bExecute
+		THEN
+			bDone := FALSE;                                 	(* Program done, in position *)
+			bBusy := TRUE;                                  	(* Program busy *)
+
+			bErrorByProgramVerification := FALSE;
+
+			etGr00Home := ET_Gr00Home_eReference;		(* Next step *)
+		END_IF;
+
+	ET_Gr00Home_eReference:
+		IF stgGr00HMI.stHMITOPLC.bProgramActive
+		THEN
+			etGr00Home := ET_Gr00Home_eReadPrg;             			(* Next step *)
+		ELSE
+			arrGr00ProcessPara[0,0] := stgGr01HMI.stHMITOPLC.rPipeDiameter;
+			arrGr00ProcessPara[1,0] := stgGr05HMI.stHMITOPLC.lrActSawingLength;
+			arrGr00ProcessPara[1,1] := stgGr01HMI.stHMITOPLC.lrActSawingAngle;
+			(*ESKG 13032026*)
+			arrGr00ProcessPara[2,0] := 0;
+			arrGr00ProcessPara[2,1] := 0;
+
+			etGr00Home := ET_Gr00Home_eProgramVerification;
+		END_IF
+
+	ET_Gr00Home_eReadPrg:
+		Gr00Control.fbProgram.bRead := TRUE;
+
+		IF Gr00Control.fbProgram.fbRead.bBusy
+		THEN
+			etGr00Home := ET_Gr00Home_eWfReadPrg;             			(* Next step *)
+
+		ELSIF Gr00Control.fbProgram.fbRead.bError
+		THEN
+			Gr00Control.fbProgram.bRead := FALSE;
+
+			etGr00Home := ET_Gr00Home_eError;             			(* Next step *)
+
+		END_IF
+
+	ET_Gr00Home_eWfReadPrg:
+		IF Gr00Control.fbProgram.fbRead.bDone
+		     AND NOT Gr00Control.fbProgram.fbRead.bError
+		THEN
+			arrGr00ProcessPara := Gr00Control.fbProgram.fbRead.arrDataDimRC;
+			FOR i := 0 TO usnFileArrayMaxDimR BY 1
+			DO
+				arrGr00ProcessPara[i,0] := Gr00Control.fbProgram.fbRead.arrDataDimRC[i,0] * 25.4;
+
+			END_FOR
+			stgGr01HMI.stHMITOPLC.rPipeDiameter :=arrGr00ProcessPara[0,0];
+
+			Gr00Control.fbProgram.bRead := FALSE;
+
+			IF stgGr05HMI.stHMITOPLC.bCylinderPosActive
+			THEN
+				IF stgGr01HMI.stHMITOPLC.rPipeDiameter < rGr01PipeDiameterMin
+				     OR stgGr01HMI.stHMITOPLC.rPipeDiameter > rGr01PipeDiameterMax
+				THEN
+					bErrorByProgramVerification := TRUE;
+
+					etGr00Home := ET_Gr00Home_eWfErrorByProgramVerification;         (* Next step *)
+				ELSE
+				(*	bgGr00HomeNotInCrashGr01 := TRUE;
+					etGr00Home := ET_Gr00Home_eDone;            ESKG13032026 		* Next step *)
+
+					etGr00Home := ET_Gr00Home_eProgramVerification;         (* Next step *)
+
+				END_IF
+			ELSE
+				etGr00Home := ET_Gr00Home_eProgramVerification;         (* Next step *)
+			END_IF
+
+		ELSIF Gr00Control.fbProgram.fbRead.bError
+		THEN
+			Gr00Control.fbProgram.bRead := FALSE;
+
+			etGr00Home := ET_Gr00Home_eError;             			(* Next step *)
+
+		END_IF
+
+	ET_Gr00Home_eProgramVerification:
+		FOR unProcessCounter := 0 TO usnFileArrayMaxDimR
+		DO
+			lrClamp2Pos := F_AxisClamp2Pos(
+								bEnable := TRUE,
+								lrActClamp2Pos := Gr05Control.fbCylinderPos.lrActPosition,
+								lrAngle := arrGr00ProcessPara[unProcessCounter,1] / 180 * PI,
+								lrRadius := arrGr00ProcessPara[0,0] / 2.0,
+								lrPipeClampWidth := lrgGr05PipeClampWidth,
+								lrSawbandGuideWidth := lrgGr05SawbandGuideWidth
+							);
+
+			IF stgGr01HMI.stHMITOPLC.rPipeDiameter < rGr01PipeDiameterMin
+			     OR stgGr01HMI.stHMITOPLC.rPipeDiameter > rGr01PipeDiameterMax
+ 			     OR lrClamp2Pos > Gr05Control.fbAxisClamp1.lrSoftLimitMax								(*Gr05Control.fbCylinderPos.lrActPosition  ESKG13032026*)
+			     OR ABS(arrGr00ProcessPara[unProcessCounter,1]) > lrgGr01AngleAutoMax
+			THEN
+				bErrorByProgramVerification := TRUE;
+
+				etGr00Home := ET_Gr00Home_eWfErrorByProgramVerification;         		(* Next step *)
+
+				EXIT;
+			ELSE
+				bgGr00HomeNotInCrashGr01 := TRUE;
+
+				etGr00Home := ET_Gr00Home_eDone;             			(* Next step *)
+			END_IF
+		END_FOR
+
+	ET_Gr00Home_eWfErrorByProgramVerification:
+		IF stgGr00Alarm.stHome.arbError[0].bActive
+		THEN
+			bErrorByProgramVerification := FALSE;
+
+			udnErrorNo := 1;
+			etGr00Home := ET_Gr00Home_eError;         					(* Next step *)
+		END_IF
+
+	ET_Gr00Home_eDone:
+		bDone := TRUE;                                     		(* Program done, in position *)
+		bBusy := FALSE;                                     		(* Program not busy *)
+	
+		etGr00Home := ET_Gr00Home_eNoExecute;            	(* Next step *)
+	
+	ET_Gr00Home_eError:
+		bDone := FALSE;                                     		(* Program done, in position *)
+		bError := TRUE;                                     		(* Program error *)
+		bBusy := FALSE;                                     		(* Program not busy *)
+	
+		etGr00Home := ET_Gr00Home_eNoExecute;           	(* Next step *)
+	
+	ET_Gr00Home_eNoExecute:
+		IF NOT bExecute
+		THEN
+			bgGr00HomeCompleted := bDone;
+
+			bDone := FALSE;                                 	(* Program done *)
+			bBusy := FALSE;                                		(* Program not busy *)
+			bError := FALSE;                                		(* Program not error *)
+		
+			etGr00Home := ET_Gr00Home_eWaitExecute;       (* Next step *)
+		
+		END_IF;
+        
+END_CASE;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Gr00HomeProcedure">
+      <LineId Id="50" Count="177" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

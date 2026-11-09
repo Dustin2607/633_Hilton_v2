@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_VFD_Drive_REF" Id="{7f68e1f5-fe9d-481a-9640-a8628c98594c}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_VFD_Drive_REF
+VAR_INPUT
+	stTerminalState			AT %I*:ST_TerminalState;
+	stVfdToPlc				AT %I*:ST_VFDTOPLC;
+	stPlcToVfd				AT %Q*:ST_PLCTOVFD;
+END_VAR
+VAR_OUTPUT
+
+END_VAR
+VAR_IN_OUT
+
+END_VAR
+VAR
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_VFD_Drive_REF">
+      <LineId Id="15" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_SEWMOVIEDRIVEBCIA402TOPLC" Id="{e3a3d6e7-e312-4260-9987-c658abce51ea}">
+    <Declaration><![CDATA[(* Communikation structure from drive to plc *)
+
+TYPE ST_SEWMOVIEDRIVEBCIA402TOPLC :
+STRUCT
+	wPO1StatusWord						:WORD;
+	bAxisWeldingLimitMax 					:BOOL; 						(* DI1.5 Maximum limit of  axis welding / Endschalter Achse Schweißen maximal *)
+	bAxisWeldingLimitMin 					:BOOL;						(* DI1.4 Minimum limit of  axis welding / Endschalter Achse Schweißen minimal *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

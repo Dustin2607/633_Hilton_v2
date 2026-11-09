@@ -1,0 +1,92 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_PosCtrlOut" Id="{57351847-eb01-4742-9461-fd226b16ffc8}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_PosCtrlOut
+(*
+Function block used to set output of position controller.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			15.07.2014
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Enummerations *)
+
+	(* Variables *)
+	lrCtrlVelo								:LREAL;							(* Controller variable output signal - velocity output  - CV  [technical units / sec] *)
+	lrCtrlVeloMin							:LREAL;							(* Controller velocity limit minimum [technical units / sec] *)
+	lrCtrlVeloMax							:LREAL;							(* Controller velocity limit maximum [technical units / sec] *)
+	lrRefVeloMin							:LREAL;							(* Speed reference value limit minimum *)
+	lrRefVeloMax							:LREAL;							(* Speed reference value limit maximum *)
+	lrRefVeloVeloLimitMin					:LREAL;							(*  Speed reference limit minimum *)
+	lrRefVeloVeloLimitMax					:LREAL;							(*  Speed reference limit maximum *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR
+VAR_OUTPUT
+	(* Enummerations *)
+
+	(* Variables *)
+	lrOutSignal							:LREAL;							(* Output signal *)
+	bLimitMin							:BOOL;							(* Limit minimum reached *)
+	bLimitMax							:BOOL;							(* Limit maximum reached *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbScaling							:FB_Scaling;						(* Output scaling *)
+	fbLimiter								:FB_Limiter;						(* Signal output limiter *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+(* Output scaling *)
+fbScaling(
+	bEnable := TRUE,
+	lrInput := lrCtrlVelo,
+	lrXLowLimit := lrCtrlVeloMin,
+	lrXUpperLimit := lrCtrlVeloMax,
+	lrYLowLimit := lrRefVeloMin,
+	lrYUpperLimit := lrRefVeloMax,
+);
+
+(* Limiter *)
+fbLimiter(
+	bEnable := TRUE,
+	lrInSignal := fbScaling.lrOutputRV,
+	lrLimitMin := lrRefVeloVeloLimitMin,
+	lrLimitMax := lrRefVeloVeloLimitMax,
+	lrOutSignal => lrOutSignal,
+	bLimitMin => bLimitMin,
+	bLimitMax => bLimitMax
+);]]></ST>
+    </Implementation>
+    <LineIds Name="FB_PosCtrlOut">
+      <LineId Id="61" Count="20" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

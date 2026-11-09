@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Gr01Signals" Id="{b3a8c0ac-0637-4b16-a369-54aaa9d0f89b}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Gr01Signals
+(*
+
+The function block used to control general signals of the machine.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			28.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	etMachineMode				:ET_MachineMode;			(* Machine mode *)
+	etMachineState				:ET_MachineState;			(* Machine state *)
+	bMachineRunning				:BOOL;						(* Machine running / Maschine lauft *)
+	bExecutedProcess			:BOOL;						(* Process executed *)
+	stBlinker						:ST_Blinker;
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bBulbBtnStop					:BOOL;						(* Signal button bulb "stop" / Signallampe "Stop" *)
+	bBulbBtnStart					:BOOL;						(* Signal button bulb "start" / Signallampe "Start" *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+A_SignalButton();]]></ST>
+    </Implementation>
+    <Action Name="A_SignalButton" Id="{abd969f5-33ea-4fe0-b940-785368cdf193}">
+      <Implementation>
+        <ST><![CDATA[
+(* Signal button bulb "stop" / Signallampe "Stop" *)
+bBulbBtnStop := NOT bExecutedProcess;
+
+
+(* Signal button bulb "start" / Signallampe "Start" *)
+bBulbBtnStart := SEL(bExecutedProcess,
+                           		     bMachineRunning AND stBlinker.Q1,
+                           		     bMachineRunning);]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_Gr01Signals">
+      <LineId Id="43" Count="1" />
+    </LineIds>
+    <LineIds Name="FB_Gr01Signals.A_SignalButton">
+      <LineId Id="0" Count="8" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

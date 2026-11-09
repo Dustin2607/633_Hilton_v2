@@ -1,0 +1,245 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Gr05HomeProcedure" Id="{bd913480-02c8-4068-a93c-4a3deb00606e}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Gr05HomeProcedure
+(*
+
+The function block used to initialize home mode.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			28.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Enable FB signal *)
+	bExecute					:BOOL;						(* Home procedure execute *)
+	bReleaseNextStep			:BOOL;						(* Home procedure release next step *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bDone						:BOOL;						(* Program done *)
+	bBusy						:BOOL;						(* Program busy *)
+	bError						:BOOL;						(* Program error *)
+	udnErrorNo					:UDINT;						(* Error number *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+	etGr05Home					:ET_Gr05Home;				(* Home mode enum variable *)
+
+	(* Variables *)
+	byBusyFlag					:BYTE;
+	byDoneFlag					:BYTE;
+
+	bFirstTime					:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	tonWatchdog					:TON;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+	bDone := FALSE;					(* Program done *)
+	bBusy := FALSE;                                  	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;                                 		(* Error number *)
+
+	bFirstTime := FALSE;
+	RETURN;
+END_IF;
+
+IF NOT bFirstTime
+THEN
+	bDone := FALSE;                                	(* Program done *)
+	bBusy := FALSE;                                 	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;                                 		(* Error number *)
+
+	byBusyFlag := 0;
+	byDoneFlag := 0;
+
+	tonWatchdog(IN := FALSE);
+
+	etGr05Home := ET_Gr05Home_eWaitExecute;       			(* Next step *)
+
+	bFirstTime := TRUE;
+END_IF;
+
+CASE etGr05Home OF
+
+	ET_Gr05Home_eWaitExecute:
+		bBusy := FALSE;                                     		(* Program not busy *)
+		bError := FALSE;                                    		(* Program not error *)
+
+		IF bExecute
+		THEN
+			bDone := FALSE;                                 	(* Program done, in position *)
+			bBusy := TRUE;                                  	(* Program busy *)
+
+			byBusyFlag := 0;
+			byDoneFlag := 0;
+
+			tonWatchdog(IN := FALSE);
+
+			etGr05Home := ET_Gr05Home_eWaitAxisStatus;		(* Next step *)
+		END_IF;
+
+	ET_Gr05Home_eWaitAxisStatus:
+		IF Gr05Control.bAllAxisCtrlEnabled
+		     AND bReleaseNextStep
+		THEN
+			etGr05Home := ET_Gr05Home_eWfFreeToMove;         		(* Next step *)
+		END_IF;
+
+	ET_Gr05Home_eWfFreeToMove:
+		IF bgGr01HomeNotInCrashGr05
+		     AND bReleaseNextStep
+		THEN
+			etGr05Home := ET_Gr05Home_eClampsSlide;              (* Next step *)
+		END_IF
+
+	ET_Gr05Home_eClampsSlide:
+		Gr05Control.arfbCylinderClamp[1].bAutoOpen := TRUE;					(* Auto open *)
+		Gr05Control.arfbCylinderClamp[1].bAutoClose := FALSE;					(* Auto close *)
+		Gr05Control.fbSlide.bAutoMoveToBase := TRUE;						(* Auto move to base *)
+		Gr05Control.fbSlide.bAutoMoveToWork := FALSE;						(* Auto move to work *)
+
+		IF Gr05Control.arfbCylinderClamp[1].fbCylinder.bEndBase
+		     AND (Gr05Control.fbSlide.fbCylinder.bEndBase OR NOT Gr05Control.fbSlide.bEnable)
+		     AND bReleaseNextStep
+		THEN
+			Gr05Control.arfbCylinderClamp[1].bAutoOpen := FALSE;					(* Auto open *)
+			Gr05Control.arfbCylinderClamp[1].bAutoClose := FALSE;					(* Auto close *)
+			Gr05Control.fbSlide.bAutoMoveToBase := FALSE;				(* Auto move to base *)
+			Gr05Control.fbSlide.bAutoMoveToWork := FALSE;				(* Auto move to work *)
+
+			etGr05Home := ET_Gr05Home_eAxisClamp1;         		(* Next step *)
+
+		ELSIF Gr05Control.arfbCylinderClamp[1].bErrorOpen
+			    OR Gr05Control.fbSlide.bErrorMoveToBase
+		THEN
+			Gr05Control.arfbCylinderClamp[1].bAutoOpen := FALSE;					(* Auto open *)
+			Gr05Control.arfbCylinderClamp[1].bAutoClose := FALSE;					(* Auto close *)
+			Gr05Control.fbSlide.bAutoMoveToBase := FALSE;				(* Auto move to base *)
+			Gr05Control.fbSlide.bAutoMoveToWork := FALSE;				(* Auto move to work *)
+
+			etGr05Home := ET_Gr05Home_eError;         		(* Next step *)
+
+		END_IF
+
+	ET_Gr05Home_eAxisClamp1:
+		Gr05Home.fbAxisClamp1.bExecute := TRUE;
+		Gr05Home.fbAxisClamp1.lrHomePosition := stgGr05HMI.stHMITOPLC.arlrAxisClampHomePos[1];
+
+		IF Gr05Home.fbAxisClamp1.bBusy
+		THEN
+			etGr05Home := ET_Gr05Home_eWfAxisClamp1;         		(* Next step *)
+
+		ELSIF Gr05Home.fbAxisClamp1.bError
+		THEN
+			Gr05Home.fbAxisClamp1.bExecute := FALSE;
+
+			etGr05Home := ET_Gr05Home_eError;         		(* Next step *)
+
+		END_IF
+
+	ET_Gr05Home_eWfAxisClamp1:
+		IF NOT Gr05Home.fbAxisClamp1.bBusy
+		     AND NOT Gr05Home.fbAxisClamp1.bError
+		     AND bReleaseNextStep
+		THEN
+			Gr05Home.fbAxisClamp1.bExecute := FALSE;
+
+			etGr05Home := ET_Gr05Home_eAxisClamp2;		(* Next step *)
+
+		ELSIF Gr05Home.fbAxisClamp1.bError
+		THEN
+			Gr05Home.fbAxisClamp1.bExecute := FALSE;
+
+			etGr05Home := ET_Gr05Home_eError;         					(* Next step *)
+
+		END_IF
+
+	ET_Gr05Home_eAxisClamp2:
+		Gr05Home.fbAxisClamp2.bExecute := TRUE;
+		Gr05Home.fbAxisClamp2.lrHomePosition := stgGr05HMI.stHMITOPLC.arlrAxisClampHomePos[2];
+
+		IF Gr05Home.fbAxisClamp2.bBusy
+		THEN
+			etGr05Home := ET_Gr05Home_eWfAxisClamp2;         		(* Next step *)
+
+		ELSIF Gr05Home.fbAxisClamp2.bError
+		THEN
+			Gr05Home.fbAxisClamp2.bExecute := FALSE;
+
+			etGr05Home := ET_Gr05Home_eError;         		(* Next step *)
+
+		END_IF
+
+	ET_Gr05Home_eWfAxisClamp2:
+		IF NOT Gr05Home.fbAxisClamp2.bBusy
+		     AND NOT Gr05Home.fbAxisClamp2.bError
+		     AND bReleaseNextStep
+		THEN
+			Gr05Home.fbAxisClamp2.bExecute := FALSE;
+
+			bgGr05HomeNotInCrashGr01 := TRUE;
+
+			etGr05Home := ET_Gr05Home_eDone;		(* Next step *)
+
+		ELSIF Gr05Home.fbAxisClamp2.bError
+		THEN
+			Gr05Home.fbAxisClamp2.bExecute := FALSE;
+
+			etGr05Home := ET_Gr05Home_eError;         					(* Next step *)
+
+		END_IF
+
+	ET_Gr05Home_eDone:
+		bDone := TRUE;                                     		(* Program done, in position *)
+		bBusy := FALSE;                                     		(* Program not busy *)
+
+		etGr05Home := ET_Gr05Home_eNoExecute;            	(* Next step *)
+
+	ET_Gr05Home_eError:
+		bDone := FALSE;                                     		(* Program done, in position *)
+		bError := TRUE;                                     		(* Program error *)
+		bBusy := FALSE;                                     		(* Program not busy *)
+	
+		etGr05Home := ET_Gr05Home_eNoExecute;           	(* Next step *)
+
+	ET_Gr05Home_eNoExecute:
+		IF NOT bExecute
+		THEN
+			bgGr05HomeCompleted := bDone;
+
+			bDone := FALSE;                                 	(* Program done *)
+			bBusy := FALSE;                                		(* Program not busy *)
+			bError := FALSE;                                		(* Program not error *)
+
+			etGr05Home := ET_Gr05Home_eWaitExecute;       (* Next step *)
+		
+		END_IF;
+
+END_CASE;
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Gr05HomeProcedure">
+      <LineId Id="48" Count="186" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

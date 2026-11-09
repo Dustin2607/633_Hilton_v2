@@ -1,0 +1,391 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_FileHandler" Id="{377bd5ae-7ace-41ee-98a1-a720605c8f10}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_FileHandler
+(*
+
+This function block is used to read and write binary datas in/from file.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			10.06.2013
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+
+VAR_INPUT
+	bEnable						:BOOL;					(* Enable FB *)
+	bExecute					:BOOL;					(* Execute operation *)
+	sFilePath					:STRING;				(* File path *)
+	sFileName					:STRING;				(* File name *)
+	sFileSuffix					:STRING := 'dat';			(* Suffix of file *)
+	dwOpenMode				:DWORD;				(*
+															FOPEN_MODEREAD (16#0001)	"r": Opens for reading. If the file does not exist or cannot be found, the call fails.
+															FOPEN_MODEWRITE (16#0002) "w": Opens an empty file for writing. If the given file exists, its contents are destroyed.
+															FOPEN_MODEAPPEND (16#0004) "a": Opens for writing at the end of the file (appending) without removing the EOF marker before writing new data to the file; creates the file first if it doesn’t exist.
+															FOPEN_MODEREAD OR FOPEN_MODEPLUS (16#0008) "r+": Opens for reading and writing. The file must exist.
+															FOPEN_MODEWRITE OR FOPEN_MODEPLUS (16#0008) "w+": Opens an empty file for both reading and writing. If the given file exists, its contents are destroyed.
+															FOPEN_MODEAPPEND OR FOPEN_MODEPLUS (16#0008)	 "a+": Opens for reading and appending; the appending operation includes the removal of the EOF marker before new data is written to the file and the EOF marker is restored after writing is complete; creates the file first if it doesn’t exist.
+															When a file is opened with the "a" or "a+" access type, all write operations occur at the end of the file. The file pointer can be repositioned using FB_FileSeek, but is always moved back to the end of the file before any write operation is carried out. Thus, existing data cannot be overwritten.
+															
+															FOPEN_MODEBINARY (16#0010) "b": Open in binary (untranslated) mode.
+															FOPEN_MODETEXT (16#0020) "t": Open in text (translated) mode.
+														*)
+	sWriteRecord					:T_MaxString;				(* Record to write *)
+	tTimeout						:TIME := t#1s;				(* States the time before the function is cancelled *)
+END_VAR
+VAR_OUTPUT
+	sReadRecord				:T_MaxString;				(* Record to read *)
+	bBusy						:BOOL;					(* Program busy *)
+	bDone						:BOOL;					(* Program done *)
+	bError						:BOOL;					(* Program error *)
+	udnErrNo					:UDINT;					(* Error number *)
+END_VAR
+VAR_IN_OUT
+
+END_VAR
+VAR
+	(* Enummerations *)
+	enStep						: (eWaitExecute := 0, eChkFileName,  eChkBufLen, eCreateDir, eChkCreateDir, eFileOpen, eChkFileOpen, eFileWrite, eChkFileWrite, eFileRead, eChkFileRead, eFileClose, eChkFileClose, eDone, eError, eNotExecute);			(* Sequence state for open, read/write and close the file *)
+
+	(* Variables *)
+	bFirstTime					:BOOL;					(* First PLC cycle *)
+
+	dwModeCache				:DWORD;				(* Contains the mode in which the file is to be opened *)
+	sWriteRecordCache			:T_MaxString;				(* Record to write *)
+	sPathName					:STRING;				(* Contains the path and filename for the file to be opened *)
+	hFileHandle					:UINT;					(* File handle *)
+
+	unWriteCounter				:UINT;
+	unReadCounter				:UINT;
+
+	(* Instances *)
+	fbCreateDir					:FB_CreateDir;			(* File open *)
+	fbFileOpen					:FB_FileOpen;			(* File open *)
+	fbFileClose					:FB_FileClose;			(* File close *)
+	fbFileRead					:FB_FileRead;			(* File read *)
+	fbFileWrite					:FB_FileWrite;				(* File write *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable				(* Enable FB *)
+THEN
+	bFirstTime := FALSE;		(* First PLC cycle *)
+	bBusy := FALSE;			(* Program busy *)
+	bDone := FALSE;			(* Program done *)
+	bError := FALSE;			(* Program error *)
+	udnErrNo := 0;				(* Error number *)
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+	enStep := eWaitExecute;
+
+	bFirstTime := TRUE;
+END_IF
+
+
+(* Sequence state for open, read/write and close the file *)
+CASE enStep
+OF
+
+	eWaitExecute:
+		IF bExecute
+		THEN
+			fbFileOpen.bExecute := FALSE;			(* File open *)
+			fbFileClose.bExecute := FALSE;			(* File close *)
+			fbFileRead.bExecute := FALSE;			(* File read *)
+			fbFileWrite.bExecute := FALSE;			(* File write *)
+
+			bDone := FALSE;
+			bError := FALSE;
+			udnErrNo := 0;
+
+			sWriteRecordCache := sWriteRecord;
+
+			IF dwOpenMode <> 0
+			THEN
+				dwModeCache := dwOpenMode;
+
+				enStep := eChkFileName;			(* Next step *)
+
+			ELSE
+				RETURN;
+			END_IF
+
+			bBusy := TRUE;
+
+		END_IF
+
+	(* Check file name and path *)
+	eChkFileName:
+
+		sPathName := CONCAT(
+						sFilePath, CONCAT(
+									sFileName, CONCAT(
+												'.', sFileSuffix)));
+
+		IF sFilePath <> ''
+		     AND sFileName <> ''
+		     AND sFileSuffix <> ''
+		THEN
+			enStep := eChkBufLen;			(* Next step *)
+
+		ELSE
+			udnErrNo := eChkFileName;
+
+			enStep := eError;				(* Next step *)
+
+		END_IF
+
+
+	(* Check buffer lenght *)
+	eChkBufLen:
+		IF LEN(sWriteRecordCache) = 0
+		THEN
+			enStep := eDone;				(* Next step *)
+	
+		ELSE
+			(*enStep := eCreateDir;			(* Next step *)*)
+			enStep := eFileOpen;			(* Next step *)
+		END_IF
+
+	(* Create direction *)
+	eCreateDir:
+		fbCreateDir.bExecute := TRUE;
+
+		enStep := eChkCreateDir;				(* Next step *)
+
+	eChkCreateDir:
+		IF NOT fbCreateDir.bBusy
+		THEN
+			IF NOT fbCreateDir.bError
+			THEN
+				fbCreateDir.bExecute := FALSE;
+
+				enStep := eFileOpen;				(* Next step *)
+			ELSE
+				fbCreateDir.bExecute := FALSE;
+
+				IF  fbCreateDir.nErrId = 16#70C 	(* 0x70C Folder is allready existing or invalid sPathName or ePath parameter.*)
+				THEN
+					enStep := eFileOpen;				(* Next step *)
+				ELSE
+					enStep := eError;					(* Next step *)
+				END_IF
+			END_IF
+		END_IF
+
+	(* Open the file *)
+	eFileOpen:
+		IF LEN(sWriteRecordCache) > 254
+		THEN
+			sWriteRecordCache := DELETE(
+								sWriteRecordCache,
+								LEN(sWriteRecordCache) + 1 - 254, 254
+							    );
+		END_IF
+
+		fbFileOpen.bExecute := TRUE;
+
+		enStep := eChkFileOpen;				(* Next step *)
+
+	(* Check open the file *)
+	eChkFileOpen:
+		IF NOT fbFileOpen.bBusy
+		THEN
+			IF NOT fbFileOpen.bError
+			THEN
+				fbFileOpen.bExecute := FALSE;
+				hFileHandle := fbFileOpen.hFile;
+
+				(* Choose write or read datas *)
+				IF fbFileOpen.nMode = FOPEN_MODEWRITE
+				THEN
+				
+					enStep := eFileWrite;			(* Next step *)
+
+				ELSIF fbFileOpen.nMode = FOPEN_MODEAPPEND
+				THEN
+	
+					enStep := eFileWrite;			(* Next step *)
+
+				ELSIF fbFileOpen.nMode = FOPEN_MODEREAD
+				THEN
+					enStep := eFileRead;			(* Next step *)
+				
+				ELSE
+					enStep := eFileClose;			(* Next step *)
+
+				END_IF
+
+			ELSE
+				fbFileOpen.bExecute := FALSE;
+				udnErrNo := fbFileOpen.nErrId;
+	
+				enStep := eError;					(* Next step *)
+				
+			END_IF
+		END_IF
+
+	(* Write the file *)
+	eFileWrite:
+		fbFileWrite.bExecute := TRUE;
+
+		enStep := eChkFileWrite;				(* Next step *)
+
+	(* Check write the file *)
+	eChkFileWrite:
+		IF NOT fbFileWrite.bBusy
+		THEN
+			IF (fbFileWrite.cbWrite >= INT_TO_UDINT(LEN(sWriteRecordCache)))
+			    AND NOT fbFileWrite.bError
+			THEN
+				fbFileWrite.bExecute := FALSE;
+				unWriteCounter := unWriteCounter + 1;
+
+				enStep := eFileClose;				(* Next step *)
+
+			ELSIF  fbFileWrite.bError
+			THEN
+				fbFileWrite.bExecute := FALSE;
+				udnErrNo := fbFileWrite.nErrId;
+
+				enStep := eError;					(* Next step *)
+				
+			END_IF
+		END_IF
+
+	(* Read the file *)
+	eFileRead:
+		fbFileRead.bExecute := TRUE;
+
+		enStep := eChkFileRead;				(* Next step *)
+
+	(* Check read the file *)
+	eChkFileRead:
+		IF NOT fbFileRead.bBusy
+		THEN
+			IF (fbFileRead.cbRead >= INT_TO_UDINT(LEN(sReadRecord)))
+			     AND NOT fbFileRead.bError
+			THEN
+				fbFileRead.bExecute := FALSE;
+				unReadCounter := unReadCounter + 1;
+	
+				enStep := eFileClose;				(* Next step *)
+
+			ELSIF  fbFileRead.bError
+			THEN
+				fbFileRead.bExecute := FALSE;
+				udnErrNo := fbFileRead.nErrId;
+	
+				enStep := eError;					(* Next step *)
+				
+			END_IF
+		END_IF
+
+	(* Close the file *)
+	eFileClose:
+		fbFileClose.bExecute := TRUE;
+
+		enStep := eChkFileClose;				(* Next step *)
+
+	(* Check close the file *)
+	eChkFileClose:
+		IF NOT fbFileClose.bBusy
+		THEN
+			IF NOT fbFileClose.bError
+			THEN
+				fbFileClose.bExecute := FALSE;
+				enStep := eDone;					(* Next step *)
+
+				IF bError
+				THEN
+					enStep := eError;				(* Next step *)
+				END_IF
+
+			ELSE
+				fbFileClose.bExecute := FALSE;
+				udnErrNo := fbFileClose.nErrId;
+	
+				enStep := eError;					(* Next step *)
+				
+			END_IF
+		END_IF
+
+	eDone:
+		bBusy := FALSE;
+		bDone := TRUE;
+		bError := FALSE;
+		udnErrNo := 0;
+
+		enStep := eNotExecute;					(* Next step *)
+
+	eError:
+		IF NOT bError
+		     AND hFileHandle <> 0
+		THEN
+			bDone := FALSE;
+			bError := TRUE;
+
+			enStep := eFileClose;					(* Next step *)
+
+		ELSE
+			bBusy := FALSE;
+			bDone := FALSE;
+			bError := TRUE;
+	
+			enStep := eNotExecute;					(* Next step *)
+		END_IF
+
+	eNotExecute:
+		IF NOT bExecute
+		THEN
+			bBusy := FALSE;
+			bDone := FALSE;
+			bError := FALSE;
+			udnErrNo := 0;
+
+			enStep := eWaitExecute;			(* Next step *)
+
+		END_IF
+
+END_CASE
+
+fbCreateDir(
+	sNetId:= '',
+	sPathName:= sFilePath,
+	ePath:= PATH_GENERIC,
+	tTimeout:= tTimeout);
+fbFileOpen(
+	sNetId := '',
+	sPathName := sPathName,
+	nMode := dwModeCache,
+	ePath := PATH_GENERIC,
+	tTimeout := tTimeout);
+fbFileClose(
+	sNetId := '',
+	hFile := hFileHandle,
+	tTimeout := tTimeout );
+fbFileWrite(
+	sNetId := '',
+	hFile := hFileHandle,
+	pWriteBuff := ADR(sWriteRecordCache),
+	cbWriteLen := INT_TO_UDINT(LEN(sWriteRecordCache)),
+	tTimeout := tTimeout);
+fbFileRead(
+	sNetId := '',
+	hFile := hFileHandle,
+	pReadBuff := ADR(sReadRecord),
+	cbReadLen := INT_TO_UDINT(LEN(sReadRecord)),
+	tTimeout := tTimeout);]]></ST>
+    </Implementation>
+    <LineIds Name="FB_FileHandler">
+      <LineId Id="69" Count="311" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_ChkAllAxisEnabled" Id="{c9956a20-f341-42f3-b916-93159da3e549}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_ChkAllAxisEnabled : BOOL
+(*
+
+The function used to detect if all axis controller enabled.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			23.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Signal FB enable *)
+	bEnabledAxis1				:BOOL;						(* Controller enabled *)
+	bEnabledAxis2				:BOOL;						(* Controller enabled *)
+	bEnabledAxis3				:BOOL;						(* Controller enabled *)
+	bEnabledAxis4				:BOOL;						(* Controller enabled *)
+	bEnabledAxis5				:BOOL;						(* Controller enabled *)
+	bEnabledAxis6				:BOOL;						(* Controller enabled *)
+	bEnabledAxis7				:BOOL;						(* Controller enabled *)
+	bEnabledAxis8				:BOOL;						(* Controller enabled *)
+	bEnabledAxis9				:BOOL;						(* Controller enabled *)
+	bEnabledAxis10				:BOOL;						(* Controller enabled *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable							(* Signal FB enable *)
+THEN
+	F_ChkAllAxisEnabled := FALSE;
+
+	RETURN;
+END_IF
+
+F_ChkAllAxisEnabled := bEnabledAxis1
+					  AND bEnabledAxis2
+					  AND bEnabledAxis3
+					  AND bEnabledAxis4
+					  AND bEnabledAxis5
+					  AND bEnabledAxis6
+					  AND bEnabledAxis7
+					  AND bEnabledAxis8
+					  AND bEnabledAxis9
+					  AND bEnabledAxis10;]]></ST>
+    </Implementation>
+    <LineIds Name="F_ChkAllAxisEnabled">
+      <LineId Id="40" Count="17" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

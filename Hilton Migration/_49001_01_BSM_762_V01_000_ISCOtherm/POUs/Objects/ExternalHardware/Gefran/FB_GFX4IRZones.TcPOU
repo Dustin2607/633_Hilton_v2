@@ -1,0 +1,194 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_GFX4IRZones" Id="{53867a7d-7127-4ded-8c01-3c4b84c0f050}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_GFX4IRZones
+(*
+
+The function block used to control Gerfan GFX4IR Zones.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			12.07.2016
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+25.09.2017		1.01				PPA					Change check zone damaged
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable							:BOOL;													(* Function block enable *)
+	arbZoneEn						:ARRAY[1..nZONES_MAX_NO] OF BOOL;						(* Zone enable *)
+	bReset							:BOOL;													(* Reset *)
+	arbHandStart						:ARRAY[1..nZONES_MAX_NO] OF BOOL;						(* Execute start GFX4IR controller with rising edge *)
+	arbHandStop						:ARRAY[1..nZONES_MAX_NO] OF BOOL;						(* Execute stop GFX4IR controller with rising edge *)
+	bAutoStart						:BOOL;													(* Execute start GFX4IR controller with rising edge *)
+	bAutoStop						:BOOL;													(* Execute stop GFX4IR controller with rising edge *)
+	bStartRelease					:BOOL;													(* Start release *)
+	bCtrlInterrupt						:BOOL;													(* Control interrupt *)
+	arlrSetpoint						:ARRAY[1..nZONES_MAX_NO] OF LREAL;					(* Setpoint *)
+	bCtrlManAuto						:BOOL;													(* Auto := FALSE, Man := TRUE *)
+	bEnAutoCtrlOff					:BOOL := TRUE;											(* Auto controller off enable*)
+	bEnOneByOneOn					:BOOL := FALSE;											(* One by one switch on *)
+	tDelayZoneOn					:TIME := t#100ms;											(* Delay time of zone one by one to switch on *)
+	tControllerOff						:TIME := t#90s;											(* Time to switch controller off *)
+	tControllerOn						:TIME := t#90s;											(* Time to switch controller on *)
+	lrTempMin						:LREAL;													(* Minimal temperature *)
+	lrTempMax						:LREAL;													(* Maximal temperature *)
+	lrTempLimitMin					:LREAL;													(* Minimal temperature limit *)
+	lrTempLimitMax					:LREAL;													(* Maximal temperature limit *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	arunCurrentValue					:ARRAY[1..nZONES_MAX_NO] OF UINT;						(* Current value *)
+	bEnabled  						:BOOL;													(* Zone enabled *)
+	bEnabledDelay					:BOOL;													(* Zone enabled delay *)
+	arbZoneDamaged				:ARRAY[1..nZONES_MAX_NO] OF BOOL;
+	bDone							:BOOL;						(* Command done *)
+	bError							:BOOL;						(* Command error  *)
+	udnErrorNo						:UDINT;						(* Error number *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	GFX4IR							:ST_GFX4IR_REF;				(* The ST_GFX4IR_REF data type  is an interface between the PLC and the GFX4IR and contains controller information *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	nIdx								:INT;
+	tEnabledDelay					:TIME := t#1s;					(* Enabled delay time *)
+
+
+	bFirstTime						:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	arfbGFX4IRCtrlZone				:ARRAY[1..nZONES_MAX_NO] OF FB_GFX4IRCtrlZone;
+	tonEnabledDelay					:TON;						(* Delay controller enabled status *)
+	tonDelayZoneOn					:ARRAY[1..nZONES_MAX_NO] OF TON;						(* Delay zone one by one to switch on *)
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+	bDone := FALSE;					(* Command done *)
+	bError := FALSE;					(* Command error  *)
+
+	FOR nIdx := 1 TO nZONES_MAX_NO
+	DO
+		arfbGFX4IRCtrlZone[nIdx](
+			bEnable := TRUE,
+			bAutoStart := bAutoStart,
+			bAutoStop := bAutoStop,
+			bCtrlInterrupt := bCtrlInterrupt,
+			lrTempMin := lrTempMin,
+			lrTempMax := lrTempMax,
+			lrTempLimitMin := lrTempLimitMin,
+			lrTempLimitMax := lrTempLimitMax,
+			CtrlGFX4IRTOPLC := GFX4IR.Gfx4IRToPlc[nIdx],
+			CtrlPLCTOGFX4IR := GFX4IR.PlcToGfx4IR[nIdx],
+			unCurrentValue => arunCurrentValue[nIdx]
+		 );
+	END_FOR
+
+	bEnabled := FALSE;
+	bEnabledDelay := FALSE;
+
+	bFirstTime := FALSE;
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+	bDone := FALSE;					(* Command done *)
+	bError := FALSE;					(* Command error  *)
+
+	bEnabled := FALSE;
+	bEnabledDelay := FALSE;
+
+	bFirstTime := TRUE;
+END_IF
+
+bEnabled := TRUE;
+bDone := TRUE;
+bError := FALSE;
+
+FOR nIdx := 1 TO nZONES_MAX_NO
+DO
+	(*
+	IF bAutoStart
+	THEN
+		IF bEnOneByOneOn
+		     AND tDelayZoneOn > t#0ms
+		     AND nIdx > 1
+		     AND NOT arfbGFX4IRController[nIdx].bEnabled
+		THEN
+			tonDelayZoneOn[nIdx](
+				IN := arfbGFX4IRController[nIdx - 1].bEnabled,
+				PT := tDelayZoneOn
+			);
+	
+			IF tonDelayZoneOn[nIdx].Q
+			THEN
+				arfbGFX4IRController[nIdx].bStartRelease := bStartRelease;
+			ELSE
+				arfbGFX4IRController[nIdx].bStartRelease := FALSE;;
+			END_IF
+		ELSE
+			tonDelayZoneOn[nIdx](IN := FALSE);
+			arfbGFX4IRController[nIdx].bStartRelease := bStartRelease;
+		END_IF
+	ELSE
+		tonDelayZoneOn[nIdx](IN := FALSE);
+		arfbGFX4IRController[nIdx].bStartRelease := bStartRelease;
+	END_IF
+	*)
+
+	arfbGFX4IRCtrlZone[nIdx].bStartRelease := bStartRelease;
+
+	arfbGFX4IRCtrlZone[nIdx](
+		bEnable := arbZoneEn[nIdx],
+		bReset := bReset,
+		bHandStart := arbHandStart[nIdx],
+		bHandStop := arbHandStop[nIdx],
+		bAutoStart := bAutoStart,
+		bAutoStop := bAutoStop,
+		bCtrlInterrupt := bCtrlInterrupt,
+		lrSetpoint := arlrSetpoint[nIdx],
+		bCtrlManAuto := bCtrlManAuto,
+		bEnAutoCtrlOff := bEnAutoCtrlOff,
+		tControllerOff := tControllerOff,
+		tControllerOn := tControllerOn,
+		lrTempMin := lrTempMin,
+		lrTempMax := lrTempMax,
+		lrTempLimitMin := lrTempLimitMin,
+		lrTempLimitMax := lrTempLimitMax,
+		CtrlGFX4IRTOPLC := GFX4IR.Gfx4IRToPlc[nIdx],
+		CtrlPLCTOGFX4IR := GFX4IR.PlcToGfx4IR[nIdx],
+		unCurrentValue => arunCurrentValue[nIdx],
+		bDamaged => arbZoneDamaged[nIdx]
+	 );
+
+	bEnabled := bEnabled AND arfbGFX4IRCtrlZone[nIdx].bEnabled;
+	bDone := bDone AND arfbGFX4IRCtrlZone[nIdx].bDone;
+	bError := bError OR arfbGFX4IRCtrlZone[nIdx].bError;
+
+END_FOR
+
+tonEnabledDelay(
+	IN := bEnabled,
+	PT := tEnabledDelay,
+	Q => bEnabledDelay
+);]]></ST>
+    </Implementation>
+    <LineIds Name="FB_GFX4IRZones">
+      <LineId Id="72" Count="111" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

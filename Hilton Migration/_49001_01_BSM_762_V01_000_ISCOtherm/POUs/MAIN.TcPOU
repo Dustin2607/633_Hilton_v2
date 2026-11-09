@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="MAIN" Id="{05c446b3-d0c2-4902-b7a7-77cc428ba4a0}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+	tonDelay			:TON;
+
+	lrRight:LREAL;
+	lrRight2:WORD;
+	lrClamp2Pos:LREAL;
+	lrActSawingAngle :LREAL;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+Init();										(* Call Init *)
+tonDelay(IN := TRUE, PT := t#3s);
+Gr00Coordinator(bEnable := tonDelay.Q);			(* Call Program *)
+Gr01Coordinator(bEnable := tonDelay.Q);			(* Call Program *)
+Gr05Coordinator(bEnable := tonDelay.Q);			(* Call Program *)
+
+
+lrActSawingAngle := (45 / 180 * PI);
+
+lrClamp2Pos := F_AxisClamp2Pos(
+					bEnable := TRUE,
+					lrActClamp2Pos := Gr05Control.fbCylinderPos.lrActPosition,
+					lrAngle := lrActSawingAngle,
+					lrRadius := stgGr01HMI.stHMITOPLC.rPipeDiameter / 2.0,
+					lrPipeClampWidth := lrgGr05PipeClampWidth,
+					lrSawbandGuideWidth := lrgGr05SawbandGuideWidth
+				);
+
+lrRight := F_GetCylinderPos(		F_SetCylinderPos(SEL(stgGr05HMI.stHMITOPLC.bCylinderPosActive, Gr05Control.fbCylinderPos.lrActPosition, lrClamp2Pos),
+																		lrgGr05CylinderPosOffset,
+																		lrgGr05CylinderPosOriginShiftPos,
+																		etgGr05CylinderPosDirection,
+																		usngGr05CylinderPosCodingType),
+														lrgGr05CylinderPosOffset,
+														lrgGr05CylinderPosOriginShiftPos,
+														etgGr05CylinderPosDirection,
+														usngGr05CylinderPosCodingType)
+									    + lrgGr05Clamp2Width ;
+
+
+
+lrRight2 := F_SetCylinderPos(SEL(stgGr05HMI.stHMITOPLC.bCylinderPosActive, Gr05Control.fbCylinderPos.lrActPosition, lrClamp2Pos),
+																		lrgGr05CylinderPosOffset,
+																		lrgGr05CylinderPosOriginShiftPos,
+																		etgGr05CylinderPosDirection,
+																		usngGr05CylinderPosCodingType);
+
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="MAIN">
+      <LineId Id="9" Count="40" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

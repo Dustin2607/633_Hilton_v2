@@ -1,0 +1,57 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_CalcTrajPos" Id="{f172a1f4-6099-4045-8f18-fd9397aeb134}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_CalcTrajPos : LREAL
+(*
+
+The function used to calculate a trajectory of half circle dependent on angle of inclination axis and radius circle
+Calculated position of axis is on output mapped.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			01.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	lrStartPosHorizontal				:LREAL;						(* Start position of horizontal axis *)
+	lrStartPosVertical					:LREAL;						(* Start position of vertical axis *)
+	lrCurrentPosHorizontal				:LREAL;						(* Current position of horizontal axis *)
+	lrCurrentPosVertical				:LREAL;						(* Current position of vertical axis *)
+	lrRadius							:LREAL;						(* Radius of circle *)
+END_VAR
+VAR
+	(* Variables *)
+	lrAlfa							:LREAL;						(* Angle of inclination *)
+	lrDelta							:LREAL;						(* Distance z = f(x)*)
+	lrCosAlfa							:LREAL;						(* Cosine of alfa *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF lrRadius > 0.0
+THEN
+	IF ABS(lrCurrentPosHorizontal - lrStartPosHorizontal) / lrRadius <= 1.0
+	THEN
+		lrAlfa := ASIN(ABS(lrCurrentPosHorizontal - lrStartPosHorizontal) / lrRadius);					(* Angle of inclination *)
+		lrCosAlfa := COS(lrAlfa);																(* Cosine of alfa *)
+		lrDelta := lrRadius - (lrCosAlfa * lrRadius);											(* Distance z = f(x)*)
+
+		F_CalcTrajPos := lrCurrentPosVertical - lrDelta;
+	ELSE
+		F_CalcTrajPos := lrCurrentPosVertical;
+	END_IF
+ELSE
+	F_CalcTrajPos := lrCurrentPosVertical;
+END_IF
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="F_CalcTrajPos">
+      <LineId Id="29" Count="17" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

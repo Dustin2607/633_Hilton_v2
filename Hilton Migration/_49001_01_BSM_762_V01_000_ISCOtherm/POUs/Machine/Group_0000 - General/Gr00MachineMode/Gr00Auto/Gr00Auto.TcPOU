@@ -1,0 +1,128 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="Gr00Auto" Id="{84e5d643-ba25-4952-9ca6-fa8a8b574942}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM Gr00Auto
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable					:BOOL;						(* Enable Gr00Auto *)
+	bExecute				:BOOL;						(* Auto execute *)
+
+	(* Instances *)
+	fbInit						:FB_Gr00AutoInit;
+	fbProcedure				:FB_Gr00AutoProcedure;
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtExecute					:R_TRIG;
+
+	fbAlarm					:FB_Gr00AutoAlarm;
+END_VAR
+VAR CONSTANT
+	nFatalErrorMaxIdx				:INT := 0;						(* Maximal index of  using alarms *)
+	nErrorMaxIdx					:INT := 0;						(* Maximal index of  using alarms *)
+	nWarningMaxIdx				:INT := 0;						(* Maximal index of  using alarms *)
+	nMessageMaxIdx				:INT := 0;						(* Maximal index of  using alarms *)
+	nHintMaxIdx					:INT := 0;						(* Maximal index of  using alarms *)
+
+	dnFatalErrorBaseIdentNo		:DINT := 02000;				(* Fatal error identification number *)
+	dnErrorBaseIdentNo			:DINT := 02100;				(* Error identification number *)
+	dnWarningBaseIdentNo		:DINT := 02200;				(* Warning identification number *)
+	dnMessageBaseIdentNo		:DINT := 02300;				(* Message identification number *)
+	dnHintBaseIdentNo			:DINT := 02400;				(* Hint identification number *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+    RETURN;
+END_IF;
+
+(* Check auto execute *)
+bExecute := bgGr00ModeAutomatic
+		      AND NOT fbInit.bFirstTime;
+
+rtExecute(CLK := bExecute);
+
+IF rtExecute.Q
+THEN
+	A_Init();
+END_IF;
+
+A_Procedure();
+A_Alarm();
+
+
+
+
+
+
+]]></ST>
+    </Implementation>
+    <Action Name="A_Alarm" Id="{edceb546-e7a3-4ad0-bff3-4f79a9119cab}">
+      <Implementation>
+        <ST><![CDATA[
+(* Collect and execute input alarms *)
+fbAlarm.stAlarmIn.arbError[0].bActive := FALSE;
+fbAlarm.stAlarmIn.arbError[0].dnCode := dnErrorBaseIdentNo + 0;
+
+fbAlarm(
+	etMachineMode := etgGr00MachineMode,
+	etMachineState := etgGr00MachineState,
+	bNoEStop := bgGr00NoEmergencyStop,
+	bConfirmAlarm := bgGr00ConfirmAlarm,
+	dtDateTime := stgGr00DateTime.dtDateTime,
+	nFatalErrorMaxIdx := nFatalErrorMaxIdx,
+	nErrorMaxIdx := nErrorMaxIdx,
+	nWarningMaxIdx := nWarningMaxIdx,
+	nMessageMaxIdx := nMessageMaxIdx,
+	nHintMaxIdx := nHintMaxIdx,
+	bMoveInterrupted := bgGr00MoveInterrupted,
+	bHomeCompleted := bgGr00HomeCompleted,
+	stAlarmOut => stgGr00Alarm.stAuto
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Init" Id="{d4d9f67f-f2b0-4769-9ca4-f025e55897be}">
+      <Implementation>
+        <ST><![CDATA[
+(* Initializing variables *)
+fbInit();]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Procedure" Id="{f4e2686a-5a9a-4061-88d3-cc4c3b2128ef}">
+      <Implementation>
+        <ST><![CDATA[
+(* Execute auto procedure *)
+fbProcedure(
+	bEnable := fbInit.bFirstTime,
+	bExecute := etgGr00MachineState = ET_MachineState_eAutoExe
+	             	       OR etgGr00MachineState = ET_MachineState_eAutoSteppingExe,
+	bInterrupt := FALSE,
+	bReleaseNextStep := etgGr00MachineState = ET_MachineState_eAutoExe
+	             	       		       OR etgGr00MachineState = ET_MachineState_eAutoSteppingExe,
+	bDone => bgGr00AutoCompleted,
+	bInterrupted => bgGr00MoveInterrupted
+);]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="Gr00Auto">
+      <LineId Id="37" Count="24" />
+    </LineIds>
+    <LineIds Name="Gr00Auto.A_Alarm">
+      <LineId Id="0" Count="19" />
+    </LineIds>
+    <LineIds Name="Gr00Auto.A_Init">
+      <LineId Id="0" Count="2" />
+    </LineIds>
+    <LineIds Name="Gr00Auto.A_Procedure">
+      <LineId Id="0" Count="11" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

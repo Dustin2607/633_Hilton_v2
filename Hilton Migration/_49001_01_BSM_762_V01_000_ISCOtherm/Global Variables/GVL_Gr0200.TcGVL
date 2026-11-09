@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <GVL Name="GVL_Gr0200" Id="{d90551fe-1912-43e2-ac10-048852abe2a8}">
+    <Declaration><![CDATA[{attribute 'Tc2GvlVarNames'}
+VAR_GLOBAL
+	arbgGr02StartProcess				:ARRAY[1..3] OF BOOL;		(* Start process *)
+	bgGr02LightCurtainOK				:BOOL;						(* Light curtain ok / Freigabe Lichtschranke i.o *)
+	bgGr02HomeNotInCrashGr02		:BOOL;						(* Home not in crash for Gr02 output *)
+	bgGr02HomeNotInCrashGr05		:BOOL;						(* Home not in crash for Gr05 output *)
+	bgGr02NotInCrashArea				:BOOL;						(* Axis not in crash are with *)
+	bgGr02SafetyCompleted			:BOOL := TRUE;				(* Safety completed *)
+	bgGr02ManualCompleted			:BOOL := TRUE;				(* Manual completed *)
+	bgGr02HomeCompleted			:BOOL := TRUE;				(* Home completed / Grundsrellung ausgeführt *)
+	bgGr02AutoCompleted				:BOOL := TRUE;				(* Automatic completed / Automatik beendet *)
+	bgGr02MoveInterrupted			:BOOL;						(* Move interrupted / Bewegung unterbrochen *)
+	bgGr02WritePersistent				:BOOL;						(* Write persisten data *)
+	bgGr02SafetyActive				:BOOL;						(* Safety active *)
+END_VAR
+]]></Declaration>
+  </GVL>
+</TcPlcObject>

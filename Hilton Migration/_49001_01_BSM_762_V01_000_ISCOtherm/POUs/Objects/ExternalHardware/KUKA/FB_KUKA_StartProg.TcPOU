@@ -1,0 +1,357 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_KUKA_StartProg" Id="{02ddaaff-d116-403e-a5f8-5b1727bf2857}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_KUKA_StartProg
+(*
+
+The function block used to start kuka
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			18.11.2016
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;			(* Signal FB enable *)
+	bStart						:BOOL;			(* Execute start *)
+	nProgNo						:INT;			(* Program number *)
+	tMaxRefTime					:TIME := t#60s;	(* Maximal referenc time *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bRunning					:BOOL;						(* Program running *)
+	bDone						:BOOL;						(* Program done *)
+	bBusy						:BOOL;						(* Program busy *)
+	bError						:BOOL;						(* Error *)
+	udnErrorNo					:UDINT;
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	Kuka						:ST_KUKA_REF;
+END_VAR
+VAR
+	(* Enummerations *)
+	etKukaStart					:ET_KukaStart;
+
+	(* Variables *)
+	bFirstTime					:BOOL;
+
+	nWatchdog					:INT;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtStart						:R_TRIG;
+	tonWatchdog					:TON;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+	bDone := FALSE;					(* Program done *)
+	bBusy := FALSE;                                  	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;                                 		(* Error number *)
+
+	Kuka.PlcToKuka.bExtStart := FALSE;
+	Kuka.PlcToKuka.bPgNoParity := FALSE;
+	Kuka.PlcToKuka.bPgNoValid := FALSE;
+
+	RETURN;
+END_IF;
+
+IF NOT bFirstTime
+THEN
+	tonWatchdog(IN := FALSE);
+
+	Kuka.PlcToKuka.bExtStart := FALSE;
+	Kuka.PlcToKuka.bPgNoParity := FALSE;
+	Kuka.PlcToKuka.bPgNoValid := FALSE;
+
+	etKukaStart := ET_KukaStart_eWaitExecute;              (* Next step *)
+
+	bFirstTime := TRUE;
+END_IF
+
+bRunning := Kuka.KukaToPlc.bApplRun
+		      AND Kuka.KukaToPlc.bProAct;
+
+IF NOT Kuka.PlcToKuka.bDrivesOff
+     OR NOT Kuka.PlcToKuka.bMoveEnable
+     OR NOT Kuka.KukaToPlc.bUserSafe
+     OR NOT Kuka.KukaToPlc.bAlarmStop
+     OR NOT Kuka.KukaToPlc.bPeriRdy
+     OR Kuka.PlcToKuka.bDrivesOn
+     OR Kuka.KukaToPlc.bStopMess
+THEN
+	Kuka.PlcToKuka.bExtStart := FALSE;
+	Kuka.PlcToKuka.bPgNoParity := FALSE;
+	Kuka.PlcToKuka.bPgNoValid := FALSE;
+
+	etKukaStart := ET_KukaStart_eWaitExecute;              (* Next step *)
+
+	RETURN;
+END_IF
+
+(* Wait for triger *)
+rtStart(
+	CLK := bStart
+);
+
+IF rtStart.Q
+    AND NOT Kuka.KukaToPlc.bProAct
+THEN
+	etKukaStart := ET_KukaStart_eWaitExecute;              (* Next step *)
+
+END_IF
+
+(* Send command *)
+CASE etKukaStart OF
+
+	ET_KukaStart_eWaitExecute:
+		bBusy := FALSE;                                     	(* Program not busy *)
+		bError := FALSE;                         		(* Program not error *)
+		udnErrorNo := 0;                         		(* Error number *)
+
+		IF rtStart.Q
+		THEN
+			nWatchdog := 0;
+			bDone:= FALSE;                               		(* Program done *)
+			bBusy := TRUE;                                  	(* Program busy *)
+
+			tonWatchdog(IN := FALSE);
+
+			Kuka.PlcToKuka.bExtStart := FALSE;
+			Kuka.PlcToKuka.bPgNoParity := FALSE;
+			Kuka.PlcToKuka.bPgNoValid := FALSE;
+			Kuka.PlcToKuka.nPgNo := nProgNo;
+
+			etKukaStart := ET_KukaStart_eExtStart;              (* Next step *)
+
+		END_IF
+
+	ET_KukaStart_eExtStart:
+		nWatchdog := nWatchdog + 1;
+
+		Kuka.PlcToKuka.bExtStart := TRUE;
+		Kuka.PlcToKuka.bPgNoParity := FALSE;
+		Kuka.PlcToKuka.bPgNoValid := FALSE;
+
+		IF Kuka.KukaToPlc.bProAct
+		     AND Kuka.KukaToPlc.bOnPath
+		     AND NOT Kuka.KukaToPlc.bStopMess
+		THEN
+			nWatchdog := 0;
+
+			Kuka.PlcToKuka.bExtStart := FALSE;
+			Kuka.PlcToKuka.bPgNoParity := FALSE;
+			Kuka.PlcToKuka.bPgNoValid := FALSE;
+
+			etKukaStart := ET_KukaStart_eWfInHome;              (* Next step *)
+
+		ELSIF Kuka.KukaToPlc.bStopMess
+			    OR nWatchdog > 1000
+		THEN
+			Kuka.PlcToKuka.bExtStart := FALSE;
+			Kuka.PlcToKuka.bPgNoParity := FALSE;
+			Kuka.PlcToKuka.bPgNoValid := FALSE;
+			
+			udnErrorNo := 1;                     (* Error number *)
+			
+			etKukaStart := ET_KukaStart_eError;              (* Next step *)
+
+		END_IF
+
+	ET_KukaStart_eWfInHome:
+		tonWatchdog(
+			IN := Kuka.PlcToKuka.nOverride > 0,
+			PT:= tMaxRefTime
+		);
+
+		IF tonWatchdog.Q
+		THEN
+			tonWatchdog(IN := FALSE);
+
+			Kuka.PlcToKuka.bExtStart := FALSE;
+			Kuka.PlcToKuka.bPgNoParity := FALSE;
+			Kuka.PlcToKuka.bPgNoValid := FALSE;
+
+			udnErrorNo := 2;
+
+			etKukaStart := ET_KukaStart_eError;             (* Next step *)
+
+		ELSIF Kuka.KukaToPlc.bInHome
+		     	    AND Kuka.KukaToPlc.bProAct
+		    	    AND Kuka.KukaToPlc.bOnPath
+		     	    AND NOT Kuka.KukaToPlc.bStopMess
+		THEN
+			tonWatchdog(IN := FALSE);
+
+			Kuka.PlcToKuka.bExtStart := FALSE;
+			Kuka.PlcToKuka.bPgNoParity := FALSE;
+			Kuka.PlcToKuka.bPgNoValid := FALSE;
+
+			etKukaStart := ET_KukaStart_eWfPgNoReq;              (* Next step *)
+
+		ELSIF Kuka.KukaToPlc.bStopMess
+		THEN
+			tonWatchdog(IN := FALSE);
+
+			Kuka.PlcToKuka.bExtStart := FALSE;
+			Kuka.PlcToKuka.bPgNoParity := FALSE;
+			Kuka.PlcToKuka.bPgNoValid := FALSE;
+
+			udnErrorNo := 3;                     (* Error number *)
+			
+			etKukaStart := ET_KukaStart_eError;              (* Next step *)
+
+		END_IF
+
+	ET_KukaStart_eWfPgNoReq:
+		nWatchdog := nWatchdog + 1;
+
+		IF Kuka.KukaToPlc.bPgNoReq
+		     AND Kuka.KukaToPlc.bProAct
+		     AND Kuka.KukaToPlc.bOnPath
+		     AND NOT Kuka.KukaToPlc.bStopMess
+		THEN
+			Kuka.PlcToKuka.bExtStart := FALSE;
+			Kuka.PlcToKuka.bPgNoParity := FALSE;
+			Kuka.PlcToKuka.bPgNoValid := FALSE;
+
+			nWatchdog := 0;
+
+			etKukaStart := ET_KukaStart_ePgNoParity;              (* Next step *)
+
+		ELSIF Kuka.KukaToPlc.bStopMess
+			   OR nWatchdog > 1000
+		THEN
+			Kuka.PlcToKuka.bExtStart := FALSE;
+			Kuka.PlcToKuka.bPgNoParity := FALSE;
+			Kuka.PlcToKuka.bPgNoValid := FALSE;
+
+			udnErrorNo := 4;                     (* Error number *)
+			
+			etKukaStart := ET_KukaStart_eError;              (* Next step *)
+
+		END_IF
+
+	ET_KukaStart_ePgNoParity:
+		nWatchdog := nWatchdog + 1;
+
+		Kuka.PlcToKuka.bPgNoParity := CHECK_PARITY(in :=  Kuka.PlcToKuka.nPgNo, p := 1);
+
+		IF Kuka.KukaToPlc.bProAct
+		     AND Kuka.KukaToPlc.bOnPath
+		     AND NOT Kuka.KukaToPlc.bStopMess
+		THEN
+			nWatchdog := 0;
+
+			etKukaStart := ET_KukaStart_ePgNoValid;              (* Next step *)
+
+		ELSIF Kuka.KukaToPlc.bStopMess
+			    OR nWatchdog > 1000
+		THEN
+			Kuka.PlcToKuka.bExtStart := FALSE;
+			Kuka.PlcToKuka.bPgNoParity := FALSE;
+			Kuka.PlcToKuka.bPgNoValid := FALSE;
+			
+			udnErrorNo := 5;                     (* Error number *)
+			
+			etKukaStart := ET_KukaStart_eError;              (* Next step *)
+
+		END_IF
+
+	ET_KukaStart_ePgNoValid:
+		Kuka.PlcToKuka.bPgNoValid := TRUE;
+
+		IF NOT Kuka.KukaToPlc.bPgNoReq
+		     AND NOT Kuka.KukaToPlc.bInHome
+		     AND Kuka.KukaToPlc.bProAct
+		     AND Kuka.KukaToPlc.bOnPath
+		     AND NOT Kuka.KukaToPlc.bStopMess
+		THEN
+			Kuka.PlcToKuka.bExtStart := FALSE;
+			Kuka.PlcToKuka.bPgNoParity := FALSE;
+			Kuka.PlcToKuka.bPgNoValid := FALSE;
+
+			etKukaStart := ET_KukaStart_eWfProgFinish;              (* Next step *)
+
+		ELSIF Kuka.KukaToPlc.bStopMess
+		THEN
+			Kuka.PlcToKuka.bExtStart := FALSE;
+			Kuka.PlcToKuka.bPgNoParity := FALSE;
+			Kuka.PlcToKuka.bPgNoValid := FALSE;
+
+			udnErrorNo := 6;                     (* Error number *)
+			
+			etKukaStart := ET_KukaStart_eError;              (* Next step *)
+
+		END_IF
+
+	ET_KukaStart_eWfProgFinish:
+		IF Kuka.KukaToPlc.bInHome
+	     	    AND Kuka.KukaToPlc.bProAct
+	    	    AND Kuka.KukaToPlc.bOnPath
+	     	    AND NOT Kuka.KukaToPlc.bStopMess
+		THEN
+			Kuka.PlcToKuka.bExtStart := FALSE;
+			Kuka.PlcToKuka.bPgNoParity := FALSE;
+			Kuka.PlcToKuka.bPgNoValid := FALSE;
+
+			etKukaStart := ET_KukaStart_eDone;              (* Next step *)
+
+		ELSIF Kuka.KukaToPlc.bStopMess
+		THEN
+			Kuka.PlcToKuka.bExtStart := FALSE;
+			Kuka.PlcToKuka.bPgNoParity := FALSE;
+			Kuka.PlcToKuka.bPgNoValid := FALSE;
+
+			udnErrorNo := 7;                     (* Error number *)
+			
+			etKukaStart := ET_KukaStart_eError;              (* Next step *)
+
+		END_IF
+
+	ET_KukaStart_eError:
+		bBusy := FALSE;						(* Command busy *)
+		bError := TRUE;						(* Command error  *)
+
+		etKukaStart := ET_KukaStart_eNoExecute;
+
+	ET_KukaStart_eDone:
+		bDone := TRUE;						(* Command done *)
+		bBusy := FALSE;						(* Command busy *)
+
+		etKukaStart := ET_KukaStart_eNoExecute;
+
+	ET_KukaStart_eNoExecute:
+		IF NOT bStart
+		THEN
+			(* Reset outputs *)
+			bDone := FALSE;						(* Command done *)
+			bBusy := FALSE;						(* Command busy *)
+			bError := FALSE;						(* Command error  *)
+
+			nWatchdog := 0;
+
+			Kuka.PlcToKuka.bExtStart := FALSE;
+			Kuka.PlcToKuka.bPgNoParity := FALSE;
+			Kuka.PlcToKuka.bPgNoValid := FALSE;
+
+			etKukaStart := ET_KukaStart_eWaitExecute;
+		END_IF
+END_CASE;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_KUKA_StartProg">
+      <LineId Id="50" Count="296" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

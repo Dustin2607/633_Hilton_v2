@@ -1,0 +1,230 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_STOEBERSDS_MC_MoveVelocity" Id="{89f35623-fa09-442d-9760-51a83d8ba61f}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_STOEBERSDS_MC_MoveVelocity
+(*
+
+The function block used to starts a continuous movement with specified velocity and direction. 
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			22.09.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bExecute					:BOOL;			(* Execut the function block *)
+	lrVelocity						:LREAL;			(* Value of velocity *)
+	lrAcceleration					:LREAL;			(* Value of the acceleration (always positive) *)
+	lrDeceleration				:LREAL;			(* Value of deceleration (always positive) *)
+	lrJerk						:LREAL;			(* Value of the jerk (always positive). *)
+	etMC_Direction				:ET_MC_Direction;(* Direction *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bInVelocity					:BOOL;			(* Target velocity is reached *)
+	bCmdAborted				:BOOL;			(* Command aborted *)
+	bBusy						:BOOL;			(* Program busy *)
+	bError						:BOOL;			(* Error *)
+	udnErrorNo					:UDINT;			(* Error number *)
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	Axis							:ST_AXIS_REF;
+END_VAR
+VAR
+	(* Enummerations *)
+	etMC_States					:ET_MC_States := ET_MC_States_eInit;
+
+	(* Variables *)
+	nWatchdog					:INT;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtExecute						:R_TRIG;
+	rtAborted						:R_TRIG;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+rtExecute(CLK := bExecute);
+rtAborted(CLK := Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bPLCOpenCmdAborted);			(* Aborted *)
+
+IF rtAborted.Q                                             									(* Aborted *)
+THEN
+	etMC_States := ET_MC_States_eAbort;                   					 (* Next step *)
+
+ELSIF rtExecute.Q
+	    AND NOT bCmdAborted
+THEN
+	etMC_States := ET_MC_States_eInit;                      						(* Next step *)
+
+END_IF;
+
+CASE etMC_States OF
+        
+	ET_MC_States_eInit:
+		bCmdAborted := FALSE;			(* Command not aborted *)
+		bBusy := FALSE;                                     	(* Program not busy *)
+		bError := FALSE;                         		(* Program not error *)
+		udnErrorNo := 0;                         		(* Error number *)
+
+		IF rtExecute.Q
+		     AND NOT Axis.bLockPDO
+		THEN
+			nWatchdog := 0;
+			bInVelocity := FALSE;                          	(* Target velocity is not reached *)
+			bBusy := TRUE;                                  	(* Program busy *)
+
+			Axis.bLockPDO := TRUE;
+
+			Axis.stPlcToNc.stBaseDevice.stCommandPositioning.usnAccFactor := LREAL_TO_USINT(ABS(lrAcceleration * 2.55));           			(* Value of the acceleration (always positive) *)
+			Axis.stPlcToNc.stBaseDevice.stCommandPositioning.usnDccFaktor := LREAL_TO_USINT(ABS(lrDeceleration * 2.55));         			(* Value of the deceleration (always positive) *)
+			Axis.stPlcToNc.stBaseDevice.stCommandPositioning.usnJerkFaktor := LREAL_TO_USINT(ABS(lrJerk * 2.55));			(* Value of the jerk (always positive) *)
+
+			IF Axis.stNcToPlc.stBaseDevice.bEnabled   			(* Control enabled *)
+			     AND Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bHomed          	(* Axis in reference *)
+			THEN
+				Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd := Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd AND 224;				(* Reset MC modes staus *)
+				Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bPLCOpenCmdExe := FALSE;                                                 						(* Reset MC_MoveVelocity execute *)
+
+				Axis.stPlcToNc.stBaseDevice.bToggleBit := FALSE;    (* Reset toggle bit *)
+	
+				IF etMC_Direction = ET_MC_Direction_ePositive
+				THEN
+					Axis.stPlcToNc.stBaseDevice.stCommandPositioning.nVeloFactor := LIMIT(0, ABS(LREAL_TO_INT(lrVelocity * 163.84)), 16384);                  (* Value of velocity *)
+
+					etMC_States := ET_MC_States_eReset;         (* Next step *)
+
+				ELSIF etMC_Direction = ET_MC_Direction_eNegative
+				THEN
+					Axis.stPlcToNc.stBaseDevice.stCommandPositioning.nVeloFactor := LIMIT(-16384, -ABS(LREAL_TO_INT(lrVelocity * 163.84)), 0);                 (* Value of velocity *)
+
+					etMC_States := ET_MC_States_eReset;         (* Next step *)
+				
+				ELSIF etMC_Direction = ET_MC_Direction_eCurrent
+				THEN
+					Axis.stPlcToNc.stBaseDevice.stCommandPositioning.nVeloFactor := LIMIT(-16384, LREAL_TO_INT(lrVelocity * 163.84), 16384);                      (* Value of velocity *)
+
+					etMC_States := ET_MC_States_eReset;         (* Next step *)
+				
+				END_IF;
+		                
+			ELSE
+				udnErrorNo := 4;                     (* Error number *)
+
+				etMC_States := ET_MC_States_eError;             (* Next step *)
+		                
+			END_IF;
+		END_IF;
+        
+	ET_MC_States_eReset:
+		nWatchdog := nWatchdog + 1;
+
+		IF NOT Axis.stNcToPlc.stBaseDevice.bToggleBit        		   	(* Ack Toggle bit *)
+		THEN
+			nWatchdog := 0;
+			etMC_States := ET_MC_States_eRunning;			(* Next step *)
+
+		ELSIF nWatchdog > 150
+		THEN
+			etMC_States := ET_MC_States_eError;             (* Next step *)
+		END_IF;
+
+	ET_MC_States_eRunning:
+		nWatchdog := nWatchdog + 1;
+
+		Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd := Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd OR 4;			(* Set MC_MoveVelocity *)
+		Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bPLCOpenCmdExe := TRUE;                                                    					(* Set MC_MoveVelocity execute *)
+
+		Axis.stPlcToNc.stBaseDevice.bToggleBit := TRUE;     (* Set Toggle bit *)
+
+		IF Axis.stNcToPlc.stBaseDevice.bToggleBit								(* Ack Toggle bit *)
+		     AND (Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd AND 31) = 4 			(* Ack MC_MoveVelocity *)
+		     AND Axis.stNcToPlc.stBaseDevice.bAxisActive      						(* Axis active *)
+		     AND NOT Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bPLCOpenStandstill				(* Axis runnning *)
+		     AND NOT Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bPLCOpenCmdAborted			(* Aborted *)
+		THEN
+			Axis.stPlcToNc.stBaseDevice.bToggleBit := FALSE;    		(* Reset Toggle bit *)
+
+			nWatchdog := 0;
+			etMC_States := ET_MC_States_eWaiting;           (* Next step *)
+		
+		ELSIF Axis.stNcToPlc.stBaseDevice.bError					(* Error *)
+			   OR nWatchdog > 150
+		THEN
+			Axis.stPlcToNc.stBaseDevice.bToggleBit := FALSE;    		(* Reset Toggle bit *)
+
+			udnErrorNo := 2;                     (* Error number *)
+
+			etMC_States := ET_MC_States_eError;             (* Next step *)
+		END_IF;
+
+	ET_MC_States_eWaiting:
+		IF Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bConstantVelocity               		(* In velocity *)
+		     AND Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bPLCOpenCmdDone       		(* Command done *)
+		THEN
+			etMC_States := ET_MC_States_eDone;              (* Next step *)
+		
+		ELSIF Axis.stNcToPlc.stBaseDevice.bError					(* Error *)
+		THEN
+			udnErrorNo := 3;                     (* Error number *)
+		
+			etMC_States := ET_MC_States_eError;             (* Next step *)
+		END_IF;
+
+	ET_MC_States_eAbort:
+		bCmdAborted := TRUE;			(* Command aborted *)
+		bInVelocity := FALSE;                               	(* Target velocity is not reached *)
+		Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bPLCOpenCmdExe := FALSE;         (* Reset MC_MoveVelocity execute *)
+	
+		 etMC_States := ET_MC_States_eNotExecute;        (* Next step *)
+
+	ET_MC_States_eDone:
+		nWatchdog := 0;
+		bInVelocity := TRUE;				(* Target velocity is reached *)
+		bBusy := FALSE;                                      	(* Program not busy *)
+
+		etMC_States := ET_MC_States_eNotExecute;            (* Next step *)
+
+	ET_MC_States_eError:
+		nWatchdog := 0;
+ 		Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bPLCOpenCmdExe := FALSE;         (* Reset MC_MoveVelocity execute *)
+	         bInVelocity := FALSE;			(* Target velocity is not reached *)
+	         bError := TRUE;				(* Program error  *)
+	         bBusy := FALSE;				(* Program not busy *)
+
+		etMC_States := ET_MC_States_eNotExecute;            (* Next step *)
+        
+	ET_MC_States_eNotExecute:
+		IF NOT bExecute
+		THEN
+			nWatchdog := 0;
+			Axis.bLockPDO := FALSE;
+
+			bInVelocity := FALSE;		(* Target velocity is not reached *)
+			bCmdAborted := FALSE;	(* Command not aborted *)
+			bBusy := FALSE;                       (* Program not busy *)
+			bError := FALSE;                       (* Program not error *)
+			udnErrorNo := 0;                        (* Error number *)
+
+			Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd := Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd AND 224;			(* Reset MC modes staus *)
+ 			Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bPLCOpenCmdExe := FALSE;         										(* Reset MC_MoveVelocity execute *)
+
+			etMC_States := ET_MC_States_eInit;              (* Next step *)
+		
+		END_IF;
+END_CASE;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_STOEBERSDS_MC_MoveVelocity">
+      <LineId Id="51" Count="168" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

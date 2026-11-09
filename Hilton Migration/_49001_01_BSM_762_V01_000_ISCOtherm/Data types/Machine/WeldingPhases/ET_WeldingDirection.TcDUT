@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_WeldingDirection" Id="{0abfb531-8648-4797-88a6-a319cd270253}">
+    <Declaration><![CDATA[TYPE ET_WeldingDirection :
+(
+	ET_WeldingDirection_eCurrent := 0,
+	ET_WeldingDirection_ePositive := 1,
+	ET_WeldingDirection_eNegative := -1
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_Gr01PLCTOHMI" Id="{b18b8d3d-f313-42ec-881d-1a1753f67beb}">
+    <Declaration><![CDATA[TYPE ST_Gr01PLCTOHMI :
+STRUCT
+	wBtnStartStatus						:WORD;						(* Button start status *)
+	wBtnStopStatus						:WORD;						(* Button stop status *)
+	wBtnStepProcStatus					:WORD;						(* Button stepping process status *)
+	bHomeCompleted						:BOOL;						(* Home completed *)
+	bExecutedProcess					:BOOL;						(* Process executed *)
+	udnCounterTotal						:UDINT;						(* Total counter *)
+	dwCycleTime							:DWORD;					(* Cycletime in 0.01sec / Zykluszeit in 0.01Sekunden *)
+	lrLifetime								:LREAL;				 		(* Lifetime *)
+	lrLifetimeAfterReset					:LREAL;				 		(* Lifetime after reset *)
+	lrLifetimeAfterTurnOn					:LREAL;				 		(* Lifetime after turn on *)
+	wAxisSawBowStatus					:WORD;						(* Axis saw bow status *)
+	wAxisAngleStatus						:WORD;						(* Axis angle status *)
+	wSawbandStatus						:WORD;						(* Sawband status *)
+         wSawbandAirStatus 					:WORD;						(* Sawband air status *)
+         wLaserStatus							:WORD;                 				(* Sawband laser status *)
+	lrAxisSawBowActPos					:LREAL;						(* Axis saw bow actual position *)
+	lrAxisSawBowActVelo					:LREAL;						(* Axis saw bow actual velocity *)
+	lrAxisSawBowActForce					:LREAL;						(* Axis saw bow actual force *)
+	lrAxisAngleActPos						:LREAL;						(* Axis angle actual position *)
+	lrAxisAngleActVelo					:LREAL;						(* Axis angle actual velocity *)
+	lrAxisAngleActForce					:LREAL;						(* Axis angle actual force *)
+	lrSawbandActSpeed					:LREAL;						(* Actual speed of sawband *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,187 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Fieldbus_v2" Id="{ceffcd65-1d06-474a-8daf-df723bab6763}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Fieldbus_v2
+(*
+
+The function block used to control fieldbus.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			23.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable					:BOOL;					(* Enable FB signal *)
+	wFrmXWcState 			:WORD;					(* Link to task related ethercat frame state FrmXWcState *)
+	nMasterDeviceId 			:UINT;
+	nMasterSlaveCount		:UINT;
+	nMasterSlaveCountCfg		:UINT;
+	nMasterDevState			:UINT;
+	arrMasterNetId			:T_AmsNetIdArr;
+	tTimeOut					:TIME := t#5s;				(* Timeout for ADS commando *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	sMasterNetId				:T_AmsNetId ;			(* Fieldbus master ams net id*)
+	bFieldbusOK				:BOOL;
+	bFrameWcStateOK		:BOOL;
+	bFrameWcStateError		:BOOL;
+	bSlaveCountError			:BOOL;
+	bMasterDevStateError		:BOOL;
+	stMasterDevState			:ST_EcMasterDevState;
+	bInit						:BOOL;
+	bDone					:BOOL;					(* Program done *)
+	bBusy					:BOOL;					(* Program busy  *)
+	bError					:BOOL;					(* Program error  *)
+	udnErrorNo				:UDINT;
+	udnMessageNo			:UDINT;
+	sMsg					:STRING;
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	bFirstTime				:BOOL;
+	wReqZeroMask			:WORD := 16#FFFF;		 (* Clear bit to ignore datagram error *)
+
+	arstDiagSlaveInfo 			: ARRAY [0..dnDiagSlaveInfoMax] OF ST_SlaveStateInfo;
+	arstDiagSlaveInfoScanned	: ARRAY [0..dnDiagSlaveInfoMax] OF ST_SlaveStateInfoScanned;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbGetDeviceType			:IOF_GetDeviceType; 		(* Get the device type from the device ID *)
+	fbEtherCATFrameDiag		:FB_EtherCATFrameDiag;
+	fbEtherCATDiag			:FB_EtherCATDiag;
+END_VAR
+VAR CONSTANT
+	dnDiagSlaveInfoMax			:DINT := 10;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	fbGetDeviceType(START := FALSE);
+	bFieldbusOK := FALSE;
+	bFrameWcStateOK := FALSE;
+	bFrameWcStateError := FALSE;
+	bSlaveCountError := FALSE;
+	bMasterDevStateError := FALSE;
+	bInit := FALSE;
+	bDone := FALSE;
+	bBusy := FALSE;
+	bError := FALSE;
+	udnErrorNo := 0;
+	udnMessageNo := 0;
+	sMsg := '';
+	RETURN;
+END_IF;
+
+
+IF NOT bFirstTime
+THEN
+	bFieldbusOK := FALSE;
+	bFrameWcStateOK := FALSE;
+	bFrameWcStateError := FALSE;
+	bSlaveCountError := FALSE;
+	bMasterDevStateError := FALSE;
+	bInit := FALSE;
+	bDone := FALSE;
+	bBusy := FALSE;
+	bError := FALSE;
+	udnErrorNo := 0;
+	udnMessageNo := 0;
+	sMsg := '';
+	bFirstTime := TRUE;
+END_IF;
+
+(* Get the device type from the device ID *)
+fbGetDeviceType(
+	NETID := '',
+	DEVICEID := nMasterDeviceId,
+	START := TRUE,
+	TMOUT := tTimeOut
+);
+
+(* Get the device type from the device ID *)
+IF NOT fbGetDeviceType.BUSY 										(* No error *)
+     AND NOT fbGetDeviceType.ERR
+THEN
+
+	CASE fbGetDeviceType.IODeviceType
+	OF
+		48: (* IODEVICETYPE_FC7500 	:= 48,  Beckhoff-SERCOS-PCI *)
+			bInit := TRUE;
+			bDone := FALSE;
+			bBusy := FALSE;
+			bError := FALSE;
+			udnErrorNo := 0;											(* Error number *)
+			(*bInitReady := unMasterState = 16#E005; 						(* Actual Phase is 4 *)
+			bBreak := unMasterState = 16#E008;							(* Interrupt / Broke *)*)
+
+		94: (* IODEVICETYPE_EtherCAT := 94,  Beckhoff-EtherCAT-PCI *)
+			sMasterNetId := F_CreateAmsNetId(nIds := arrMasterNetId);
+			bInit := sMasterNetID <> '' AND sMasterNetID <> '0.0.0.0.0.0';
+
+			fbEtherCATFrameDiag(
+				wFrmXWcState := wFrmXWcState,
+				wReqZeroMask := wReqZeroMask,
+				bFrameWcStateOK => bFrameWcStateOK
+			);
+
+
+			fbEtherCATDiag(
+				sNetID := '',
+				sMasterNetID	 := sMasterNetId,
+				nMasterDevID := nMasterDeviceId,
+				nSlaveCount := nMasterSlaveCount,
+				nSlaveCountCfg := nMasterSlaveCountCfg,
+				nMasterDevState := nMasterDevState,
+				bAllFrameWcStatesOK	:= bFrameWcStateOK,
+				tTimeout := tTimeOut,
+				arstDiagSlaveInfo := arstDiagSlaveInfo,
+				arstDiagSlaveInfoScanned	:= arstDiagSlaveInfoScanned,
+				bEtherCATOK => bFieldbusOK,
+				bFrameWcStateError	=> bFrameWcStateError,
+				bSlaveCountError	=> bSlaveCountError,
+				bMasterDevStateError=> bMasterDevStateError,
+				stMasterDevState	=> stMasterDevState,
+				bDone => bDone,
+				bBusy => bBusy,
+				bError => bError,
+				iErrorID => udnErrorNo
+			);
+
+	ELSE (* IDLE *)
+		bInit := FALSE;
+		bDone := FALSE;
+		bBusy := FALSE;
+		bError := TRUE;
+		udnErrorNo := 1;																			(* Error number *)
+		sMsg := CONCAT('Unidentified fieldbus:', DINT_TO_STRING(fbGetDeviceType.IODeviceType));		(* Description error *)
+	END_CASE;
+
+ELSIF NOT fbGetDeviceType.BUSY
+	    AND fbGetDeviceType.ERR
+THEN
+	bInit := FALSE;
+	bDone := FALSE;
+	bBusy := FALSE;
+	bError := TRUE;
+	udnErrorNo := 2;																				(* Error number *)
+	sMsg := CONCAT('Fehler beim Lesen über ADS: ', UDINT_TO_STRING(fbGetDeviceType.ERRID));		(* Description error *)
+	fbGetDeviceType(START := FALSE);
+END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Fieldbus_v2">
+      <LineId Id="64" Count="112" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

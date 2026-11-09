@@ -1,0 +1,516 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Gr01AutoProcedure" Id="{99cb5d62-6b68-4095-abe9-209f84497282}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Gr01AutoProcedure
+(*
+
+The function block used to execute automatic procedure.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			28.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Enable FB signal *)
+	bExecute					:BOOL;						(* Auto procedure execute *)
+	bInterrupt						:BOOL;						(* Auto procedure interrupt *)
+	bReleaseNextStep			:BOOL;						(* Auto procedure release next step *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bDone						:BOOL;						(* Program done *)
+	bInterrupted					:BOOL;						(* Program interrupted *)
+	bBusy						:BOOL;						(* Program busy *)
+	bError						:BOOL;						(* Program error *)
+	udnErrorNo					:UDINT;						(* Error number *)
+
+	bErrorCollisionDetected		:BOOL;						(* Collision detected *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+	etGr01Auto					:ET_Gr01Auto;				(* Auto mode enum variable *)
+	etGr01AutoCache				:ET_Gr01Auto;				(* Auto mode enum variable *)
+	etGr01AutoHistory				:ARRAY[0..20] OF ET_Gr01Auto;				(* Auto mode enum variable history *)
+	usnt							:INT;
+
+	(* Variables *)
+	unProcessCounter				:UINT;
+	wBusyFlag					:WORD;
+
+	bFirstTime					:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	tonWatchdog					:TON;
+	tonSawingDoneDelay			:TON;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+	bDone := FALSE;					(* Program done *)
+	bInterrupted := FALSE;				(* Program interrupted *)
+	bBusy := FALSE;                                  	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;                                 		(* Error number *)
+
+	bErrorCollisionDetected := FALSE;
+
+	tonWatchdog(IN := FALSE);
+
+	etGr01Auto := ET_Gr01Auto_eWaitExecute;       				(* Next step *)
+
+	bFirstTime := FALSE;
+	RETURN;
+END_IF;
+
+IF NOT bFirstTime
+THEN
+	bDone := FALSE;					(* Program done *)
+	bInterrupted := FALSE;				(* Program interrupted *)
+	bBusy := FALSE;                                  	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;                                 		(* Error number *)
+
+	bgGr01SawingAck := FALSE;
+	bgGr01AngleAck := FALSE;
+	bgGr01TransportReq := FALSE;
+	unProcessCounter	 := 0;
+	tonSawingDoneDelay(IN := FALSE);
+
+	bErrorCollisionDetected := FALSE;
+
+	tonWatchdog(IN := FALSE);
+
+	etGr01Auto := ET_Gr01Auto_eWaitExecute;       				(* Next step *)
+
+	bFirstTime := TRUE;
+END_IF;
+
+CASE etGr01Auto
+OF
+	ET_Gr01Auto_eWaitExecute:
+		bBusy := FALSE;                                     		(* Program not busy *)
+		bError := FALSE;                                    		(* Program not error *)
+
+		IF bExecute
+		THEN
+			bDone := FALSE;                                 	(* Program done, in position *)
+			bBusy := TRUE;                                  	(* Program busy *)
+
+			IF NOT bInterrupted				(* Program interrupted *)
+			THEN
+				wBusyFlag := 0;
+
+				bgGr01SawingAck := FALSE;
+				bgGr01AngleAck := FALSE;
+				bgGr01TransportReq := FALSE;
+				unProcessCounter	 := 0;
+				tonSawingDoneDelay(IN := FALSE);
+	
+				bErrorCollisionDetected := FALSE;
+
+				etGr01Auto := ET_Gr01Auto_eWaitAxisStatus;         		(* Next step *)
+
+			ELSE
+				bInterrupted := FALSE;                                      	(* Program not  interrupted *)
+				bBusy := TRUE;                                     		(* Program not busy *)
+
+				etGr01Auto := etGr01AutoCache;         					(* Next step *)
+
+			END_IF
+		END_IF;
+
+	ET_Gr01Auto_eWaitAxisStatus:
+		IF Gr01Control.bAllAxisCtrlEnabled
+		     AND Gr01Control.bAllAxisNotMoving
+		     AND Gr01Control.bAllAxisStandStill
+		THEN
+			etGr01Auto := ET_Gr01Auto_eGetProcessPara;              (* Next step *)
+		END_IF;
+
+	ET_Gr01Auto_eGetProcessPara:
+		IF unProcessCounter <= usnFileArrayMaxDimR
+		THEN
+			unProcessCounter := unProcessCounter + 1;
+
+			stgGr01HMI.stHMITOPLC.lrActSawingAngle := arrGr00ProcessPara[unProcessCounter,1];
+
+			IF stgGr01HMI.stHMITOPLC.rPipeDiameter < rGr01PipeDiameterMin
+			     OR stgGr01HMI.stHMITOPLC.rPipeDiameter > rGr01PipeDiameterMax
+			     OR ABS(stgGr01HMI.stHMITOPLC.lrActSawingAngle) > lrgGr01AngleAutoMax
+			THEN
+				bErrorCollisionDetected := TRUE;
+
+				etGr01Auto := ET_Gr01Auto_eWfErrorCollisionDetected;         		(* Next step *)
+			ELSE
+				etGr01Auto := ET_Gr01Auto_eChkProcessEnd;         		(* Next step *)
+			END_IF
+
+		ELSE
+			etGr01Auto := ET_Gr01Auto_eAxisSawBowToSafePos2;         		(* Next step *)
+		END_IF
+
+	ET_Gr01Auto_eWfErrorCollisionDetected:
+		IF stgGr00Alarm.stAuto.arbError[0].bActive
+		THEN
+			bErrorCollisionDetected := FALSE;
+
+			udnErrorNo := 1;
+			etGr01Auto := ET_Gr01Auto_eError;         					(* Next step *)
+		END_IF
+
+	ET_Gr01Auto_eChkProcessEnd:
+		IF arrGr00ProcessPara[unProcessCounter, 0] <= 0.0
+		     AND arrGr00ProcessPara[unProcessCounter, 1] = 0.0
+		     AND bReleaseNextStep
+		THEN
+			etGr01Auto := ET_Gr01Auto_eAxisSawBowToSafePos2;         		(* Next step *)
+		ELSE
+			IF bgGr05AutoCompleted
+			THEN
+				IF bReleaseNextStep
+				THEN
+					etGr01Auto := ET_Gr01Auto_eAxisSawBowToSafePos2;         		(* Next step *)
+				END_IF
+			ELSE
+				IF bReleaseNextStep
+				THEN
+					etGr01Auto := ET_Gr01Auto_eAxisAngleToWorkPos;         		(* Next step *)
+				END_IF
+			END_IF
+		END_IF
+
+	ET_Gr01Auto_eAxisAngleToWorkPos:
+		Gr01Control.fbAxisAngle.bExeMoveAbs := TRUE;
+		Gr01Control.fbAxisAngle.lrTargetPosition := stgGr01HMI.stHMITOPLC.lrActSawingAngle;
+		Gr01Control.fbAxisAngle.lrAutoVelocity := stgGr01HMI.stHMITOPLC.lrAxisAngleAutoVelo;
+
+		IF Gr01Control.fbAxisAngle.fbMoveAuto.fbMoveAbs.bBusy
+		THEN
+			etGr01Auto := ET_Gr01Auto_eWfAxisAngleInWorkPos;              (* Next step *)
+
+		ELSIF Gr01Control.fbAxisAngle.fbMoveAuto.fbMoveAbs.bError
+		THEN
+			Gr01Control.fbAxisAngle.bExeMoveAbs := FALSE;
+
+			etGr01Auto := ET_Gr01Auto_eError;         					(* Next step *)
+
+		END_IF;
+
+	ET_Gr01Auto_eWfAxisAngleInWorkPos:
+		IF Gr01Control.fbAxisAngle.fbMoveAuto.bInPosition
+		     AND bReleaseNextStep
+		THEN
+			Gr01Control.fbAxisAngle.bExeMoveAbs := FALSE;
+
+			etGr01Auto := ET_Gr01Auto_eWfReq;              (* Next step *)
+
+		ELSIF Gr01Control.fbAxisAngle.fbMoveAuto.fbMoveAbs.bError
+		THEN
+			Gr01Control.fbAxisAngle.bExeMoveAbs := FALSE;
+
+			etGr01Auto := ET_Gr01Auto_eError;         					(* Next step *)
+
+		END_IF;
+
+	ET_Gr01Auto_eWfReq:
+		IF bgGr05AutoCompleted
+		     AND bReleaseNextStep
+		THEN
+			etGr01Auto := ET_Gr01Auto_eAxisSawBowToSafePos2;         		(* Next step *)
+
+		ELSIF bgGr05AngleReq
+		     	    AND bReleaseNextStep
+		THEN
+			bgGr01AngleAck := TRUE;;
+
+			etGr01Auto := ET_Gr01Auto_eAngleAck;         		(* Next step *)
+
+		ELSIF bgGr05SawingReq
+		     	    AND bReleaseNextStep
+		THEN
+			bgGr01SawingAck := TRUE;
+
+			etGr01Auto := ET_Gr01Auto_eSawingAck;              (* Next step *)
+
+		END_IF
+
+	ET_Gr01Auto_eAngleAck:
+		IF NOT bgGr05AngleReq
+		     AND bReleaseNextStep
+		THEN
+			bgGr01AngleAck := FALSE;
+
+			stgGr01HMI.stHMITOPLC.lrActSawingAngle := arrGr00ProcessPara[unProcessCounter - 1, 1];
+
+			etGr01Auto := ET_Gr01Auto_eAxisAngleToWorkPos;              (* Next step *)
+		END_IF;
+
+	ET_Gr01Auto_eSawingAck:
+		IF NOT bgGr05SawingReq
+		     AND bReleaseNextStep
+		THEN
+			bgGr01SawingAck := FALSE;
+
+			etGr01Auto := ET_Gr01Auto_eSawbandStart;              (* Next step *)
+
+		END_IF;
+
+	ET_Gr01Auto_eSawbandStart:
+		Gr01Control.fbSawband.bExeMoveVelo := TRUE;
+
+		IF Gr01Control.fbSawband.fbMoveAuto.fbMoveVelo.bBusy
+		THEN
+			etGr01Auto := ET_Gr01Auto_eWfSawbandStart;              (* Next step *)
+
+		ELSIF Gr01Control.fbSawband.fbMoveAuto.fbMoveVelo.bError
+		THEN
+			Gr01Control.fbSawband.bExeMoveVelo := FALSE;
+
+			etGr01Auto := ET_Gr01Auto_eError;         					(* Next step *)
+
+		END_IF;
+
+	ET_Gr01Auto_eWfSawbandStart:
+		IF Gr01Control.fbSawband.bReady
+		     AND Gr01Control.fbSawband.fbMoveAuto.fbMoveVelo.bInVelocity
+		     AND bReleaseNextStep
+		THEN
+			Gr01Control.fbSawband.bExeMoveVelo := FALSE;
+			Gr01Control.fbAxisSawBow.bExtOverrideEn := TRUE;
+
+			etGr01Auto := ET_Gr01Auto_eSawingStart;              (* Next step *)
+
+		ELSIF Gr01Control.fbSawband.fbMoveAuto.fbMoveVelo.bError
+		THEN
+			Gr01Control.fbSawband.bExeMoveVelo := FALSE;
+
+			etGr01Auto := ET_Gr01Auto_eError;         					(* Next step *)
+
+		END_IF;
+
+	ET_Gr01Auto_eSawingStart:
+		Gr01Control.fbAxisSawBow.bExtOverrideEn := TRUE;
+		Gr01Control.fbAxisSawBow.bExeMoveAbs := TRUE;
+		Gr01Control.fbAxisSawBow.lrTargetPosition := lrgGr01SawingEndPosition;
+		Gr01Control.fbAxisSawBow.lrAutoVelocity := stgGr01HMI.stHMITOPLC.lrAxisSawBowAutoVelo * lrgGr01SawingSpeed / 100; (* velo=100 ^= 50mm/s *)
+
+		IF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMoveAbs.bBusy
+		THEN
+			etGr01Auto := ET_Gr01Auto_eWfSawingDone;              (* Next step *)
+
+		ELSIF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMoveAbs.bError
+		THEN
+			Gr01Control.fbAxisSawBow.bExtOverrideEn := FALSE;
+			Gr01Control.fbAxisSawBow.bExeMoveAbs := FALSE;
+
+			etGr01Auto := ET_Gr01Auto_eError;         					(* Next step *)
+
+		END_IF;
+
+	ET_Gr01Auto_eWfSawingDone:
+		tonSawingDoneDelay(
+			IN := Gr01Control.fbAxisSawBow.fbMoveAuto.bInPosition,
+			PT := lrgGr01SawingEndDelay
+		);
+
+		IF tonSawingDoneDelay.Q
+		     AND bReleaseNextStep
+		THEN
+			tonSawingDoneDelay(IN := FALSE);
+
+			Gr01Control.fbAxisSawBow.bExtOverrideEn := FALSE;
+			Gr01Control.fbAxisSawBow.bExeMoveAbs := FALSE;
+
+			etGr01Auto := ET_Gr01Auto_eAxisSawBowToSafePos;              (* Next step *)
+
+		ELSIF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMoveAbs.bError
+		THEN
+			tonSawingDoneDelay(IN := FALSE);
+
+			Gr01Control.fbAxisSawBow.bExtOverrideEn := FALSE;
+			Gr01Control.fbAxisSawBow.bExeMoveAbs := FALSE;
+
+			etGr01Auto := ET_Gr01Auto_eError;           					(* Next step *)
+
+		END_IF;
+
+	ET_Gr01Auto_eAxisSawBowToSafePos:
+		Gr01Control.fbAxisSawBow.bExeMoveAbs := TRUE;
+		Gr01Control.fbAxisSawBow.lrTargetPosition := MIN(stgGr01HMI.stHMITOPLC.rPipeDiameter
+												        + stgGr01HMI.stHMITOPLC.lrSafeDistSawBandToPipe,
+												        Gr01Control.fbAxisSawBow.lrSoftLimitMax);
+		Gr01Control.fbAxisSawBow.lrAutoVelocity := stgGr01HMI.stHMITOPLC.lrAxisSawBowAutoVelo;
+
+		IF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMoveAbs.bBusy
+		THEN
+			etGr01Auto := ET_Gr01Auto_eWfAxisSawBowInSafePos;              (* Next step *)
+
+		ELSIF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMoveAbs.bError
+		THEN
+			Gr01Control.fbAxisSawBow.bExeMoveAbs := FALSE;
+
+			etGr01Auto := ET_Gr01Auto_eError;         					(* Next step *)
+
+		END_IF;
+
+	ET_Gr01Auto_eWfAxisSawBowInSafePos:
+		IF Gr01Control.fbAxisSawBow.fbMoveAuto.bInPosition
+		     AND bReleaseNextStep
+		THEN
+			Gr01Control.fbAxisSawBow.bExeMoveAbs := FALSE;
+
+			etGr01Auto := ET_Gr01Auto_eTransportReq;              (* Next step *)
+
+		ELSIF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMoveAbs.bError
+		THEN
+			Gr01Control.fbAxisSawBow.bExeMoveAbs := FALSE;
+
+			etGr01Auto := ET_Gr01Auto_eError;           					(* Next step *)
+
+		END_IF;
+
+	ET_Gr01Auto_eTransportReq:
+		bgGr01TransportReq := TRUE;
+
+		IF bgGr05TransportAck
+		     AND bReleaseNextStep
+		THEN
+			bgGr01TransportReq := FALSE;
+
+			etGr01Auto := ET_Gr01Auto_eTransportAck;              (* Next step *)
+		END_IF;
+
+	ET_Gr01Auto_eTransportAck:
+		IF NOT bgGr05TransportAck
+		     AND bReleaseNextStep
+		THEN
+			etGr01Auto := ET_Gr01Auto_eGetProcessPara;         (* Next step *)
+		END_IF;
+
+	ET_Gr01Auto_eAxisSawBowToSafePos2:
+		Gr01Control.fbAxisSawBow.bExeMoveAbs := TRUE;
+		Gr01Control.fbAxisSawBow.lrTargetPosition := MIN(stgGr01HMI.stHMITOPLC.rPipeDiameter
+												        + stgGr01HMI.stHMITOPLC.lrSafeDistSawBandToPipe,
+												        Gr01Control.fbAxisSawBow.lrSoftLimitMax);
+		Gr01Control.fbAxisSawBow.lrAutoVelocity := stgGr01HMI.stHMITOPLC.lrAxisSawBowAutoVelo;
+
+		IF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMoveAbs.bBusy
+		THEN
+			etGr01Auto := ET_Gr01Auto_eWfAxisSawBowInSafePos2;              (* Next step *)
+
+		ELSIF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMoveAbs.bError
+		THEN
+			Gr01Control.fbAxisSawBow.bExeMoveAbs := FALSE;
+
+			etGr01Auto := ET_Gr01Auto_eError;         					(* Next step *)
+
+		END_IF;
+
+	ET_Gr01Auto_eWfAxisSawBowInSafePos2:
+		IF Gr01Control.fbAxisSawBow.fbMoveAuto.bInPosition
+		     AND bReleaseNextStep
+		THEN
+			Gr01Control.fbAxisSawBow.bExeMoveAbs := FALSE;
+
+			etGr01Auto := ET_Gr01Auto_eAxisAngleToBasePos;              (* Next step *)
+
+		ELSIF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMoveAbs.bError
+		THEN
+			Gr01Control.fbAxisSawBow.bExeMoveAbs := FALSE;
+
+			etGr01Auto := ET_Gr01Auto_eError;           					(* Next step *)
+
+		END_IF;
+
+	ET_Gr01Auto_eAxisAngleToBasePos:
+		Gr01Control.fbAxisAngle.bExeMoveAbs := TRUE;
+		Gr01Control.fbAxisAngle.lrTargetPosition := 0.0;
+		Gr01Control.fbAxisAngle.lrAutoVelocity := stgGr01HMI.stHMITOPLC.lrAxisAngleAutoVelo;
+
+		IF Gr01Control.fbAxisAngle.fbMoveAuto.fbMoveAbs.bBusy
+		THEN
+			etGr01Auto := ET_Gr01Auto_eWfAxisAngleInBasePos;              (* Next step *)
+
+		ELSIF Gr01Control.fbAxisAngle.fbMoveAuto.fbMoveAbs.bError
+		THEN
+			Gr01Control.fbAxisAngle.bExeMoveAbs := FALSE;
+
+			etGr01Auto := ET_Gr01Auto_eError;         					(* Next step *)
+
+		END_IF;
+
+	ET_Gr01Auto_eWfAxisAngleInBasePos:
+		IF Gr01Control.fbAxisAngle.fbMoveAuto.bInPosition
+		     AND bReleaseNextStep
+		THEN
+			Gr01Control.fbAxisAngle.bExeMoveAbs := FALSE;
+
+			etGr01Auto := ET_Gr01Auto_eDone;              (* Next step *)
+
+		ELSIF Gr01Control.fbAxisAngle.fbMoveAuto.fbMoveAbs.bError
+		THEN
+			Gr01Control.fbAxisAngle.bExeMoveAbs := FALSE;
+
+			etGr01Auto := ET_Gr01Auto_eError;         					(* Next step *)
+
+		END_IF;
+
+	ET_Gr01Auto_eDone:
+		bDone := TRUE;                                      		(* Program done, in position *)
+		bBusy := FALSE;                                     		(* Program not busy *)
+
+		etGr01Auto := ET_Gr01Auto_eNoExecute;            		(* Next step *)
+
+	ET_Gr01Auto_eError:
+		bDone := FALSE;                                    	 	(* Program done, in position *)
+		bError := TRUE;                                     		(* Program error *)
+		bBusy := FALSE;                                     		(* Program not busy *)
+
+		etGr01Auto := ET_Gr01Auto_eNoExecute;            		(* Next step *)
+
+	ET_Gr01Auto_eNoExecute:
+		IF NOT bExecute
+		THEN
+			bDone := FALSE;                                 	(* Program done *)
+			bBusy := FALSE;                                 	(* Program not busy *)
+			bError := FALSE;                                		(* Program not error *)
+	
+			etGr01Auto := ET_Gr01Auto_eWaitExecute;       		(* Next step *)
+	
+		END_IF;
+        
+END_CASE;
+
+(* Watchdog *)
+tonWatchdog();
+
+(* This loup used to track the steps of this sequence *)
+IF etGr01Auto <> etGr01AutoHistory[0] THEN
+	FOR usnt := 20 TO 1 BY  -1  DO
+		etGr01AutoHistory[usnt] := etGr01AutoHistory[usnt - 1] ;
+	END_FOR
+		etGr01AutoHistory[0] := etGr01Auto;
+END_IF
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Gr01AutoProcedure">
+      <LineId Id="57" Count="448" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_SpindlePDSXLHClutchStatus" Id="{d2fa777e-e938-492d-b3fe-05ccfe028e79}">
+    <Declaration><![CDATA[TYPE ST_SpindlePDSXLHClutchStatus :
+STRUCT
+	bToolClampedS1					:BOOL;			(* Tool clamped S1 *)
+	bToolEjectedS2					:BOOL;			(* Tool present S2 *)
+	bSpindleStandstillS3				:BOOL;			(* Spindle standstill S3 *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

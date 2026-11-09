@@ -1,0 +1,88 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_STOEBERSDS_Power" Id="{eeecf870-40fa-41bc-8745-be4cfaa1c915}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_STOEBERSDS_Power
+(*
+
+The function block used to control an axis
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			22.09.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;			(* Signal FB enable *)
+	bRegulatorOn				:BOOL;			(* Enable the power stage *)
+	bEnablePositive				:BOOL;			(* Advance movement enable in positive direction. *)
+	bEnableNegative				:BOOL;			(* Advance movement enable in negative direction. *)
+	lrOverride					:LREAL;			(* Velocity override in % for all motion commands. (0 <= Override <= 100.0) *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bStatus						:BOOL;			(* Status = TRUE indicates that the axis is ready for operation. *)
+	bError						:BOOL;			(* Error *)
+	udnErrorNo					:UDINT;			(* Error number *)
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	Axis							:ST_AXIS_REF;
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	tStatusDelay 					:TIME := t#300ms;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	tonStatusDelay				:TON;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+	Axis.stPlcToNc.stBaseDevice.bEnable := FALSE;                   		 (* Switch off *)
+	Axis.stPlcToNc.stBaseDevice.stFastRefereneValue.nSpeed := 0;                                        (* Value of the velocity *)
+	tonStatusDelay(IN := FALSE,
+				    PT := tStatusDelay);
+ELSE
+
+	IF NOT bRegulatorOn
+	     OR Axis.stNcToPlc.stBaseDevice.bError
+	THEN
+		Axis.stPlcToNc.stBaseDevice.bEnable := FALSE;			(* Switch off *)
+		Axis.stPlcToNc.stBaseDevice.stFastRefereneValue.nSpeed := 0;                                        (* Value of the velocity *)
+	ELSE
+		Axis.stPlcToNc.stBaseDevice.bEnable := TRUE;                     	(* Switch on *)
+	END_IF;
+
+END_IF;
+
+Axis.stPlcToNc.stBaseDevice.bFeedEnablePlus := bEnablePositive;
+Axis.stPlcToNc.stBaseDevice.bFeedEnableMinus := bEnableNegative;
+
+Axis.stPlcToNc.stBaseDevice.stFastRefereneValue.bHWLimitMax := NOT bEnablePositive;
+Axis.stPlcToNc.stBaseDevice.stFastRefereneValue.bHWLimitMin := NOT bEnableNegative;
+
+Axis.stPlcToNc.stBaseDevice.stFastRefereneValue.nOverride := LIMIT(0,LREAL_TO_INT(lrOverride), 100);
+
+tonStatusDelay(IN := Axis.stNcToPlc.stBaseDevice.bEnabled,		(* Control enabled *)
+			   PT := tStatusDelay);
+bStatus := tonStatusDelay.Q;
+
+bError := Axis.stNcToPlc.stBaseDevice.bError;                     (* Error *)]]></ST>
+    </Implementation>
+    <LineIds Name="FB_STOEBERSDS_Power">
+      <LineId Id="45" Count="32" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="CheckBounds" Id="{7bc0ee24-dfe6-4b4a-a3fd-968078dc033c}" SpecialFunc="CheckBounds">
+    <Declaration><![CDATA[FUNCTION CheckBounds : DINT
+VAR_INPUT
+	index: DINT;
+	lower: DINT;
+	upper: DINT;
+END_VAR
+VAR_EXTERNAL
+	fbCheckArrayBounds: FB_CheckArrayBounds;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*This function checks if an index out of range an array is being accessed *)
+
+fbCheckArrayBounds(
+	diArrayIndex			:= index,
+	diLowerBound		:= lower,
+	diUpperBound		:= upper,
+	sLogMessage		=> ,
+	diReturnBound		=> CheckBounds);
+]]></ST>
+    </Implementation>
+    <LineIds Name="CheckBounds">
+      <LineId Id="9" Count="8" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

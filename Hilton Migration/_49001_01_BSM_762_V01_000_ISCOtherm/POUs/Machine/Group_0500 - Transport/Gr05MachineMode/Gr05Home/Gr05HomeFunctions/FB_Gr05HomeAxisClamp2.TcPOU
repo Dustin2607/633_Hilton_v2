@@ -1,0 +1,173 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Gr05HomeAxisClamp2" Id="{3874bd56-81e7-4234-9edf-9c834393b407}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Gr05HomeAxisClamp2
+(*
+
+The function block used to referenc axis clamp 2.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			28.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+(*
+
+The function block used to auto spndle control.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			28.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Enable FB signal *)
+	bExecute					:BOOL;						(* Procedure execute *)
+	bReleaseNextStep			:BOOL;						(* Procedure release next step *)
+	bFirstTime					:BOOL;
+	lrHomePosition				:LREAL;
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bDone						:BOOL;						(* Program done *)
+	bBusy						:BOOL;						(* Program busy *)
+	bError						:BOOL;						(* Program error *)
+	udnErrorNo					:UDINT;						(* Error number *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+	etHomeAxis					:ET_Gr05HomeAxis;				(* Home mode enum variable *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtExecute						:R_TRIG;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+	bDone := FALSE;					(* Program done *)
+	bBusy := FALSE;                                  	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;                                 		(* Error number *)
+
+	bFirstTime := FALSE;
+	RETURN;
+END_IF;
+
+IF NOT bFirstTime
+THEN
+	bDone := FALSE;                                	(* Program done *)
+	bBusy := FALSE;                                 	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;                                 		(* Error number *)
+
+	etHomeAxis := ET_Gr05HomeAxis_eWaitExecute;       			(* Next step *)
+
+	bFirstTime := TRUE;
+END_IF;
+
+rtExecute(CLK := bExecute);
+
+CASE etHomeAxis OF
+
+	ET_Gr05HomeAxis_eWaitExecute:
+		bBusy := FALSE;                                     		(* Program not busy *)
+		bError := FALSE;                                    		(* Program not error *)
+
+		IF rtExecute.Q
+		THEN
+			bDone := FALSE;                                 	(* Program done, in position *)
+			bBusy := TRUE;                                  	(* Program busy *)
+
+			etHomeAxis := ET_Gr05HomeAxis_eWaitAxisStatus;		(* Next step *)
+		END_IF;
+
+	ET_Gr05HomeAxis_eWaitAxisStatus:
+		IF Gr05Control.fbCylinderPos.bCtrlEnabled
+		THEN
+			etHomeAxis := ET_Gr05HomeAxis_eAxisMoveHomePos;         		(* Next step *)
+		END_IF;
+
+	ET_Gr05HomeAxis_eAxisMoveHomePos:
+		Gr05Control.fbCylinderPos.bExeMoveAbs := TRUE;
+		Gr05Control.fbCylinderPos.lrTargetPosition := lrHomePosition;
+
+		IF Gr05Control.fbCylinderPos.fbMoveAbs.bBusy
+		THEN
+			etHomeAxis := ET_Gr05HomeAxis_eAxisInHomePos;              (* Next step *)
+
+		ELSIF Gr05Control.fbCylinderPos.fbMoveAbs.bError
+		THEN
+			Gr05Control.fbCylinderPos.bExeMoveAbs := FALSE;
+
+			etHomeAxis := ET_Gr05HomeAxis_eError;         					(* Next step *)
+
+		END_IF;
+
+	ET_Gr05HomeAxis_eAxisInHomePos:
+		IF Gr05Control.fbCylinderPos.fbMoveAbs.bDone
+		    AND bReleaseNextStep
+		THEN
+			Gr05Control.fbCylinderPos.bExeMoveAbs := FALSE;
+
+			etHomeAxis := ET_Gr05HomeAxis_eDone;              (* Next step *)
+
+		ELSIF Gr05Control.fbCylinderPos.fbMoveAbs.bError
+		THEN
+			Gr05Control.fbCylinderPos.bExeMoveAbs := FALSE;
+
+			etHomeAxis := ET_Gr05HomeAxis_eError;         					(* Next step *)
+
+		END_IF
+
+	ET_Gr05HomeAxis_eDone:
+		bDone := TRUE;                                     		(* Program done, in position *)
+		bBusy := FALSE;                                     		(* Program not busy *)
+
+		etHomeAxis := ET_Gr05HomeAxis_eNoExecute;            	(* Next step *)
+
+	ET_Gr05HomeAxis_eError:
+		bDone := FALSE;                                     		(* Program done, in position *)
+		bError := TRUE;                                     		(* Program error *)
+		bBusy := FALSE;                                     		(* Program not busy *)
+
+		etHomeAxis := ET_Gr05HomeAxis_eNoExecute;           	(* Next step *)
+	
+	 ET_Gr05HomeAxis_eNoExecute:
+		IF NOT bExecute
+		THEN
+			bDone := FALSE;                                 	(* Program done *)
+			bBusy := FALSE;                                		(* Program not busy *)
+			bError := FALSE;                                		(* Program not error *)
+		
+			etHomeAxis := ET_Gr05HomeAxis_eWaitExecute;       (* Next step *)
+		
+		END_IF;
+        
+END_CASE;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Gr05HomeAxisClamp2">
+      <LineId Id="60" Count="102" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

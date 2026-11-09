@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_VFD_AxisLink" Id="{ca03c2d1-3ac1-4e09-b7d4-1db70348caed}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_VFD_AxisLink
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR_IN_OUT
+	Drive						:ST_VFD_DRIVE_REF;			(* The DRIVE_REF data type  is an interface between the PLC and the DRIVE and contains axis information *)
+	Axis							:ST_VFD_AXIS_REF;			(* The AXIS_REF data type  is an interface between the PLC and the NC and contains axis information *)
+END_VAR
+VAR
+
+END_VAR
+VAR CONSTANT
+	rAxFactor		:REAL := 0.9328;
+	rBFactor			:REAL := 98.0;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+(* Set terminal parameters *)
+Axis.sAdsAddr:= F_CreateAmsNetId(Drive.stTerminalState.stAdsAddr.netId);
+Axis.unSlaveAddr:= Drive.stTerminalState.stAdsAddr.port;
+
+(* Copy the actual values from the inverter to the axis reference *)
+Axis.bEnabled := Drive.stVfdToPlc.bEnabled;										(* The drive is enabled. *)
+Axis.bOperational := Drive.stVfdToPlc.bOperational OR Drive.stVfdToPlc.bEnabled;		(* The drive is ready for operation. *)
+Axis.bError := Drive.stVfdToPlc.bBrakeError OR NOT Drive.stVfdToPlc.bEnabled;		(* The drive state is fault. *)
+Axis.bNotMoving := Drive.stVfdToPlc.nCurrentMotorSpeed < 50;						(* Motor not moving *)
+Axis.bMotorSpeedReached := Axis.nSetMotorSpeed > 50								(* Motor speed reached *)
+						     AND (ABS(Axis.nCurrentMotorSpeed - Axis.nSetMotorSpeed) < 100);
+Axis.nCurrentMotorSpeed := REAL_TO_INT((Drive.stVfdToPlc.nCurrentMotorSpeed * rAxFactor) + rBFactor);					(* Current motor speed *)
+
+(* Copy the setpoint values from the axis reference to the inverter *)
+Drive.stPlcToVfd.bEnable := Axis.bEnable;										(* Enable controller *)
+Drive.stPlcToVfd.bFaultReset := Axis.bFaultReset;									(* Acknowledgment for faults of the device state machine. *)
+Drive.stPlcToVfd.bForwardStop:= Axis.bForwardStop;								(* Counterclockwise rotation moving. *)
+Drive.stPlcToVfd.bReverseStop:= Axis.bReverseStop;								(* Clockwise rotation moving. *)
+Drive.stPlcToVfd.bJog:= Axis.bJog;												(* Jog command. *)
+Drive.stPlcToVfd.bExtError:= Axis.bExtError;										(* External error signal. *)
+Drive.stPlcToVfd.nSetMotorSpeed := Axis.nSetMotorSpeed * (Axis.nOverride/100) ;	(* Relative speed reference value *)
+Drive.stPlcToVfd.bReserve1 := Axis.bReserve1;									(* Reserve 1. *)
+Drive.stPlcToVfd.bReserve2 := Axis.bReserve2;									(* Reserve 2. *)]]></ST>
+    </Implementation>
+    <LineIds Name="FB_VFD_AxisLink">
+      <LineId Id="16" Count="23" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

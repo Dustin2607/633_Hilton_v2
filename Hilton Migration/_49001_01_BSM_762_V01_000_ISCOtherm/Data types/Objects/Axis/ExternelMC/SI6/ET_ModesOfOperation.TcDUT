@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_ModesOfOperation" Id="{b9282a71-3b95-46b2-95db-1513107ab867}">
+    <Declaration><![CDATA[TYPE ET_ModesOfOperation :
+(
+	ET_ModesOfOperation_Jog := -1,							(* -1: Jog *)
+	ET_ModesOfOperation_None := 0,							(* 0: No mode assigned *)
+	ET_ModesOfOperation_ProfilePosition := 1,					(* 1: Profile position mode *)
+	ET_ModesOfOperation_Velocity := 2,							(* 2: Profile velocity mode *)
+	ET_ModesOfOperation_ProfileVelocity := 3,					(* 3: Profile velocity mode *)
+	ET_ModesOfOperation_ProfileTorque := 4,					(* 4: Profile torque mode *)
+	ET_ModesOfOperation_Inactive := 5,							(* 5: Inactive *)
+	ET_ModesOfOperation_Homing := 6,							(* 6: Homing Mode *)
+	ET_ModesOfOperation_InterpolatedPosition := 7,				(* 7: Interpolated position mode *)
+	ET_ModesOfOperation_CyclicSynchroPosition := 8,				(* 8: Cyclic synchronous position mode *)
+	ET_ModesOfOperation_CyclicSynchroVelocity := 9,				(* 9: Cyclic synchronous velocity mode *)
+	ET_ModesOfOperation_CyclicSynchroTorque := 10				(* 10: Cyclic synchronous torque mode *)
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

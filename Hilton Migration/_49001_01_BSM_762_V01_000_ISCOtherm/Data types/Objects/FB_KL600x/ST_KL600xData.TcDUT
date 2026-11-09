@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_KL600xData" Id="{83f63f4f-92d8-4a3f-8d77-388c6494cdb9}">
+    <Declaration><![CDATA[TYPE ST_KL600xData :
+STRUCT
+	sDateTime			:STRING;
+	sData				:STRING;
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

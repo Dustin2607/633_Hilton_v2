@@ -1,0 +1,79 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_StoeberPS6A34" Id="{bc35bb92-a65c-4410-b07f-169e0a337de4}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_StoeberPS6A34
+(*
+
+The function block used to controll stoeber PS6A43 power supply
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			18.05.2018
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bNoEStop					:BOOL;						(* No ermergency Stop / Keine Notaus *)
+	stStatus						:ST_STOEBER_PS6A34Status;	(* Stoeber PS6A34 status *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bOn							:BOOL;						(* Power supply on *)
+	bErrorReady					:BOOL;						(* Error device ready *)
+	bErrorOverload				:BOOL;						(* Error device overload *)
+	bErrorGridPhase				:BOOL;						(* Error device grid phase *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbPowerSupply				:FB_PowerSupply;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+(* Cooling device controller *)
+fbPowerSupply(
+	bEnable := TRUE,
+	bIn := stStatus.bReady
+		  AND stStatus.bNoOverload
+		  AND stStatus.bGridPhaseOk,
+	bNoEStop := bNoEStop,
+	tPowerSupplyOn := t#2s,
+	tPowerSupplyOff := t#1s,
+	bOut => bOn,
+	bError =>
+ );
+
+A_Alarm();]]></ST>
+    </Implementation>
+    <Action Name="A_Alarm" Id="{92137c8f-6353-4f92-bca5-3f7f9d530038}">
+      <Implementation>
+        <ST><![CDATA[
+bErrorReady := bNoEStop AND NOT stStatus.bReady;
+bErrorOverload := NOT stStatus.bNoOverload;
+bErrorGridPhase := NOT stStatus.bGridPhaseOk;]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_StoeberPS6A34">
+      <LineId Id="43" Count="14" />
+    </LineIds>
+    <LineIds Name="FB_StoeberPS6A34.A_Alarm">
+      <LineId Id="0" Count="3" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_VeloControllerConfig" Id="{c254509c-9941-4e74-b448-5abd9be7faac}">
+    <Declaration><![CDATA[TYPE ST_VeloControllerConfig :
+STRUCT
+
+	lrKp							:LREAL := 0.005;					(* Tuning parameter, proportional gain *)
+	lrTi							:LREAL := 1000000;				(* Tuning parameter, time of integral *)
+	lrTd							:LREAL := 0.0;						(* Tuning parameter, time of differential *)
+	lrPreCtrlVelo					:LREAL := 0.01; 					(* Feedforward velocity precontrol wieghting =  0..1 *)
+	lrVeloKpFilter					:LREAL := 1.0;						(* Velocity filter - proportional gain *)
+	tVeloT1Filter					:TIME := t#100ms;					(* Velocity filter - time constant *)
+	tDeadTime					:TIME := t#200ms;					(* Dead time *)
+	lrDeltaMax					:LREAL := 100.0;					(* Maximum difference between two actual position values *)
+	lrVeloMin					:LREAL := -100.0;					(* Velocity limit minimum [technical units / sec] *)
+	lrVeloMax					:LREAL := 100.0;					(* Velocity limit maximum [technical units / sec] *)
+	lrDeadZone					:LREAL := 10.0;					(* Dead zone *)
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_ScalingMethod" Id="{3c3169e7-5142-44df-9ca1-12dea0a4c6f3}">
+    <Declaration><![CDATA[TYPE ET_ScalingMethod :
+(
+	ET_ScalingMethod_eSMRotary := 0,
+	ET_ScalingMethod_eSMLinear := 1
+	
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

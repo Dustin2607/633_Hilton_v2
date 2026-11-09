@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_Position" Id="{390caa02-6b4c-4fea-9598-2fb31256d647}">
+    <Declaration><![CDATA[TYPE ST_Position :
+STRUCT
+	(* Position *)		
+	lrActPos 						:LREAL;			(* Actual position absolut value from NC [mm] *)
+	dnActPos 					:DINT; 			(* Actual position absolut value from NC [mm] *)
+	dwActPos 					:DWORD; 		(* Actual position absolut value from NC [inc] *)
+	lrSetPos						:LREAL;			(* Setpoint position [mm] *)
+	dnSetPos					:DINT;			(* Setpoint position [mm] *)
+	lrCachePos					:LREAL;  			(* Cache position [mm] *)
+	lrOffsetPos 					:LREAL; 			(* Position offset [mm] *)
+	bPosLagMonitoring 			:BOOL;
+	lrMaxPosLag					:LREAL;
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,74 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_CIA402In" Id="{93f45cad-33ec-4a78-bab7-a3c11b108b56}">
+    <Declaration><![CDATA[TYPE ST_CIA402In :
+STRUCT
+
+	bReadyToSwitchOn 			:BOOL;			(* Ready to switch on. *)
+	bSwitchedOn 					:BOOL;			(* Switched on. *)
+	bEnabled 					:BOOL;			(* Operation enabled. *)
+	bError  						:BOOL;			(* The drive state is fault. *)
+	bVoltageEnabled 				:BOOL;			(* Voltage enabled. *)
+	bQuickStop 					:BOOL;			(* Quick stop is queued/is being executed. *)
+	bSwitchOnDisabled 			:BOOL;			(* Switch on disabled. *)
+	bMessage 					:BOOL;			(* Message *)
+	snDecimalDigits 				:SINT;			(* Number of positions after the decimal point for indication and entry of position reference values, speeds, accelerations *)
+
+	(* Jog mode *)
+
+	(* Position mode *)
+	stPositionMode				:ST_PositionModeFromDrive;
+
+	(* Velocity mode *)
+	stVelocityMode				:ST_VelocityModeFromDrive;
+
+	(* Torque mode *)
+	stTorqueMode				:ST_TorqueModeFromDrive;
+
+	(* Homing mode *)
+	stHomingMode				:ST_HomingModeFromDrive;
+
+
+	etModesOfOperation			:ET_ModesOfOperation;			(* Actual operating mode *)
+																(*
+																	-1: Jog
+																	0: No mode assigned
+																	1: Profile position mode
+																	3: Profile velocity mode
+																	4: Profile torque mode
+																	6: Homing Mode
+																	7: Interpolated position mode
+																	8: Cyclic synchronous position mode
+																	9: Cyclic synchronous velocity mode
+																	10: Cyclic synchronous torque mode													
+																*)
+	dnActPosition					:DINT;			(* Actual position of the axis *)
+	dnActVelocity					:DINT;			(* Actual velocity of the axis *)
+	nActTorque 					:INT;			(* Actual torque/force of the axis *)
+	dnActFollowingError			:DINT;			(* Actual lag *)
+
+	bNegLimitSwitch				:BOOL;			(* Negative limit switch *)
+	bPosLimitSwitch				:BOOL;			(* Positive limit switch *)
+	bHomeSwitch 				:BOOL;			(* Reference switch *)
+
+	dnActAdditionalPosition		:DINT;			(* Actual position of the master encoder *)
+
+
+	snPLCOpenState				:SINT;
+	snPLCOpenErrStopCause		:SINT;			(* Cause of a requested command being denied or cancelled by the motion core *)
+	bPLCOpenError				:BOOL;			(* Motion core has denied or is cancelling the requested command  *)
+	bPLCOpenDone				:BOOL;			(* The motion core has successfully ended the command to be executed  *)
+	bPLCOpenAborted			:BOOL;			(* The motion core has aborted  *)
+
+	bConstantVelocity				:BOOL;			(* Speed reached *)
+	bAccelerating					:BOOL;			(* Accelerating  *)
+	bDecelerating				:BOOL;			(* Decelerating  *)
+	bNotMoving					:BOOL;			(* Actual speed is zero *)
+	bReferenced					:BOOL;			(* Referenced *)
+
+	dwDigitalInputs				:DWORD;
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

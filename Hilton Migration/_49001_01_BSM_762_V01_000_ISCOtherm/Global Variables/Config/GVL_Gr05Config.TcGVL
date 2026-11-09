@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <GVL Name="GVL_Gr05Config" Id="{9bd44b39-87a7-4b62-a8b6-c182ddb9d1e4}">
+    <Declaration><![CDATA[{attribute 'Tc2GvlVarNames'}
+VAR_GLOBAL CONSTANT
+	tgGr05ControllerOff				:TIME := t#10s;				(* Delay to switch the controller off *)
+	tgGr05LightCurtainDelay			:TIME := t#1s;					(* After time light Curtain safe *)
+	tgGr05MaxRefTime				:TIME := t#4m;					(* Maximum time after start reference until message in reference / Maximale Zeit von Starten der Referenbzfahr bis ende der Referenzfahrt *)
+
+	rgGr05AdsOverrideAcc				:REAL := 10.0;					(* Override accerlation per second / Override Beschleuingung pro sekunde *)
+	rgGr05AdsOverrideDec			:REAL :=100.0;				(* Override decerlation per second / Override Verzögerung pro sekunde *)
+
+	sgGr05LifetimeFilePath				:STRING := 'C:\TwinCAT\Boot\';	(* File path for life time *)
+	sgGr05LifetimeFileName			:STRING := 'lt5';				(* File name for life time *)
+
+	(* Clamp cylinder parameters *)
+	ungGr05ClampMaxNo				:UINT := 2;					(* Maxinmal number of clamps *)
+
+	(* Position cylinder parameters *)
+	lrgGr05CylinderPosOffset			:LREAL := 100;				(* Position offset *)
+	lrgGr05CylinderPosOriginShiftPos	:LREAL := 0;				(* Orgin shift position *)
+	etgGr05CylinderPosDirection		:ET_MC_Direction := ET_MC_Direction_ePositive;				(* Direction: -1 Negative, +1 Positive *)
+	usngGr05CylinderPosCodingType	:USINT := 1;
+	ungGr05CylinderPosMaxNo			:UINT := 3;					(* Maxinmal number of position cylinders *)
+
+	(* Spindle starting parameters *)
+	ungGr05MaxPhasesNewSpdl 			:UINT := 4;					(* Max number of starting phases for new spindle *)
+	ungGr05MaxPhasesDailyPreheat		:UINT := 4;					(* Max number of starting  phases for daily preheat *)
+END_VAR
+]]></Declaration>
+  </GVL>
+</TcPlcObject>

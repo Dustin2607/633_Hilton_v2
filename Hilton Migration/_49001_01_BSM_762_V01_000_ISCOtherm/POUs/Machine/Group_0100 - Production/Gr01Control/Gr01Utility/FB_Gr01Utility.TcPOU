@@ -1,0 +1,247 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Gr01Utility" Id="{740a79a7-734f-4321-9e21-325db0f15d95}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Gr01Utility
+(*
+
+The function block used to control general utility of the machine.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			28.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	etMachineMode				:ET_MachineMode;			(* Machine mode *)
+	etMachineState				:ET_MachineState;			(* Machine state *)
+	arbStartProcess				:ARRAY[1..3] OF BOOL;		(* Start process *)
+	arbStopProcess				:ARRAY[1..3] OF BOOL;		(* Stop process *)
+	arbSteppingProcess			:ARRAY[1..3] OF BOOL;		(* Stepping process *)
+	bAutoCompleted				:BOOL;						(* Process completed *)
+	bExeCounter					:BOOL;						(* Execute counter *)
+	bLaserOnOff					:BOOL;						(* Laser on / off *)
+	bStartTime					:BOOL;						(* Start measurement of cylce time *)
+	bStopTime					:BOOL;						(* Stop measurement of cylce time *)
+	bLifetimeOn					:BOOL;						(* Lifetime on *)
+	bResetLifetimeAll				:BOOL; 						(* Reset all counters *)
+	bResetLifetime				:BOOL;						(* Reset counter *)
+	sLifetimeFilePath				:STRING;					(* File path for life time *)
+	sLifetimeFileName			:STRING;					(* File name for life time *)
+	bPipeIdentify					:BOOL;						(* Pipe identify *)
+	rGlobalOverride				:REAL;						(* Global override *)
+	tAdsTimeOut 					:TIME := t#2s;					(* Timout for ads commands *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	arbExeProcess				:ARRAY[1..3] OF BOOL;		(* Execute process *)
+	rActOverride					:REAL;						(* Actual override *)
+	lrLifetimeAll					:LREAL;						(* Lifetime all *)
+	lrLifetimeAfterReset			:LREAL;						(* Lifetime after reset *)
+	lrLifetimeAfterTrunOn			:LREAL;						(* Lifetime after turn on *)
+	bLaserOn					:BOOL;						(* Laser on*)
+	bPipePresent					:BOOL;						(* End present *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	bHomeCompleted				:BOOL;						(* Execute process *)
+	rLocalOverride				:REAL;						(* Actual override *)
+	udnCounterTotal				:UDINT;						(* Counter *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	nIdxStartProcess				:INT;
+	arudnCounterTotal				:ARRAY[0..1] OF UDINT;			(* Counter *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	arfbStartProcess				:ARRAY[1..3] OF FB_StartProcess;
+	fbOverride					:FB_Override;
+	fbOverrideSelection			:FB_OverrideSelection;
+	fbLifetime					:FB_TimeHoursCounter;		(* Machine lifetime *)
+	arfbCounter					:ARRAY[0..1] OF FB_Counter;
+	arfbCylceTime				:ARRAY[0..1] OF FB_Timer;
+	fbPipeIdentify					:FB_SignalHandlingEdge;
+	fbLaserOnOff					:FB_SignalHandlingEdge;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+A_StartProcess();
+A_Override();
+A_Counter();
+A_CycleTime();
+A_Laser();
+A_PipeIdentify();
+
+ 
+]]></ST>
+    </Implementation>
+    <Action Name="A_Counter" Id="{951a19ec-4117-4f28-b5bb-f6d269ad6513}">
+      <Implementation>
+        <ST><![CDATA[
+(* Hours counter *)
+fbLifetime(
+	bEnable := TRUE,
+	bDeleteAll := bResetLifetimeAll,
+	sAmsNetId := sgAmsNetId,
+	bCount := bLifetimeOn,
+	bSave := FALSE,
+	bReset := bResetLifetime,
+	sFilePath := sLifetimeFilePath,
+	sFileName := sLifetimeFileName,
+	tSaveIntervall := t#8m,
+	tTimeout := tAdsTimeOut,
+	lrAllOverHours => lrLifetimeAll,
+	lrAfterResetHours => lrLifetimeAfterReset,
+	lrNoRetainHours => lrLifetimeAfterTrunOn,
+ );
+
+(* Counter *)
+arfbCounter[0](
+	bEnable := TRUE,
+	bExecute := bExeCounter,
+	bReset := arfbCounter[0].bOverflow,
+	udnCounter := udnCounterTotal
+);
+
+arfbCounter[1](
+	bEnable := TRUE,
+	bExecute := bExeCounter,
+	bReset := arfbCounter[1].bOverflow,
+	udnCounter := arudnCounterTotal[1]
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_CycleTime" Id="{b7008e10-155d-4c45-a9e1-3b2aa612e0dc}">
+      <Implementation>
+        <ST><![CDATA[
+(* Cylce time *)
+arfbCylceTime[0](
+	bEnable := TRUE,
+	bReset := FALSE,
+	bStartStop := bStartTime
+			        AND bgGr00ModeAutomatic,
+	bStop := bStopTime
+		        OR bgGr00MachineStandstill,
+	tMaxTime := t#480m,
+	stRefTime => ,
+	stActTime => ,
+	stRestTime =>
+);
+
+arfbCylceTime[1](
+	bEnable := TRUE,
+	bReset := FALSE,
+	bStartStop := bStartTime
+			        AND bgGr00ModeAutomatic,
+	bStop := bStopTime
+		        OR bgGr00MachineStandstill,
+	tMaxTime := t#480m,
+	stRefTime => ,
+	stActTime => ,
+	stRestTime =>
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Laser" Id="{4d096b4c-7f4e-4d28-9fd9-037ab1b4f34c}">
+      <Implementation>
+        <ST><![CDATA[
+fbLaserOnOff(
+	bEnable := TRUE,
+	bIn := bLaserOnOff,
+	tDelay := t#0ms,
+);
+
+IF fbLaserOnOff.bRisingEdge
+THEN
+	bLaserOn := NOT bLaserOn;
+END_IF;]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Override" Id="{f1ff23d5-93a3-4377-9863-c4c2061d6922}">
+      <Implementation>
+        <ST><![CDATA[
+(* Override control *)
+fbOverrideSelection(
+	bEnable := TRUE,
+	rGlobalOverride := rGlobalOverride,
+	rLocalOverride := rLocalOverride
+);
+
+fbOverride(
+	bEnable := TRUE,
+	bBypassAccDec := etMachineMode = ET_MachineMode_eManual,
+	rSetOverride := fbOverrideSelection.rActOverride,
+	rAcc := rgGr01AdsOverrideAcc,
+	rDec := rgGr00AdsOverrideDec,
+	rActOverride => rActOverride
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_PipeIdentify" Id="{f162cd7d-bb87-4ee5-89d5-a7643a6779f7}">
+      <Implementation>
+        <ST><![CDATA[
+fbPipeIdentify(
+	bEnable := TRUE,
+	bIn := bPipeIdentify,
+	tDelay := t#100ms,
+	bOut => bPipePresent
+);
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_StartProcess" Id="{84760a52-4098-4e32-9cd9-eb029b0c5b3c}">
+      <Implementation>
+        <ST><![CDATA[
+(* Start auto process *)
+
+FOR nIdxStartProcess := 1 TO 3
+DO
+	arfbStartProcess[nIdxStartProcess](
+		bEnable := etMachineMode = ET_MachineMode_eAutomatic
+				    OR etMachineMode = ET_MachineMode_eCycle
+				    OR etMachineMode = ET_MachineMode_eStepping,
+		bStart := arbStartProcess[nIdxStartProcess],
+		bStop := arbStopProcess[nIdxStartProcess],
+		bDone := bAutoCompleted,
+		bStepping := arbSteppingProcess[nIdxStartProcess],
+		bHomeCompleted := bHomeCompleted,
+		bStartProcess =>
+	);
+
+	arbExeProcess[nIdxStartProcess] := arfbStartProcess[nIdxStartProcess].bStartProcess;
+END_FOR]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_Gr01Utility">
+      <LineId Id="72" Count="9" />
+    </LineIds>
+    <LineIds Name="FB_Gr01Utility.A_Counter">
+      <LineId Id="0" Count="31" />
+    </LineIds>
+    <LineIds Name="FB_Gr01Utility.A_CycleTime">
+      <LineId Id="0" Count="26" />
+    </LineIds>
+    <LineIds Name="FB_Gr01Utility.A_Laser">
+      <LineId Id="0" Count="10" />
+    </LineIds>
+    <LineIds Name="FB_Gr01Utility.A_Override">
+      <LineId Id="0" Count="15" />
+    </LineIds>
+    <LineIds Name="FB_Gr01Utility.A_PipeIdentify">
+      <LineId Id="0" Count="7" />
+    </LineIds>
+    <LineIds Name="FB_Gr01Utility.A_StartProcess">
+      <LineId Id="0" Count="18" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

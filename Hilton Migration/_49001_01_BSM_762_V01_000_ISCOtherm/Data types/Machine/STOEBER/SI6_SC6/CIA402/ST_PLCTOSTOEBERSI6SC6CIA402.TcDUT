@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_PLCTOSTOEBERSI6SC6CIA402" Id="{6a129485-1f31-45bb-b339-c13987e2d43e}">
+    <Declaration><![CDATA[(* Communikation structure from plc to drive *)
+
+TYPE ST_PLCTOSTOEBERSI6SC6CIA402 :
+STRUCT
+	wA515Controlword					:WORD;
+	snA541ModesOfOperation			:SINT;
+	snDummy1						:SINT;
+	dnA567TargetPosition				:DINT;
+	dnA638TargetVelocity				:DINT;
+	nA558TargetTorque 				:INT;
+	unA559MaxTorque 				:UINT;
+	udnA604MaxAcceleration			:UDINT;
+	udnA605MaxDeceleration			:UDINT;
+	udnA574Velocity					:UDINT;
+	udnA576Acceleration				:UDINT;
+	udnA577Deceleration				:UDINT;
+	dnA569HomeOffset				:DINT;
+	dnA570SoftwarePosLimitMin		:DINT;
+	dnA570SoftwarePosLimitMax		:DINT;
+	dwA637DigitalOutputs 				:DWORD;
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

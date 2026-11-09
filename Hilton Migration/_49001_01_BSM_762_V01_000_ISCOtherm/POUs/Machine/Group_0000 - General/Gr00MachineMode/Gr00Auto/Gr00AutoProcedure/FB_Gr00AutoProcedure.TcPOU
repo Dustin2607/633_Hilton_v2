@@ -1,0 +1,156 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Gr00AutoProcedure" Id="{23ac0d39-841a-410a-8263-4097e4fa923a}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Gr00AutoProcedure
+(*
+
+The function block used to initialize manual mode.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			28.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Enable FB signal *)
+	bExecute					:BOOL;						(* Auto procedure execute *)
+	bInterrupt						:BOOL;						(* Auto procedure interrupt *)
+	bReleaseNextStep			:BOOL;						(* Auto procedure release next step *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bDone						:BOOL;						(* Program done *)
+	bInterrupted					:BOOL;						(* Program interrupted *)
+	bBusy						:BOOL;						(* Program busy *)
+	bError						:BOOL;						(* Program error *)
+	udnErrorNo					:UDINT;						(* Error number *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+	etGr00Auto					:ET_Gr00Auto;				(* Auto mode enum variable *)
+	etGr00AutoCache				:ET_Gr00Auto;				(* Auto mode enum variable *)
+
+	(* Variables *)
+	bFirstTime					:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+	bDone := FALSE;					(* Program done *)
+	bInterrupted := FALSE;				(* Program interrupted *)
+	bBusy := FALSE;                                  	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;                                 		(* Error number *)
+
+	bFirstTime := FALSE;
+	RETURN;
+END_IF;
+
+IF NOT bFirstTime
+THEN
+	bDone := FALSE;                                 	(* Program done *)
+	bInterrupted := FALSE;				(* Program interrupted *)
+	bBusy := FALSE;                                  	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;                                		(* Error number *)
+	
+	etGr00Auto := ET_Gr00Auto_eWaitExecute;       				(* Next step *)
+	
+	bFirstTime := TRUE;
+END_IF;
+
+CASE etGr00Auto OF
+
+	ET_Gr00Auto_eWaitExecute:
+		bBusy := FALSE;                                     		(* Program not busy *)
+		bError := FALSE;                                    		(* Program not error *)
+
+		IF bExecute
+		THEN
+			IF NOT bInterrupted				(* Program interrupted *)
+			THEN
+				bDone := FALSE;                                 	(* Program done, in position *)
+				bBusy := TRUE;                                  	(* Program busy *)
+	
+				etGr00Auto := ET_Gr00Auto_eAutomatic;         		(* Next step *)
+
+			ELSE
+				bInterrupted := FALSE;                                      	(* Program not  interrupted *)
+				bBusy := TRUE;                                     		(* Program not busy *)
+
+				etGr00Auto := etGr00AutoCache;         					(* Next step *)
+	
+			END_IF
+		END_IF;
+
+	ET_Gr00Auto_eAutomatic:
+		IF bReleaseNextStep
+		THEN
+			etGr00Auto := ET_Gr00Auto_eDone;            			(* Next step *)
+		END_IF
+
+	ET_Gr00Auto_eInterrupted:
+		bInterrupted := TRUE;                                      	(* Program interrupted *)
+		bBusy := FALSE;                                     		(* Program not busy *)
+
+		etGr00Auto := ET_Gr00Auto_eNoExecute;            		(* Next step *)
+
+	ET_Gr00Auto_eDone:
+		bDone := TRUE;                                      		(* Program done, in position *)
+		bBusy := FALSE;                                     		(* Program not busy *)
+
+		etGr00Auto := ET_Gr00Auto_eNoExecute;            		(* Next step *)
+
+	ET_Gr00Auto_eError:
+		bDone := FALSE;                                    	 	(* Program done, in position *)
+		bError := TRUE;                                     		(* Program error *)
+		bBusy := FALSE;                                     		(* Program not busy *)
+
+		etGr00Auto := ET_Gr00Auto_eNoExecute;            		(* Next step *)
+	
+	ET_Gr00Auto_eNoExecute:
+		IF NOT bExecute
+		THEN
+			bDone := FALSE;                                 	(* Program done *)
+			bBusy := FALSE;                                 	(* Program not busy *)
+			bError := FALSE;                                		(* Program not error *)
+
+			etGr00Auto := ET_Gr00Auto_eWaitExecute;       		(* Next step *)
+	
+		END_IF;
+        
+END_CASE;
+
+(* Interrupt *)
+IF bInterrupt
+     AND bBusy
+     AND etGr00Auto <> ET_Gr00Auto_eDone
+     AND etGr00Auto <> ET_Gr00Auto_eError
+     AND etGr00Auto <> ET_Gr00Auto_eNoExecute
+THEN
+	etGr00AutoCache := etGr00Auto;
+	etGr00Auto := ET_Gr00Auto_eInterrupted;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Gr00AutoProcedure">
+      <LineId Id="48" Count="97" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

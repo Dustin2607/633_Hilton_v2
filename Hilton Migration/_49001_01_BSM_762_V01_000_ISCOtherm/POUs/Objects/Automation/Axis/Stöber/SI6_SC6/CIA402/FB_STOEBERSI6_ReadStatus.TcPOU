@@ -1,0 +1,178 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_STOEBERSI6_ReadStatus" Id="{4c5dbae1-d83d-4cb4-b7ec-e0ce5dd52fc6}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_STOEBERSI6_ReadStatus
+(*
+
+The function block used to state of an axis
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			22.09.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	stStoeberToPlc			:ST_STOEBERSI6SC6CIA402TOPLC;
+	stPlcToStoeber			:ST_PLCTOSTOEBERSI6SC6CIA402;
+
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR_IN_OUT
+
+	(* Input Output variables / Ausgang Variablen *)
+	stAxisStatus					:ST_STOEBER_AxisStatus;
+
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+(* Motion status byte  I201 *)
+
+IF stStoeberToPlc.snI89PLCOpenState <= 2
+     OR stStoeberToPlc.wA67UserStatusword.6									(* Actual speed is zero *)
+	    OR NOT stStoeberToPlc.wA516Statusword.2								(* Operation not enabled. *)
+THEN
+	stAxisStatus.bStandStill := TRUE;
+ELSE
+	stAxisStatus.bStandStill := FALSE;
+END_IF;
+(*
+IF nPLCOpenState = 5
+THEN
+	stSTOEBERAxisStatus.bInSync := TRUE;
+ELSE
+	stSTOEBERAxisStatus.bInSync := FALSE;
+END_IF;
+IF nPLCOpenState = 8
+THEN
+	stSTOEBERAxisStatus.bHoming := TRUE;
+ELSE
+	stSTOEBERAxisStatus.bHoming := FALSE;
+END_IF;
+IF stSTOEBERTOPLC.byI201MotionStatusByte.5
+THEN
+	stSTOEBERAxisStatus.bInPositionWindow := TRUE;
+ELSE
+	stSTOEBERAxisStatus.bInPositionWindow := FALSE;
+END_IF;
+IF stSTOEBERTOPLC.byI201MotionStatusByte.6
+THEN
+	stSTOEBERAxisStatus.bAccelerating := TRUE;
+ELSE
+	stSTOEBERAxisStatus.bAccelerating := FALSE;
+END_IF;
+IF stSTOEBERTOPLC.byI201MotionStatusByte.7
+THEN
+	stSTOEBERAxisStatus.bDecelerating := TRUE;
+ELSE
+	stSTOEBERAxisStatus.bDecelerating := FALSE;
+END_IF;*)
+(*
+(* Device state byte E200 *)
+(* (stSTOEBERTOPLC.byE200DeviceStatusByte AND 2#00000001) = 2#00000001 *)
+IF stSTOEBERTOPLC.byE200DeviceStatusByte.0
+THEN
+	stSTOEBERAxisStatus.bEnabled := TRUE;
+ELSE
+	stSTOEBERAxisStatus.bEnabled := FALSE;
+END_IF;
+IF stSTOEBERTOPLC.byE200DeviceStatusByte.1
+THEN
+	stSTOEBERAxisStatus.bError := TRUE;
+ELSE
+	stSTOEBERAxisStatus.bError := FALSE;
+END_IF;
+IF stSTOEBERTOPLC.byE200DeviceStatusByte.3
+THEN
+	stSTOEBERAxisStatus.bFastStopActive := TRUE;
+ELSE
+	stSTOEBERAxisStatus.bFastStopActive := FALSE;
+END_IF;
+IF stSTOEBERTOPLC.byE200DeviceStatusByte.6
+THEN
+	stSTOEBERAxisStatus.bLocalActive := TRUE;
+ ELSE
+	stSTOEBERAxisStatus.bLocalActive := FALSE;
+END_IF;
+
+(* Position state word I200 *)
+stSTOEBERAxisStatus.nActMotionID := WORD_TO_INT(SHR(stSTOEBERTOPLC.unI200PosiStatusWord, 13));			(* Actual motion ID: bits 13,14,15 [0 .. 7] *)
+IF stSTOEBERTOPLC.unI200PosiStatusWord.1
+THEN
+	stSTOEBERAxisStatus.bDenied:=TRUE;
+ELSE
+	stSTOEBERAxisStatus.bDenied:=FALSE;
+END_IF;
+IF stSTOEBERTOPLC.unI200PosiStatusWord.5
+THEN
+	stSTOEBERAxisStatus.bInPosition := TRUE;
+ELSE
+	stSTOEBERAxisStatus.bInPosition := FALSE;
+END_IF;
+IF stSTOEBERTOPLC.unI200PosiStatusWord.6
+THEN
+	stSTOEBERAxisStatus.bInReference :=TRUE;
+ELSE
+	stSTOEBERAxisStatus.bInReference:=FALSE;
+END_IF;
+IF stSTOEBERTOPLC.unI200PosiStatusWord.8
+    AND NOT stSTOEBERAxisStatus.bLocalActive
+THEN
+	stSTOEBERAxisStatus.bJogActive := TRUE;
+ELSE
+	stSTOEBERAxisStatus.bJogActive := FALSE;
+END_IF;
+IF stSTOEBERTOPLC.unI200PosiStatusWord.9
+THEN
+	stSTOEBERAxisStatus.bCam1 := TRUE;
+ELSE
+	stSTOEBERAxisStatus.bCam1 := FALSE;
+END_IF;
+IF stSTOEBERTOPLC.unI200PosiStatusWord.10
+THEN
+	stSTOEBERAxisStatus.bSwitchPoint := TRUE;
+ELSE
+	stSTOEBERAxisStatus.bSwitchPoint := FALSE;
+END_IF;
+IF stSTOEBERAxisStatus.bEnabled
+     AND nPLCOpenState  > 0			(* 0 = init *)
+     AND nPLCOpenState <> 7			(* 7 = error *)
+     AND nPLCOpenState <> 8 			(* 8 = homing active *)
+     AND NOT stSTOEBERAxisStatus.bLocalActive
+     AND NOT stSTOEBERAxisStatus.bJogActive
+THEN
+	stSTOEBERAxisStatus.bReadyToPos := TRUE;
+ELSE
+	stSTOEBERAxisStatus.bReadyToPos := FALSE;
+END_IF;
+
+(* Actual position = value of I203 / 10 exp(value of I06) *)
+(*stSTOEBERAxisStatus.lrActPosition := DINT_TO_REAL(stSTOEBERTOPLC.dnI203CurrentPosition) / (10*10* stSTOEBERAxisStatus.byI06DecimalDigits);*)
+
+*);
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_STOEBERSI6_ReadStatus">
+      <LineId Id="41" Count="126" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

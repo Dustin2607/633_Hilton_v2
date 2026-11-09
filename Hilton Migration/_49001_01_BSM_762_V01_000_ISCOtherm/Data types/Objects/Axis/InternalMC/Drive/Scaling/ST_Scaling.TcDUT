@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_Scaling" Id="{686e52ea-4afa-4883-a5a5-5363e7225bb7}">
+    <Declaration><![CDATA[TYPE ST_Scaling :
+STRUCT
+
+	lrTaskCycle					:LREAL := 0.002; 			(* Cycle time of the task which is defined for NC [sec] *)
+	udnScalingDenom				:UDINT := 1;	  			(* Denominator for the conversion factor at the conversion of bus data to technical units [INC] *)
+	lrScalingNum					:LREAL := 1.0;  			(* Numerator for the conversion factor at the conversion of bus data to technical units [technical units] *)
+	lrModuloFactor 				:LREAL := 360; 			(* This is the "distance" represented by one rotation [technical units] *)
+	dwModuloValue				:DWORD := 0; 			(* Maximum encoder modulo value e.g 1048576 [inc] *)
+	etScalingMethod				:ET_ScalingMethod := ET_ScalingMethod_eSMLinear; (* Scaling method: linear or rotary *)
+	etDirection 					:ET_MC_Direction := ET_MC_Direction_ePositive;
+	lrScaleFactor	 				:LREAL := 1.0;				(* Incremental evaluation: this factor is used to convert the displacement increments into axis positions [INC / technical units] *)
+	lrFactorVel 					:LREAL := 1.0; 			(* Velocity factor *)
+	lrFactorAcc 					:LREAL := 1.0; 			(* Acceleration factor *)
+	lrFactorDec 					:LREAL := 1.0; 			(* Deceleration factor *)
+	lrFactorJerk 					:LREAL := 1.0; 			(* Jerk factor *)
+	lrFactorCur 					:LREAL := 1.0; 			(* Current factor*)
+	lrFactorTor 					:LREAL := 1.0; 			(* Torque factor *)
+
+	enMCRampType				:ET_MC_RampType;
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

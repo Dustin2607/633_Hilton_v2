@@ -1,0 +1,289 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Logger" Id="{7accf935-a5a5-4354-b0f1-834707d4c244}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Logger
+VAR_INPUT
+	bEnable								:BOOL;
+	bEnableSaveInFile					:BOOL;				(* Enable save in file *)
+	bInterrupt								:BOOL;
+	sDateTime 							:STRING;			(* Actual date and time *)
+	bDeleteAll							:BOOL;
+	bLogOne							:BOOL := FALSE;		(* Log data only one time *)
+	sFilePath							:STRING := 'C:\TwinCAT\Boot\';			(* Login file path *)
+	sFileSuffix							:STRING := 'log';							(* Suffix of loggin file *)
+	arsLogVars							:ARRAY[1..unNUM_OF_LOG_VAR] OF STRING(10);
+	unLogMaxNo							:UINT;
+	unLogBeforMaxNo					:UINT;
+	unLogDuringMaxNo					:UINT;
+	unLogAfterMaxNo						:UINT;
+END_VAR
+VAR_OUTPUT
+	bBusy								:BOOL;
+	bDone								:BOOL;
+	bError								:BOOL;
+	bEStop								:BOOL;
+	arstLogger							:ARRAY[1..unLOG_MAX_NO] OF ST_Logger;
+	arstLoggerWaitInterrupt					:ARRAY[1..unLOG_BEFOR_MAX_NO] OF ST_LoggerVar;
+	arstLoggerDuringInterrupt				:ARRAY[1..unLOG_DURING_MAX_NO] OF ST_LoggerVar;
+	arstLoggerAfterInterrupt					:ARRAY[1..unLOG_AFTER_MAX_NO] OF ST_LoggerVar;
+END_VAR
+VAR
+	bFirstTime							:BOOL;
+	nIdx									:INT;			(* Index *)
+	udnCycleNo							:UDINT;
+	unInstanceIdx							:UINT;
+
+	unState								:UINT := 0;
+	unIncLog								:UINT := 1;
+	unIncDuringInterrupt					:UINT := 1;
+	unIncAfterInterrupt						:UINT := 1;
+
+	rtDeleteAll							:R_TRIG;
+	rtInterrupt								:R_TRIG;
+	fbLoggerFile							:FB_LoggerFile;
+
+END_VAR
+VAR CONSTANT
+	unWaitInterrupt						:UINT := 0;
+	unDuringInterrupt						:UINT := 1;
+	unAfterInterrupt						:UINT := 2;
+	unChkFile							:UINT := 3;
+	unNoInterrupt							:UINT := 4;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	bBusy := FALSE;
+	bDone := FALSE;
+	bError := FALSE;
+	bEStop := FALSE;
+	bFirstTime := FALSE;
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+	bBusy := FALSE;
+	bDone := FALSE;
+	bError := FALSE;
+	bEStop := FALSE;
+	unState := 0;
+	unIncLog := 1;
+	unIncDuringInterrupt := 1;
+	unIncAfterInterrupt := 1;
+
+	unLOG_INSTANCE_IDX  := unLOG_INSTANCE_IDX + 1;
+	unInstanceIdx := unLOG_INSTANCE_IDX;
+
+	unState := unWaitInterrupt;
+
+	bFirstTime := TRUE;
+END_IF
+
+
+rtDeleteAll(CLK := bDeleteAll);
+
+IF rtDeleteAll.Q
+    AND (bDone OR bError)
+THEN
+	bBusy := FALSE;
+	bDone := FALSE;
+	bError := FALSE;
+	bEStop := FALSE;
+	unState := 0;
+	unIncLog := 1;
+	unIncDuringInterrupt := 1;
+	unIncAfterInterrupt := 1;
+
+	unState := unWaitInterrupt;
+END_IF
+
+rtInterrupt(CLK := bInterrupt);
+IF rtInterrupt.Q
+THEN
+	unState := unWaitInterrupt;
+END_IF;
+
+udnCycleNo := udnCycleNo + 1;
+
+CASE unState OF
+	
+	unWaitInterrupt:
+		bBusy := FALSE;
+		bDone := FALSE;
+		bError := FALSE;
+
+		fbLoggerFile.bExecute := FALSE;
+
+		(* Shift down logger list by 1 *)
+		A_ShiftDown();
+
+		(* Write time stamp and value of variables before interrupt *)
+		arstLoggerWaitInterrupt[1].udnCycleNo := udnCycleNo;
+		arstLoggerWaitInterrupt[1].sTimeStamp := sDateTime;
+		arstLoggerWaitInterrupt[1].arsLogVars := arsLogVars;
+
+		IF bInterrupt
+		THEN
+			bBusy := TRUE;
+			bDone := FALSE;
+
+			bEStop := bLogOne;
+
+			MEMSET(ADR(arstLoggerDuringInterrupt), 0, SIZEOF(arstLoggerDuringInterrupt));
+			MEMSET(ADR(arstLoggerAfterInterrupt), 0, SIZEOF(arstLoggerAfterInterrupt));
+
+			(* Log data *)
+			IF unIncLog <= unLOG_MAX_NO
+			THEN
+				MEMCPY(ADR(arstLogger[unIncLog].arstLoggerWaitInterrupt), ADR(arstLoggerWaitInterrupt), SIZEOF(arstLoggerWaitInterrupt));
+			ELSE
+				unIncLog := 1;
+				MEMCPY(ADR(arstLogger[unIncLog].arstLoggerWaitInterrupt), ADR(arstLoggerWaitInterrupt), SIZEOF(arstLoggerWaitInterrupt));
+			END_IF
+
+			(* Write time stamp and value of variables during interrupt *)
+			unIncDuringInterrupt := 1;
+			arstLoggerDuringInterrupt[unIncDuringInterrupt].udnCycleNo := udnCycleNo;
+			arstLoggerDuringInterrupt[unIncDuringInterrupt].sTimeStamp := sDateTime;
+			arstLoggerDuringInterrupt[unIncDuringInterrupt].arsLogVars := arsLogVars;
+			unIncDuringInterrupt := unIncDuringInterrupt + 1;
+
+			fbLoggerFile.sFileName := CONCAT(
+										sDateTime,
+										CONCAT(
+											'_',
+											UINT_TO_STRING(unInstanceIdx)
+										)
+									);
+
+			unState := unDuringInterrupt;
+
+		END_IF
+
+	unDuringInterrupt:
+		IF unIncDuringInterrupt <= unLOG_DURING_MAX_NO
+		THEN
+			(*  Write time stamp and value of variables during interrupt *)
+			arstLoggerDuringInterrupt[unIncDuringInterrupt].udnCycleNo := udnCycleNo;
+			arstLoggerDuringInterrupt[unIncDuringInterrupt].sTimeStamp := sDateTime;
+			arstLoggerDuringInterrupt[unIncDuringInterrupt].arsLogVars := arsLogVars;
+		
+			unIncDuringInterrupt := unIncDuringInterrupt + 1;
+
+		END_IF
+
+		IF NOT bInterrupt
+		THEN
+			(* Log data *)
+			MEMCPY(ADR(arstLogger[unIncLog].arstLoggerDuringInterrupt), ADR(arstLoggerDuringInterrupt), SIZEOF(arstLoggerDuringInterrupt));
+
+			(* Write time stamp and value of variables after interrupt *)
+			unIncAfterInterrupt := 1;
+			arstLoggerAfterInterrupt[unIncAfterInterrupt].udnCycleNo := udnCycleNo;
+			arstLoggerAfterInterrupt[unIncAfterInterrupt].sTimeStamp := sDateTime;
+			arstLoggerAfterInterrupt[unIncAfterInterrupt].arsLogVars := arsLogVars;
+			unIncAfterInterrupt := unIncAfterInterrupt + 1;
+
+			unState := unAfterInterrupt;
+
+		END_IF
+
+	unAfterInterrupt:
+		IF unIncAfterInterrupt <= unLOG_AFTER_MAX_NO
+		THEN
+			(* Write time stamp and value of variables after interrupt *)
+			arstLoggerAfterInterrupt[unIncAfterInterrupt].udnCycleNo := udnCycleNo;
+			arstLoggerAfterInterrupt[unIncAfterInterrupt].sTimeStamp := sDateTime;	
+			arstLoggerAfterInterrupt[unIncAfterInterrupt].arsLogVars := arsLogVars;
+
+			unIncAfterInterrupt := unIncAfterInterrupt + 1;
+		ELSE
+			(* Log data *)
+			MEMCPY(ADR(arstLogger[unIncLog].arstLoggerAfterInterrupt), ADR(arstLoggerAfterInterrupt), SIZEOF(arstLoggerAfterInterrupt));
+
+			fbLoggerFile.bExecute := TRUE;
+
+			IF fbLoggerFile.bBusy
+			THEN
+				unState := unChkFile;
+
+			ELSIF fbLoggerFile.bError
+			THEN
+				fbLoggerFile.bExecute := FALSE;
+	
+				bBusy := FALSE;
+				bError := TRUE;
+	
+				unState := unNoInterrupt;
+
+			END_IF
+		END_IF
+
+	unChkFile:
+		IF NOT bEnableSaveInFile
+		     OR fbLoggerFile.bDone
+		THEN
+			fbLoggerFile.bExecute := FALSE;
+
+			bBusy := FALSE;
+			bDone := TRUE;
+
+			unState := unNoInterrupt;
+
+		ELSIF  fbLoggerFile.bError
+		THEN
+			fbLoggerFile.bExecute := FALSE;
+
+			bBusy := FALSE;
+			bError := TRUE;
+
+			unState := unNoInterrupt;
+
+		END_IF
+
+	unNoInterrupt:
+		IF NOT bInterrupt
+		    AND NOT bEStop
+		THEN
+			bBusy := FALSE;
+			bDone := FALSE;
+			bError := FALSE;
+
+			unIncLog := unIncLog + 1;
+
+			unState := unWaitInterrupt;
+		END_IF
+
+END_CASE
+
+
+fbLoggerFile(
+	bEnable := bEnableSaveInFile,
+	sFilePath := sFilePath,
+	sFileSuffix := sFileSuffix,
+	arstLoggerWaitInterrupt := arstLoggerWaitInterrupt,
+	arstLoggerDuringInterrupt := arstLoggerDuringInterrupt,
+	arstLoggerAfterInterrupt := arstLoggerAfterInterrupt
+ );
+
+]]></ST>
+    </Implementation>
+    <Action Name="A_ShiftDown" Id="{1abd7e20-602a-4661-a65c-7248cc8bc11f}">
+      <Implementation>
+        <ST><![CDATA[
+FOR nIdx := unLOG_BEFOR_MAX_NO - 1 TO 1 BY -1
+DO
+	arstLoggerWaitInterrupt[nIdx + 1] := arstLoggerWaitInterrupt[nIdx];
+END_FOR]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_Logger">
+      <LineId Id="50" Count="216" />
+    </LineIds>
+    <LineIds Name="FB_Logger.A_ShiftDown">
+      <LineId Id="0" Count="4" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

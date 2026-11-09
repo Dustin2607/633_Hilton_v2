@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_Gr02HomeAxis" Id="{90e1b3a6-d1f0-466f-892e-e410bdf1980c}">
+    <Declaration><![CDATA[TYPE ET_Gr02HomeAxis :
+(
+	ET_Gr02HomeAxis_eWaitExecute := 0,
+	ET_Gr02HomeAxis_eWaitAxisStatus,
+	ET_Gr02HomeAxis_eMoveStop,
+	ET_Gr02HomeAxis_eWFMoveStop,
+	ET_Gr02HomeAxis_eAxisReset,
+	ET_Gr02HomeAxis_eWfAxisReset,
+	ET_Gr02HomeAxis_eChkAxisCoupled,
+	ET_Gr02HomeAxis_eAxisRef,
+	ET_Gr02HomeAxis_eWfAxisRef,
+	ET_Gr02HomeAxis_eWfErrorByReference,
+	ET_Gr02HomeAxis_eAxisMoveHomePos,
+	ET_Gr02HomeAxis_eAxisInHomePos,
+	ET_Gr02HomeAxis_eAxisSetHome,
+	ET_Gr02HomeAxis_eWfSetHome,
+	ET_Gr02HomeAxis_eDone := 197,
+	ET_Gr02HomeAxis_eError := 198,
+	ET_Gr02HomeAxis_eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

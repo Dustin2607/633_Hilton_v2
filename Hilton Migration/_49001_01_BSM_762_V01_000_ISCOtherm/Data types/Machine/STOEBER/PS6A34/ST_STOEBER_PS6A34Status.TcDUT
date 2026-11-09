@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_STOEBER_PS6A34Status" Id="{0bb37e81-ee3d-4541-ad34-c9a3f192b1fe}">
+    <Declaration><![CDATA[(* Status of Stober PS6A34 *)
+
+TYPE ST_STOEBER_PS6A34Status :
+STRUCT
+	bReady				:BOOL;			(* Stoeber PS6A34 ready / StoeberPS6A34 i.O. *)
+	bNoOverload			:BOOL;			(* StoeberPS6A34 no overload  / StoeberPS6A34 nicht überlastet *)
+	bGridPhaseOk		:BOOL;			(* StoeberPS6A34 no grid phase failure  / StoeberPS6A34 nicht Netzphasenausfall *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

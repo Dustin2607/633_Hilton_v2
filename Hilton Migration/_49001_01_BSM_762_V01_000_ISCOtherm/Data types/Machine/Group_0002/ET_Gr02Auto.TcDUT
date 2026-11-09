@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_Gr02Auto" Id="{6ec12e4b-5280-436b-9ee4-b8db0cbd8896}">
+    <Declaration><![CDATA[TYPE ET_Gr02Auto :
+(
+	ET_Gr02Auto_eWaitExecute := 0,
+	ET_Gr02Auto_eWaitAxisStatus,
+	ET_Gr02Auto_eGetPart,
+	ET_Gr02Auto_eFixPart,
+	ET_Gr02Auto_eWarrningPartNoPresent,
+	ET_Gr02Auto_eStartProgramReq,
+	ET_Gr02Auto_eStartProgramAck,
+	ET_Gr02Auto_eAxisRef,
+	ET_Gr02Auto_eWfAxisRef,
+	ET_Gr02Auto_eDelayStartSection,
+	ET_Gr02Auto_eWfDelayStartSection,
+	ET_Gr02Auto_eStartSection,
+	ET_Gr02Auto_eStopExtruderReq,
+	ET_Gr02Auto_eWfStartSection,
+	ET_Gr02Auto_eReleasePart,
+	ET_Gr02Auto_eDone := 197,
+	ET_Gr02Auto_eError := 198,
+	ET_Gr02Auto_eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

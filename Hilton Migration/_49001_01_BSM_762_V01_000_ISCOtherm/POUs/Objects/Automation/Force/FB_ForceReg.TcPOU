@@ -1,0 +1,118 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_ForceReg" Id="{707060a7-fabd-4e8c-aab0-4d62d35af9f5}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ForceReg
+VAR_INPUT
+	rVelocityMax			:REAL := 10.0;
+	rVelocityMin			:REAL := 0.0;
+	PID_Reg: FB_PID_Regler;
+	SollForceInt: INT := 20;
+	IstForceInt: INT := 20;
+	bRegelung: BOOL := FALSE;
+	PWM_Aus: INT := 0;
+	Force_Aus: REAL := 0.0;
+	Simulation: BOOL := FALSE;
+END_VAR
+VAR_OUTPUT
+	ForceOK: BOOL := FALSE;
+	ForceOn: BOOL := FALSE;
+	ForceLeistung: REAL := 0.0;
+END_VAR
+VAR
+	PWM_Inc: INT := 0;
+	PWM_Max: INT := 200;
+	ForceModellReal: REAL := 0.0;
+	K_Modell: REAL := 0.1;
+	K_Modell_EM: REAL := 0.9;
+	Force_Normal: REAL := 19.0;
+	ForceModellInt: INT := 0;
+	T_Modell: REAL := 360.0;
+	bfirstCycle: BOOL := TRUE;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF bFirstCycle THEN 				 (* Anfangsinitialisierungen *)
+
+	PWM_Inc := 0;
+
+	PID_Reg	(	
+		fMax:=INT_TO_REAL(PWM_Max) ,
+		fMin := 0.0,
+		fD_Max := 1.0E10,
+		fD_Min := -1.0E10,
+		fKr := 1.0,
+		fTN := 0.0,
+		fTv := 0.0,
+		fTau := 0.0,
+		fOff := 0.0,
+		fTab := 2.0,
+		fState :=0.0,
+		fIntegral := 0.0,
+		fSoll := 0.0,
+		fIst := 0.0
+	);
+
+	K_Modell 		:= EXP(-0.01/T_Modell);
+	K_Modell_EM 	:= 1.0 - K_Modell;
+	
+	bFirstCycle:=FALSE;
+END_IF
+
+(* Zähler füR PID 0 incrementieren *)
+PWM_Inc := 	PWM_Inc  + 1;
+
+(* Regelung für PID 0 aufrufen *)
+IF (PWM_Inc >= PWM_Max ) 
+THEN
+	PWM_Inc :=  0;
+
+	(* Hier Regler einbauen *)
+	IF bRegelung 
+	THEN
+		IF Simulation 
+		THEN
+			PID_Reg(fSoll:=SollForceInt, fIst:=ForceModellInt);
+		ELSE
+			PID_Reg(fSoll:=SollForceInt, fIst:=IstForceInt);
+		END_IF
+	
+		PWM_Aus :=  REAL_TO_INT(PID_Reg.fAus);
+		Force_Aus :=  PID_Reg.fAus;
+		ForceOK := PID_Reg.bRegOK;
+	ELSE
+		PID_Reg.fIntegral := 0.0;
+		PID_Reg(fSoll:=0.0, fIst:=0.0);
+		PWM_Aus :=  0;
+		Force_Aus :=  0.0;
+		ForceOK := TRUE;
+	
+	END_IF
+
+	IF ( PWM_Aus > PWM_Max ) THEN PWM_Aus:= PWM_Max; END_IF
+	IF ( PWM_Aus < 0      ) THEN PWM_Aus := 0; END_IF
+
+	IF ( Force_Aus > rVelocityMax ) THEN Force_Aus := rVelocityMax; END_IF
+	IF ( Force_Aus < rVelocityMin ) THEN Force_Aus := rVelocityMin; END_IF
+
+END_IF
+
+(* PWM für PID  ausgeben == Inaktivierungsstrecke*)
+
+ForceOn := FALSE;
+IF (  PWM_Aus > PWM_Inc ) 
+THEN		
+	ForceOn := TRUE;        
+END_IF
+
+IF Simulation
+THEN
+	ForceModellReal := K_Modell*ForceModellReal;
+	IF (  PWM_Aus > PWM_Inc ) THEN		ForceModellReal := K_Modell_EM*ForceModellReal;       END_IF
+	ForceModellReal  := ForceModellReal + Force_Normal;
+	ForceModellInt	:=REAL_TO_INT(ForceModellReal*10.0);
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ForceReg">
+      <LineId Id="28" Count="79" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

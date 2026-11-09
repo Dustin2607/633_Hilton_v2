@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Gr00HomeInit" Id="{97047e8b-7d37-4232-b27a-25bb89bba875}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Gr00HomeInit
+(*
+
+The function block used to initialize manual mode.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			28.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bFirstTime					:BOOL;
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+(* Initializing variables *)
+IF NOT bFirstTime
+THEN
+	(* Program init *)
+	Gr00Control.fbProgram.bRead := FALSE;								(* Read program *)
+
+	MEMSET(ADR(arrGr00ProcessPara), 0, SIZEOF(arrGr00ProcessPara));
+
+	(* Home procedure *)
+	Gr00Home.fbProcedure.bEnable := FALSE;							(* Start init process *)
+	Gr00Home.fbProcedure.bExecute := FALSE;
+	Gr00Home.fbProcedure();
+
+	Gr00Auto.fbInit.bFirstTime := FALSE;
+	bgGr00HomeCompleted := FALSE;
+	bgGr00HomeNotInCrashGr01 := FALSE;
+
+	bFirstTime := TRUE;
+END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Gr00HomeInit">
+      <LineId Id="38" Count="19" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,211 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_STOEBERSDS_MC_Home" Id="{95a5beb5-487c-4562-95a0-9eabdf7e7b24}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_STOEBERSDS_MC_Home
+(*
+
+The function block used to carried out calibration of the axis (referencing) . 
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			22.09.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bExecute					:BOOL;			(* Execut the function block *)
+	lrOriginPosition				:LREAL;			(* Origin position when the reference signal is detected *)
+	bCalibrationCam				:BOOL; 			(* The signal of a reference cam via a digital input. *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bDone						:BOOL;			(* Program done *)
+	bCmdAborted				:BOOL;			(* Command aborted *)
+	bBusy						:BOOL;			(* Program busy *)
+	bError						:BOOL;			(* Error *)
+	udnErrorNo					:UDINT;			(* Error number *)
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	Axis							:ST_AXIS_REF;
+END_VAR
+VAR
+	(* Enummerations *)
+	etMC_States					:ET_MC_States := ET_MC_States_eInit;
+
+	(* Variables *)
+	nWatchdog					:INT;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtExecute						:R_TRIG;
+	rtAborted						:R_TRIG;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+rtExecute(CLK := bExecute);
+rtAborted(CLK := Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bPLCOpenCmdAborted);           (* Aborted *)
+
+IF rtAborted.Q			(* Aborted *)
+THEN
+	etMC_States := ET_MC_States_eAbort;			(* Next step *)
+
+ELSIF rtExecute.Q
+	    AND NOT bCmdAborted
+THEN
+	etMC_States := ET_MC_States_eInit;                      		(* Next step *)
+
+END_IF;
+
+CASE etMC_States OF
+
+	ET_MC_States_eInit:
+		bCmdAborted := FALSE;		(* Command not aborted *)
+		bBusy := FALSE;                                (* Program not busy *)
+		bError := FALSE;                         	(* Program not error *)
+		udnErrorNo := 0;                         	(* Error number *)
+
+		IF rtExecute.Q
+		     AND NOT Axis.bLockPDO
+		THEN
+			nWatchdog := 0;
+			bDone := FALSE;			(* Program done *)
+			bBusy := TRUE;			(* Program busy *)
+
+			Axis.bLockPDO := TRUE;
+
+			IF Axis.stNcToPlc.stBaseDevice.bEnabled       (* Control enabled *)
+			THEN
+				Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd:= Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd AND 224;			(* Reset MC modes staus *)
+				Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bPLCOpenCmdExe := FALSE;                                                 					(* Reset MC_Home execute *)
+
+
+				Axis.stPlcToNc.stBaseDevice.stCommandPositioning.dnReferencePosition := REAL_TO_DINT(((lrOriginPosition * (EXPT(10, Axis.stNcToPlc.stBaseDevice.stCommandPositioning.rDecimalDigits))) * Axis.stNcToPlc.stBaseDevice.stCommandPositioning.udnScalingDenom)               (* Scale reference position and send it to the axis reference *)
+															                                                              / Axis.stNcToPlc.stBaseDevice.stCommandPositioning.lrScalingNum
+															                                                              / (EXPT(10, Axis.stNcToPlc.stBaseDevice.stCommandPositioning.rDecimalDigits)));
+
+				Axis.stPlcToNc.stBaseDevice.bToggleBit := FALSE;			(* Reset Togglebit *)
+
+				etMC_States := ET_MC_States_eReset;			(* Next step *)
+
+			ELSE
+				udnErrorNo := 4;			(* Error number *)
+
+				etMC_States := ET_MC_States_eError;             		(* Next step *)
+
+			END_IF;
+		END_IF;
+
+	ET_MC_States_eReset:
+		nWatchdog := nWatchdog + 1;
+
+		IF NOT Axis.stNcToPlc.stBaseDevice.bToggleBit			(* Ack Togglebit *)
+		THEN
+			nWatchdog := 0;
+			etMC_States := ET_MC_States_eRunning;           (* Next step *)
+
+		ELSIF nWatchdog > 150
+		THEN
+			etMC_States := ET_MC_States_eError;             (* Next step *)
+		END_IF;
+        
+	ET_MC_States_eRunning:
+		nWatchdog := nWatchdog + 1;
+
+		Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd := Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd OR 6;			(* Set MC_Home *)
+		Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bPLCOpenCmdExe := TRUE;                                                     					(* Set MC_Home execute *)
+		
+		Axis.stPlcToNc.stBaseDevice.bToggleBit := TRUE;			(* Set Togglebit *)
+		
+		IF Axis.stNcToPlc.stBaseDevice.bToggleBit								(* Ack Toggle bit *)
+		     AND (Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd AND 31) = 6			(* Ack MC_Home *)
+		     AND Axis.stNcToPlc.stBaseDevice.bAxisActive       						(* Axis active *)
+		     AND NOT Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bPLCOpenStandstill       			(* Axis runnning *)
+		     AND NOT Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bPLCOpenCmdAborted      		(* Aborted *)
+		THEN
+
+			nWatchdog := 0;
+			etMC_States := ET_MC_States_eWaiting;           			(* Next step *)
+		
+		ELSIF Axis.stNcToPlc.stBaseDevice.bError         					(* Error *)
+			    OR nWatchdog > 150
+		THEN
+			Axis.stPlcToNc.stBaseDevice.bToggleBit := FALSE;			(* Reset Toggle bit *)
+
+			udnErrorNo := 2;                     							(* Error number *)
+		
+			etMC_States := ET_MC_States_eError;            			(* Next step *)
+		END_IF;
+
+	ET_MC_States_eWaiting:
+		IF Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bHomed							(* Axis in reference *)
+		     AND Axis.stNcToPlc.stBaseDevice.stCommandPositioning.bPLCOpenCmdDone			(* Command done *)
+		THEN
+			etMC_States := ET_MC_States_eDone;			(* Next step *)
+		
+		ELSIF Axis.stNcToPlc.stBaseDevice.bError        (* Error *)
+		THEN
+			udnErrorNo := 3;                     		(* Error number *)
+		
+			etMC_States := ET_MC_States_eError;			(* Next step *)
+		END_IF;
+
+	ET_MC_States_eAbort:
+		bCmdAborted := TRUE;			(* Command aborted *)
+		bDone := FALSE;					(* Program done, in position *)
+		Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bPLCOpenCmdExe := FALSE;         (* Reset MC_Home execute *)
+	
+		etMC_States := ET_MC_States_eNotExecute;        (* Next step *)
+
+	ET_MC_States_eDone:
+		nWatchdog := 0;
+		bDone := TRUE;			(* Program done, in position *)
+		bBusy := FALSE;			(* Program not busy *)
+
+		etMC_States := ET_MC_States_eNotExecute;			(* Next step *)
+
+    	ET_MC_States_eError:
+		nWatchdog := 0;
+		Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bPLCOpenCmdExe := FALSE;			(* Reset MC_Home execute *)
+		bDone := FALSE;			(* Program done, in position *)
+		bError := TRUE;			(* Program error *)   
+		bBusy := FALSE;			(* Program not busy *)
+
+        		etMC_States := ET_MC_States_eNotExecute;			(*Next step *)
+
+	ET_MC_States_eNotExecute:
+		IF NOT bExecute
+		THEN
+			nWatchdog := 0;
+			Axis.bLockPDO := FALSE;
+
+			bDone := FALSE;					(* Program done, in position *)
+			bCmdAborted := FALSE;			(* Command not aborted *)
+			bBusy := FALSE;                                 	(* Program not busy *)
+			bError := FALSE;                     			(* Program not error *)
+			udnErrorNo := 0;                     			(* Error number *)
+			
+			Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd := Axis.stPlcToNc.stBaseDevice.stCommandPositioning.byPLCOpenCmd AND 224;			(* Reset MC modes staus *)
+			Axis.stPlcToNc.stBaseDevice.stCommandPositioning.bPLCOpenCmdExe := FALSE;                                                 					(* Reset MC_Home execute *)
+
+			etMC_States := ET_MC_States_eInit;			(* Next step *)
+		
+		END_IF;
+END_CASE;
+
+(* Reference signal *)
+Axis.stPlcToNc.stBaseDevice.bHomingSensor := bCalibrationCam;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_STOEBERSDS_MC_Home">
+      <LineId Id="48" Count="152" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

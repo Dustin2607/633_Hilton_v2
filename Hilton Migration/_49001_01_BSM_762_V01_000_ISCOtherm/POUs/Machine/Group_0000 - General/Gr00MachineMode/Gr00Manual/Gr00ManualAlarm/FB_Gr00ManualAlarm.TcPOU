@@ -1,0 +1,79 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Gr00ManualAlarm" Id="{4034232d-ef0a-4169-9e20-18e16a8b7a2d}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Gr00ManualAlarm
+(*
+
+The function block used to control alarms in manual mode.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			28.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	etMachineMode				:ET_MachineMode;			(* Machine mode *)
+	etMachineState				:ET_MachineState;			(* Machine state *)
+	bNoEStop					:BOOL;						(* Emergency stop *)
+	bConfirmAlarm				:BOOL;						(* Confirm alarm *)
+	dtDateTime 					:DATE_AND_TIME;			(* Actual date and time *)
+	nFatalErrorMaxIdx				:INT;						(* Maximal index of  using alarms *)
+	nErrorMaxIdx					:INT;						(* Maximal index of  using alarms *)
+	nWarningMaxIdx				:INT;						(* Maximal index of  using alarms *)
+	nMessageMaxIdx				:INT;						(* Maximal index of  using alarms *)
+	nHintMaxIdx					:INT;						(* Maximal index of  using alarms *)
+	stAlarmIn						:ST_AlarmIn;					(* Alarm input *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	stAlarmOut					:ST_AlarmOut;				(* Alarm input *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	bHomeCompleted				:BOOL;						(* Home completed *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbAlarm						:FB_Alarm;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+(* Collection of alarms *)
+fbAlarm(
+	bEnable := TRUE,
+	bNoEStop := bNoEStop,
+	bReset := bConfirmAlarm,
+	dtDateTime := dtDateTime,
+	nFatalErrorMaxIdx := nFatalErrorMaxIdx,
+	nErrorMaxIdx := nErrorMaxIdx,
+	nWarningMaxIdx := nWarningMaxIdx,
+	nMessageMaxIdx := nMessageMaxIdx,
+	nHintMaxIdx := nHintMaxIdx,
+    	stAlarmIn := stAlarmIn,
+    	stAlarmOut => stAlarmOut
+);
+
+IF stAlarmOut.bFatalError
+    OR stAlarmOut.bError
+THEN
+	bHomeCompleted := FALSE;
+END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Gr00ManualAlarm">
+      <LineId Id="48" Count="20" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

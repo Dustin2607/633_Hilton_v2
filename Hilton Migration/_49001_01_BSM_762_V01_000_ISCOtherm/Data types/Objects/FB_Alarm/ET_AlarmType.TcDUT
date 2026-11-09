@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_AlarmType" Id="{d8a52626-5f4c-4e9c-9d51-d7a93a861d80}">
+    <Declaration><![CDATA[TYPE ET_AlarmType :
+(
+	ET_AlarmType_eIdle := 0,
+	ET_AlarmType_eFatalError := 1,
+	ET_AlarmType_eError := 2,
+	ET_AlarmType_eWarning := 3,
+	ET_AlarmType_eMessage := 4,
+	ET_AlarmType_eHint := 5
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_TerminalState" Id="{543b5eda-a381-49d7-ad52-ea44ad6c0a02}">
+    <Declaration><![CDATA[TYPE ST_TerminalState :
+STRUCT
+	stAdsAddr 					:ST_AmsAddr;				(* AMS Address for CoE Com *)
+	bWcState					:BOOL;						(* WcState (Working Counter) *)
+	unInfoState 					:UINT;						(* Info Data --> State *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

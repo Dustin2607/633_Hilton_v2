@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_ConvertActPosResiduals" Id="{b25e518c-73f5-46c1-87d0-f80d49b367cc}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_ConvertActPosResiduals : LREAL
+(*
+Convert inc to technical units
+
+*)
+VAR_INPUT
+
+	(* Enummerations *)
+	
+	(* Variables *)
+	dwPos								:DWORD;
+
+	(* References *)
+
+	(* Interfaces *)
+	pAxis								:POINTER TO ST_AXIS_REF_V2;
+
+	(* Instances *)
+
+END_VAR
+VAR
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF pAxis^.stScaling.etScalingMethod = ET_ScalingMethod_eSMRotary
+THEN
+
+	F_ConvertActPosResiduals := DWORD_TO_LREAL(dwPos);
+
+ELSIF pAxis^.stScaling.etScalingMethod = ET_ScalingMethod_eSMLinear
+THEN
+
+	IF pAxis^.stScaling.dwModuloValue > 0
+	     AND dwPos > (pAxis^.stScaling.dwModuloValue / 2)
+	THEN
+		F_ConvertActPosResiduals := (DWORD_TO_DINT(dwPos) - DWORD_TO_DINT(pAxis^.stScaling.dwModuloValue)) / pAxis^.stScaling.lrScaleFactor - pAxis^.stPosition.lrOffsetPos;
+	ELSE
+		F_ConvertActPosResiduals := DWORD_TO_DINT(dwPos) / pAxis^.stScaling.lrScaleFactor - pAxis^.stPosition.lrOffsetPos;
+	END_IF
+
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="F_ConvertActPosResiduals">
+      <LineId Id="22" Count="17" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

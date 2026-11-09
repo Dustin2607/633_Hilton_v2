@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_SpindlePreheat" Id="{acb020fc-49b1-4fbb-bb7d-9c5a763d713c}">
+    <Declaration><![CDATA[TYPE ET_SpindlePreheat :
+(
+	ET_SpindlePreheat_eWaitExecute := 0,
+	ET_SpindlePreheat_eStartNewSpindle := 5,
+	ET_SpindlePreheat_eStartDailyPreheat := 10,
+	ET_SpindlePreheat_eStartSpindle := 15,
+	ET_SpindlePreheat_eWfStartSpindle := 20,
+	ET_SpindlePreheat_eWfStartSpindleProc := 25,
+	ET_SpindlePreheat_eSpindleStop := 30,
+	ET_SpindlePreheat_eWfSpindleStopped := 35,
+	ET_SpindlePreheat_eDone := 197,
+	ET_SpindlePreheat_eError := 198,
+	ET_SpindlePreheat_eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

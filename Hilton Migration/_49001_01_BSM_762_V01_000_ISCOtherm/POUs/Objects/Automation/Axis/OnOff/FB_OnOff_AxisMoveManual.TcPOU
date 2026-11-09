@@ -1,0 +1,167 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_OnOff_AxisMoveManual" Id="{ec9e48f0-ae90-44b1-b6dc-99296d6468f4}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_OnOff_AxisMoveManual
+(*
+
+The function block used to manual control of axis.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			22.09.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Signal FB enable *)
+	etMachineMode				:ET_MachineMode;			(* Machine mode *)
+	etMachineState				:ET_MachineState;			(* Machine state *)
+	bNoEStop					:BOOL;						(* No ermergency Stop / Keine Notaus *)
+	bPowerSupplyOn				:BOOL;						(* Power supply on / Leitung eingeschaltet *)
+	bLightCurtainOK				:BOOL;						(* Light curtain ok / Freigabe Lichtschranke i.o *)
+	bReset						:BOOL;						(* Reset *)
+	bMovePlus					:BOOL;						(* Move in plus direction *)
+	bMoveMinus					:BOOL;						(* Move in minus direction *)
+	bInPlusLimit					:BOOL;						(* In plus limit *)
+	bInMinusLimit					:BOOL;						(* In minus limit *)
+	bPlusRelease				:BOOL;						(* Plus move release *)
+	bMinusRelease				:BOOL;						(* Minus move release *)
+	tTimeOut						:TIME := t#5s;					(* TimeOut *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bMoving						:BOOL;						(* Axis moving *)
+	bMoveToPlus				:BOOL;						(* Move to plus *)
+	bMoveToMinus				:BOOL;						(* Move to minus *)
+	bErrorMoveToPlus			:BOOL;						(* Error move to plus *)
+	bErrorMoveToMinus			:BOOL;						(* Error move to minus *)
+END_VAR
+VAR_IN_OUT
+	bHomeCompleted				:BOOL;						(* Home completed *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	bFirstTime					:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbJog						:FB_Motor;					(* The function block is used to manual control an axis *)
+	fbAtPlusLimit					:FB_SignalHandlingDelay;
+	fbAtMinusLimit				:FB_SignalHandlingDelay;
+	fbPlusRelease				:FB_SignalHandlingDelay;
+	fbMinusRelease				:FB_SignalHandlingDelay;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable							(* Signal FB enable *)
+THEN
+	fbJog(
+		bEnable := FALSE,
+		bHandPlus := FALSE,
+		bHandMinus := FALSE,
+		bAutoPlus := FALSE,
+		bAutoMinus := FALSE,
+		bHomeCompleted := bHomeCompleted,
+		bMoveToPlus => bMoveToPlus,
+		bMoveToMinus => bMoveToMinus
+	);
+
+	bFirstTime := FALSE;
+
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+
+	bFirstTime := TRUE;
+END_IF
+
+(* Control on/off motor *)
+fbAtPlusLimit(
+	bEnable := TRUE,
+	bIn := bInPlusLimit,
+	tDelay := t#0ms
+);
+
+fbAtMinusLimit(
+	bEnable := TRUE,
+	bIn := bInMinusLimit,
+	tDelay := t#0ms
+);
+
+fbPlusRelease(
+	bEnable := TRUE,
+	bIn := bPlusRelease,
+	tDelay :=t#0ms
+);
+
+fbMinusRelease(
+	bEnable := TRUE,
+	bIn := bMinusRelease,
+	tDelay := t#0ms
+);
+
+fbJog(
+	bEnable := TRUE,
+	bNoEmergencyStop := bNoEStop
+						AND bLightCurtainOK,
+	bVoltageOK := bPowerSupplyOn,
+	bReset := bReset,
+	bAutoHand := etMachineMode = ET_MachineMode_eHome
+			         OR etMachineMode = ET_MachineMode_eStepping
+			         OR etMachineMode = ET_MachineMode_eAutomatic,
+	bHandPlus := bMovePlus,
+	bHandMinus := bMoveMinus,
+	bAtPlusLimit := fbAtPlusLimit.bOut,
+	bAtMinusLimit := fbAtMinusLimit.bOut,
+	bPlusRelease := fbPlusRelease.bOut,
+	bMinusRelease := fbMinusRelease.bOut,
+	bSyncPlus := FALSE,
+	bSyncMinus := FALSE,
+	bSyncOn := FALSE,
+	bControlOff := FALSE,
+	bMotorCtrlErrOff := FALSE,
+	bErrorOff := TRUE,
+	tSyncTimeOut := ,
+	tConTimeOut := ,
+	tCtrlTimeOut := tTimeOut,
+	bHomeCompleted := bHomeCompleted,
+	bMoveToPlus => bMoveToPlus,
+	bMoveToMinus => bMoveToMinus
+);
+
+A_Error();
+]]></ST>
+    </Implementation>
+    <Action Name="A_Error" Id="{72b21ad7-275f-46b0-82c4-6cab1c8b3c84}">
+      <Implementation>
+        <ST><![CDATA[
+bErrorMoveToMinus := fbJog.bError
+					AND (fbJog.udnErrorNo = 1
+					     OR fbJog.udnErrorNo = 2
+					     OR fbJog.udnErrorNo = 5);
+
+bErrorMoveToPlus := fbJog.bError
+					 AND (fbJog.udnErrorNo = 3
+					       OR fbJog.udnErrorNo = 4
+					       OR fbJog.udnErrorNo = 5);]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_OnOff_AxisMoveManual">
+      <LineId Id="59" Count="80" />
+    </LineIds>
+    <LineIds Name="FB_OnOff_AxisMoveManual.A_Error">
+      <LineId Id="0" Count="9" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_STOEBERSDS_Stop" Id="{c92b8500-df69-48d3-8516-64fb581effe0}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_STOEBERSDS_Stop
+(*
+
+The function block used to stop an axis
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			22.09.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bExecute					:BOOL;			(* Execut the function block *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bDone						:BOOL;			(* Status = TRUE indicates that the axis is ready for operation. *)
+	bBusy						:BOOL;			(* Program busy *)
+	bError						:BOOL;			(* Error *)
+	udnErrorNo					:UDINT;			(* Error number *)
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	Axis							:ST_AXIS_REF;
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtExecute						:R_TRIG;
+	rtLimitMax					:R_TRIG;
+	rtLimitMin						:R_TRIG;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+rtExecute(CLK := bExecute);	                          (* Stop execute  *)
+
+rtLimitMax(CLK := Axis.stPlcToNc.stBaseDevice.stFastRefereneValue.bHWLimitMax);	                         				 (* Stop execute  *)
+rtLimitMin(CLK := Axis.stPlcToNc.stBaseDevice.stFastRefereneValue.bHWLimitMin);	                         				 (* Stop execute  *)
+
+IF rtExecute.Q
+     OR rtLimitMax.Q
+     OR rtLimitMin.Q
+THEN
+	bBusy := TRUE;
+	Axis.stPlcToNc.stBaseDevice.bQuickStop := TRUE;
+	Axis.stPlcToNc.stBaseDevice.stFastRefereneValue.nSpeed := 0;		(* Value of the velocity *)
+
+ELSIF Axis.stNcToPlc.stBaseDevice.stFastRefereneValue.bStandstill            (* Axis standstill *)
+THEN
+	bBusy := FALSE;
+	Axis.stPlcToNc.stBaseDevice.bQuickStop := FALSE;
+END_IF;
+
+bDone := bExecute
+		AND NOT bBusy
+		AND Axis.stNcToPlc.stBaseDevice.stFastRefereneValue.bStandstill;                      	(* Axis standstill *)]]></ST>
+    </Implementation>
+    <LineIds Name="FB_STOEBERSDS_Stop">
+      <LineId Id="43" Count="22" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

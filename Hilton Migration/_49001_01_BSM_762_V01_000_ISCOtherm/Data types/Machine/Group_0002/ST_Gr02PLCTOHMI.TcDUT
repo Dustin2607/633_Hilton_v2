@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_Gr02PLCTOHMI" Id="{de390550-f232-4657-b8a3-655c7d371053}">
+    <Declaration><![CDATA[TYPE ST_Gr02PLCTOHMI :
+STRUCT
+	wBtnStartStatus						:WORD;						(* Button start status *)
+	wBtnStopStatus						:WORD;						(* Button stop status *)
+	wBtnStepProcStatus					:WORD;						(* Button stepping process status *)
+	bHomeCompleted						:BOOL;						(* Home completed *)
+	bExecutedProcess					:BOOL;						(* Process executed *)
+	udnCounterTotal						:UDINT;						(* Total counter *)
+	dwCycleTime							:DWORD;					(* Cycletime in 0.01sec / Zykluszeit in 0.01Sekunden *)
+	lrLifetime								:LREAL;				 		(* Lifetime *)
+	lrLifetimeAfterReset					:LREAL;				 		(* Lifetime after reset *)
+	lrLifetimeAfterTurnOn					:LREAL;				 		(* Lifetime after turn on *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

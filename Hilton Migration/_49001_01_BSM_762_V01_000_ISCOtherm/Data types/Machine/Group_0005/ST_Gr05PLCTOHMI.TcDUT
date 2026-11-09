@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_Gr05PLCTOHMI" Id="{359afe3a-0e06-4eae-90dc-5f3ee18696b7}">
+    <Declaration><![CDATA[TYPE ST_Gr05PLCTOHMI :
+STRUCT
+	wBtnStartStatus						:WORD;						(* Button start status *)
+	wBtnStopStatus						:WORD;						(* Button stop status *)
+	wBtnStepProcStatus					:WORD;						(* Button stepping process status *)
+	bHomeCompleted						:BOOL;						(* Home completed *)
+	bExecutedProcess					:BOOL;						(* Process executed *)
+	udnCounterTotal						:UDINT;						(* Total counter *)
+	dwCycleTime							:DWORD;					(* Cycletime in 0.01sec / Zykluszeit in 0.01Sekunden *)
+	lrLifetime								:LREAL;				 		(* Lifetime *)
+	lrLifetimeAfterReset					:LREAL;				 		(* Lifetime after reset *)
+	lrLifetimeAfterTurnOn					:LREAL;				 		(* Lifetime after turn on *)
+	wAxisClampStatus						:WORD;						(* Axis clamp 1 status *)
+	wSlideStatus							:WORD;						(* Slide status *)
+	wRemovalBandStatus					:WORD;						(* Removal band status *)
+	arwClampStatus						:ARRAY[1..ungGr05ClampMaxNo] OF WORD;						(* Clamp status *)
+	arwCylinderPosStatus					:ARRAY[1..ungGr05CylinderPosMaxNo] OF WORD;					(* Position cylinder status *)
+	arlrAxisClampActPos					:ARRAY[1..ungGr05ClampMaxNo] OF LREAL;						(* Axis clamp actual position *)
+	arlrAxisClampActVelo					:ARRAY[1..ungGr05ClampMaxNo] OF LREAL;						(* Axis clamp actual velocity *)
+	arlrAxisClampActForce					:ARRAY[1..ungGr05ClampMaxNo] OF LREAL;						(* Axis clamp actual force *)
+	unSawingStep						:UINT;						(* Current sawing step *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_SEWMOVIEDRIVEBCIA402_REF" Id="{9e62da4d-038a-441b-a2ea-e5f931c503e5}">
+    <Declaration><![CDATA[TYPE ST_SEWMOVIEDRIVEBCIA402_REF : FB_SEWMOVIDRIVEBCIA402_REF;
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

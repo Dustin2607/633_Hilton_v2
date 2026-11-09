@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_MachineState" Id="{0fb348bf-57c9-429a-910e-1d58475ca1fb}">
+    <Declaration><![CDATA[(* Machine state *)
+TYPE ET_MachineState :
+(
+	ET_MachineState_eUndefined := 0,
+	ET_MachineState_eAutoExe := 1,
+	ET_MachineState_eAutoSteppingExe := 2,
+	ET_MachineState_eAutoSteppingNoExe := 3,
+	ET_MachineState_eHomeExe := 4,
+	ET_MachineState_eHomeRefExe := 5,
+	ET_MachineState_eIdle := 10
+) ;
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

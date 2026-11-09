@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_DateTime" Id="{1830f55d-8327-4eb2-81bd-f8b8ae7d6ff6}">
+    <Declaration><![CDATA[TYPE ST_DateTime :
+STRUCT
+	sDate						:STRING;					(* Current data *)
+	sTime						:STRING;					(* Current time *)
+	sTimeEx						:STRING;					(* Current time extend *)
+	sDateTime					:STRING;					(* Current data and time *)
+	dtDateTime					:DATE_AND_TIME;				(* Current data and time *)
+	sDateTimeEx					:STRING;					(* Current data and time extend *)
+	dtDateTimeEx				:DATE_AND_TIME;				(* Current data and time extend *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>
