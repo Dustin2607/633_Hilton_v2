@@ -1,0 +1,235 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_PosCylinder_MoveAbsolut" Id="{cb86a20f-90f5-4cd6-9ac6-35afb9eb9044}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_PosCylinder_MoveAbsolut
+(*
+
+The function block used to starts positioning to an absolute target position. 
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			22.09.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;			(* Function block enable *)
+	bNoEStop					:BOOL;			(* No ermergency Stop / Keine Notaus *)
+	bLightCurtainOK				:BOOL;			(* Light curtain ok / Freigabe Lichtschranke i.o *)
+	bAirPressure					:BOOL;			(* Signal air pressure *)
+	arbInBase					:ARRAY[1..ungGr05PosCylinderMaxNo] OF BOOL;
+	arbInWork					:ARRAY[1..ungGr05PosCylinderMaxNo] OF BOOL;
+	arbInError					:ARRAY[1..ungGr05PosCylinderMaxNo] OF BOOL;
+	bExecute					:BOOL;			(* Execut the function block *)
+	lrPosition						:LREAL;			(* Absolute target position *)
+	lrPosOffset					:LREAL;					(* Position offset *)
+	lrOriginShiftPos				:LREAL;					(* Origin shift position *)
+	etDirection					:ET_MC_Direction;			(* Direction: -1 Negative, +1 Positive *)
+	usnCodingType				:USINT;
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	lrActPosition					:LREAL;			(* Absolute actual position *)
+	arbToBase					:ARRAY[1..ungGr05PosCylinderMaxNo] OF BOOL;
+	arbToWork					:ARRAY[1..ungGr05PosCylinderMaxNo] OF BOOL;
+	bDone						:BOOL;			(* Program done *)
+	bBusy						:BOOL;			(* Program busy *)
+	bError						:BOOL;			(* Error *)
+	udnErrorNo					:UDINT;			(* Error number *)
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+	etMC_States					:ET_MC_States := ET_MC_States_eInit;
+
+	(* Variables *)
+	wSetPosCylinder				:WORD;			(* Set position of cylinder  *)
+	wGetPosCylinder				:WORD;			(* Get position of cylinder  *)
+
+	wPosCylinder					:WORD;
+
+	nWatchdog					:INT;
+
+	bFirstTime					:BOOL;
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtExecute						:R_TRIG;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+wGetPosCylinder.0 := arbInBase[1];
+wGetPosCylinder.1 := arbInWork[1];
+wGetPosCylinder.2 := arbInBase[2];
+wGetPosCylinder.3 := arbInWork[2];
+wGetPosCylinder.4 := arbInBase[3];
+wGetPosCylinder.5 := arbInWork[3];
+
+lrActPosition := F_GetPosCylinder(wGetPosCylinder, lrPosOffset, lrOriginShiftPos, etDirection, usnCodingType);
+
+IF NOT bEnable
+THEN
+	bDone := bExecute AND bBusy;		(* Program done *)
+	bBusy := bExecute;                                  	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;                                 		(* Error number *)
+
+	bFirstTime := FALSE;
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+	bDone := FALSE;                                	(* Program done *)
+	bBusy := FALSE;                                 	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;                                 		(* Error number *)
+
+	etMC_States := ET_MC_States_eInit;                      (* Next step *)
+
+	bFirstTime := TRUE;
+END_IF;
+
+rtExecute(CLK := bExecute
+			     AND bNoEStop
+			     AND bLightCurtainOK
+			     AND bAirPressure
+);
+
+IF rtExecute.Q
+THEN
+	etMC_States := ET_MC_States_eInit;                      (* Next step *)
+
+ELSIF NOT bExecute
+	    OR NOT bNoEStop
+	    OR NOT bLightCurtainOK
+	    OR NOT bAirPressure
+THEN
+	arbToBase[1] := FALSE;
+	arbToWork[1] := FALSE;
+	arbToBase[2] := FALSE;
+	arbToWork[2] := FALSE;
+	arbToBase[3] := FALSE;
+	arbToWork[3] := FALSE;
+
+END_IF;
+
+CASE etMC_States OF
+
+	ET_MC_States_eInit:
+		bBusy := FALSE;                                    	(* Program not busy *)
+		bError := FALSE;                         		(* Program not error *)
+		udnErrorNo := 0;                         		(* Error number *)
+
+		IF rtExecute.Q
+		THEN
+			nWatchdog := 0;
+			bDone := FALSE;				(* Program done, in position *)
+			bBusy := TRUE;				(* Program busy *)
+
+			IF bNoEStop
+			     AND bLightCurtainOK
+			     AND bAirPressure
+			THEN
+				etMC_States := ET_MC_States_eRunning;			(* Next step *)
+
+			ELSE
+				udnErrorNo := 4;                     (* Error number *)
+
+				etMC_States := ET_MC_States_eError;			(* Next step *)
+
+			END_IF;
+		END_IF;
+
+	ET_MC_States_eRunning:
+		wSetPosCylinder := F_SetPosCylinder(lrPosition, lrPosOffset, lrOriginShiftPos, etDirection, usnCodingType);
+
+		arbToBase[1] := wSetPosCylinder.0;
+		arbToWork[1] := wSetPosCylinder.1;
+		arbToBase[2] := wSetPosCylinder.2;
+		arbToWork[2] := wSetPosCylinder.3;
+		arbToBase[3] := wSetPosCylinder.4;
+		arbToWork[3] := wSetPosCylinder.5;
+
+		etMC_States := ET_MC_States_eWaiting;			(* Next step *)
+
+	ET_MC_States_eWaiting:
+		wPosCylinder.0 := arbToBase[1];
+		wPosCylinder.1 := arbToWork[1];
+		wPosCylinder.2 := arbToBase[2];
+		wPosCylinder.3 := arbToWork[2];
+		wPosCylinder.4 := arbToBase[3];
+		wPosCylinder.5 := arbToWork[3];
+		
+		lrPosition := F_GetPosCylinder(wPosCylinder, lrPosOffset, lrOriginShiftPos, etDirection, usnCodingType);
+
+		IF lrPosition = lrActPosition
+		THEN
+			arbToBase[1] := FALSE;
+			arbToWork[1] := FALSE;
+			arbToBase[2] := FALSE;
+			arbToWork[2] := FALSE;
+			arbToBase[3] := FALSE;
+			arbToWork[3] := FALSE;
+
+			etMC_States := ET_MC_States_eDone;			(* Next step *)
+
+		ELSIF arbInError[1]
+			    OR arbInError[2]
+			    OR arbInError[3]
+		THEN
+			arbToBase[1] := FALSE;
+			arbToWork[1] := FALSE;
+			arbToBase[2] := FALSE;
+			arbToWork[2] := FALSE;
+			arbToBase[3] := FALSE;
+			arbToWork[3] := FALSE;
+
+			etMC_States := ET_MC_States_eError;			(* Next step *)
+
+		END_IF;
+
+	ET_MC_States_eDone:
+		nWatchdog := 0;
+		bDone := TRUE;			(* Program done, in position *)
+		bBusy := FALSE;			(* Program not busy *)
+
+		etMC_States := ET_MC_States_eNotExecute;            (* Next step *)
+
+	ET_MC_States_eError:
+		nWatchdog := 0;
+		bDone := FALSE;			(* Program done, in position *)
+		bError := TRUE;			(* Program error *)   
+		bBusy := FALSE;			(* Program not busy *)
+
+        		etMC_States := ET_MC_States_eNotExecute;			(*Next step *)
+
+	ET_MC_States_eNotExecute:
+		IF NOT bExecute
+		THEN
+			bDone := FALSE;					(* Program done, in position *)
+			bBusy := FALSE;                                 	(* Program not busy *)
+			bError := FALSE;                     			(* Program not error *)
+			udnErrorNo := 0;                     			(* Error number *)
+
+			etMC_States := ET_MC_States_eInit;			(* Next step *)
+		
+		END_IF;
+END_CASE;
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_PosCylinder_MoveAbsolut">
+      <LineId Id="65" Count="159" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

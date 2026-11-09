@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_SignalHandlingDelay_1" Id="{e2f4c581-a81a-4099-828f-0c4dcc8c6330}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_SignalHandlingDelay_1
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable					:BOOL;						(* Enable FB signal *)
+	bIn						:BOOL;						(* Input signal *)
+	tDelay					:TIME := t#0s;					(* Delay *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bOut					:BOOL;						(* Delayed signal *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	bFirstTime				:BOOL;						(* First cycle *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	tonDelay					:TON;						(* Timer to delay *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	tonDelay(IN := FALSE,
+	          	PT := tDelay);
+	bOut := bIn;
+    RETURN;
+END_IF;
+
+tonDelay(				(* Dealy input signal *)
+	IN := bIn,
+	PT := tDelay
+);
+
+bOut := tonDelay.Q;		(* Set output *)]]></ST>
+    </Implementation>
+    <LineIds Name="FB_SignalHandlingDelay_1">
+      <LineId Id="24" Count="13" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

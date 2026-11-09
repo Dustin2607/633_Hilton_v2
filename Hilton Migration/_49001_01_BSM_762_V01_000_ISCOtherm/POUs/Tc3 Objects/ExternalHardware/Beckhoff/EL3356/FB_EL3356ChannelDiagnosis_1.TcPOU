@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_EL3356ChannelDiagnosis_1" Id="{21217628-b136-4eeb-9174-6ca91da6d694}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_EL3356ChannelDiagnosis_1
+VAR_INPUT
+	stChannelState				:ST_EL3356ChannelState;
+END_VAR
+VAR_OUTPUT
+	bChannelOK					:BOOL;
+	bCalibrationInProgress			:BOOL;
+END_VAR
+VAR
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+(* General Channel Status *)
+IF stChannelState.bOverrange = 0
+    AND stChannelState.bError = 0
+    AND stChannelState.bSyncError = 0
+THEN
+	bChannelOK := TRUE;
+ELSE
+	bChannelOK := FALSE;
+END_IF
+
+bCalibrationInProgress := stChannelState.bCalibrationInProgress;
+
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_EL3356ChannelDiagnosis_1">
+      <LineId Id="11" Count="15" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_PLCTOSTOEBERSI6SC6CIA402_1" Id="{1db49839-22c7-4cb2-be59-46837d8b0304}">
+    <Declaration><![CDATA[(* Communikation structure from plc to drive *)
+
+TYPE ST_PLCTOSTOEBERSI6SC6CIA402_1 :
+STRUCT
+	snA541ModesOfOperation			:SINT;
+	dnA592VelocityOffset				:DINT;
+	nA593TorqueOffset 				:INT;
+	nA558TargetTorque 				:INT;
+	dwA637DigitalOutputs 				:DWORD;
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

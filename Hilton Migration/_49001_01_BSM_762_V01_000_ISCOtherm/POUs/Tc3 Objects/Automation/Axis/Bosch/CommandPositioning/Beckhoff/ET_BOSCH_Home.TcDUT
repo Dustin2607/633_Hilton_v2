@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_BOSCH_Home" Id="{708d7ab4-4db9-4576-b1c2-ec1c873ad327}">
+    <Declaration><![CDATA[TYPE ET_BOSCH_Home :
+(
+	eWaitExecute := 0,
+	eInit,
+	eResetCalibrationFlag,
+	eWfResetCalibrationFlag,
+	eReadEnablePosLagMonitoring,
+	eWfReadEnablePosLagMonitoring,
+	eReadEnableLimitPos,
+	eWfReadEnableLimitPos,
+	eReadEnableLimitNeg,
+	eWfReadEnableLimitNeg,
+	eEraseEnablePosLagMonitoring,
+	eWfEraseEnablePosLagMonitoring,
+	eEraseEnableLimitPos,
+	eWfEraseEnableLimitPos,
+	eEraseEnableLimitNeg,
+	eWfEraseEnableLimitNeg,
+	eStartCancelCalibration,
+	eReadDriveNoCalibrated,
+	eStopCancelCalibration,
+	eWriteCalibrationOffset,
+	eStartCalibration,
+	eReadDriveCalibrated,
+	eReadDriveStopped,
+	eWriteEnablePosLagMonitoring,
+	eWfWriteEnablePosLagMonitoring,
+	eWriteEnableLimitPos,
+	eWfWriteEnableLimitPos,
+	eWriteEnableLimitNeg,
+	eWfWriteEnableLimitNeg,
+	eWriteCancelCalibration,
+	eWriteStopCalibration,
+	eSetCalibrationFlag,
+	eWfSetCalibrationFlag,
+	eWfAxisEnabled,
+	eAbort,
+	eDone := 197,
+	eError := 198,
+	eNotExecute := 199
+);
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

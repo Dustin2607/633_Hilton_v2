@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <GVL Name="GVL_Trace" Id="{912e9db1-2053-44d9-a66a-b182699f418b}">
+    <Declaration><![CDATA[{attribute 'Tc2GvlVarNames'}
+VAR_GLOBAL CONSTANT
+	MAX_TRACE_ROWS 					:UDINT := 1;
+	MAX_TRACE_COLUMNS 				:UDINT := 30;
+	MAX_TRACE_FIELD_LENGTH			:UDINT := 100;
+END_VAR
+]]></Declaration>
+  </GVL>
+</TcPlcObject>

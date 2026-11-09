@@ -1,0 +1,124 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_ValueFilter_1" Id="{76d497c2-16e8-4526-8b16-1df3647b38b3}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ValueFilter_1
+(*
+
+Function block for filtering current input-value.
+
+Sample Time
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			16.07.2014
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Enummerations *)
+
+	(* Variables *)
+	bEnable								:BOOL := TRUE;					(* Enable FB *)
+
+	lrInSignal								:LREAL;							(* Input signal *)
+	lrDeltaMax							:LREAL := 100;					(* Maximum difference between two input values *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR
+VAR_OUTPUT
+	(* Enummerations *)
+	
+	(* Variables *)
+	lrOutSignal							:LREAL;							(* Output signal *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+END_VAR
+VAR
+	(* Enummerations *)
+	
+	(* Variables *)
+	bFirstTime							:BOOL;							(* First cycle *)
+
+	lrCacheInSignal						:LREAL;							(* Copy of input signal *)
+	dnOverLimitCounter					:DINT;							(* Counter of over limit *)
+
+	lrLastSignal							:LREAL;							(* Last signal in time N *)
+	lrSignalN_1							:LREAL;							(* Signal in time N - 1 *)
+	lrSignalN_2							:LREAL;							(* Signal in time N - 2 *)
+	lrSignalN_3							:LREAL;							(* Signal in time N - 3 *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+
+
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	lrOutSignal := lrInSignal;
+
+	bFirstTime := FALSE;
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+	lrSignalN_3 := lrInSignal;
+	lrSignalN_2 := lrInSignal;
+	lrSignalN_1 := lrInSignal;
+	lrLastSignal := lrInSignal;
+
+	bFirstTime := TRUE;
+END_IF
+
+lrSignalN_3 := lrSignalN_2;
+lrSignalN_2 := lrSignalN_1;
+lrSignalN_1 := lrLastSignal;
+
+lrCacheInSignal := lrInSignal;
+
+IF ABS( lrCacheInSignal - lrSignalN_1 ) <= lrDeltaMax
+THEN
+	lrLastSignal := lrCacheInSignal;
+	dnOverLimitCounter := 0;
+
+ELSE
+	dnOverLimitCounter := dnOverLimitCounter + 1;
+
+	IF dnOverLimitCounter <= 3
+	THEN
+		lrLastSignal	:= lrSignalN_1 + ((lrSignalN_1 - lrSignalN_2) + (lrSignalN_2 - lrSignalN_3)) / 2.0;
+
+	ELSIF dnOverLimitCounter = 4
+	THEN
+		lrLastSignal := lrSignalN_1 + (lrCacheInSignal - lrSignalN_1) / 2.0;
+
+	ELSE
+		lrLastSignal := lrCacheInSignal;
+	END_IF
+
+END_IF
+
+lrOutSignal := lrLastSignal;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ValueFilter_1">
+      <LineId Id="67" Count="46" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

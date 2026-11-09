@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_PLCTOKUKA_1" Id="{4d5a3e3d-86ca-4a04-8591-0bee5530a4fb}">
+    <Declaration><![CDATA[TYPE ST_PLCTOKUKA_1 :
+STRUCT
+	bDrivesOn						:BOOL;						(* $IN[140] - Switch on the robot drives / Einschalten der Roboterantriebe *)
+	bDrivesOff						:BOOL;						(* $IN[141] - If this input is FALSE, Switch off the robot drives / Abschalten der Roboterantriebe *)
+	bConfMess						:BOOL;						(* $IN[142] - Acknowledge error / Quittieren von Fehlermeldungen durch den Leitrechner *)
+	bMoveEnable					:BOOL;						(* $IN[143] - Check the robot drives. TRUE Jogging and program execution are possible / Kontrolle der Roboterantriebe *)
+	bCheckMovena					:BOOL;						(* TRUE MOVE_ENABLE monitoring is activated / Überwachung für MOVE_ENABLE *)
+	bExtStart							:BOOL;						(* $IN[145] - If the I/O interface is active, this input can be set to start or continue a program / Extern Start *)
+	bIOAct							:BOOL;						(* $IN[1025] - If this input is TRUE, the Automatic External interface is active. Default setting:$IN[1025]. *)
+	nPgNo							:INT;						(* $IN[33] - Program number / Programmnummer *)
+																(* $IN[33]  + 8 = $IN[41], PGNO_LENGTH = 8 (max. 16) *)
+	bPgNoParity						:BOOL;						(* $IN[41] - Input to which the parity bit is transferred from the higher-level controller / Übertragen des Paritätsbit vom Leitrechner *)
+	bPgNoValid						:BOOL;						(* $IN[42] - Input to which the command to read the program number is transferred from the higher-level controller / Einlesen der Programmnumer vom Leitrechener *)
+	nOverride						:INT;						(* $IN[100] - Override *)
+
+	bPgReset						:BOOL;						(* $IN[148] - Cancel a program / Programm abbrechen *)
+
+	bForceInBase					:BOOL;						(* $IN[10] - Force in base position *)
+	bForceInWork					:BOOL;						(* $IN[11] - Force in work position *)
+	bCutoffInBase						:BOOL;						(* $IN[12] - Cutoff in base position *)
+	bCutoffInWork						:BOOL;						(* $IN[13] - Cutoff in work position *)
+
+	bMEHeat						:BOOL;						(* $IN[18] - Heat status ON = TRUE, OFF = FALSE *)
+	bMEHeating						:BOOL;						(* $IN[19] - Heating status ON = TRUE, OFF = FALSE *)
+	bMEHeated						:BOOL;						(* $IN[20] - Heated status ON = TRUE, OFF = FALSE *)
+	bMEExtruding						:BOOL;						(* $IN[21] - Extruder status ON = TRUE, OFF = FALSE *)
+
+	nCutOffDist						:INT;						(* $IN[50] - Distance of cutoff *)
+	nExtruderOffDist					:INT;						(* $IN[66] - Distance aftre extruder is off *)
+	unExtruderStartTime				:UINT;						(* $IN[82] - Extruder start time *)
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

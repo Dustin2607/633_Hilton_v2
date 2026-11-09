@@ -1,0 +1,507 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_AxisMcBeckhoffBoschIndraDrive" Id="{f8e1118a-b157-4d6a-9bb9-a12fe51e89d0}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_AxisMcBeckhoffBoschIndraDrive
+(*
+
+The function block used to control Bosch IndraDrive axis.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			24.01.2019
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Axis present *)
+	etMachineMode				:ET_MachineMode;			(* Machine mode *)
+	etMachineState				:ET_MachineState;			(* Machine state *)
+	bNoEStop					:BOOL;						(* No ermergency Stop / Keine Notaus *)
+	bPowerSupplyOn				:BOOL;						(* Power supply on / Leitung eingeschaltet *)
+	bLightCurtainOK				:BOOL;						(* Light curtain ok / Freigabe Lichtschranke i.o *)
+	bMachineStandstill			:BOOL;						(* Machine standstill *)
+	bCtrlInterrupt				:BOOL;						(* Control interrupt *)
+	bMoveRelease				:BOOL;						(* Move release *)
+	lrSoftLimitMax				:LREAL; 						(* Position limit switch maximum *)
+	lrSoftLimitMin				:LREAL; 						(* Position limit switch minimum *)
+	bTipPlus					:BOOL;						(* Manual tip in plus direction *)
+	bTipMinus					:BOOL;						(* Manual tip in minus direction *)
+	lrTipDistance				:LREAL;						(* Relative distance for movements *)
+	bPlusRelease				:BOOL;						(* Plus move release *)
+	bMinusRelease				:BOOL;						(* Minus move release *)
+	bExeSetPos					:BOOL;						(* Execute set position *)
+	bExeHome					:BOOL;						(* Execute home *)
+	bExeMoveAbs					:BOOL;						(* Execute move absolut *)
+	bExeMoveRel					:BOOL;						(* Execute move relative *)
+	bExeMoveAdd					:BOOL;						(* Execute move additive *)
+	bExeMoveSuper				:BOOL;						(* Execute move superimposed *)
+	bExeMoveVelo				:BOOL;						(* Execute move velo *)
+	bExeGearIn					:BOOL;						(* Execute gear in *)
+	bExeGearOut					:BOOL;						(* Execute gear out *)
+	bExeStop					:BOOL;						(* Execute move stop *)
+	bExeReset					:BOOL;						(* Execute auto reset *)
+	bExtOverrideEn				:BOOL;						(* External override enable *)
+	lrExtOverride				:LREAL;						(* External override *)
+	lrTargetPosition			:LREAL;						(* Absolute target position *)
+	lrManualVelocity			:LREAL;						(* Value of velocity in manual motion [mm/s] *)
+	lrNoRefVelocity				:LREAL;						(* Velocity if has no reference [mm/s] *)
+	bVelocityLimitEn			:BOOL;						(* Enable velocity limit *)
+	lrAutoVelocity				:LREAL;						(* Value of velocity in auto motion [mm/s] *)
+	lrVelocityMin				:LREAL;						(* Velocity minimum [%] *)
+	lrVelocityMax				:LREAL;						(* Velocity maximum [%] *)
+	lrAcceleration				:LREAL;						(* Value of the acceleration (always positive). If >= 0 else from SM *)
+	lrDeceleration				:LREAL;						(* Value of deceleration (always positive). If >= 0 else from SM *)
+	lrJerk						:LREAL;						(* Value of jerk (always positive). If >= 0 else from SM *)
+	bEngineTorqueLimitEn		:BOOL;						(* Enable engine torque limit *)
+	lrEngineTorque				:LREAL;						(* Engine torque [%] *)
+	bWithAbsoluteEncoder		:BOOL; 						(* Encoder is an absolute one / Absolutwertgeber *)
+	bPosLagMonitoringEn			:BOOL;						(* Enable position lag monitoring *)
+	lrOriginShiftPos			:LREAL;						(* Origin shift position *)
+	dnRatioNumerator			:DINT;						(* Gear ratio numerator. Alternatively, the gear ratio can be specified in the numerator as a floating comma value, if the denominator is 1. *)
+	udnRatioDenominator			:UDINT;						(* Gear ratio denominator *)
+	bProcessCtrlEn				:BOOL;						(* Enable process controller *)
+	bProcessCtrlExtStart		:BOOL;						(* Process controller start *)
+	bProcessCtrlExtStop			:BOOL;						(* Process controller stop *)
+	rProcessCtrlKp				:REAL;						(* Process controller proportional gain Kp *)
+	rProcessCtrlTi				:REAL;						(* Process controller integral Ti *)	
+	rProcessCtrlLimitUpper		:REAL;						(* Process controller limit output velocity of the drive *)
+	rProcessCtrlLimitLower		:REAL;						(* Process controller limit output velocity of the drive *)
+	rProcessCtrlPosLimit		:REAL;						(* Process controller limit output position of the drive *)
+	rProcessCtrlPosLimitWindow	:REAL;						(* Process controller window limit output position of the drive *)
+	lrTargetForce				:LREAL;						(* Absolute target force [N] *)
+	lrForceMax					:LREAL;						(* Maximal force [N] *)
+	lrForceOffset				:LREAL;						(* Acttual force offset [N] *)
+	lrManualOverflowForce		:LREAL;						(* Maximal force in manual mode [N] *)
+	lrAutoOverflowForce			:LREAL;						(* Maximal force in automatic mode [N] *)
+	lrOverride					:LREAL;						(* Override *)
+	lrActTemp					:LREAL;						(* Current temperatur *)
+	lrTempLimitMax				:LREAL;						(* Temperatur limit maximum*)
+	lrTempLimitMin				:LREAL;						(* Temperatur limit minimum*)
+	bCoolingActive				:BOOL;						(* Cooling on *)
+	bConfirmAlarm				:BOOL;						(* Confirm alarm *)
+	bOccupied					:BOOL;						(* Axis occupied *)
+	tControllerOff				:TIME := T#60S;				(* Time to switch controller off *)
+	tAdsTimeOut 				:TIME := T#2S;				(* Timout for ads commands *)					
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bCtrlEnabled				:BOOL;						(* Controller enabled *)
+	bNotMoving					:BOOL;						(* Axis not moving *)
+	bReferenced					:BOOL;						(* Axis referenced *)
+	bCoupled					:BOOL;						(* Axis coupled *)
+	lrActPosition				:LREAL;						(* Actual position [mm] *)
+	lrActAbsPosition			:LREAL;						(* Actual absolut position [mm] *)
+	lrActVelocity				:LREAL;						(* Actual velocity [mm/s] *)
+	lrActForce					:LREAL;						(* Actual force [N] *)
+	lrVeloMax					:LREAL;						(* Velocity limit maximum *)
+	lrAccMax					:LREAL;						(* Acceleration limit maximum *)
+	lrDecMax					:LREAL;						(* Deceleration limit maximum *)
+	lrJerkMax					:LREAL;						(* Jerk limit maximum *)
+	bHardLimitMaxExceeded		:BOOL;						(* Position limit switch maximum is exceeded *)
+	bHardLimitMinExceeded		:BOOL;						(* Position limit switch minimum is exceeded *)
+	bSoftLimitMaxExceeded		:BOOL;						(* Position limit switch maximum is exceeded *)
+	bSoftLimitMinExceeded		:BOOL;						(* Position limit switch minimum is exceeded *)
+	bCoolingOn					:BOOL;						(* Cooling *)
+	bErrorTerminal				:BOOL;						(* Error Axis terminal *)
+	bErrorDrive					:BOOL;						(* Error drive *)
+	bErrorCtrlEnabled			:BOOL;						(* Error Axis controller enabled *)
+	bErrorForceOverflow			:BOOL;						(* Error force overflow *)
+	bErrPosLimitOverflow		:BOOL;						(* Error position limit overflow *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	bHomeCompleted				:BOOL;						(* Home completed *)
+	Drive						:ST_BOSCHINDRADRIVECIA402_REF; (* The ST_BOSCHINDRADRIVECIA402_REF data type  is an interface between the PLC and the DRIVE and contains axis information *)
+	Axis						:AXIS_REF;					(* The AXIS_REF data type  is an interface between the PLC and the NC and contains axis information *)
+	MasterAxis					:AXIS_REF;					(* The AXIS_REF data type  is an interface between the PLC and the NC and contains axis information *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	sAdsAddr					:STRING(23);					(* AmsNetId of the EtherCAT master device.*)
+	unSlaveAddr					:UINT;						(* Address of the slave device.*)
+
+	nTorqueLimitMax				:INT := 100;					(* The torque limit (absolute value). Value range in %: -200 ... 200 ... 200 *)
+
+	lrVeloLimitMax				:LREAL;
+	lrVeloLimitMin				:LREAL;
+
+	sTerminalStatus				:STRING;
+
+	bSetDefaultSettings			:BOOL;
+	bReadSettings				:BOOL;
+	bWriteSettings				:BOOL;
+
+	ProcessCtrl					:ST_FWS_MLDPCx_PRE_01Vxx_MPxx;
+	
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbTerminalDiagnosis			:FB_TerminalDiagnosis;
+	rtMachineStandstill			:R_TRIG;
+	tonAxisEnabled				:TON;
+
+	fbController				:FB_BOSCH_AxisController;
+	fbMoveManual				:FB_BOSCH_AxisMoveManual;
+	fbMoveAuto					:FB_BOSCH_AxisMoveAuto;
+	fbDriveLink					:FB_BOSCH_DriveLink;
+	fbProcessCtrlLink			:FB_BOSCH_ProcessCtrlLink;
+	fbProcessCtrl				:FB_BOSCH_ProcessCtrl;
+	fbCoolingOff				:FB_SignalHandlingDelay;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable								(* Signal FB enable *)
+THEN
+
+	RETURN;
+END_IF
+
+A_AxisLink();
+A_AxisGetStatus();
+A_AxisController();
+A_AxisProcessCtrl();
+A_AxisMoveManual();
+A_AxisMoveAuto();
+A_AxisCooling();
+A_AxisTerminalDiag();
+A_AxisAlarm();
+
+]]></ST>
+    </Implementation>
+    <Action Name="A_AxisAlarm" Id="{c86ae012-24bb-4c8e-9a22-f95f5633744f}">
+      <Implementation>
+        <ST><![CDATA[
+(* Axis errors *)
+tonAxisEnabled(
+	IN := fbController.bEnable
+		AND fbController.bRegulatorOn
+		AND NOT fbController.bStatusDelay,
+	PT := fbController.tStatusDelay + t#2s
+);
+
+bErrorCtrlEnabled := tonAxisEnabled.Q;
+
+bErrorDrive := Drive.bDriverZKL1;
+
+bErrorForceOverflow := ((etMachineMode = ET_MachineMode_eAutomatic
+			    		 OR etMachineMode = ET_MachineMode_eHome) AND NOT bNotMoving AND lrActForce > lrAutoOverflowForce)
+			  			 OR (etMachineMode = ET_MachineMode_eManual AND bTipMinus AND bTipPlus AND lrActForce > lrManualOverflowForce)
+						  OR (etMachineMode = ET_MachineMode_eMaintenance AND NOT bNotMoving AND lrActForce > lrManualOverflowForce);
+						 
+bErrPosLimitOverflow := fbProcessCtrl.bErrPosLimitExceeded;	]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_AxisController" Id="{2446656e-6efa-49ec-bc75-ed724c4e4a0c}">
+      <Implementation>
+        <ST><![CDATA[
+(* Axis controller *)
+fbController(
+    bEnable := TRUE,
+	etMachineMode := etMachineMode,
+	etMachineState := etMachineState,
+	bRegulatorOn := bNoEStop
+				      AND bPowerSupplyOn
+				      AND bLightCurtainOK
+				      AND SEL(bNotMoving, NOT bCtrlInterrupt, TRUE)
+				      AND NOT fbMoveManual.bControllerOff
+				      AND NOT fbMoveAuto.bControllerOff,
+	bReset := bConfirmAlarm,
+	bTerminalOK := fbTerminalDiagnosis.bTerminalOK,
+	bExeReset := bExeReset,
+	bExeSetPos := bExeSetPos,
+	lrSetPosition := lrTargetPosition,
+	bExeGearIn := bExeGearIn,
+	bExeGearOut := bExeGearOut,
+	dnRatioNumerator := dnRatioNumerator,
+	udnRatioDenominator := udnRatioDenominator,
+	lrOverride := SEL(bExtOverrideEn,
+					lrOverride,
+					lrOverride * lrExtOverride / 100.0),
+	bWithAbsoluteEncoder := bWithAbsoluteEncoder,
+	bPosLagMonitoringEn := bPosLagMonitoringEn,
+	lrPositionBias := lrOriginShiftPos,
+	bHWSignalLimitMax := FALSE,
+	bHWSignalLimitMin := FALSE,
+	lrSoftLimitMax := lrSoftLimitMax,
+	lrSoftLimitMin := lrSoftLimitMin,
+	lrAcceleration := lrAcceleration,
+	lrDeceleration := lrDeceleration,
+	lrJerk := lrJerk,
+	pDrive := ADR(Drive),
+	Axis := Axis,
+	MasterAxis := MasterAxis,
+	bStatusDelay => bCtrlEnabled,
+	lrActPos => lrActPosition,
+	lrActAbsPos => lrActAbsPosition,
+	lrActVelo => lrActVelocity,
+	bNotMoving => bNotMoving,
+	bReferenced => bReferenced,
+	bCoupled => bCoupled,
+	lrVeloLimitMax => lrVeloMax,
+	lrAccLimitMax => lrAccMax,
+	lrDecLimitMax => lrDecMax,
+	lrJerkLimitMax => lrJerkMax,
+	bHardLimitMaxExceeded => bHardLimitMaxExceeded,
+	bHardLimitMinExceeded => bHardLimitMinExceeded,
+	bSoftLimitMaxExceeded => bSoftLimitMaxExceeded,
+	bSoftLimitMinExceeded => bSoftLimitMinExceeded
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_AxisCooling" Id="{a16da094-71c4-44be-8eb9-2e9dd9f3ebf1}">
+      <Implementation>
+        <ST><![CDATA[
+(* Cooling control *)
+fbCoolingOff(
+	bEnable := TRUE,
+	bIn := NOT bCoolingActive
+		  AND lrActTemp < lrTempLimitMin
+		  AND bCoolingOn,
+	tDelay := t#30s
+);
+
+IF bCoolingActive
+     OR lrActTemp > lrTempLimitMax
+THEN
+	bCoolingOn := TRUE;
+
+ELSIF fbCoolingOff.bOut
+THEN
+	bCoolingOn := FALSE;
+END_IF]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_AxisGetStatus" Id="{d7104738-50b5-4021-9f41-7d2938117c6c}">
+      <Implementation>
+        <ST><![CDATA[
+(* Get axis status *)
+Axis.ReadStatus();]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_AxisLink" Id="{f784762c-2f47-47ac-8338-3f6e910f662e}">
+      <Implementation>
+        <ST><![CDATA[
+(* Get terminal status *)
+sAdsAddr := F_CreateAmsNetId(Drive.stTerminalState.stAdsAddr.netId);
+unSlaveAddr := Drive.stTerminalState.stAdsAddr.port;
+Axis.DriveAddress.NetID := F_CreateAmsNetId(Drive.stTerminalState.stAdsAddr.netId);
+Axis.DriveAddress.SlaveAddress := Drive.stTerminalState.stAdsAddr.port;
+
+(* Set/Get drive parameter *)
+fbDriveLink(
+	pDrive := ADR(Drive)
+);
+
+(* Set/Get process controller parameter *)
+fbProcessCtrlLink(
+	pDrive := ADR(Drive),
+	pProcessCtrl := ADR(ProcessCtrl)
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_AxisMoveAuto" Id="{aaaa9323-ef11-4ab8-86f5-8a49c7e3d56b}">
+      <Implementation>
+        <ST><![CDATA[
+(* Move axis auto *)
+rtMachineStandstill(CLK := bMachineStandstill);
+
+lrVeloLimitMin := SEL(bVelocityLimitEn, -1 * lrVeloMax, lrVelocityMin);
+lrVeloLimitMax := SEL(bVelocityLimitEn, lrVeloMax, lrVelocityMax);
+
+fbMoveAuto(
+	bEnable := bNoEStop
+               		    AND bPowerSupplyOn
+               		    AND bLightCurtainOK,
+	bOccupied := bOccupied,
+	bCtrlEnabled := bCtrlEnabled
+				      AND bMoveRelease,
+	etMachineMode := etMachineMode,
+	etMachineState := etMachineState,
+	bReset := bConfirmAlarm,
+	bExeHome := bExeHome,
+	bExeMoveAbs := bExeMoveAbs,
+	bExeMoveRel := bExeMoveRel,
+	bExeMoveAdd := bExeMoveAdd,
+	bExeMoveSuper := bExeMoveSuper,
+	bExeMoveVelo := bExeMoveVelo,
+	bExeStop := bExeStop
+			      OR rtMachineStandstill.Q,
+	lrPosition := lrTargetPosition,
+	lrVelocity := LIMIT(lrVeloLimitMin, lrAutoVelocity, lrVeloLimitMax),
+	lrAcceleration := lrAcceleration,
+	lrDeceleration := lrDeceleration,
+	lrJerk := lrJerk,
+	lrOriginShiftPos := lrOriginShiftPos,
+	tControllerOff := tControllerOff,
+	pDrive := ADR(Drive),
+	bHomeCompleted := bHomeCompleted,
+	Axis := Axis,
+	MasterAxis := MasterAxis
+ );]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_AxisMoveManual" Id="{aae37436-ea92-4a8b-a8ca-a35431e64371}">
+      <Implementation>
+        <ST><![CDATA[
+(* Move axis manual *)
+fbMoveManual(
+	bEnable := bNoEStop
+               		    AND bPowerSupplyOn
+               		    AND bLightCurtainOK,
+	bOccupied := bOccupied,
+	bCtrlEnabled := bCtrlEnabled
+				      AND bMoveRelease,
+	etMachineMode := etMachineMode,
+	etMachineState := etMachineState,
+	bReset := bConfirmAlarm,
+	bMovePlus := bTipPlus,
+	bMoveMinus := bTipMinus,
+	lrTipDistance := lrTipDistance,
+	bLimitMax := bHardLimitMaxExceeded
+			       OR bSoftLimitMaxExceeded,
+	bLimitMin := bHardLimitMinExceeded
+			      OR bSoftLimitMinExceeded,
+	bPlusRelease := bPlusRelease,
+	bMinusRelease := bMinusRelease,
+	lrVelocity := SEL(NOT bReferenced, lrManualVelocity, lrVelocityNoRef),
+	lrAcceleration := lrAcceleration,
+	lrDeceleration := lrDeceleration,
+	lrJerk := lrJerk,
+	tControllerOff := tControllerOff,
+	pDrive := ADR(Drive),
+	bHomeCompleted := bHomeCompleted,
+	Axis := Axis,
+	MasterAxis := MasterAxis
+);
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_AxisProcessCtrl" Id="{79e7305c-208c-4658-acb4-3b24019401f2}">
+      <Implementation>
+        <ST><![CDATA[
+(* Force controller *)
+fbProcessCtrl(
+	bEnable := bProcessCtrlEn, 
+	etMachineMode := etMachineMode,
+	etMachineState := etMachineState,
+	bCtrlEnabled := bCtrlEnabled
+				    AND bMoveRelease,
+	bTerminalOK := fbTerminalDiagnosis.bTerminalOK,
+	bReset := bConfirmAlarm, 
+	bExeReset := bExeReset, 
+	bExeStart := bProcessCtrlExtStart, 
+	bExeStop := bProcessCtrlExtStop
+			    OR rtMachineStandstill.Q,
+	rSetProcessValue := lrTargetForce,
+	rSetProcessValueScaling := lrForceMax,
+	rActProcessValueoOffset := lrForceOffset,
+	rProportionalGain := rProcessCtrlKp, 
+	rIntegralTime := rProcessCtrlTi,
+	rCtrlLimitUpper := rProcessCtrlLimitUpper,
+	rCtrlLimitLower := rProcessCtrlLimitLower,
+	rPosLimitUpper := rProcessCtrlPosLimit + rProcessCtrlPosLimitWindow,
+	rPosLimitLower := rProcessCtrlPosLimit - rProcessCtrlPosLimitWindow,
+	pProcessCtrl := ADR(ProcessCtrl), 
+	rActProcessValue => lrActForce, 
+	bEnabled => , 
+	bError => , 
+	bErrProcessCtrl=> , 
+	bErrMLDNotRunning=> , 
+	bErrDriveNotEnabled=> 
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_AxisTerminalDiag" Id="{cc952746-01a1-4691-9de1-1287a9d827e9}">
+      <Implementation>
+        <ST><![CDATA[
+(*Axis terminal diagnosis *)
+fbTerminalDiagnosis(
+	stTerminalState := Drive.stTerminalState,
+	sTerminalStatus => sTerminalStatus
+);
+
+bErrorTerminal := NOT fbTerminalDiagnosis.bTerminalOK;]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_AxisMcBeckhoffBoschIndraDrive">
+      <LineId Id="146" Count="17" />
+    </LineIds>
+    <LineIds Name="FB_AxisMcBeckhoffBoschIndraDrive.A_AxisAlarm">
+      <LineId Id="0" Count="9" />
+      <LineId Id="15" Count="1" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="20" Count="2" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="17" Count="1" />
+    </LineIds>
+    <LineIds Name="FB_AxisMcBeckhoffBoschIndraDrive.A_AxisController">
+      <LineId Id="0" Count="33" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="34" Count="17" />
+    </LineIds>
+    <LineIds Name="FB_AxisMcBeckhoffBoschIndraDrive.A_AxisCooling">
+      <LineId Id="0" Count="18" />
+    </LineIds>
+    <LineIds Name="FB_AxisMcBeckhoffBoschIndraDrive.A_AxisGetStatus">
+      <LineId Id="0" Count="2" />
+    </LineIds>
+    <LineIds Name="FB_AxisMcBeckhoffBoschIndraDrive.A_AxisLink">
+      <LineId Id="0" Count="3" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="4" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="28" Count="2" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="5" Count="1" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="14" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_AxisMcBeckhoffBoschIndraDrive.A_AxisMoveAuto">
+      <LineId Id="0" Count="24" />
+      <LineId Id="26" Count="5" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="34" Count="3" />
+    </LineIds>
+    <LineIds Name="FB_AxisMcBeckhoffBoschIndraDrive.A_AxisMoveManual">
+      <LineId Id="0" Count="25" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="26" Count="5" />
+    </LineIds>
+    <LineIds Name="FB_AxisMcBeckhoffBoschIndraDrive.A_AxisProcessCtrl">
+      <LineId Id="0" Count="1" />
+      <LineId Id="5" Count="1" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="10" Count="2" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="13" Count="1" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="15" Count="1" />
+      <LineId Id="27" Count="1" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="17" Count="5" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="34" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_AxisMcBeckhoffBoschIndraDrive.A_AxisTerminalDiag">
+      <LineId Id="0" Count="7" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

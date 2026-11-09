@@ -1,0 +1,454 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_GFX4IRCtrlZone_1" Id="{ffcbe9cf-9131-4e02-a479-f3bcf4794fe2}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_GFX4IRCtrlZone_1
+(*
+
+The function block used to control Gerfan GFX4IR zone.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			12.07.2016
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable							:BOOL;						(* Function block enable *)
+	bReset							:BOOL;						(* Controller reset *)
+	bPowerEnabled					:BOOL;						(* Power enabled *)
+	bHandStart						:BOOL;						(* Execute start an external trajectory with rising edge *)
+	bHandStop						:BOOL;						(* Execute stop an external trajectory with rising edge *)
+	bAutoStart						:BOOL;						(* Execute start an external trajectory with rising edge *)
+	bAutoStop						:BOOL;						(* Execute stop an external trajectory with rising edge *)
+	bExeStop						:BOOL;						(* Execute stop *)
+	bStartRelease					:BOOL;						(* Start release *)
+	bCtrlInterrupt					:BOOL;						(* Control interrupt *)
+	lrSetpoint						:LREAL;						(* Setpoint 0 - 100 *)
+	bCtrlManAuto					:BOOL;						(* Auto := TRUE, Man := FALSE *)
+	bEnAutoCtrlOff					:BOOL := TRUE;				(* Auto off enable*)
+	tControllerOff					:TIME := T#90S;				(* Time to switch controller off *)
+	tControllerOn					:TIME := T#90S;				(* Time to switch controller on *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	lrCurrentValue					:LREAL;						(* Current value *)
+	bPowerEnable		 			:BOOL;						(* Power enable *)
+	bSwitchOn		 				:BOOL;						(* Zone switch on *)
+	bEnabled  						:BOOL;						(* Zone enabled *)
+	bDamaged						:BOOL;						(* Zone damaged *)
+	bDone							:BOOL;						(* Command done *)
+	bBusy							:BOOL;						(* Command busy *)
+	bError							:BOOL;						(* Command error  *)
+	udnErrorNo						:UDINT;						(* Error number *)
+	sErrorMsg						:STRING; 					(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	CtrlGFX4IRTOPLC					:ST_GFX4IRTOPLC;			(* The ST_GFX4IRTOPLC data type  is an interface between the PLC and the GFX4IR and contains controller information *)
+	CtrlPLCTOGFX4IR					:ST_PLCTOGFX4IR;			(* The ST_PLCTOGFX4IR data type  is an interface between the PLC and the GFX4IR and contains controller information *)
+END_VAR
+VAR
+	(* Enummerations *)
+	etGFX4IRStates					:ET_GFX4IR := ET_GFX4IRState_eWaitExecute;			(* Current state *)
+
+	(* Variables *)
+	bStop 							:BOOL;
+	nWatchdog						:INT;
+	bControllerOn					:BOOL;
+
+	bFirstTime						:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	tofCtrlOn						:TOF;
+	tonSwitchOn						:TON;
+	tonDamaged						:TON;
+	tonEnabled						:TON;			
+	
+	fbControllerOff					:FB_SignalHandlingDelay;
+	fbControllerOn					:FB_SignalHandlingDelay;
+
+	rtAutoStart						:R_TRIG;
+	rtAutoStop						:R_TRIG;
+	rtHandStart						:R_TRIG;
+	rtHandStop						:R_TRIG;
+	rtExeStop						:R_TRIG;
+END_VAR
+VAR CONSTANT
+	tPowerOn						:TIME := T#500MS;
+	tSwitchOn						:TIME := T#500MS;
+	tEnabled						:TIME := T#2S500MS;
+	tDamaged						:TIME := t#2s;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bFirstTime
+THEN
+	IF bCtrlManAuto
+	THEN
+		CtrlPLCTOGFX4IR.wControllerStatus.4 := FALSE;			(* Auto *)
+	ELSE
+		CtrlPLCTOGFX4IR.wControllerStatus.4 := TRUE;			(* Manual *)
+	END_IF
+
+	bControllerOn := TRUE;
+
+	bStop := TRUE;
+	
+	CtrlPLCTOGFX4IR.wControllerStatus.3 := TRUE;			(* Ctrl ON = FALSE, OFF = TRUE *)
+	CtrlPLCTOGFX4IR.nLocalSetPoint := 0;
+	CtrlPLCTOGFX4IR.nManualOutput := 0;
+
+	nWatchdog := 0;
+	bDone := FALSE;						(* Command done *)
+	bBusy := FALSE;						(* Command busy *)
+	bError := FALSE;						(* Command error  *)
+
+	etGFX4IRStates := ET_GFX4IRState_eWaitExecute;
+
+	bFirstTime := TRUE;
+END_IF
+
+tofCtrlOn(
+	IN := NOT CtrlPLCTOGFX4IR.wControllerStatus.3,
+	PT := tPowerOn
+);
+
+bPowerEnable := tofCtrlOn.Q
+				AND NOT CtrlPLCTOGFX4IR.wControllerStatus.3			(* Ctrl ON = FALSE, OFF = TRUE *)
+				AND NOT bCtrlInterrupt
+     			AND NOT fbControllerOff.bOut
+				AND NOT bStop;
+tonSwitchOn(
+	IN := bPowerEnable
+		  AND bPowerEnabled,
+	PT := tSwitchOn
+);
+bSwitchOn := tonSwitchOn.Q;
+
+tonEnabled(
+	IN := bSwitchOn
+		  AND CtrlGFX4IRTOPLC.nOutputPower > 0
+		  AND (LREAL_TO_INT(lrSetpoint  * 10) = CtrlGFX4IRTOPLC.nOutputPower),
+		  (*AND CtrlGFX4IRTOPLC.wControllerStatus.5					(* Ctrl enabled  *)
+			AND NOT CtrlGFX4IRTOPLC.wControllerStatus.0;			(* Alarm  *)*)
+	PT:= tEnabled
+);
+bEnabled := tonEnabled.Q;
+
+tonDamaged(
+	IN := bSwitchOn
+		  AND CtrlGFX4IRTOPLC.wControllerStatus.12,
+	PT := tDamaged
+);
+
+bDamaged := tonDamaged.Q;
+lrCurrentValue := CtrlGFX4IRTOPLC.nOutputPower * 0.1;
+
+fbControllerOff(
+	bEnable := TRUE,
+	bIn := bEnAutoCtrlOff
+		  AND bEnabled,
+	tDelay := tControllerOff
+);
+
+fbControllerOn(
+	bEnable := TRUE,
+	bIn := NOT bEnabled					(* Ctrl disabled *)
+		  AND NOT bControllerOn,
+	tDelay := tControllerOn
+);
+
+(*
+IF bHandStop
+    OR bCtrlInterrupt
+THEN
+	CtrlPLCTOGFX4IR.wControllerStatus.3 := TRUE;			(* Ctrl ON = FALSE, OFF = TRUE *)
+	CtrlPLCTOGFX4IR.nLocalSetPoint := 0;
+	CtrlPLCTOGFX4IR.nManualOutput := 0;
+ELSIF bHandStart
+THEN
+	CtrlPLCTOGFX4IR.wControllerStatus.3 := FALSE;			(* Ctrl ON = FALSE, OFF = TRUE *)
+	CtrlPLCTOGFX4IR.nManualOutput := LREAL_TO_INT(lrSetpoint  * 10);
+END_IF
+
+RETURN;
+*)
+
+IF bCtrlInterrupt
+     OR fbControllerOff.bOut
+THEN
+	bControllerOn := FALSE;
+
+	bStop := TRUE;
+	
+	CtrlPLCTOGFX4IR.wControllerStatus.3 := TRUE;			(* Ctrl ON = FALSE, OFF = TRUE *)
+	CtrlPLCTOGFX4IR.nLocalSetPoint := 0;
+	CtrlPLCTOGFX4IR.nManualOutput := 0;
+
+	nWatchdog := 0;
+	bDone := FALSE;						(* Command done *)
+	bBusy := FALSE;						(* Command busy *)
+	bError := FALSE;						(* Command error  *)
+
+	etGFX4IRStates := ET_GFX4IRState_eWaitExecute;
+
+ELSIF fbControllerOn.bOut
+THEN
+	bControllerOn := TRUE;
+END_IF
+
+IF bReset
+     AND bError
+THEN
+	(* Reset outputs *)
+	nWatchdog := 0;
+	bDone := FALSE;						(* Command done *)
+	bBusy := FALSE;						(* Command busy *)
+	bError := FALSE;						(* Command error  *)
+
+	etGFX4IRStates := ET_GFX4IRState_eWaitExecute;
+ELSE
+	(*IF bEnable
+	     AND CtrlGFX4IRTOPLC.wControllerStatus.8					(* Ctrl error *)
+	THEN
+		bError := TRUE;									(* Command error  *)
+
+		etGFX4IRStates := ET_GFX4IRState_eError;             		(* Next step *)
+	END_IF*);
+END_IF
+
+rtHandStart(CLK := bHandStart);
+rtHandStop(CLK := bHandStop);
+rtAutoStart(CLK := bAutoStart AND bStartRelease AND bControllerOn);
+rtAutoStop(CLK := bAutoStop);
+rtExeStop(CLK := bExeStop);
+
+IF rtExeStop.Q
+	OR rtAutoStart.Q OR rtAutoStop.Q
+THEN
+	nWatchdog := 0;
+	bDone := FALSE;						(* Command done *)
+	bBusy := FALSE;						(* Command busy *)
+	bError := FALSE;						(* Command error  *)
+
+	bStop := TRUE;
+
+	etGFX4IRStates := ET_GFX4IRState_eWaitExecute;	
+
+ELSIF rtHandStart.Q OR rtHandStop.Q 
+THEN
+	nWatchdog := 0;
+	bDone := FALSE;						(* Command done *)
+	bBusy := FALSE;						(* Command busy *)
+	bError := FALSE;						(* Command error  *)
+
+	bStop := FALSE;
+
+	etGFX4IRStates := ET_GFX4IRState_eWaitExecute;
+END_IF
+
+CASE etGFX4IRStates
+OF
+	ET_GFX4IRState_eWaitExecute:
+		IF NOT bEnable
+		THEN
+			bDone := TRUE;						(* Command done *)
+			bBusy := TRUE;						(* Command busy *)
+			bError := FALSE;						(* Command error  *)
+			bEnabled  := bAutoStart AND NOT bAutoStop; 				(* Controller enabled *)
+
+			bStop := TRUE;
+			
+			CtrlPLCTOGFX4IR.wControllerStatus.3 := TRUE;			(* Ctrl ON = FALSE, OFF = TRUE *)
+			CtrlPLCTOGFX4IR.nLocalSetPoint := 0;
+			CtrlPLCTOGFX4IR.nManualOutput := 0;
+
+			etGFX4IRStates := ET_GFX4IRState_eWaitExecute;
+
+		ELSE
+			IF rtExeStop.Q
+			   OR bAutoStop
+			   OR bHandStop
+			THEN
+				nWatchdog := 0;
+
+				bDone := FALSE;						(* Command done *)
+				bBusy := TRUE;						(* Command busy *)
+				bError := FALSE;						(* Command error  *)
+				udnErrorNo := 0;						(* Error number *)
+				sErrorMsg := ''; 						(* Error message *)
+
+				etGFX4IRStates := ET_GFX4IRState_eCtrlOff;
+
+			ELSIF (rtAutoStart.Q
+				   OR (rtHandStart.Q
+					    AND bStartRelease
+					    AND bControllerOn))
+				   AND NOT bCtrlInterrupt
+				   AND NOT fbControllerOff.bOut
+			THEN
+				nWatchdog := 0;
+	
+				bDone := FALSE;						(* Command done *)
+				bBusy := TRUE;						(* Command busy *)
+				bError := FALSE;						(* Command error  *)
+				udnErrorNo := 0;						(* Error number *)
+				sErrorMsg := ''; 						(* Error message *)
+
+				etGFX4IRStates := ET_GFX4IRState_eCtrlOn;
+
+			END_IF
+		END_IF
+
+	ET_GFX4IRState_eCtrlOn:
+		nWatchdog := nWatchdog + 1;
+		IF nWatchdog > 25000
+		THEN
+			etGFX4IRStates := ET_GFX4IRState_eError;            		 (* Next step *)
+		END_IF;
+
+		bStop := FALSE;
+		
+		CtrlPLCTOGFX4IR.wControllerStatus.3 := FALSE;			(* Ctrl ON = FALSE, OFF = TRUE *)
+
+		IF bCtrlManAuto
+		THEN
+			CtrlPLCTOGFX4IR.nLocalSetPoint := LREAL_TO_INT(lrSetpoint * 10);
+		ELSE
+			CtrlPLCTOGFX4IR.nManualOutput := LREAL_TO_INT(lrSetpoint  * 10);
+		END_IF
+		
+		IF bEnabled											(* Ctrl enabled *)
+		THEN
+			nWatchdog := 0;
+			etGFX4IRStates := ET_GFX4IRState_eDone;
+		END_IF
+
+	ET_GFX4IRState_eCtrlOff:
+		nWatchdog := nWatchdog + 1;
+		IF nWatchdog > 1000
+		THEN
+			etGFX4IRStates := ET_GFX4IRState_eError;             		(* Next step *)
+		END_IF;
+
+		bStop := TRUE;
+		
+		CtrlPLCTOGFX4IR.wControllerStatus.3 := TRUE;			(* Ctrl ON = FALSE, OFF = TRUE *)
+		CtrlPLCTOGFX4IR.nLocalSetPoint := 0;
+		CtrlPLCTOGFX4IR.nManualOutput := 0;
+
+		IF NOT bEnabled
+		THEN
+			nWatchdog := 0;
+			etGFX4IRStates := ET_GFX4IRState_eDone;
+		END_IF
+
+	ET_GFX4IRState_eDone:
+		nWatchdog := 0;
+		bDone := TRUE;						(* Command done *)
+		bBusy := FALSE;						(* Command busy *)
+
+		etGFX4IRStates := ET_GFX4IRState_eNoExecute;
+
+	ET_GFX4IRState_eError:
+		nWatchdog := 0;
+		bBusy := FALSE;						(* Command busy *)
+		bError := TRUE;						(* Command error  *)
+
+		bStop := TRUE;
+		
+		CtrlPLCTOGFX4IR.wControllerStatus.3 := TRUE;			(* Ctrl ON = FALSE, OFF = TRUE *)
+		CtrlPLCTOGFX4IR.nLocalSetPoint := 0;
+		CtrlPLCTOGFX4IR.nManualOutput := 0;
+
+		etGFX4IRStates := ET_GFX4IRState_eNoExecute;
+
+	ET_GFX4IRState_eNoExecute:
+		IF NOT bHandStart
+		   AND NOT bHandStop
+		   AND NOT bAutoStart
+		   AND NOT bAutoStop
+		THEN
+			(* Reset outputs *)
+			nWatchdog := 0;
+			bDone := FALSE;						(* Command done *)
+			bBusy := FALSE;						(* Command busy *)
+			bError := FALSE;						(* Command error  *)
+
+			etGFX4IRStates := ET_GFX4IRState_eWaitExecute;
+		END_IF
+END_CASE
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_GFX4IRCtrlZone_1">
+      <LineId Id="482" Count="10" />
+      <LineId Id="1035" Count="0" />
+      <LineId Id="493" Count="0" />
+      <LineId Id="1036" Count="0" />
+      <LineId Id="494" Count="17" />
+      <LineId Id="934" Count="0" />
+      <LineId Id="936" Count="0" />
+      <LineId Id="935" Count="0" />
+      <LineId Id="822" Count="0" />
+      <LineId Id="937" Count="1" />
+      <LineId Id="824" Count="0" />
+      <LineId Id="827" Count="0" />
+      <LineId Id="832" Count="0" />
+      <LineId Id="828" Count="0" />
+      <LineId Id="823" Count="0" />
+      <LineId Id="933" Count="0" />
+      <LineId Id="513" Count="1" />
+      <LineId Id="929" Count="0" />
+      <LineId Id="927" Count="0" />
+      <LineId Id="515" Count="2" />
+      <LineId Id="930" Count="2" />
+      <LineId Id="518" Count="43" />
+      <LineId Id="1142" Count="0" />
+      <LineId Id="1141" Count="0" />
+      <LineId Id="562" Count="40" />
+      <LineId Id="1040" Count="1" />
+      <LineId Id="603" Count="0" />
+      <LineId Id="1044" Count="8" />
+      <LineId Id="1042" Count="1" />
+      <LineId Id="604" Count="0" />
+      <LineId Id="606" Count="4" />
+      <LineId Id="1022" Count="0" />
+      <LineId Id="611" Count="0" />
+      <LineId Id="1023" Count="0" />
+      <LineId Id="612" Count="11" />
+      <LineId Id="1029" Count="0" />
+      <LineId Id="624" Count="0" />
+      <LineId Id="1030" Count="0" />
+      <LineId Id="625" Count="5" />
+      <LineId Id="917" Count="0" />
+      <LineId Id="634" Count="0" />
+      <LineId Id="1053" Count="0" />
+      <LineId Id="635" Count="15" />
+      <LineId Id="921" Count="1" />
+      <LineId Id="651" Count="19" />
+      <LineId Id="1031" Count="0" />
+      <LineId Id="671" Count="0" />
+      <LineId Id="1032" Count="0" />
+      <LineId Id="672" Count="7" />
+      <LineId Id="1026" Count="0" />
+      <LineId Id="681" Count="11" />
+      <LineId Id="1027" Count="0" />
+      <LineId Id="693" Count="0" />
+      <LineId Id="1028" Count="0" />
+      <LineId Id="694" Count="20" />
+      <LineId Id="1033" Count="0" />
+      <LineId Id="715" Count="0" />
+      <LineId Id="1034" Count="0" />
+      <LineId Id="716" Count="20" />
+      <LineId Id="330" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

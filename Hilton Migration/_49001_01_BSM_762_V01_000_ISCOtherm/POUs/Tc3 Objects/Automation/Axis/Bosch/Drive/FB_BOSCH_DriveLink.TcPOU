@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_BOSCH_DriveLink" Id="{7b25cd81-1b2d-47fe-a7a5-f97947ab44ab}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_BOSCH_DriveLink
+VAR_INPUT
+	pDrive							:POINTER TO ST_BOSCHINDRADRIVECIA402_REF;			(* The DRIVE_REF data type  is an interface between the PLC and the DRIVE and contains axis information *)
+END_VAR
+VAR_OUTPUT		
+
+END_VAR
+VAR_IN_OUT
+
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+	
+pDrive^.bDriverZKL3 := pDrive^.stBoschToPlc.wDriveStatuswordS00135.11;			(* Drive change bit class 3 diagnostics *)
+pDrive^.bDriverZKL2 := pDrive^.stBoschToPlc.wDriveStatuswordS00135.12;			(* Drive change bit class 2 diagnostics *)
+pDrive^.bDriverZKL1 := pDrive^.stBoschToPlc.wDriveStatuswordS00135.13;			(* Drive error, error in class 1 diagnostics *)
+	
+pDrive^.bDriveBB :=	pDrive^.stBoschToPlc.wDriveStatuswordS00135.14				(* Drive ready for power on *)
+					AND NOT pDrive^.stBoschToPlc.wDriveStatuswordS00135.15;
+pDrive^.bDriveAB :=	NOT pDrive^.stBoschToPlc.wDriveStatuswordS00135.14			(* Drive control section and power section ready for operation, torque-free*)
+					AND pDrive^.stBoschToPlc.wDriveStatuswordS00135.15;
+pDrive^.bDriveAF :=	pDrive^.stBoschToPlc.wDriveStatuswordS00135.14				(* Drive in operation, with torque *)
+					AND pDrive^.stBoschToPlc.wDriveStatuswordS00135.15;	
+	
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_BOSCH_DriveLink">
+      <LineId Id="92" Count="0" />
+      <LineId Id="113" Count="5" />
+      <LineId Id="120" Count="0" />
+      <LineId Id="119" Count="0" />
+      <LineId Id="121" Count="0" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="122" Count="0" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

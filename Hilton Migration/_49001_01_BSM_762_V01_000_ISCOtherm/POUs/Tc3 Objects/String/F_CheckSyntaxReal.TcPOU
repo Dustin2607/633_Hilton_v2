@@ -1,0 +1,64 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_CheckSyntaxReal" Id="{a3247213-3d66-4b3b-b3c3-a47e2f65b5b7}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_CheckSyntaxReal : BOOL (* TRUE if STR does not contain capital letters *)
+VAR_INPUT
+	str 		:T_MaxString;
+	flag 		:T_MaxString;
+	sep 		:T_MaxString := '=';
+	rsufix		:POINTER TO REAL; 					
+END_VAR
+VAR
+	L			:INT;
+	prefix1		:T_MaxString;
+	prefix2		:T_MaxString;
+	ssufix		:T_MaxString;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+prefix1 := CONCAT(flag, sep);
+L := LEN(prefix1);
+prefix2 := MID(str, L, 1);
+
+F_CheckSyntaxReal := FALSE;
+
+IF LEN(str) > L
+THEN
+	ssufix := DELETE(str, L, 1);
+	IF prefix1 = prefix2
+	THEN
+		IF F_CheckStringIsReal(ssufix)
+		THEN
+			F_CheckSyntaxReal := TRUE; 
+			rsufix^ := STRING_TO_REAL(ssufix);
+		END_IF
+	END_IF;
+END_IF
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="F_CheckSyntaxReal">
+      <LineId Id="227" Count="0" />
+      <LineId Id="247" Count="0" />
+      <LineId Id="251" Count="0" />
+      <LineId Id="248" Count="1" />
+      <LineId Id="87" Count="0" />
+      <LineId Id="240" Count="0" />
+      <LineId Id="178" Count="0" />
+      <LineId Id="218" Count="0" />
+      <LineId Id="250" Count="0" />
+      <LineId Id="215" Count="1" />
+      <LineId Id="223" Count="0" />
+      <LineId Id="264" Count="0" />
+      <LineId Id="266" Count="0" />
+      <LineId Id="268" Count="0" />
+      <LineId Id="265" Count="0" />
+      <LineId Id="217" Count="0" />
+      <LineId Id="214" Count="0" />
+      <LineId Id="181" Count="0" />
+      <LineId Id="185" Count="0" />
+      <LineId Id="177" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

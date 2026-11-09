@@ -1,0 +1,401 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_BOSCH_AxisMoveAuto" Id="{6d2230f3-970b-4ad8-8026-a78ffaed0f43}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_BOSCH_AxisMoveAuto
+(*
+
+The function block used to auto control of axis.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			23.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Signal FB enable *)
+	bOccupied					:BOOL;						(* Axis occupied *)
+	etMachineMode				:ET_MachineMode;			(* Machine mode *)
+	etMachineState				:ET_MachineState;			(* Machine state *)
+	bCtrlEnabled				:BOOL;						(* Controller enabled *)
+	bReset						:BOOL;						(* Reset *)
+	bExeHome					:BOOL;						(* Execute home *)
+	bExeMoveAbs					:BOOL;						(* Execute move absolut *)
+	bExeMoveRel					:BOOL;						(* Execute move relative *)
+	bExeMoveAdd					:BOOL;						(* Execute move additive *)
+	bExeMoveSuper				:BOOL;						(* Execute move superimposed *)
+	bExeMoveVelo				:BOOL;						(* Execute move velo *)
+	bExeStop					:BOOL;						(* Execute stop *)
+	lrPosition					:LREAL;						(* Target position *)
+	lrVelocity					:LREAL;						(* Target velocity *)
+	lrAcceleration				:LREAL;						(* Value of the acceleration (always positive) *)
+	lrDeceleration				:LREAL;						(* Value of deceleration (always positive) *)
+	lrJerk						:LREAL;						(* Value of jerk (always positive) *)
+	lrOriginShiftPos			:LREAL;						(* Origin shift position *)
+	tControllerOff				:TIME := T#60S;				(* Time to switch controller off *)
+	pDrive						:POINTER TO ST_BOSCHINDRADRIVECIA402_REF;			(* The DRIVE_REF data type  is an interface between the PLC and the DRIVE and contains axis information *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bInReference				:BOOL;						(* Target has reference *)
+	bInPosition					:BOOL;						(* Target position is reached *)
+	bSuperInPosition			:BOOL;						(* Superimposed is reached *)
+	bInVelocity					:BOOL;						(* Target velocity is reached *)
+	bStopped					:BOOL;						(* Target stopped *)
+	bControllerOff				:BOOL;						(* Switch controller off *)
+	bError						:BOOL;						(* Program error *)
+	udnErrorNo					:UDINT;						(* Error number *)
+END_VAR
+VAR_IN_OUT
+	bHomeCompleted				:BOOL;						(* Home completed *)
+	Axis						:AXIS_REF;					(* The AXIS_REF data type  is an interface between the PLC and the NC and contains axis information *)
+	MasterAxis					:AXIS_REF;					(* The AXIS_REF data type  is an interface between the PLC and the NC and contains axis information *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	bFirstTime					:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbMCHome					:FB_BOSCH_Home;
+	fbMCMoveAbs					:MC_MoveAbsolute;
+	fbMCMoveRel					:MC_MoveRelative;
+	fbMCMoveAdd					:MC_MoveAdditive;
+	fbMCMoveSuper				:MC_MoveSuperImposed;
+	fbMCMoveVelo				:MC_MoveVelocity;
+	fbMCStop					:MC_Stop;
+	fbStateIdle					:FB_SignalWatchdog;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable								(* Signal FB enable *)
+      OR  bOccupied
+THEN
+
+	(* Calibration of the axis (referencing) is carried out with the function block MC_Home. *)
+	fbMCHome(
+		bExecute := FALSE,
+		pDrive := pDrive,  
+		Axis := Axis,
+		bDone => bInReference
+	);
+	
+	(* The function block MC_MoveAbsolute starts positioning to an absolute target position and monitors the axis movement over the whole travel path.  *)
+	fbMCMoveAbs(
+		Execute := FALSE,
+		Axis := Axis,
+		Done => bInPosition
+	);
+
+	(* The function block MC_MoveRelative used to moves the axis a specified distance relative to the actual position at the time of the execution. *)
+	fbMCMoveRel(
+		Execute := FALSE,
+		Axis := Axis,
+		Done => bInPosition
+	);
+
+	(* The function block MC_MoveAdditive used to starts relative distance additional to the original commanded position in the discrete motion state. In the Continuous Motion the specified relative distance is added to the actual position at the time of the execution.. *)
+	fbMCMoveAdd(
+		Execute := FALSE,
+		Axis := Axis,
+		Done => bInPosition
+	);
+
+	(* The function block MC_MoveSuperimposed used to specified relative distance additional to an existing motion. The existing Motion is not interrupted, but is superimposed by the additional motion. *)
+	fbMCMoveSuper(
+		Execute := FALSE,
+		Axis := Axis,
+		Done => bSuperInPosition
+	);
+
+	(* The function block MC_MoveVelocity starts a continuous movement with specified velocity and direction.  *)
+	fbMCMoveVelo(
+		Execute := FALSE,
+		Axis := Axis,
+		InVelocity => bInVelocity
+	 );
+
+	(* The function block MC_Stop stops an axis with a defined braking ramp and blocks the axis for any motion commands.  *)
+	fbMCStop(
+		Execute := FALSE,
+		Axis := Axis,
+		Done => bStopped
+	);
+
+	fbStateIdle(
+		bEnable := FALSE,
+		tWatchdog := tControllerOff
+	);
+
+	bControllerOff := NOT bEnable;
+
+	bFirstTime := FALSE;
+
+	RETURN;
+END_IF;
+
+IF NOT bFirstTime
+THEN
+
+	bFirstTime := TRUE;
+END_IF;
+
+IF bReset
+     AND bError
+THEN
+	(* Calibration of the axis (referencing) is carried out with the function block MC_Home. *)
+	fbMCHome(
+		bExecute := FALSE,
+		pDrive := pDrive,    
+		Axis := Axis,
+		bDone => bInReference
+	);
+
+	(* The function block MC_MoveAbsolute starts positioning to an absolute target position and monitors the axis movement over the whole travel path.  *)
+	fbMCMoveAbs(
+		Execute := FALSE,
+		Axis := Axis,
+		Done => bInPosition
+	);
+
+	(* The function block MC_MoveRelative used to moves the axis a specified distance relative to the actual position at the time of the execution. *)
+	fbMCMoveRel(
+		Execute := FALSE,
+		Axis := Axis,
+		Done => bInPosition
+	);
+
+	(* The function block MC_MoveAdditive used to starts relative distance additional to the original commanded position in the discrete motion state. In the Continuous Motion the specified relative distance is added to the actual position at the time of the execution.. *)
+	fbMCMoveAdd(
+		Execute := FALSE,
+		Axis := Axis,
+		Done => bInPosition
+	);
+
+	(* The function block MC_MoveSuperimposed used to specified relative distance additional to an existing motion. The existing Motion is not interrupted, but is superimposed by the additional motion. *)
+	fbMCMoveSuper(
+		Execute := FALSE,
+		Axis := Axis,
+		Done => bSuperInPosition
+	);
+
+	(* The function block MC_MoveVelocity starts a continuous movement with specified velocity and direction.  *)
+	fbMCMoveVelo(
+		Execute := FALSE,
+		Axis := Axis,
+		InVelocity => bInVelocity
+	 );
+
+	(* The function block MC_Stop stops an axis with a defined braking ramp and blocks the axis for any motion commands.  *)
+	fbMCStop(
+		Execute := FALSE,
+		Axis := Axis,
+		Done => bStopped
+	);
+END_IF;
+
+IF bCtrlEnabled
+     AND NOT Axis.NcToPlc.StateDWord.5 			(* Check axis is not slave *)
+     AND (etMachineMode = ET_MachineMode_eAutomatic
+		OR etMachineMode = ET_MachineMode_eStepping
+		OR etMachineMode = ET_MachineMode_eHome
+		OR etMachineMode = ET_MachineMode_eMaintenance)
+    AND etMachineState <> ET_MachineState_eIdle
+    AND etMachineState <> ET_MachineState_eUndefined
+THEN
+	(* Calibration of the axis (referencing) is carried out with the function block MC_Home. *)
+	fbMCHome(
+		bExecute := bExeHome, 
+		rOriginPosition := LREAL_TO_REAL(lrOriginShiftPos),
+		pDrive := pDrive,   
+		Axis := Axis, 
+		bDone => bInReference
+	);
+
+	(* The function block MC_MoveAbsolute starts positioning to an absolute target position and monitors the axis movement over the whole travel path.  *)
+	fbMCMoveAbs(
+		Execute := bExeMoveAbs,
+		Position := lrPosition,
+		Velocity := lrVelocity,
+		Acceleration := lrAcceleration,
+		Deceleration := lrDeceleration,
+		Jerk := lrJerk,
+		Axis := Axis
+	);
+
+	(* The function block MC_MoveRelative used to moves the axis a specified distance relative to the actual position at the time of the execution. *)
+	fbMCMoveRel(
+		Execute := bExeMoveRel,
+		Distance := lrPosition,
+		Velocity := lrVelocity,
+		Acceleration := lrAcceleration,
+		Deceleration := lrDeceleration,
+		Jerk := lrJerk,
+		Options := ,
+		Axis := Axis
+	 );
+
+	(* The function block MC_MoveAdditive used to starts relative distance additional to the original commanded position in the discrete motion state. In the Continuous Motion the specified relative distance is added to the actual position at the time of the execution.. *)
+	fbMCMoveAdd(
+		Execute := bExeMoveAdd,
+		Distance := lrPosition,
+		Velocity := lrVelocity,
+		Acceleration := lrAcceleration,
+		Deceleration := lrDeceleration,
+		Options := ,
+		Axis := Axis
+	 );
+
+	bInPosition := fbMCMoveAbs.Done
+			        OR fbMCMoveRel.Done
+			        OR fbMCMoveAdd.Done;
+
+	(* The function block MC_MoveSuperimposed used to specified relative distance additional to an existing motion. The existing Motion is not interrupted, but is superimposed by the additional motion. *)
+	fbMCMoveSuper(
+		Execute := bExeMoveSuper,
+		Mode := ,
+		Distance := lrPosition,
+		VelocityDiff := ,
+		Acceleration := lrAcceleration,
+		Deceleration := lrDeceleration,
+		Jerk := lrJerk,
+		VelocityProcess := ,
+		Length := ,
+		Options := ,
+		Axis := Axis,
+		Done => bSuperInPosition
+	);
+
+	(* The function block MC_MoveVelocity starts a continuous movement with specified velocity and direction.  *)
+	fbMCMoveVelo(
+		Execute := bExeMoveVelo,
+		Velocity := ABS(lrVelocity),
+		Acceleration := lrAcceleration,
+		Deceleration := lrDeceleration,
+		Jerk := lrJerk,
+		Direction := SEL(lrVelocity < 0.0, MC_Positive_Direction, MC_Negative_Direction),
+		Axis := Axis,
+		InVelocity => bInVelocity
+	 );
+
+ELSE
+	(* Calibration of the axis (referencing) is carried out with the function block MC_Home. *)
+	fbMCHome(
+		bExecute := FALSE,
+		pDrive := pDrive,    
+		Axis := Axis,
+		bDone => bInReference
+	);
+	
+	(* The function block MC_MoveAbsolute starts positioning to an absolute target position and monitors the axis movement over the whole travel path.  *)
+	fbMCMoveAbs(
+		Execute := FALSE,
+		Axis := Axis,
+		Done => bInPosition
+	);
+
+	(* The function block MC_MoveRelative used to moves the axis a specified distance relative to the actual position at the time of the execution. *)
+	fbMCMoveRel(
+		Execute := FALSE,
+		Axis := Axis,
+		Done => bInPosition
+	);
+
+	(* The function block MC_MoveAdditive used to starts relative distance additional to the original commanded position in the discrete motion state. In the Continuous Motion the specified relative distance is added to the actual position at the time of the execution.. *)
+	fbMCMoveAdd(
+		Execute := FALSE,
+		Axis := Axis,
+		Done => bInPosition
+	);
+
+	(* The function block MC_MoveSuperimposed used to specified relative distance additional to an existing motion. The existing Motion is not interrupted, but is superimposed by the additional motion. *)
+	fbMCMoveSuper(
+		Execute := FALSE,
+		Axis := Axis,
+		Done => bSuperInPosition
+	);
+
+	(* The function block MC_MoveVelocity starts a continuous movement with specified velocity and direction.  *)
+	fbMCMoveVelo(
+		Execute := FALSE,
+		Axis := Axis,
+		InVelocity => bInVelocity
+	 );
+
+END_IF;
+
+fbStateIdle(
+	bEnable := etMachineMode = ET_MachineMode_eAutomatic
+			    OR etMachineMode = ET_MachineMode_eStepping
+		  	    OR etMachineMode = ET_MachineMode_eHome
+				OR etMachineMode = ET_MachineMode_eMaintenance,
+	bIn := etMachineState <> ET_MachineState_eIdle
+		  AND etMachineState <> ET_MachineState_eUndefined,
+	tWatchdog := tControllerOff
+);
+
+bControllerOff := SEL( Axis.NcToPlc.StateDWord.5, 			(* Check axis is slave *)
+				      NOT fbStateIdle.bOut,
+				      NOT MasterAxis.PlcToNc.ControlDWord.0)
+			    AND (etMachineMode = ET_MachineMode_eAutomatic
+				        OR etMachineMode = ET_MachineMode_eStepping
+				        OR etMachineMode = ET_MachineMode_eHome
+				        OR etMachineMode = ET_MachineMode_eMaintenance);
+						
+(* The function block MC_Stop stops an axis with a defined braking ramp and blocks the axis for any motion commands.  *)
+fbMCStop(
+	Execute := bExeStop,
+	Deceleration := lrDeceleration,
+	Jerk := lrJerk,
+	Axis := Axis,
+	Done => bStopped
+);
+
+bError := fbMCHome.bError
+		OR fbMCMoveAbs.Error
+		OR fbMCMoveRel.Error
+		OR fbMCMoveAdd.Error
+		OR fbMCMoveVelo.Error
+		OR fbMCStop.Error;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_BOSCH_AxisMoveAuto">
+      <LineId Id="77" Count="5" />
+      <LineId Id="441" Count="1" />
+      <LineId Id="556" Count="0" />
+      <LineId Id="452" Count="0" />
+      <LineId Id="446" Count="0" />
+      <LineId Id="439" Count="1" />
+      <LineId Id="89" Count="63" />
+      <LineId Id="453" Count="1" />
+      <LineId Id="557" Count="0" />
+      <LineId Id="456" Count="1" />
+      <LineId Id="157" Count="49" />
+      <LineId Id="824" Count="0" />
+      <LineId Id="207" Count="2" />
+      <LineId Id="742" Count="6" />
+      <LineId Id="741" Count="0" />
+      <LineId Id="648" Count="0" />
+      <LineId Id="220" Count="67" />
+      <LineId Id="473" Count="1" />
+      <LineId Id="559" Count="0" />
+      <LineId Id="476" Count="1" />
+      <LineId Id="292" Count="42" />
+      <LineId Id="825" Count="0" />
+      <LineId Id="335" Count="10" />
+      <LineId Id="826" Count="0" />
+      <LineId Id="650" Count="0" />
+      <LineId Id="348" Count="14" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

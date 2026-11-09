@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_ItpReadRParams_1" Id="{25327ab2-9aea-4467-80a9-d36a7bd907ff}">
+    <Declaration><![CDATA[TYPE ET_ItpReadRParams_1 :
+(
+	ET_ItpReadRParams_eWaitExecute := 0,
+	ET_ItpReadRParams_eReadRParams := 5,
+	ET_ItpReadRParams_eDone := 197,
+	ET_ItpReadRParams_eError := 198,
+	ET_ItpReadRParams_eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

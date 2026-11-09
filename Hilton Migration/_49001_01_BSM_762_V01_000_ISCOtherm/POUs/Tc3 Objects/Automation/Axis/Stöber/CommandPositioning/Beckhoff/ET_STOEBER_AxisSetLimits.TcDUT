@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_STOEBER_AxisSetLimits" Id="{2e1e7aa7-10d8-46a4-9d17-dd70544d6181}">
+    <Declaration><![CDATA[TYPE ET_STOEBER_AxisSetLimits :
+(
+	eWaitExecute := 0,
+	eSetReferenceSystem,
+	eWfSetReferenceSystem,
+	eSetPositionBias,
+	eWfSetPositionBias,
+	eSetLimitPos,
+	eWfSetLimitPos,
+	eSetLimitNeg,
+	eWfSetLimitNeg,
+	eEnableLimitPos,
+	eWfEnableLimitPos,
+	eEnableLimitNeg,
+	eWfEnableLimitNeg,
+	eEnablePosLagMonitoring,
+	eWfEnablePosLagMonitoring,
+	eDone := 197,
+	eError := 198,
+	eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,388 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_ModeSelector_1" Id="{a9fc41ba-b9a2-432b-be13-a1039f665e19}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ModeSelector_1
+(*
+
+The function block used to control opration mode.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			23.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bStart					:BOOL;						(* Signal start *)
+	bStop					:BOOL;						(* Signal stop *)
+	bAbort					:BOOL;						(* Signal abort *)
+	bHome					:BOOL;						(* Signal home *)
+	bReference				:BOOL;						(* Signal reference *)
+	bReset					:BOOL;						(* Signal reset *)
+	bAutoStartRelease		:BOOL;						(* Auto start release *)
+	bHomeStartRelease		:BOOL;						(* Home start release *)
+	bMaintenanceStartRelease:BOOL;						(* Maintenance start release *)
+	bAutoToHome				:BOOL;						(* If auto completed go to home *)
+	bChangeModeWithHome		:BOOL;						(* If mode was changed start home *)
+	bHomeCompleted			:BOOL;						(* Home completed *)
+	bAutoCompleted			:BOOL;						(* Auto completed *)
+	bMaintenanceCompleted	:BOOL;						(* Maintenance completed *)
+	bAllDoorsClosed 		:BOOL;						(* All doors closed *)
+	bAllDoorsLocked 		:BOOL;						(* All doors locked *)
+	bLightCurtainOk			:BOOL;						(* Light curtain ok *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	etMachineMode			:ET_MachineMode;			(* Machine mode enum variable *)
+	etMachineState			:ET_MachineState;			(* Machine state enum variable *)
+	etMaintenanceType		:ET_MaintenanceType;		(* Maintenance type enum variable *)
+	bModeAutomatic			:BOOL;						(* Machine mode automatic *)
+	bModeHome				:BOOL;						(* Machine mode home *)
+	bModeManual				:BOOL;						(* Machine mode manual *)
+	bModeMaintenance		:BOOL;						(* Machine mode maintenance *)
+	bMachineRunning			:BOOL;						(* Machine running *)
+	bMachineStandstill		:BOOL;						(* Machine standstill *)
+	bConfirmAlarm			:BOOL;						(* Confirm alarm *)
+END_VAR
+VAR_IN_OUT
+	etMachineModeReq		:ET_MachineMode;			(* Machine mode request enum variable *)
+	etMaintenanceTypeReq	:ET_MaintenanceType;		(* Maintenance type request *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	etMachinePrvState		:ET_MachineState;			(* Machine previous active state enum variable *)
+	etMachinePrvModeReq		:ET_MachineMode;			(* Machine mode request previous enum variable *)
+	
+	bModeExecute			:BOOL;						(* Mode execute *)
+	bSafetyCompleted		:BOOL;						(* Safety completed *)
+	
+	bFirstHomeCompleted		:BOOL;						(* First home is completed *)	
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtStart					:R_TRIG;
+	rtStop					:R_TRIG;
+	rtAbort					:R_TRIG;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+bConfirmAlarm := bReset;
+bSafetyCompleted := bAllDoorsLocked				(* Safety completed *)
+				      AND bLightCurtainOk;
+
+etMaintenanceType := etMaintenanceTypeReq;					  
+					  
+IF bHome
+THEN
+	etMachineModeReq := ET_MachineMode_eHome;
+END_IF;
+
+IF bMaintenanceCompleted
+THEN
+	etMachineModeReq := ET_MachineMode_eManual;
+END_IF
+
+IF bHomeCompleted
+THEN
+	bFirstHomeCompleted := bHomeCompleted;
+
+	IF etMachineMode = ET_MachineMode_eHome                          	 (* Set auto mode *)
+	    AND etMachinePrvState <> ET_MachineState_eAutoExe
+	    AND etMachinePrvState <> ET_MachineState_eAutoSteppingExe
+	    AND etMachinePrvState <> ET_MachineState_eAutoSteppingNoExe
+		AND etMachinePrvState <> ET_MachineState_eMaintenanceExe
+	    AND bModeExecute
+	THEN
+		IF etMachinePrvModeReq = ET_MachineMode_eManual
+		THEN
+			etMachineModeReq := ET_MachineMode_eManual;
+			etMachinePrvModeReq := ET_MachineMode_eUndefined;
+		ELSE
+			etMachineModeReq := ET_MachineMode_eAutomatic;
+		END_IF
+	END_IF;	
+ELSE
+	IF etMachineModeReq <> ET_MachineMode_eManual                   	 (* Set home mode *)
+	   AND SEL(bFirstHomeCompleted, TRUE, etMachineModeReq <> ET_MachineMode_eMaintenance)
+	THEN
+		etMachineModeReq := ET_MachineMode_eHome;
+	
+	END_IF;
+END_IF;
+
+IF (etMachineModeReq <> etMachineMode)                                    		(* Stop always if changed mode *)
+THEN
+	(*bStart := FALSE *)
+	bStop := TRUE;
+	
+	IF (etMachineMode = ET_MachineMode_eAutomatic
+	      AND etMachineModeReq = ET_MachineMode_eStepping)
+	     OR
+	     (etMachineMode = ET_MachineMode_eStepping
+	      AND etMachineModeReq = ET_MachineMode_eAutomatic)
+		  OR
+	     (etMachineMode = ET_MachineMode_eManual
+	      AND etMachineModeReq = ET_MachineMode_eMaintenance)
+	THEN
+		bStop := FALSE;
+		
+	ELSIF ((etMachineMode = ET_MachineMode_eAutomatic
+			OR etMachineMode = ET_MachineMode_eStepping
+			OR etMachineMode = ET_MachineMode_eCycle)
+			AND bMachineRunning
+			AND bChangeModeWithHome)
+	THEN
+		bStart := TRUE;
+		bStop := FALSE;
+		etMachinePrvModeReq := etMachineModeReq;
+		etMachineModeReq := ET_MachineMode_eHome;
+			
+	END_IF;
+	
+	etMachineMode := etMachineModeReq;
+
+END_IF;
+
+rtStart(CLK := bStart);								(* Check start *)
+
+rtStop(CLK := bStop								(* Check stop *)
+		        OR bAbort
+		        OR bAutoCompleted
+		        OR (NOT bSafetyCompleted AND bMachineRunning));
+rtAbort(CLK := bAbort);
+
+IF rtStop.Q
+THEN
+	bModeExecute := FALSE;
+
+	IF bAutoToHome
+	     AND bAutoCompleted
+	THEN
+		etMachineModeReq := ET_MachineMode_eHome;
+	END_IF
+	
+	IF etMachinePrvModeReq = ET_MachineMode_eManual
+		OR etMachineMode = ET_MachineMode_eMaintenance
+	THEN
+		etMachineModeReq := ET_MachineMode_eManual;
+		etMachinePrvModeReq := ET_MachineMode_eUndefined;
+	END_IF
+
+ELSIF rtStart.Q
+	    AND bAllDoorsClosed
+	    AND bLightCurtainOk
+	    AND NOT bStop
+	    AND NOT bAbort
+	    AND ((etMachineMode = ET_MachineMode_eMaintenance 
+			  AND SEL(etMachineState = ET_MachineState_eMaintenanceExe, 
+					  bMaintenanceStartRelease, TRUE))
+	    	  OR (etMachineMode = ET_MachineMode_eHome 
+			  AND SEL(etMachineState = ET_MachineState_eHomeExe 
+					  OR etMachineState = ET_MachineState_eHomeRefExe, 
+					  bHomeStartRelease, TRUE))
+	    	  OR ((etMachineMode = ET_MachineMode_eAutomatic OR etMachineMode = ET_MachineMode_eStepping) 
+				   AND SEL(etMachineState = ET_MachineState_eAutoExe 
+						   OR etMachineState = ET_MachineState_eAutoSteppingExe 
+						   OR etMachineState = ET_MachineState_eAutoSteppingNoExe,
+						   bAutoStartRelease, TRUE)))
+THEN
+	bModeExecute := TRUE;
+
+END_IF;
+
+bStart := FALSE;
+bStop := FALSE;
+
+CASE etMachineMode
+OF
+	ET_MachineMode_eAutomatic:            (* Statement section automatic *)
+		bModeAutomatic := TRUE;
+		bModeHome := FALSE;
+		bModeManual := FALSE;
+		bModeMaintenance := FALSE;
+
+		IF bModeExecute
+		     AND bSafetyCompleted
+		THEN
+			etMachineState := ET_MachineState_eAutoExe;
+			etMachinePrvState := etMachineState;
+		ELSE
+		 	etMachineState := ET_MachineState_eIdle;
+		END_IF;
+	    
+	ET_MachineMode_eStepping:             (* Statement section stepping *)
+		bModeAutomatic := TRUE;
+		bModeHome := FALSE;
+		bModeManual := FALSE;
+		bModeMaintenance := FALSE;
+
+		IF bModeExecute
+		     AND bSafetyCompleted
+		THEN
+			IF rtStart.Q
+			THEN
+				etMachineState := ET_MachineState_eAutoSteppingExe;
+			ELSE
+				etMachineState := ET_MachineState_eAutoSteppingNoExe;
+			END_IF;
+
+			etMachinePrvState := etMachineState;
+		ELSE
+			etMachineState := ET_MachineState_eIdle;
+		END_IF;
+
+	ET_MachineMode_eHome:                 (* Statement section home  *)
+		bModeAutomatic := FALSE;
+		bModeHome := TRUE;
+		bModeManual := FALSE;
+		bModeMaintenance := FALSE;
+		
+		IF bModeExecute
+		     AND bSafetyCompleted
+		THEN
+			IF bReference
+			THEN
+				etMachineState := ET_MachineState_eHomeRefExe;
+			ELSE
+				etMachineState := ET_MachineState_eHomeExe;
+			END_IF;
+
+			etMachinePrvState := etMachineState;
+		ELSE
+			etMachineState := ET_MachineState_eIdle;
+		END_IF;
+
+	ET_MachineMode_eManual:              (* Statement section manual  *)
+		bModeExecute := FALSE;
+		bModeAutomatic := FALSE;
+		bModeHome := FALSE;
+		bModeManual := TRUE;
+		bModeMaintenance := FALSE;
+
+		etMachineState := ET_MachineState_eIdle;
+
+	ET_MachineMode_eMaintenance:              (* Statement section maintenance  *)
+		bModeAutomatic := FALSE;
+		bModeHome := FALSE;
+		bModeManual := FALSE;
+		bModeMaintenance := TRUE;
+	
+		IF bModeExecute
+		     AND bSafetyCompleted
+		THEN
+			etMachineState := ET_MachineState_eMaintenanceExe;
+			etMachinePrvState := etMachineState;
+		ELSE
+		 	etMachineState := ET_MachineState_eIdle;
+		END_IF;
+	
+	ELSE
+		bModeExecute := FALSE;
+		bModeAutomatic := FALSE;
+		bModeHome := FALSE;
+		bModeManual := FALSE;
+		bModeMaintenance := FALSE;
+	    
+	    etMachineState := ET_MachineState_eUndefined;
+        
+END_CASE;
+
+bMachineRunning := bModeExecute
+		           AND etMachineMode <> ET_MachineMode_eManual
+		           AND etMachineMode <> ET_MachineMode_eIdle
+		           AND etMachineMode <> ET_MachineMode_eUndefined;
+                    
+bMachineStandstill := NOT bMachineRunning;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ModeSelector_1">
+      <LineId Id="62" Count="3" />
+      <LineId Id="649" Count="0" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="650" Count="0" />
+      <LineId Id="67" Count="2" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="428" Count="0" />
+      <LineId Id="427" Count="0" />
+      <LineId Id="429" Count="0" />
+      <LineId Id="431" Count="0" />
+      <LineId Id="430" Count="0" />
+      <LineId Id="72" Count="2" />
+      <LineId Id="385" Count="0" />
+      <LineId Id="384" Count="0" />
+      <LineId Id="75" Count="3" />
+      <LineId Id="412" Count="0" />
+      <LineId Id="79" Count="1" />
+      <LineId Id="566" Count="1" />
+      <LineId Id="569" Count="0" />
+      <LineId Id="572" Count="0" />
+      <LineId Id="570" Count="1" />
+      <LineId Id="568" Count="0" />
+      <LineId Id="83" Count="2" />
+      <LineId Id="386" Count="0" />
+      <LineId Id="86" Count="9" />
+      <LineId Id="565" Count="0" />
+      <LineId Id="97" Count="4" />
+      <LineId Id="421" Count="0" />
+      <LineId Id="420" Count="0" />
+      <LineId Id="419" Count="0" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="483" Count="0" />
+      <LineId Id="489" Count="0" />
+      <LineId Id="485" Count="3" />
+      <LineId Id="484" Count="0" />
+      <LineId Id="490" Count="0" />
+      <LineId Id="471" Count="0" />
+      <LineId Id="491" Count="0" />
+      <LineId Id="562" Count="0" />
+      <LineId Id="474" Count="0" />
+      <LineId Id="473" Count="0" />
+      <LineId Id="104" Count="1" />
+      <LineId Id="463" Count="0" />
+      <LineId Id="456" Count="0" />
+      <LineId Id="107" Count="18" />
+      <LineId Id="432" Count="0" />
+      <LineId Id="575" Count="0" />
+      <LineId Id="580" Count="0" />
+      <LineId Id="576" Count="2" />
+      <LineId Id="435" Count="0" />
+      <LineId Id="126" Count="5" />
+      <LineId Id="414" Count="1" />
+      <LineId Id="417" Count="0" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="314" Count="0" />
+      <LineId Id="309" Count="1" />
+      <LineId Id="136" Count="0" />
+      <LineId Id="311" Count="2" />
+      <LineId Id="141" Count="14" />
+      <LineId Id="304" Count="0" />
+      <LineId Id="156" Count="13" />
+      <LineId Id="305" Count="0" />
+      <LineId Id="170" Count="19" />
+      <LineId Id="306" Count="0" />
+      <LineId Id="190" Count="16" />
+      <LineId Id="410" Count="0" />
+      <LineId Id="208" Count="2" />
+      <LineId Id="307" Count="0" />
+      <LineId Id="211" Count="1" />
+      <LineId Id="292" Count="0" />
+      <LineId Id="213" Count="0" />
+      <LineId Id="299" Count="2" />
+      <LineId Id="308" Count="0" />
+      <LineId Id="296" Count="0" />
+      <LineId Id="403" Count="6" />
+      <LineId Id="293" Count="1" />
+      <LineId Id="214" Count="4" />
+      <LineId Id="411" Count="0" />
+      <LineId Id="219" Count="10" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

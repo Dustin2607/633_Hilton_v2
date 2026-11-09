@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_ExtSetpoint" Id="{1bef0e43-6e60-47e7-a20c-e211348c8410}">
+    <Declaration><![CDATA[TYPE ET_ExtSetpoint :
+(
+	ET_ExtSetpoint_eWaitExecute := 0,
+	ET_ExtSetpoint_eEnableExtSetPointGenerator := 5,
+	ET_ExtSetpoint_eDisableExtSetPointGenerator := 10,
+	ET_ExtSetpoint_eDone := 197,
+	ET_ExtSetpoint_eError := 198,
+	ET_ExtSetpoint_eNoExecute := 199
+);
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

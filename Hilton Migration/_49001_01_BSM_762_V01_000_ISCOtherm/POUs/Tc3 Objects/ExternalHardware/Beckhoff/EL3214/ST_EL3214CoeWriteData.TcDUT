@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_EL3214CoeWriteData" Id="{836e22f8-e80b-4ac9-a425-c44c0add2b0c}">
+    <Declaration><![CDATA[TYPE ST_EL3214CoeWriteData :
+STRUCT
+	wIdx: WORD;
+	bySubIdx: BYTE;
+	bWriteOK: BOOL;
+	dwData: DWORD;
+	nSize: UDINT;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

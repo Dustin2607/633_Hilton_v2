@@ -1,0 +1,113 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_MoveToKukaRef_1" Id="{3d518a3b-ef8b-4540-a97f-6b1352abc7c6}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_MoveToKukaRef_1
+VAR_INPUT
+	stRobotToPlc					:ST_ROBOTTOPLC;
+END_VAR
+VAR_OUTPUT
+	stPlcToRobot					:ST_PLCTOROBOT;
+END_VAR
+VAR_IN_OUT
+	Kuka						:ST_KUKA_REF;				(* The KUKA_REF data type  is an interface between the PLC and the KUKA and contains axis information *)
+END_VAR
+VAR
+	rtForceToBase				:R_TRIG;
+	rtForceToWork				:R_TRIG;
+	rtCutoffToBase				:R_TRIG;
+	rtCutoffToWork				:R_TRIG;
+
+	rtMEStartHeat					:R_TRIG;
+	rtMEStopHeat				:R_TRIG;
+	rtMEStartExtruding				:R_TRIG;
+	rtMEStopExtruding				:R_TRIG;
+	rtMEStartFlush				:R_TRIG;
+	rtMEStopFlush				:R_TRIG;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+(* Set general parameter *)
+
+
+(* Copy the actual values from the robot to the kuka reference *)
+Kuka.KukaToPlc.bPgNoReq := stRobotToPlc.arbyInput[2].0;						(* $OUT[33] - A change of signal requests the higher-level controller to send a program number / PGNO Req-Signalwechsel fordert Leitrechner Programmnr. zu senden *)
+
+Kuka.KukaToPlc.bApplRun := stRobotToPlc.arbyInput[2].1;						(* $OUT[34] - Program is currently being executed / TRUE wenn Programm abgearbeitet wird *)
+Kuka.KukaToPlc.bErrToPlc := stRobotToPlc.arbyInput[2].2;						(* $OUT[35] - Error output to PLC / Steuerungs- oder Technologiefehler aufgetreten *)
+Kuka.KukaToPlc.bInWorkArea := stRobotToPlc.arbyInput[2].3;					(* $OUT[36] - Robot in work area / Roboter in Bearbeitunsbereich*)
+
+Kuka.KukaToPlc.bIOActConf := stRobotToPlc.arbyInput[0].0;						(* $OUT[140] - This output is TRUE if Automatic External mode is selected and the input $I_O_ACT is TRUE. / *)
+Kuka.KukaToPlc.bT1:= stRobotToPlc.arbyInput[0].1;							(* $OUT[993] - Operating mode T1 / Betriebsart T1 *)
+Kuka.KukaToPlc.bT2 := stRobotToPlc.arbyInput[0].2;							(* $OUT[994] - Operating mode T2/ Betriebsart T2 *)
+Kuka.KukaToPlc.bAut := stRobotToPlc.arbyInput[0].3;							(* $OUT[995] - Operating mode Aut / Betriebsart Aut *)
+Kuka.KukaToPlc.bExt := stRobotToPlc.arbyInput[0].4;							(* $OUT[996] - Operating mode Ext / Betriebsart Ext *)
+Kuka.KukaToPlc.bOnPath := stRobotToPlc.arbyInput[0].5;						(* $OUT[997] - Set as long as the robot stays on its programmed path / TRUE solange sich Rob. auf programmierten Bahn befindet *)
+Kuka.KukaToPlc.bInHome := stRobotToPlc.arbyInput[0].6;						(* $OUT[1000] - Whether or not the robot is in its HOME position  / In Home Position *)
+Kuka.KukaToPlc.bStopMess := stRobotToPlc.arbyInput[0].7; 						(* $OUT[1010] - Any message occurring which requires the robot to be stopped / Störung Roboter *)
+Kuka.KukaToPlc.bUserSafe := stRobotToPlc.arbyInput[1].0;						(* $OUT[1011] - If the safety fence monitoring switch is opened (AUT mode) or an enabling switch is released (T1 or T2 mode). / Abfrage Schutzgitter(Auto)/Zustimmungsschalter(Test) *)
+Kuka.KukaToPlc.bPeriRdy := stRobotToPlc.arbyInput[1].1;						(* $OUT[1012] - Robot drives are switched on / TRUE wenn Roboterantriebe eingeschaltet *)
+Kuka.KukaToPlc.bAlarmStop := stRobotToPlc.arbyInput[1].2;						(* $OUT[1013] - Emergency stop / Not Aus *)
+Kuka.KukaToPlc.bProAct := stRobotToPlc.arbyInput[1].3;							(* $OUT[1021] - Whenever a process is active / Programmbearbeitung aktiv *)
+
+Kuka.KukaToPlc.arbInHome[1]:= stRobotToPlc.arbyInput[3].1;					(* $OUT[1003] - Whether or not the robot is in its HOME position  / In Home Position *)
+Kuka.KukaToPlc.arbInHome[2] := stRobotToPlc.arbyInput[3].2;					(* $OUT[1004] - Whether or not the robot is in its HOME position  / In Home Position *)
+Kuka.KukaToPlc.arbInHome[3] := stRobotToPlc.arbyInput[3].3;					(* $OUT[1005] - Whether or not the robot is in its HOME position  / In Home Position *)
+Kuka.KukaToPlc.arbInHome[4] := stRobotToPlc.arbyInput[3].4;					(* $OUT[1006] - Whether or not the robot is in its HOME position  / In Home Position *)
+Kuka.KukaToPlc.arbInHome[5] := stRobotToPlc.arbyInput[3].5;					(* $OUT[1007] - Whether or not the robot is in its HOME position  / In Home Position *)
+
+rtForceToBase(CLK := stRobotToPlc.arbyInput[12].0); Kuka.KukaToPlc.bForceToBase := rtForceToBase.Q;					(* $OUT[10] - Move force to base position *)
+rtForceToWork(CLK := stRobotToPlc.arbyInput[12].1); Kuka.KukaToPlc.bForceToWork := rtForceToWork.Q;					(* $OUT[11] - Move force to work position *)
+rtCutoffToBase(CLK := stRobotToPlc.arbyInput[12].2); Kuka.KukaToPlc.bCutoffToBase := rtCutoffToBase.Q;					(* $OUT[12] - Move cutoff to base position *)
+rtCutoffToWork(CLK := stRobotToPlc.arbyInput[12].3); Kuka.KukaToPlc.bCutoffToWork := rtCutoffToWork.Q;					(* $OUT[13] - Move cutoffe to work position *)
+
+rtMEStartHeat(CLK := stRobotToPlc.arbyInput[13].0); Kuka.KukaToPlc.bMEStartHeat := rtMEStartHeat.Q;						(* $OUT[18] - Start heat *)
+rtMEStopHeat(CLK := stRobotToPlc.arbyInput[13].1); Kuka.KukaToPlc.bMEStopHeat := rtMEStopHeat.Q;						(* $OUT[19] - Stop heat *)
+rtMEStartExtruding(CLK := stRobotToPlc.arbyInput[13].2); Kuka.KukaToPlc.bMEStartExtruding := rtMEStartExtruding.Q;			(* $OUT[20] - Start extruding *)
+rtMEStopExtruding(CLK := stRobotToPlc.arbyInput[13].3); Kuka.KukaToPlc.bMEStopExtruding := rtMEStopExtruding.Q;			(* $OUT[21] - Stop extruding *)
+rtMEStartFlush(CLK := stRobotToPlc.arbyInput[13].4); Kuka.KukaToPlc.bMEStartFlush := rtMEStartFlush.Q;					(* $OUT[22] - Start flush *)
+rtMEStopFlush(CLK := stRobotToPlc.arbyInput[13].5); Kuka.KukaToPlc.bMEStopFlush := rtMEStopFlush.Q;					(* $OUT[23] - Stop flush *)
+Kuka.KukaToPlc.nMEExtrudingSpeed := BYTE_TO_INT(stRobotToPlc.arbyInput[10]);	(* $OUT[100] - Extruding speed [%] *)
+
+(* Copy the setpoint values from the kuka reference to the robot *)
+stPlcToRobot.arbyOutput[4] := INT_TO_BYTE(Kuka.PlcToKuka.nPgNo);		(* $IN[33] - Program number / Programmnummer *)
+																	(* $IN[33]  + 8 = $IN[41], PGNO_LENGTH = 8 (max. 16) *)
+stPlcToRobot.arbyOutput[2].0 := Kuka.PlcToKuka.bPgNoParity;				(* $IN[41] - Input to which the parity bit is transferred from the higher-level controller / Übertragen des Paritätsbit vom Leitrechner *)
+stPlcToRobot.arbyOutput[2].1 := Kuka.PlcToKuka.bPgNoValid;				(* $IN[42] - Input to which the command to read the program number is transferred from the higher-level controller / Einlesen der Programmnumer vom Leitrechener *)
+
+stPlcToRobot.arbyOutput[0].0 := Kuka.PlcToKuka.bDrivesOn;					(* $IN[140] - Switch on the robot drives / Einschalten der Roboterantriebe *)
+stPlcToRobot.arbyOutput[0].1 := Kuka.PlcToKuka.bDrivesOff;					(* $IN[141] - Switch off the robot drives / Abschalten der Roboterantriebe *)
+stPlcToRobot.arbyOutput[0].2 := Kuka.PlcToKuka.bMoveEnable;				(* $IN[143] - Check the robot drives. TRUE Jogging and program execution are possible / Kontrolle der Roboterantriebe *)
+stPlcToRobot.arbyOutput[0].3 := Kuka.PlcToKuka.bIOAct;					(* $IN[1025] - If this input is TRUE, the Automatic External interface is active. Default setting:$IN[1025]. *)
+stPlcToRobot.arbyOutput[0].4 := Kuka.PlcToKuka.bConfMess;				(* $IN[142] - Acknowledge error / Quittieren von Fehlermeldungen durch den Leitrechner *)
+stPlcToRobot.arbyOutput[0].5 := Kuka.PlcToKuka.bExtStart;					(* $IN[145] - If the I/O interface is active, this input can be set to start or continue a program / Extern Start *)
+
+stPlcToRobot.arbyOutput[0].6 := Kuka.PlcToKuka.bCheckMovena;			(* TRUE MOVE_ENABLE monitoring is activated / Überwachung für MOVE_ENABLE *)
+
+stPlcToRobot.arbyOutput[1].0 := Kuka.PlcToKuka.bPgReset;					(* $IN[148] - Cancel a program / Programm abbrechen *)
+
+stPlcToRobot.arbyOutput[10] := INT_TO_BYTE(Kuka.PlcToKuka.nOverride);	(* $IN[100] - Override *)
+
+stPlcToRobot.arbyOutput[6] := INT_TO_BYTE(Kuka.PlcToKuka.nCutOffDist);						(* $IN[50] - Distance of cutoff *)
+stPlcToRobot.arbyOutput[7] := INT_TO_BYTE(SHR(Kuka.PlcToKuka.nCutOffDist,8));
+
+stPlcToRobot.arbyOutput[8] := INT_TO_BYTE(Kuka.PlcToKuka.nExtruderOffDist);					(* $IN[66] - Distance aftre extruder is off *)
+stPlcToRobot.arbyOutput[9] := INT_TO_BYTE(SHR(Kuka.PlcToKuka.nExtruderOffDist,8));
+
+stPlcToRobot.arbyOutput[14] := UINT_TO_BYTE(Kuka.PlcToKuka.unExtruderStartTime);				(* $IN[82] - Extruder start time *)
+stPlcToRobot.arbyOutput[15] := UINT_TO_BYTE(SHR(Kuka.PlcToKuka.unExtruderStartTime,8));
+
+stPlcToRobot.arbyOutput[12].0 := Kuka.PlcToKuka.bForceInBase;			(* $IN[10] - Force in base position *)
+stPlcToRobot.arbyOutput[12].1 := Kuka.PlcToKuka.bForceInWork;			(* $IN[11] - Force in work position *)
+stPlcToRobot.arbyOutput[12].2 := Kuka.PlcToKuka.bCutoffInBase;			(* $IN[12] - Cutoff in base position *)
+stPlcToRobot.arbyOutput[12].3 := Kuka.PlcToKuka.bCutoffInWork;			(* $IN[13] - Cutoff in work position *)
+
+stPlcToRobot.arbyOutput[13].0 := Kuka.PlcToKuka.bMEHeat;				(* $IN[18] - Heat status ON = TRUE, OFF = FALSE *)
+stPlcToRobot.arbyOutput[13].1 := Kuka.PlcToKuka.bMEHeating;			(* $IN[19] - Heating status ON = TRUE, OFF = FALSE *)
+stPlcToRobot.arbyOutput[13].2 := Kuka.PlcToKuka.bMEHeated;			(* $IN[20] - Heated status ON = TRUE, OFF = FALSE *)
+stPlcToRobot.arbyOutput[13].3 := Kuka.PlcToKuka.bMEExtruding;			(* $IN[21] - Extruder status ON = TRUE, OFF = FALSE *)]]></ST>
+    </Implementation>
+    <LineIds Name="FB_MoveToKukaRef_1">
+      <LineId Id="23" Count="79" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

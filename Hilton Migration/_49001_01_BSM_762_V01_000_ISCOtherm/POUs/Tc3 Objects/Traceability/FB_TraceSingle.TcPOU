@@ -1,0 +1,265 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_TraceSingle" Id="{db21eb73-9d55-42de-83c6-4847a781bc76}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_TraceSingle
+(*
+
+This function block is used to traceability of data.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			02.09.2016
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+21.02.2018		0.01			PPA						Additional logger for samples
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;					(* Enable FB *)
+	sFilePath					:STRING := 'C:\Riex\Traceability\NewData\';	(* Path to file e.g. 'c:\', \Hard Disk\ *)
+	sFileName					:STRING := 'default';	(* Name of file *)
+	bExecute					:BOOL;					(* Execute write data *)
+	bReset						:BOOL;					(* Reset write data *)	
+	arsNameRecords				:ARRAY[0..GVL_Trace.MAX_TRACE_ROWS, 0..GVL_Trace.MAX_TRACE_COLUMNS] OF STRING(GVL_Trace.MAX_TRACE_FIELD_LENGTH);
+	arsValueRecords				:ARRAY[0..GVL_Trace.MAX_TRACE_ROWS, 0..GVL_Trace.MAX_TRACE_COLUMNS] OF STRING(GVL_Trace.MAX_TRACE_FIELD_LENGTH);
+	tTimeout					:TIME := T#1S;			(* States the time before the function is cancelled *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bBusy						:BOOL;					(* Program busy *)
+	bDone						:BOOL;					(* Program done *)
+	bError						:BOOL;					(* Program error *)
+	udnErrNo					:UDINT;					(* Error number *)
+END_VAR
+VAR_IN_OUT
+	fbFileHandler				:FB_FileCSVHandler;				(* Traceability *)
+END_VAR
+VAR
+	(* Enummerations *)
+	etTraceState				:ET_TRACE_State := ET_TRACE_State_eWaitExecute;
+	
+	(* Variables *)
+	udnWriteCounter				:UDINT;
+	
+	sLastFilePath				:STRING;
+	sLastFileName				:STRING;
+	
+	udnRowCounter				:UDINT;
+	udnColumnCounter			:UDINT;
+
+	bFirstTime					:BOOL;					(* First PLC cycle *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtExecute						:R_TRIG;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable				(* Enable FB *)
+THEN
+	bFirstTime := FALSE;		(* First PLC cycle *)
+	bBusy := FALSE;			(* Program busy *)
+	bDone := FALSE;			(* Program done *)
+	bError := FALSE;			(* Program error *)
+	udnErrNo := 0;				(* Error number *)
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+
+	bFirstTime := TRUE;
+END_IF
+
+IF bReset
+   AND bError
+THEN
+	bBusy := FALSE;
+	bDone := FALSE;
+	bError := FALSE;
+	
+	etTraceState := ET_TRACE_State_eWaitExecute;
+END_IF
+
+rtExecute(CLK := bExecute);
+
+CASE etTraceState
+OF
+	ET_TRACE_State_eWaitExecute:
+		IF rtExecute.Q
+		   AND NOT fbFileHandler.bBusy
+		THEN
+			bBusy := TRUE;
+			bDone := FALSE;
+			bError := FALSE;
+			udnErrNo := 0;
+
+			fbFileHandler.bExecute := FALSE;
+			fbFileHandler.sFilePath := sFilePath;
+			fbFileHandler.sFileName := sFileName; 
+			
+			udnWriteCounter := 0;
+			udnRowCounter := 0;
+			udnColumnCounter := 0;
+			
+			IF (sLastFilePath <> sFilePath)
+			   OR (sLastFileName <> sFileName)
+			THEN
+				FOR udnColumnCounter := 0 TO GVL_Trace.MAX_TRACE_COLUMNS
+				DO 
+					fbFileHandler.arsWriteRecords[0, udnColumnCounter] := arsNameRecords[0, udnColumnCounter];
+				END_FOR
+
+				sLastFilePath := sFilePath;
+				sLastFileName := sFileName;
+				
+				etTraceState := ET_TRACE_State_eDataWrite;
+			
+			ELSE
+				udnWriteCounter := udnWriteCounter + 1;
+				
+				etTraceState := ET_TRACE_State_eGetData;
+			END_IF
+								
+		END_IF
+
+	ET_TRACE_State_eGetData:
+		FOR udnColumnCounter := 0 TO GVL_Trace.MAX_TRACE_COLUMNS
+		DO 
+			fbFileHandler.arsWriteRecords[udnRowCounter, udnColumnCounter] := arsValueRecords[udnRowCounter, udnColumnCounter];
+		END_FOR
+		
+		etTraceState := ET_TRACE_State_eDataWrite;
+			
+	ET_TRACE_State_eDataWrite:
+		fbFileHandler.bExecute := TRUE;
+
+		IF fbFileHandler.bBusy
+		   AND NOT fbFileHandler.bError
+		THEN
+			etTraceState := ET_TRACE_State_eWfDataWrite;
+			
+		ELSIF fbFileHandler.bError
+		THEN
+			fbFileHandler.bExecute := FALSE;
+
+			etTraceState := ET_TRACE_State_eError;
+		END_IF
+		
+	ET_TRACE_State_eWfDataWrite:
+		IF fbFileHandler.bDone
+		    AND NOT fbFileHandler.bError
+		THEN
+			fbFileHandler.bExecute := FALSE;
+
+			IF udnWriteCounter <= 0
+			THEN
+				udnWriteCounter := udnWriteCounter + 1;
+				
+				etTraceState := ET_TRACE_State_eGetData;
+			ELSE
+				etTraceState := ET_TRACE_State_eDone;
+			END_IF
+			
+		ELSIF fbFileHandler.bError
+		THEN
+			fbFileHandler.bExecute := FALSE;
+
+			etTraceState := ET_TRACE_State_eError;
+		END_IF
+
+	ET_TRACE_State_eDone:
+		bBusy := FALSE;
+		bDone := TRUE;
+		bError := FALSE;
+		
+		etTraceState := ET_TRACE_State_eNoExecute;					(* Next step *)
+
+	ET_TRACE_State_eError:
+		bBusy := FALSE;
+		bDone := FALSE;
+		bError := TRUE;
+
+		etTraceState := ET_TRACE_State_eNoExecute;					(* Next step *)
+
+	ET_TRACE_State_eNoExecute:
+		IF NOT bExecute
+		THEN
+			bBusy := FALSE;
+			bDone := FALSE;
+			bError := FALSE;
+
+			etTraceState := ET_TRACE_State_eWaitExecute;			(* Next step *)
+
+		END_IF		
+END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="FB_TraceSingle">
+      <LineId Id="53" Count="14" />
+      <LineId Id="607" Count="0" />
+      <LineId Id="609" Count="5" />
+      <LineId Id="617" Count="1" />
+      <LineId Id="608" Count="0" />
+      <LineId Id="68" Count="1" />
+      <LineId Id="131" Count="2" />
+      <LineId Id="135" Count="0" />
+      <LineId Id="604" Count="0" />
+      <LineId Id="136" Count="1" />
+      <LineId Id="436" Count="1" />
+      <LineId Id="434" Count="1" />
+      <LineId Id="470" Count="0" />
+      <LineId Id="469" Count="0" />
+      <LineId Id="573" Count="0" />
+      <LineId Id="463" Count="1" />
+      <LineId Id="592" Count="1" />
+      <LineId Id="590" Count="1" />
+      <LineId Id="673" Count="0" />
+      <LineId Id="689" Count="0" />
+      <LineId Id="688" Count="0" />
+      <LineId Id="513" Count="0" />
+      <LineId Id="515" Count="0" />
+      <LineId Id="517" Count="0" />
+      <LineId Id="516" Count="0" />
+      <LineId Id="686" Count="1" />
+      <LineId Id="685" Count="0" />
+      <LineId Id="690" Count="0" />
+      <LineId Id="692" Count="0" />
+      <LineId Id="691" Count="0" />
+      <LineId Id="693" Count="0" />
+      <LineId Id="695" Count="1" />
+      <LineId Id="694" Count="0" />
+      <LineId Id="474" Count="0" />
+      <LineId Id="697" Count="0" />
+      <LineId Id="142" Count="0" />
+      <LineId Id="574" Count="0" />
+      <LineId Id="577" Count="0" />
+      <LineId Id="581" Count="5" />
+      <LineId Id="575" Count="0" />
+      <LineId Id="144" Count="5" />
+      <LineId Id="151" Count="0" />
+      <LineId Id="509" Count="0" />
+      <LineId Id="152" Count="5" />
+      <LineId Id="510" Count="0" />
+      <LineId Id="158" Count="4" />
+      <LineId Id="596" Count="0" />
+      <LineId Id="594" Count="0" />
+      <LineId Id="597" Count="0" />
+      <LineId Id="599" Count="0" />
+      <LineId Id="602" Count="1" />
+      <LineId Id="600" Count="1" />
+      <LineId Id="598" Count="0" />
+      <LineId Id="163" Count="0" />
+      <LineId Id="166" Count="5" />
+      <LineId Id="475" Count="0" />
+      <LineId Id="477" Count="7" />
+      <LineId Id="493" Count="4" />
+      <LineId Id="499" Count="9" />
+      <LineId Id="195" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

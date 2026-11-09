@@ -82,7 +82,7 @@ END_IF;
 IF bgGr01PipePresent
      (* AND NOT bgGr00ModeAutomatic*) 	(* 20260219 ES/KG *)
      AND MAX(0, stgGr01HMI.stPLCTOHMI.lrAxisSawBowActPos - lrgGr01DistSawbandPipe) > stgGr01HMI.stHMITOPLC.rPipeDiameter
-     AND igGr01AxisSawBow.stNcToPlc.stBaseDevice.stCommandPositioning.dnActVelocity < 0
+     AND  Gr01Control.fbAxisSawBow.lrActVelocity < 0 		(* from Tc2) igGr01AxisSawBow.stNcToPlc.stBaseDevice.stCommandPositioning.dnActVelocity < 0 *)
 THEN
 	bPipeNotInCrashArea := FALSE;
 ELSE

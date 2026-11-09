@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <GVL Name="GVL_TCPIP" Id="{b122514e-e16e-4f84-b499-ef0a65c01a0d}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL CONSTANT
+	BUFFER_SIZE						:UDINT := 1000;(* Max. internal fifo/receiver buffer size *)
+
+	CLIENT_SEND_CYCLE_TIME			:TIME := T#1S;
+	RECEIVE_POLLING_TIME			:TIME := T#100MS;
+	RECEIVE_MESSAGE_MAX				:UINT := 10;
+
+	(* Some project specific error codes *)
+	ERROR_RECEIVE_TIMEOUT			:UDINT := 16#8101;(* Receive timeout *)
+	ERROR_SENDFIFO_OVERFLOW			:UDINT := 16#8102;(* Send fifo overflow *)
+	ERROR_RECFIFO_OVERFLOW			:UDINT := 16#8103;(* Receive fifo overflow *)
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

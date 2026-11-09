@@ -1,0 +1,241 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_HydraulicCylinder_1" Id="{b804992f-8331-4e7b-8d89-a96f6eb72f61}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_HydraulicCylinder_1
+(*
+
+The function block used to control clamping cylinder.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			24.10.2016
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	etMachineMode				:ET_MachineMode;			(* Machine mode *)
+	etMachineState				:ET_MachineState;			(* Machine state *)
+	bMachineRunning				:BOOL;						(* Machine running / Maschine lauft *)
+	bNoEStop					:BOOL;						(* No ermergency Stop / Keine Notaus *)
+	bHydraulicOK				:BOOL;						(* Hydraulic OK *)
+	bSafetyOk					:BOOL;						(* Safety OK  *)
+	bOpened						:BOOL;						(* Opened *)
+	bClosed						:BOOL;						(* Closed *)
+	bPressureClosed				:BOOL;						(* Pressure closed *)
+	bOpenRelease				:BOOL;						(* Release open *)
+	bCloseRelease				:BOOL;						(* Release close *)
+	bHandOpen					:BOOL;						(* Hand open *)
+	bHandClose					:BOOL;						(* Hand close *)
+	bHandPressureFree			:BOOL;						(* Hand pressure free *)
+	bAutoOpen					:BOOL;						(* Auto open *)
+	bAutoClose					:BOOL;						(* Auto close *)
+	bAutoPressureFree			:BOOL;						(* Auto pressure free *)
+	bExtCtrlEn					:BOOL;						(* Enable external control *)
+	bExtOpen					:BOOL;						(* External open *)
+	bExtClose					:BOOL;						(* External close *)
+	bControlOff					:BOOL;						(* TRUE - controle off *)
+	bValveOff					:BOOL;						(* Valve off *)
+	bConfirmAlarm				:BOOL;						(* Confirm alarm *)
+	tPumpOff					:TIME;						(* Pump delay off time *)
+	tPressureOn					:TIME;						(* Pressure delay on time *)
+	tPressureOff				:TIME;						(* Pressure delay off time *)
+	tTimeOut					:TIME := T#6S;					(* TimeOut *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bPumpOn						:BOOL;						(* Pump on *)
+	bPressureOn					:BOOL;						(* Pressure on *)
+	bOpen						:BOOL;						(* Open *)
+	bClose						:BOOL;						(* Close *)
+	bPressureFree				:BOOL;						(* Pressure free *)
+	bErrorOpen					:BOOL;						(* Error open *)
+	bErrorClose					:BOOL;						(* Error close *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	bHomeCompleted				:BOOL;						(* Home completed *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbCylinder					:FB_Cylinder;
+	fbCylinderOpened			:FB_SignalHandlingDelay;
+	fbCylinderClosed			:FB_SignalHandlingDelay;
+	fbCylinderOpenRelease		:FB_SignalHandlingDelay;
+	fbCylinderCloseRelease		:FB_SignalHandlingDelay;
+	fbCylinderPumpOff			:FB_SignalWatchdog;
+	fbCylinderPressureOn		:FB_SignalHandlingDelay;
+	fbCylinderPressureOff		:FB_SignalWatchdog;
+	tonPressureFree				:TON;
+	tofPressureFree				:TOF;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* Control clamp cylinder *)
+
+fbCylinderOpened(
+	bEnable := TRUE,
+	bIn := bOpened,
+	tDelay := t#0ms
+);
+
+fbCylinderClosed(
+	bEnable := TRUE,
+	bIn := bClosed,
+	tDelay := t#0ms
+);
+
+fbCylinderOpenRelease(
+	bEnable := TRUE,
+	bIn := bOpenRelease,
+	tDelay :=t#0ms
+);
+
+fbCylinderCloseRelease(
+	bEnable := TRUE,
+	bIn := bCloseRelease,
+	tDelay := t#0ms
+);
+
+fbCylinder(
+	bEnable := TRUE,
+	bAirPressure := bHydraulicOK,
+	bSafetyOk := bSafetyOk,
+	bReset := bConfirmAlarm,
+	bAutoHand := etMachineMode = ET_MachineMode_eHome
+			         OR etMachineMode = ET_MachineMode_eStepping
+			         OR etMachineMode = ET_MachineMode_eAutomatic
+					 OR etMachineMode = ET_MachineMode_eMaintenance,
+	bHandBase := bHandOpen OR bExtOpen
+				 OR (NOT bPressureFree AND fbCylinderClosed.bOut AND bHandPressureFree),
+	bHandWork := bHandClose OR bExtClose,
+	bAutoBase := SEL(bExtCtrlEn,
+					bAutoOpen OR (NOT bPressureFree AND fbCylinderClosed.bOut  AND bAutoPressureFree ),
+					bExtOpen),
+	bAutoWork := SEL(bExtCtrlEn, bAutoClose, bExtClose),
+	bAtBasePos := fbCylinderOpened.bOut,
+	bAtWorkPos := fbCylinderClosed.bOut,
+	bBaseRelease := fbCylinderOpenRelease.bOut
+				        OR (NOT bPressureFree AND fbCylinderClosed.bOut AND (bHandPressureFree OR bAutoPressureFree)),
+	bWorkRelease := fbCylinderCloseRelease.bOut,
+	bControlStateOn := etMachineMode = ET_MachineMode_eManual,
+	bControlOff := bControlOff,
+	bValveOff := fbCylinder.bAutoHand
+			       AND bPressureFree AND bAutoPressureFree,
+	bValveErrOff := TRUE,
+	bErrorOff := FALSE,
+	tTimeOut := tTimeOut,
+	bHomeCompleted := bHomeCompleted,
+	bMoveToBase => ,
+	bMoveToWork =>
+);
+
+(* Cylinder pump on/off *)
+fbCylinderPumpOff(
+	bEnable := bNoEStop
+     			   AND bHydraulicOK
+			   AND etMachineMode = ET_MachineMode_eManual,
+	bIn := bNoEStop
+		  AND bHydraulicOK
+		  AND (fbCylinder.bMoveToBase
+		  	     OR fbCylinder.bMoveToWork)		,
+	tWatchdog := tPumpOff
+);
+
+IF etMachineMode = ET_MachineMode_eManual
+THEN
+	bPumpOn := fbCylinderPumpOff.bOut;
+ELSE
+	IF NOT bNoEStop
+	     OR NOT bHydraulicOK
+	     OR NOT bMachineRunning
+	     OR bErrorOpen
+	     OR bErrorClose
+	THEN
+		bPumpOn := FALSE;
+
+	ELSIF fbCylinder.bMoveToBase
+	     	    OR fbCylinder.bMoveToWork
+	THEN
+		bPumpOn := TRUE;
+	END_IF
+END_IF
+
+(* Cylinder pressure on/off *)
+fbCylinderPressureOn(
+	bEnable := TRUE,
+	bIn := bPumpOn
+		  AND (fbCylinder.bMoveToBase AND NOT fbCylinder.bAtBasePos)
+			     OR (fbCylinder.bMoveToWork AND NOT fbCylinder.bAtWorkPos),
+	tDelay := tPressureOn
+);
+
+fbCylinderPressureOff(
+	bEnable := bPumpOn,
+	bIn := fbCylinderPressureOn.bOut,
+	tWatchdog := tPressureOff
+);
+
+IF NOT fbCylinderPressureOff.bOut
+THEN
+	bPressureOn := FALSE;
+
+ELSIF fbCylinderPressureOn.bOut
+THEN
+	bPressureOn := TRUE;
+END_IF
+
+bOpen := bPressureOn AND fbCylinder.bMoveToBase;
+bClose := bPressureOn AND fbCylinder.bMoveToWork;
+
+(* Pressure free *)
+tonPressureFree(
+	IN := NOT bPressureClosed,
+         PT := t#10ms
+);
+
+tofPressureFree(
+	IN := tonPressureFree.Q,
+         PT := t#10ms
+);
+
+bPressureFree := tofPressureFree.Q;
+
+A_Alarm();]]></ST>
+    </Implementation>
+    <Action Name="A_Alarm" Id="{259cda80-cc11-475e-a5a1-385ea3c9603f}">
+      <Implementation>
+        <ST><![CDATA[
+bErrorClose := fbCylinder.bError
+			AND (fbCylinder.udnErrorNo = 1
+				   OR fbCylinder.udnErrorNo = 2
+				   OR fbCylinder.udnErrorNo = 5);
+
+bErrorOpen := fbCylinder.bError
+			 AND (fbCylinder.udnErrorNo = 3
+			       	    OR fbCylinder.udnErrorNo = 4
+			       	    OR fbCylinder.udnErrorNo = 5);]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_HydraulicCylinder_1">
+      <LineId Id="78" Count="28" />
+      <LineId Id="362" Count="0" />
+      <LineId Id="107" Count="3" />
+      <LineId Id="284" Count="0" />
+      <LineId Id="111" Count="95" />
+    </LineIds>
+    <LineIds Name="FB_HydraulicCylinder_1.A_Alarm">
+      <LineId Id="0" Count="9" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="E_EcCommState_1" Id="{b7018059-c8eb-4a1b-9ca7-766e210c3527}">
+    <Declaration><![CDATA[TYPE E_EcCommState_1 : (
+	eEcState_UNDEFINED 	:= 0,
+	eEcState_INIT 		:= 1,
+	eEcState_PREOP 		:= 2,
+	eEcState_BOOT 		:= 3,
+	eEcState_SAFEOP 	:= 4,
+	eEcState_OP 		:= 8
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_STOEBER_ManualSetLimits" Id="{52ebf602-a848-4c6a-ae96-653f49559ba1}">
+    <Declaration><![CDATA[TYPE ET_STOEBER_ManualSetLimits :
+(
+	eWaitExecute := 0,
+	eSetVelo := 5,
+	eWfSetVelo := 10,
+	eDone := 197,
+	eError := 198,
+	eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

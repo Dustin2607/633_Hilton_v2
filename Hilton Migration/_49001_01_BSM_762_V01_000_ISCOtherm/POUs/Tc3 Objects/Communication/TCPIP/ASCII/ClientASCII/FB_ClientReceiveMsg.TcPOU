@@ -1,0 +1,110 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_ClientReceiveMsg" Id="{a3d15e95-5f7a-4d3e-81cf-f27239168914}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ClientReceiveMsg
+(*
+
+The function block used to received message strings.
+
+Basie on orginal Beckhoffs example.
+
+Constructor: 	Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			18.02.2019
+Version:		1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;					(* Enable FB *)
+	sSuffix						:STRING := '$R$N';		(* Receive command suffix *)	
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	sMsg						:T_MaxString := '';
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	fbRx 						:FB_FrameFifo;				(* Tx fifo *)
+	arsMsg						:ARRAY[1..GVL_TCPIP.RECEIVE_MESSAGE_MAX] OF T_MaxString;			(* Get message of received an ASCII typable string data. *)
+END_VAR
+VAR
+	(* Enummerations *)
+	
+	(* Variables *)
+	nPosOfChar				:INT := 0;								(* Position of first character. *)
+	unIdxRcvMsg				:UINT := 1;
+		
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+
+	RETURN;
+END_IF 
+
+REPEAT
+	(* Fetch string from rx fifo *)
+	fbRx.RemoveHead();
+	IF fbRx.bOk 
+	THEN
+		sMsg := fbRx.sGet;
+	
+		IF LEN(sMsg) <> 0
+		THEN
+			unIdxRcvMsg := 1;
+			REPEAT
+				nPosOfChar := FIND(sMsg, sSuffix);
+				arsMsg[unIdxRcvMsg] := MID(sMsg, MAX(0, nPosOfChar - 1), 1);
+				sMsg := DELETE(sMsg, MAX(0, nPosOfChar - 1 + LEN(sSuffix)), 1);		
+				unIdxRcvMsg := unIdxRcvMsg + 1;
+			UNTIL nPosOfChar <= 0
+				  OR LEN(sMsg) = 0
+			END_REPEAT
+		END_IF	
+	
+		sMsg := fbRx.sGet;
+		
+	END_IF
+UNTIL NOT fbRx.bOk
+END_REPEAT
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ClientReceiveMsg">
+      <LineId Id="910" Count="0" />
+      <LineId Id="908" Count="0" />
+      <LineId Id="911" Count="0" />
+      <LineId Id="914" Count="0" />
+      <LineId Id="913" Count="0" />
+      <LineId Id="912" Count="0" />
+      <LineId Id="838" Count="0" />
+      <LineId Id="865" Count="1" />
+      <LineId Id="863" Count="0" />
+      <LineId Id="862" Count="0" />
+      <LineId Id="861" Count="0" />
+      <LineId Id="1008" Count="1" />
+      <LineId Id="997" Count="10" />
+      <LineId Id="994" Count="1" />
+      <LineId Id="857" Count="0" />
+      <LineId Id="990" Count="0" />
+      <LineId Id="859" Count="1" />
+      <LineId Id="256" Count="0" />
+      <LineId Id="960" Count="0" />
+      <LineId Id="959" Count="0" />
+      <LineId Id="254" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

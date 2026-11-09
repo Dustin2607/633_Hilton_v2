@@ -1,0 +1,72 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_ForceBit_1" Id="{ceb608bf-5191-4722-b435-7c65d24496b7}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ForceBit_1
+(*
+
+Forcing the input bit through pointer.
+IO variables in VAR_CONFIG are generated automatically by TwinCAT - read only
+Matching variable must be with  %I* declarated.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			28.10.2013
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	bEnable						:BOOL; 							(* Enable FB *)
+	dwBitAddr					:DWORD;						(* The address of input argument in a DWORD: BITADR(Input) where e.g Input = %IX0.1 *)
+	bForceInState				:BOOL;							(* Force input state *)
+	tDelayOn					:TIME;							(* Delay signal on *)
+	tDelayOff					:TIME;							(* Delay signal off *)
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR
+	pByteAddr					:POINTER TO BYTE;
+	byCurrentInState				:BYTE;							(* Current input state *)
+	byBitMask					:BYTE;
+
+	tonDelayOn					:TON;
+	tonDelayOff					:TOF;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	RETURN;
+END_IF
+
+(* Delay on signal *)
+tonDelayOn(
+	IN := bForceInState,
+	PT := tDelayOn
+);
+
+(* Delay off signal *)
+tonDelayOff(
+	IN := tonDelayOn.Q,
+	PT := tDelayOff
+);
+
+pByteAddr := ADR(%IB0) + (dwBitAddr / 8);
+byCurrentInState := pByteAddr^;
+
+byBitMask := SHL(BYTE#1, (dwBitAddr AND 2#00000111));
+
+IF tonDelayOff.Q
+THEN
+	pByteAddr^ := byCurrentInState OR byBitMask;
+ELSE
+	pByteAddr^ := byCurrentInState AND NOT byBitMask;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ForceBit_1">
+      <LineId Id="34" Count="27" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

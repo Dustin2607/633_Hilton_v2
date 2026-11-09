@@ -1,0 +1,79 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_ClientLogger" Id="{e54cdff2-9f03-4b9a-8ac7-5600098a08c3}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ClientLogger
+(*
+
+The function block used to get log/error messages from log fifo.
+
+Basie on orginal Beckhoffs example.
+
+Constructor: 	Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			18.02.2019
+Version:		1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;					(* Enable FB *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	sMsg						:T_MaxString := '';
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	fbLoggger					:FB_LogFifo;			(* Logger message fifo *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+	
+	(* Variables *)
+	
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+	RETURN;
+END_IF
+
+REPEAT
+	fbLoggger.Remove();
+	
+	IF fbLoggger.bOk 
+	THEN
+		sMsg := fbLoggger.sGet;
+	END_IF
+UNTIL NOT fbLoggger.bOk
+END_REPEAT
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ClientLogger">
+      <LineId Id="924" Count="0" />
+      <LineId Id="921" Count="2" />
+      <LineId Id="838" Count="0" />
+      <LineId Id="925" Count="0" />
+      <LineId Id="867" Count="1" />
+      <LineId Id="877" Count="0" />
+      <LineId Id="869" Count="0" />
+      <LineId Id="876" Count="0" />
+      <LineId Id="872" Count="0" />
+      <LineId Id="874" Count="1" />
+      <LineId Id="256" Count="0" />
+      <LineId Id="254" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,110 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_PowerSupply_1" Id="{9e2fdad7-15f2-445e-91da-7567d8aaaa78}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_PowerSupply_1
+(*
+
+The function block used to control power supply.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			23.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable					:BOOL;						(* Enable FB signal *)
+	bIn						:BOOL;						(* Input signal *)
+	bNoEStop				:BOOL;						(* Emergency stop *)
+	tPowerSupplyOn			:TIME := t#2s;					(* Timeout power supply on *)
+	tPowerSupplyOff			:TIME := t#1s;					(* Timeout power supply off *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bOut					:BOOL;						(* Power supply ok *)
+	bError					:BOOL;						(* Error by no air pressure *)
+	udnErrorNo				:UDINT;
+	udnMessageNo			:UDINT;
+	sMsg					:STRING;
+END_VAR
+VAR_IN_OUT
+
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	bFirstTime				:BOOL;						(* First cycle *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	tonPowerSupplyOn		:TON;						(* Timer to delay *)
+	tofPowerSupplyOff			:TOF;						(* Timer to delay *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	bOut := TRUE;
+	bError := FALSE;
+	udnErrorNo := 0;
+	udnMessageNo := 0;
+	sMsg := '';
+	tonPowerSupplyOn(IN := FALSE,
+				            PT := tPowerSupplyOn);
+	tofPowerSupplyOff(IN := FALSE,
+	            			 PT := tPowerSupplyOff);
+	bFirstTime := FALSE;
+    RETURN;
+END_IF;
+
+IF NOT bFirstTime
+THEN
+	bError := FALSE;
+	udnErrorNo := 0;
+	udnMessageNo := 0;
+	sMsg := '';
+	tonPowerSupplyOn(IN := FALSE,
+	          			  PT := tPowerSupplyOn);
+	tofPowerSupplyOff(IN := FALSE,
+	             			 PT := tPowerSupplyOff);
+	bFirstTime := TRUE;
+END_IF;
+
+(* Timer starts when came rising edge of signal *)
+tonPowerSupplyOn(
+	IN := bIn AND bNoEStop,
+         PT := tPowerSupplyOn
+);
+
+tofPowerSupplyOff(
+	IN := tonPowerSupplyOn.Q AND bNoEStop,
+         PT := tPowerSupplyOff
+);
+
+bOut := tofPowerSupplyOff.Q;
+bError := NOT tofPowerSupplyOff.Q;
+
+IF bError
+THEN
+	udnErrorNo := 1;
+	udnMessageNo := 0;
+	sMsg := 'No power supply';
+ELSE
+	udnErrorNo := 0;
+	udnMessageNo := 0;
+	sMsg := '';
+END_IF;
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_PowerSupply_1">
+      <LineId Id="47" Count="52" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

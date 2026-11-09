@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_FWS_MLDPCx_PRE_01Vxx_MPxx" Id="{103b1ede-7135-474c-86cb-f13a6575cfa5}">
+    <Declaration><![CDATA[TYPE ST_FWS_MLDPCx_PRE_01Vxx_MPxx :
+STRUCT
+    sNetId     						:T_AmsNetId; 	(* String containing the AMS network ID of the EtherCAT master device. *)
+    unSlaveAddr 					:UINT;			(* Fixed address of the EtherCAT slave to which the SoE write command is to be sent. *)
+	usnDecimalDigits 				:USINT;			(* Number of positions after the decimal point *)
+	
+	bCmdLock						:BOOL;			(* Command lock *)
+	bDriveEnabled					:BOOL;			(* The drive is ready for operation. *)	
+	bMLDRunning    					:BOOL;          (* MLD running *)
+	
+	bEnable							:BOOL;			(* Enable controller *)
+	bFaultReset						:BOOL;			(* Acknowledgment for faults of the controller. *)
+	bFreezeCtrlOut					:BOOL;			(* Freeze controller output *)
+	bControlValve					:BOOL;			(* Control valve *)
+	
+	bEnabled						:BOOL;			(* Controller is ready for operation. *)
+	bError							:BOOL;			(* An error in process control has occurred. *)
+	bCtrlDiffTolWindow				:BOOL;			(* Control difference within tolerance window:  
+														0: Control difference > tolerance window, 
+														1: Control difference <= tolerance window *)
+	bUpperCtrlOutLimitActive		:BOOL;			(* Controller output is limited by P‑0‑1377 *)
+	bLowerCtrlOutLimitActive		:BOOL;			(* Controller output is limited by P‑0‑1378 *)
+
+	bUpperPosLimitExceeded			:BOOL;			(* Upper position limit P‑0‑1381 exceeded *)
+	bLowerPosLimitExceeded			:BOOL;			(* Lower position limit P‑0‑1382 exceeded *)
+
+	bLimitCmdValueChangeNotActive	:BOOL;			(* Displays whether P‑0‑1371 = P‑0‑1271 If bit 7 = 0, the command value change is limited by the ramp and/or the filter 
+														0: Command value change is limited/filtered (P‑0‑1371 <> P‑0‑1271)
+														1: Command value corresponds to possibly limited/filtered active command value (P‑0‑1371 = P‑0‑1271) *)
+	
+	bDriveNoAF						:BOOL;			(* The drive is not in drive enable when process control is activated *)
+	bActiveCtrlSetting				:BOOL;			(* Displays which controller settings are currently active, depending on the effective process feedback
+													   value (P‑0‑1273) or on the effective velocity command value (P‑0‑0048) and on the switch points (P‑0‑1322, P‑0‑1323) that have been set 
+														0: Controller setting 1 takes effect (P‑0‑1373, P‑0‑1374)
+														1: Controller setting 2 takes effect (P‑0‑1320, P‑0‑1321) *)
+	
+	rSetProcessValue				:REAL;			(* Command process value *)
+	rProportionalGain				:REAL;			(* Tuning parameter, proportional gain *)
+	rIntegralTime					:REAL;			(* Tuning parameter, time of integral *)
+	rActProcessValueoOffset			:REAL;			(* Current process value offset *)
+	
+	rActProcessValue				:REAL;			(* Current process value *)													
+																									
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

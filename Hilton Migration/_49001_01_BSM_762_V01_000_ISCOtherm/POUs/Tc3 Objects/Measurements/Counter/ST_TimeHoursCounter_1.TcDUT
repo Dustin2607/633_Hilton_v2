@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_TimeHoursCounter_1" Id="{fca72cd6-1a5e-4060-bb63-b14b8cd18a35}">
+    <Declaration><![CDATA[TYPE ST_TimeHoursCounter_1 :
+STRUCT
+	lrAllOverHours					:LREAL; 							(* All over counter hours *)
+	lrAfterResetHours					:LREAL; 							(* Counter hours since last reset *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

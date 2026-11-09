@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_ChkAxisError" Id="{f9eaf25b-eabd-4c4e-8a03-30f01ae393e7}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_ChkAxisError : BOOL
+(*
+
+The function used to detect if any error existss.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			23.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Signal FB enable *)
+	bAxis1Error					:BOOL;						(* Axis error *)
+	bAxis2Error					:BOOL;						(* Axis error *)
+	bAxis3Error					:BOOL;						(* Axis error *)
+	bAxis4Error					:BOOL;						(* Axis error *)
+	bAxis5Error					:BOOL;						(* Axis error *)
+	bAxis6Error					:BOOL;						(* Axis error *)
+	bAxis7Error					:BOOL;						(* Axis error *)
+	bAxis8Error					:BOOL;						(* Axis error *)
+	bAxis9Error					:BOOL;						(* Axis error *)
+	bAxis10Error				:BOOL;						(* Axis error *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable							(* Signal FB enable *)
+THEN
+	F_ChkAxisError := bEnable;
+
+	RETURN;
+END_IF
+
+F_ChkAxisError := bAxis1Error
+				  OR bAxis2Error
+				  OR bAxis3Error
+				  OR bAxis4Error
+				  OR bAxis5Error
+				  OR bAxis6Error
+				  OR bAxis7Error
+				  OR bAxis8Error
+				  OR bAxis9Error
+				  OR bAxis10Error;]]></ST>
+    </Implementation>
+    <LineIds Name="F_ChkAxisError">
+      <LineId Id="136" Count="16" />
+      <LineId Id="57" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

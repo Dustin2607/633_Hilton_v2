@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_EL3351CoeInfo_1" Id="{f88bc96c-3eb4-48d8-8f60-6cd024f8f5de}">
+    <Declaration><![CDATA[TYPE ST_EL3351CoeInfo_1 :
+STRUCT
+	bEnableUserScale: BOOL:= 0;
+	diUserScaleOffset: DINT:= 0;
+	diUserScaleGain: DINT:= 65536;
+	dwFilterSettings: DWORD:= 2;
+
+	bEnableUserScaleIndex8010: BOOL:= 0;
+	dnUserScaleOffsetIndex8010: DINT:= 0;
+	dnUserScaleGainIndex8010: DINT:= 65536;
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

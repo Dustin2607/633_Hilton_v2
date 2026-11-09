@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_MunschRES_1" Id="{0616697f-eb21-4534-83f3-f44a38909d4a}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_MunschRES_1 : ST_MUNSCH_RES_Data			(* Response from Munsch extruder *)
+VAR_INPUT
+	sResponse					:STRING	;
+END_VAR
+VAR
+	usnBaseMaterialTemp		:USINT := 160;					(* Base material temperature 160 °C *)
+	usnBaseAirTemp			:USINT := 160;					(* Base air temperature 160 °C *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF sResponse = 'H1'		THEN	F_MunschRES.etResponse := ET_MUNSCH_RES_STARTHEAT;
+ELSIF sResponse = 'H0'	THEN	F_MunschRES.etResponse := ET_MUNSCH_RES_STOPHEAT;
+ELSIF sResponse = 'h1'	THEN	F_MunschRES.etResponse := ET_MUNSCH_RES_ACKHEATSTATUSON;
+ELSIF sResponse = 'h0'	THEN	F_MunschRES.etResponse := ET_MUNSCH_RES_ACKHEATSTATUSOFF;
+ELSIF sResponse = 'R1'	THEN	F_MunschRES.etResponse := ET_MUNSCH_RES_STARTEXTRUDER;
+ELSIF sResponse = 'R0'	THEN	F_MunschRES.etResponse := ET_MUNSCH_RES_STOPEXTRUDER;
+ELSIF sResponse = 'r1'		THEN	F_MunschRES.etResponse := ET_MUNSCH_RES_ACKEXTRUDERSTATUSON;
+ELSIF sResponse = 'r0'		THEN	F_MunschRES.etResponse := ET_MUNSCH_RES_ACKEXTRUDERSTATUSOFF;
+ELSIF FIND(sResponse, 'M') = 1		THEN	F_MunschRES.etResponse := ET_MUNSCH_RES_SETMATERIALTEMP; F_MunschRES.nMaterialRefTemp := usnBaseMaterialTemp + ASC(DELETE(sResponse,LEN('M'), FIND(sResponse, 'M')));
+ELSIF FIND(sResponse, 'm') = 1 		THEN	F_MunschRES.etResponse := ET_MUNSCH_RES_REQMATERIALREFTEMP; F_MunschRES.nMaterialRefTemp := usnBaseMaterialTemp + ASC(DELETE(sResponse,LEN('m'), FIND(sResponse, 'm')));
+ELSIF FIND(sResponse, 'n') = 1 		THEN	F_MunschRES.etResponse := ET_MUNSCH_RES_REQMATERIALACTTEMP; F_MunschRES.nMaterialActTemp := usnBaseMaterialTemp + ASC(DELETE(sResponse,LEN('n'), FIND(sResponse, 'n')));
+ELSIF FIND(sResponse, 'A') = 1		THEN	F_MunschRES.etResponse := ET_MUNSCH_RES_SETAIRTEMP; F_MunschRES.nAirRefTemp := usnBaseAirTemp + ASC(DELETE(sResponse,LEN('A'), FIND(sResponse, 'A')));
+ELSIF FIND(sResponse, 'a') = 1		THEN	F_MunschRES.etResponse := ET_MUNSCH_RES_REQAIRREFTEMP; F_MunschRES.nAirRefTemp := usnBaseAirTemp + ASC(DELETE(sResponse,LEN('a'), FIND(sResponse, 'a')));
+ELSIF FIND(sResponse, 'b') = 1		THEN	F_MunschRES.etResponse := ET_MUNSCH_RES_REQAIRACTTEMP; F_MunschRES.nAirActTemp := usnBaseAirTemp + ASC(DELETE(sResponse,LEN('b'), FIND(sResponse, 'b')));
+ELSIF sResponse = 's1'	THEN	F_MunschRES.etResponse := ET_MUNSCH_RES_REQSTATUSHEATED;
+ELSIF sResponse = 's0'	THEN	F_MunschRES.etResponse := ET_MUNSCH_RES_REQSTATUSHEATING;
+ELSIF sResponse = 'sE'	THEN	F_MunschRES.etResponse := ET_MUNSCH_RES_REQSTATUSERROR;
+ELSIF sResponse = 'ER' 	THEN	F_MunschRES.etResponse := ET_MUNSCH_RES_CMDERROR;
+ELSE F_MunschRES.etResponse := ET_MUNSCH_RES_NOCMD;
+END_IF
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="F_MunschRES_1">
+      <LineId Id="8" Count="22" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

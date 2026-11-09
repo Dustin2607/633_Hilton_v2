@@ -1,0 +1,138 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_TerminalDiagnosis_1" Id="{a6909094-26b1-4e7a-9749-7ca8868bf620}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_TerminalDiagnosis_1
+VAR_INPUT
+	stTerminalState				:ST_TerminalState;
+END_VAR
+VAR_OUTPUT
+	bTerminalOK					:BOOL;
+	sTerminalStatus				:STRING;
+END_VAR
+VAR
+
+	sStateStatusAll				:STRING(255);
+	sState						:STRING;
+	sWorkingState				:STRING;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*This Function returns the State of the Device. Either one of the States INIT, PREOP, OP, BOOTSTRAP or SAFE-OP is returned. stState is given the Value of the Function. *)
+sState:= FUN_StateReturn(state:= stTerminalState.unInfoState);
+
+(*All other Errors that can occur concerning the State of the Device*)
+(*Because theoratically all the other errors could occur all together, CONCAT is done to show them all in one view box.*)
+IF stTerminalState.unInfoState.4
+THEN
+	sStateStatusAll:= 'Slave signals error. ';
+ELSE
+	sStateStatusAll:= '';
+END_IF
+
+IF stTerminalState.unInfoState.5
+THEN
+	sStateStatusAll:= CONCAT( sStateStatusAll, 'Invalid vendorID. ');
+ELSE
+	sStateStatusAll:= CONCAT( sStateStatusAll, '');
+END_IF
+
+IF stTerminalState.unInfoState.6
+THEN
+	sStateStatusAll:= CONCAT( sStateStatusAll, 'Initialization error occurred. ');
+ELSE
+	sStateStatusAll:= CONCAT( sStateStatusAll, '');
+END_IF
+
+IF stTerminalState.unInfoState.7
+THEN
+	sStateStatusAll:= CONCAT( sStateStatusAll, 'Slave disabled. ');
+ELSE
+	sStateStatusAll:= CONCAT( sStateStatusAll, '');
+END_IF
+
+IF stTerminalState.unInfoState.8
+THEN
+	sStateStatusAll:= CONCAT( sStateStatusAll, 'Slave not present. ');
+ELSE
+	sStateStatusAll:= CONCAT( sStateStatusAll, '');
+END_IF
+
+IF stTerminalState.unInfoState.9
+THEN
+	sStateStatusAll:= CONCAT( sStateStatusAll, 'Slave signals link error. ');
+ELSE
+	sStateStatusAll:= CONCAT( sStateStatusAll, '');
+END_IF
+
+IF stTerminalState.unInfoState.10
+THEN
+	sStateStatusAll:= CONCAT( sStateStatusAll, 'Slave signals missing link. ');
+ELSE
+	sStateStatusAll:= CONCAT( sStateStatusAll, '');
+END_IF
+
+IF stTerminalState.unInfoState.11
+THEN
+	sStateStatusAll:= CONCAT( sStateStatusAll, 'Slave signals unexpected link. ');
+ELSE
+	sStateStatusAll:= CONCAT( sStateStatusAll, '');
+END_IF
+
+IF stTerminalState.unInfoState.12
+THEN
+	sStateStatusAll:= CONCAT( sStateStatusAll,  'Communication port A. ');
+ELSE
+	sStateStatusAll:= CONCAT( sStateStatusAll, '');
+END_IF
+
+IF stTerminalState.unInfoState.13
+THEN
+	sStateStatusAll:= CONCAT( sStateStatusAll, 'Communication port B. ');
+ELSE
+	sStateStatusAll:= CONCAT( sStateStatusAll, '');
+END_IF
+
+IF stTerminalState.unInfoState.14
+THEN
+	sStateStatusAll:= CONCAT( sStateStatusAll, 'Communication port C. ');
+ELSE
+	sStateStatusAll:= CONCAT( sStateStatusAll, '');
+END_IF
+
+IF stTerminalState.unInfoState.15
+THEN
+	sStateStatusAll:= CONCAT( sStateStatusAll,  'Communication port D. ');
+ELSE
+	sStateStatusAll:= CONCAT( sStateStatusAll, '');
+END_IF
+
+(*If none of the other errors occur, the text of the view box is 'None'.*)
+IF sStateStatusAll= ''
+THEN
+	sStateStatusAll:= 'No error';
+END_IF
+
+(*The colour and text of the view box WcState is adjusted.*)
+IF stTerminalState.bWcState = 0
+THEN
+	sWorkingState:= 'Working State OK ';
+ELSE
+	sWorkingState:= 'Working State NOT OK ';
+END_IF
+
+(*General Status Information*)
+IF stTerminalState.bWcState= 0
+     AND sStateStatusAll= 'No error'
+THEN
+	bTerminalOK:= TRUE;
+	sTerminalStatus:= 'Terminal OK ';
+ELSE
+	bTerminalOK:= FALSE;
+	sTerminalStatus:= 'Terminal Error ';
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_TerminalDiagnosis_1">
+      <LineId Id="15" Count="112" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_COGNEX_ScannerCtrl" Id="{63c6a255-8294-461b-9d75-de753ddf0b2c}">
+    <Declaration><![CDATA[TYPE ET_COGNEX_ScannerCtrl :
+(
+	ET_COGNEX_ScannerCtrl_eWaitExecute := 0,
+	ET_COGNEX_ScannerCtrl_eConnect,
+	ET_COGNEX_ScannerCtrl_eTrigger,
+	ET_COGNEX_ScannerCtrl_eGetData,
+	ET_COGNEX_ScannerCtrl_eChkData,
+	ET_COGNEX_ScannerCtrl_eAbort,
+	ET_COGNEX_ScannerCtrl_eDone := 197,
+	ET_COGNEX_ScannerCtrl_eError := 198,
+	ET_COGNEX_ScannerCtrl_eNotExecute := 199
+);
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

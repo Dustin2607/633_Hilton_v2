@@ -1,0 +1,101 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_PosCtrlIn_1" Id="{d7f13cee-ed5c-406d-89ef-aeabfcbf3eaa}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_PosCtrlIn_1
+(*
+Function block used to set input of position controller.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			15.07.2014
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Enummerations *)
+
+	(* Variables *)
+	dnSetPos							:DINT;							(* Set position - set point - SP  [inc] *)
+	dnActPos							:DINT;							(* Measured position - process variable - PV  [inc]  *)
+	lrSetVelo								:LREAL;							(* Set velocity  [technical units / sec] *)
+	lrDeltaMax							:LREAL := 0.01;					(* Maximum difference between two actual position values *)
+	lrKpPT1								:LREAL := 1.0;						(* Proportional gain of integrator of PT1 element *)
+	tT1PT1								:TIME := t#100ms;					(* Time constant  of integrator of PT1 element *)
+	tDeadTime							:TIME := t#200ms;					(* Dead time *)
+	tTaskCycle							:TIME := t#10ms; 					(* Cycle time *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+
+END_VAR
+VAR_OUTPUT
+	(* Enummerations *)
+
+	(* Variables *)
+	lrDelaySetPos						:LREAL;							(* Delayed set position *)
+	lrFilterActPos							:LREAL;							(* Filtered actual position *)
+	lrFilterSetVelo						:LREAL;							(* Filtered set velocity *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbDeadTime							:FB_Delay;						(* Dead time compensation *)
+	fbVelocityFilter						:FB_PT1;							(* Velocity filter *)
+	fbActPosFilter							:FB_ValueFilter;					(* Actual position filter *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+(* Dead time compensation of position *)
+fbDeadTime(
+	bEnable := TRUE,
+	lrInSignal := DINT_TO_LREAL(dnSetPos),
+	tDeadTime := tDeadTime,
+	tTaskCycle := tTaskCycle,
+	lrOutSignal => lrDelaySetPos
+);
+
+(* Current position value filtering *)
+fbActPosFilter(
+	bEnable := TRUE,
+	lrInSignal := DINT_TO_LREAL(dnActPos),
+	lrDeltaMax := lrDeltaMax,
+	lrOutSignal => lrFilterActPos
+);
+
+(* Velocity filter *)
+fbVelocityFilter(
+	bEnable := TRUE,
+	lrInSignal := lrSetVelo,
+	lrKp := lrKpPT1,
+	tT1:= tT1PT1,
+	tTaskCycle := tTaskCycle,
+	lrOutSignal=> lrFilterSetVelo
+);]]></ST>
+    </Implementation>
+    <LineIds Name="FB_PosCtrlIn_1">
+      <LineId Id="64" Count="26" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

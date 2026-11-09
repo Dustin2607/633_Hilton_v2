@@ -194,7 +194,7 @@ END_VAR]]></Declaration>
                       <v n="IdParent">68L</v>
                     </o>
                     <o t="SFCTransition">
-                      <n n="VariableName" />
+                      <v n="VariableName">"Init__to__Gr05Auto_eWaitAxisStatus"</v>
                       <n n="EmbeddedTransition" />
                       <l2 n="EmbeddedTransitionProperties" />
                       <l2 n="Attributes" cet="SFCAttribute">
@@ -377,7 +377,7 @@ END_VAR]]></Declaration>
                       <v n="IdParent">68L</v>
                     </o>
                     <o t="SFCTransition">
-                      <n n="VariableName" />
+                      <v n="VariableName">"Gr05Auto_eWaitAxisStatus__to__Gr05Auto_eClamp1Close"</v>
                       <n n="EmbeddedTransition" />
                       <l2 n="EmbeddedTransitionProperties" />
                       <l2 n="Attributes" cet="SFCAttribute">
@@ -566,7 +566,7 @@ END_VAR]]></Declaration>
                             <o n="ElementList" t="SFCElementList">
                               <l2 n="InnerList" cet="SFCTransition">
                                 <o>
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Branch0__Gr05Auto_eClamp1Close__to__Gr05Auto_ChkPipeBeginEdge"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -670,7 +670,7 @@ END_VAR]]></Declaration>
                             <o n="ElementList" t="SFCElementList">
                               <l2 n="InnerList">
                                 <o t="SFCTransition">
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Branch1__Gr05Auto_eClamp1Close__to__Gr05Auto_eClamp1CloseErr"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -853,7 +853,7 @@ END_VAR]]></Declaration>
                                   <v n="IdParent">112L</v>
                                 </o>
                                 <o t="SFCTransition">
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Gr05Auto_eClamp1CloseErr__to__Gr05Auto_eError"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -1152,7 +1152,7 @@ END_VAR]]></Declaration>
                             <o n="ElementList" t="SFCElementList">
                               <l2 n="InnerList" cet="SFCTransition">
                                 <o>
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Branch0__Gr05Auto_ChkPipeBeginEdge__to__Gr05Auto_eClamp2Open"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -1256,7 +1256,7 @@ END_VAR]]></Declaration>
                             <o n="ElementList" t="SFCElementList">
                               <l2 n="InnerList">
                                 <o t="SFCTransition">
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Branch1__Gr05Auto_ChkPipeBeginEdge__to__Gr05Auto_eAxisClamp1InPipeBeginPos"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -1555,7 +1555,7 @@ END_VAR]]></Declaration>
                             <o n="ElementList" t="SFCElementList">
                               <l2 n="InnerList" cet="SFCTransition">
                                 <o>
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Branch0__Gr05Auto_eClamp2Open__to__Gr05Auto_eAxisClamp1MoveVeloPipeBegin"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -1659,7 +1659,7 @@ END_VAR]]></Declaration>
                             <o n="ElementList" t="SFCElementList">
                               <l2 n="InnerList">
                                 <o t="SFCTransition">
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Branch1__Gr05Auto_eClamp2Open__to__Gr05Auto_eClamp2OpenErr"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -1842,7 +1842,7 @@ END_VAR]]></Declaration>
                                   <v n="IdParent">180L</v>
                                 </o>
                                 <o t="SFCTransition">
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Gr05Auto_eClamp2OpenErr__to__Gr05Auto_eError"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -2141,7 +2141,7 @@ END_VAR]]></Declaration>
                             <o n="ElementList" t="SFCElementList">
                               <l2 n="InnerList" cet="SFCTransition">
                                 <o>
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Branch0__Gr05Auto_eAxisClamp1MoveVeloPipeBegin__to__Gr05Auto_eWfAxisClamp1MoveVeloPipeBegin"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -2245,7 +2245,7 @@ END_VAR]]></Declaration>
                             <o n="ElementList" t="SFCElementList">
                               <l2 n="InnerList">
                                 <o t="SFCTransition">
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Branch1__Gr05Auto_eAxisClamp1MoveVeloPipeBegin__to__Gr05Auto_eAxisClamp1MoveVeloPipeBeginErr"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -2428,7 +2428,7 @@ END_VAR]]></Declaration>
                                   <v n="IdParent">220L</v>
                                 </o>
                                 <o t="SFCTransition">
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Gr05Auto_eAxisClamp1MoveVeloPipeBeginErr__to__Gr05Auto_eError"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -2727,7 +2727,7 @@ END_VAR]]></Declaration>
                             <o n="ElementList" t="SFCElementList">
                               <l2 n="InnerList" cet="SFCTransition">
                                 <o>
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Branch0__Gr05Auto_eWfAxisClamp1MoveVeloPipeBegin__to__Gr05Auto_eAxisClamp1InPipeBeginPos"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -2831,7 +2831,7 @@ END_VAR]]></Declaration>
                             <o n="ElementList" t="SFCElementList">
                               <l2 n="InnerList">
                                 <o t="SFCTransition">
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Branch1__Gr05Auto_eWfAxisClamp1MoveVeloPipeBegin__to__Gr05Auto_eWfAxisClamp1MoveVeloPipeBeginErr"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -3014,7 +3014,7 @@ END_VAR]]></Declaration>
                                   <v n="IdParent">260L</v>
                                 </o>
                                 <o t="SFCTransition">
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Gr05Auto_eWfAxisClamp1MoveVeloPipeBeginErr__to__Gr05Auto_eError"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -3313,7 +3313,7 @@ END_VAR]]></Declaration>
                             <o n="ElementList" t="SFCElementList">
                               <l2 n="InnerList">
                                 <o t="SFCTransition">
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Branch0__Gr05Auto_eAxisClamp1InPipeBeginPos__to__Gr05Auto_eGetClamp1ActPos"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -3496,7 +3496,7 @@ END_VAR]]></Declaration>
                                   <v n="IdParent">294L</v>
                                 </o>
                                 <o t="SFCTransition">
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Gr05Auto_eGetClamp1ActPos__to__Gr05Auto_eSawbandStart"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -3679,7 +3679,7 @@ END_VAR]]></Declaration>
                                   <v n="IdParent">294L</v>
                                 </o>
                                 <o t="SFCTransition">
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Gr05Auto_eSawbandStart__to__Gr05Auto_eAxisClamp1MoveToSawBandPos"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -3789,7 +3789,7 @@ END_VAR]]></Declaration>
                                         <o n="ElementList" t="SFCElementList">
                                           <l2 n="InnerList">
                                             <o t="SFCTransition">
-                                              <n n="VariableName" />
+                                              <v n="VariableName">"Branch1_0__Gr05Auto_eAxisClamp1InPipeBeginPos__to__Gr05Auto_eWfPipeBeginNoDetectedError"</v>
                                               <n n="EmbeddedTransition" />
                                               <l2 n="EmbeddedTransitionProperties" />
                                               <l2 n="Attributes" cet="SFCAttribute">
@@ -3972,7 +3972,7 @@ END_VAR]]></Declaration>
                                               <v n="IdParent">331L</v>
                                             </o>
                                             <o t="SFCTransition">
-                                              <n n="VariableName" />
+                                              <v n="VariableName">"Gr05Auto_eWfPipeBeginNoDetectedError__to__Gr05Auto_eError"</v>
                                               <n n="EmbeddedTransition" />
                                               <l2 n="EmbeddedTransitionProperties" />
                                               <l2 n="Attributes" cet="SFCAttribute">
@@ -4076,7 +4076,7 @@ END_VAR]]></Declaration>
                                         <o n="ElementList" t="SFCElementList">
                                           <l2 n="InnerList">
                                             <o t="SFCTransition">
-                                              <n n="VariableName" />
+                                              <v n="VariableName">"Branch1_1__Gr05Auto_eAxisClamp1InPipeBeginPos__to__Gr05Auto_eWfPipeBeginNoDetectedWarrning"</v>
                                               <n n="EmbeddedTransition" />
                                               <l2 n="EmbeddedTransitionProperties" />
                                               <l2 n="Attributes" cet="SFCAttribute">
@@ -4259,7 +4259,7 @@ END_VAR]]></Declaration>
                                               <v n="IdParent">349L</v>
                                             </o>
                                             <o t="SFCTransition">
-                                              <n n="VariableName" />
+                                              <v n="VariableName">"Gr05Auto_eWfPipeBeginNoDetectedWarrning__to__Gr05Auto_eEnd"</v>
                                               <n n="EmbeddedTransition" />
                                               <l2 n="EmbeddedTransitionProperties" />
                                               <l2 n="Attributes" cet="SFCAttribute">
@@ -4674,7 +4674,7 @@ END_VAR]]></Declaration>
                                         <o n="ElementList" t="SFCElementList">
                                           <l2 n="InnerList" cet="SFCTransition">
                                             <o>
-                                              <n n="VariableName" />
+                                              <v n="VariableName">"Branch0__Gr05Auto_eAxisClamp1MoveToSawBandPos__to__Gr05Auto_eAxisClamp1InSawBandPos"</v>
                                               <n n="EmbeddedTransition" />
                                               <l2 n="EmbeddedTransitionProperties" />
                                               <l2 n="Attributes" cet="SFCAttribute">
@@ -4778,7 +4778,7 @@ END_VAR]]></Declaration>
                                         <o n="ElementList" t="SFCElementList">
                                           <l2 n="InnerList">
                                             <o t="SFCTransition">
-                                              <n n="VariableName" />
+                                              <v n="VariableName">"Branch1__Gr05Auto_eAxisClamp1MoveToSawBandPos__to__Gr05Auto_eAxisClamp1MoveToSawBandPosErr"</v>
                                               <n n="EmbeddedTransition" />
                                               <l2 n="EmbeddedTransitionProperties" />
                                               <l2 n="Attributes" cet="SFCAttribute">
@@ -4961,7 +4961,7 @@ END_VAR]]></Declaration>
                                               <v n="IdParent">399L</v>
                                             </o>
                                             <o t="SFCTransition">
-                                              <n n="VariableName" />
+                                              <v n="VariableName">"Gr05Auto_eAxisClamp1MoveToSawBandPosErr__to__Gr05Auto_eError"</v>
                                               <n n="EmbeddedTransition" />
                                               <l2 n="EmbeddedTransitionProperties" />
                                               <l2 n="Attributes" cet="SFCAttribute">
@@ -5260,7 +5260,7 @@ END_VAR]]></Declaration>
                                         <o n="ElementList" t="SFCElementList">
                                           <l2 n="InnerList">
                                             <o t="SFCTransition">
-                                              <n n="VariableName" />
+                                              <v n="VariableName">"Branch0__Gr05Auto_eAxisClamp1InSawBandPos__to__Gr05Auto_eGetClamp1ActPos_01"</v>
                                               <n n="EmbeddedTransition" />
                                               <l2 n="EmbeddedTransitionProperties" />
                                               <l2 n="Attributes" cet="SFCAttribute">
@@ -5443,7 +5443,7 @@ END_VAR]]></Declaration>
                                               <v n="IdParent">433L</v>
                                             </o>
                                             <o t="SFCTransition">
-                                              <n n="VariableName" />
+                                              <v n="VariableName">"Gr05Auto_eGetClamp1ActPos_01__to__Dummy_01A"</v>
                                               <n n="EmbeddedTransition" />
                                               <l2 n="EmbeddedTransitionProperties" />
                                               <l2 n="Attributes" cet="SFCAttribute">
@@ -5547,7 +5547,7 @@ END_VAR]]></Declaration>
                                         <o n="ElementList" t="SFCElementList">
                                           <l2 n="InnerList">
                                             <o t="SFCTransition">
-                                              <n n="VariableName" />
+                                              <v n="VariableName">"Branch1__Gr05Auto_eAxisClamp1InSawBandPos__to__Gr05Auto_eAxisClamp1InSawBandPosErr"</v>
                                               <n n="EmbeddedTransition" />
                                               <l2 n="EmbeddedTransitionProperties" />
                                               <l2 n="Attributes" cet="SFCAttribute">
@@ -5730,7 +5730,7 @@ END_VAR]]></Declaration>
                                               <v n="IdParent">451L</v>
                                             </o>
                                             <o t="SFCTransition">
-                                              <n n="VariableName" />
+                                              <v n="VariableName">"Gr05Auto_eAxisClamp1InSawBandPosErr__to__Gr05Auto_eError"</v>
                                               <n n="EmbeddedTransition" />
                                               <l2 n="EmbeddedTransitionProperties" />
                                               <l2 n="Attributes" cet="SFCAttribute">
@@ -6182,7 +6182,7 @@ END_VAR]]></Declaration>
                                         <o n="ElementList" t="SFCElementList">
                                           <l2 n="InnerList" cet="SFCTransition">
                                             <o>
-                                              <n n="VariableName" />
+                                              <v n="VariableName">"Branch0__Gr05Auto_eAxisClamp2MoveToSawBandPos__to__Gr05Auto_eAxisClamp2InSawBandPos"</v>
                                               <n n="EmbeddedTransition" />
                                               <l2 n="EmbeddedTransitionProperties" />
                                               <l2 n="Attributes" cet="SFCAttribute">
@@ -6286,7 +6286,7 @@ END_VAR]]></Declaration>
                                         <o n="ElementList" t="SFCElementList">
                                           <l2 n="InnerList">
                                             <o t="SFCTransition">
-                                              <n n="VariableName" />
+                                              <v n="VariableName">"Branch1__Gr05Auto_eAxisClamp2MoveToSawBandPos__to__Gr05Auto_eAxisClamp2MoveToSawBandPosErr"</v>
                                               <n n="EmbeddedTransition" />
                                               <l2 n="EmbeddedTransitionProperties" />
                                               <l2 n="Attributes" cet="SFCAttribute">
@@ -6469,7 +6469,7 @@ END_VAR]]></Declaration>
                                               <v n="IdParent">503L</v>
                                             </o>
                                             <o t="SFCTransition">
-                                              <n n="VariableName" />
+                                              <v n="VariableName">"Gr05Auto_eAxisClamp2MoveToSawBandPosErr__to__Gr05Auto_eError"</v>
                                               <n n="EmbeddedTransition" />
                                               <l2 n="EmbeddedTransitionProperties" />
                                               <l2 n="Attributes" cet="SFCAttribute">
@@ -6768,7 +6768,7 @@ END_VAR]]></Declaration>
                                         <o n="ElementList" t="SFCElementList">
                                           <l2 n="InnerList" cet="SFCTransition">
                                             <o>
-                                              <n n="VariableName" />
+                                              <v n="VariableName">"Branch0__Gr05Auto_eAxisClamp2InSawBandPos__to__Dummy_01B"</v>
                                               <n n="EmbeddedTransition" />
                                               <l2 n="EmbeddedTransitionProperties" />
                                               <l2 n="Attributes" cet="SFCAttribute">
@@ -6872,7 +6872,7 @@ END_VAR]]></Declaration>
                                         <o n="ElementList" t="SFCElementList">
                                           <l2 n="InnerList">
                                             <o t="SFCTransition">
-                                              <n n="VariableName" />
+                                              <v n="VariableName">"Branch1__Gr05Auto_eAxisClamp2InSawBandPos__to__Gr05Auto_eAxisClamp2InSawBandPosErr"</v>
                                               <n n="EmbeddedTransition" />
                                               <l2 n="EmbeddedTransitionProperties" />
                                               <l2 n="Attributes" cet="SFCAttribute">
@@ -7055,7 +7055,7 @@ END_VAR]]></Declaration>
                                               <v n="IdParent">543L</v>
                                             </o>
                                             <o t="SFCTransition">
-                                              <n n="VariableName" />
+                                              <v n="VariableName">"Gr05Auto_eAxisClamp2InSawBandPosErr__to__Gr05Auto_eError"</v>
                                               <n n="EmbeddedTransition" />
                                               <l2 n="EmbeddedTransitionProperties" />
                                               <l2 n="Attributes" cet="SFCAttribute">
@@ -7425,7 +7425,7 @@ END_VAR]]></Declaration>
                       <v n="IdParent">68L</v>
                     </o>
                     <o t="SFCTransition">
-                      <n n="VariableName" />
+                      <v n="VariableName">"Dummy_01A__to__Gr05Auto_eAxisClamp2MoveSawPos"</v>
                       <n n="EmbeddedTransition" />
                       <l2 n="EmbeddedTransitionProperties" />
                       <l2 n="Attributes" cet="SFCAttribute">
@@ -7614,7 +7614,7 @@ END_VAR]]></Declaration>
                             <o n="ElementList" t="SFCElementList">
                               <l2 n="InnerList" cet="SFCTransition">
                                 <o>
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Branch0__Gr05Auto_eAxisClamp2MoveSawPos__to__Gr05Auto_eAxisClamp2InSawPos"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -7718,7 +7718,7 @@ END_VAR]]></Declaration>
                             <o n="ElementList" t="SFCElementList">
                               <l2 n="InnerList">
                                 <o t="SFCTransition">
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Branch1__Gr05Auto_eAxisClamp2MoveSawPos__to__Gr05Auto_eAxisClamp2MoveSawPosErr"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -7901,7 +7901,7 @@ END_VAR]]></Declaration>
                                   <v n="IdParent">595L</v>
                                 </o>
                                 <o t="SFCTransition">
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Gr05Auto_eAxisClamp2MoveSawPosErr__to__Gr05Auto_eError"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -8200,7 +8200,7 @@ END_VAR]]></Declaration>
                             <o n="ElementList" t="SFCElementList">
                               <l2 n="InnerList" cet="SFCTransition">
                                 <o>
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Branch0__Gr05Auto_eAxisClamp2InSawPos__to__Gr05Auto_eGetProcessPara"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -8304,7 +8304,7 @@ END_VAR]]></Declaration>
                             <o n="ElementList" t="SFCElementList">
                               <l2 n="InnerList">
                                 <o t="SFCTransition">
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Branch1__Gr05Auto_eAxisClamp2InSawPos__to__Gr05Auto_eAxisClamp2InSawPosErr"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -8487,7 +8487,7 @@ END_VAR]]></Declaration>
                                   <v n="IdParent">635L</v>
                                 </o>
                                 <o t="SFCTransition">
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Gr05Auto_eAxisClamp2InSawPosErr__to__Gr05Auto_eError"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -8786,7 +8786,7 @@ END_VAR]]></Declaration>
                             <o n="ElementList" t="SFCElementList">
                               <l2 n="InnerList" cet="SFCTransition">
                                 <o>
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Branch0__Gr05Auto_eGetProcessPara__to__Gr05Auto_eClamp12Open"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -8890,7 +8890,7 @@ END_VAR]]></Declaration>
                             <o n="ElementList" t="SFCElementList">
                               <l2 n="InnerList">
                                 <o t="SFCTransition">
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Branch1__Gr05Auto_eGetProcessPara__to__Gr05Auto_eChkProcessEnd"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -9079,7 +9079,7 @@ END_VAR]]></Declaration>
                                         <o n="ElementList" t="SFCElementList">
                                           <l2 n="InnerList" cet="SFCTransition">
                                             <o>
-                                              <n n="VariableName" />
+                                              <v n="VariableName">"Branch1_0__Gr05Auto_eChkProcessEnd__to__Gr05Auto_eWfSlideUp"</v>
                                               <n n="EmbeddedTransition" />
                                               <l2 n="EmbeddedTransitionProperties" />
                                               <l2 n="Attributes" cet="SFCAttribute">
@@ -9183,7 +9183,7 @@ END_VAR]]></Declaration>
                                         <o n="ElementList" t="SFCElementList">
                                           <l2 n="InnerList">
                                             <o t="SFCTransition">
-                                              <n n="VariableName" />
+                                              <v n="VariableName">"Branch1_1__Gr05Auto_eChkProcessEnd__to__Gr05Auto_eClamp12Open"</v>
                                               <n n="EmbeddedTransition" />
                                               <l2 n="EmbeddedTransitionProperties" />
                                               <l2 n="Attributes" cet="SFCAttribute">
@@ -9476,7 +9476,7 @@ END_VAR]]></Declaration>
                                   <v n="IdParent">675L</v>
                                 </o>
                                 <o t="SFCTransition">
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Gr05Auto_eWfSlideUp__to__Gr05Auto_eGetClamp2ActPos"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -9665,7 +9665,7 @@ END_VAR]]></Declaration>
                                         <o n="ElementList" t="SFCElementList">
                                           <l2 n="InnerList" cet="SFCTransition">
                                             <o>
-                                              <n n="VariableName" />
+                                              <v n="VariableName">"Branch1_0__Gr05Auto_eGetClamp2ActPos__to__Gr05Auto_eChkWorkArea"</v>
                                               <n n="EmbeddedTransition" />
                                               <l2 n="EmbeddedTransitionProperties" />
                                               <l2 n="Attributes" cet="SFCAttribute">
@@ -9769,7 +9769,7 @@ END_VAR]]></Declaration>
                                         <o n="ElementList" t="SFCElementList">
                                           <l2 n="InnerList">
                                             <o t="SFCTransition">
-                                              <n n="VariableName" />
+                                              <v n="VariableName">"Branch1_1__Gr05Auto_eGetClamp2ActPos__to__Gr05Auto_eCollisionDetectedErr"</v>
                                               <n n="EmbeddedTransition" />
                                               <l2 n="EmbeddedTransitionProperties" />
                                               <l2 n="Attributes" cet="SFCAttribute">
@@ -9952,7 +9952,7 @@ END_VAR]]></Declaration>
                                               <v n="IdParent">740L</v>
                                             </o>
                                             <o t="SFCTransition">
-                                              <n n="VariableName" />
+                                              <v n="VariableName">"Gr05Auto_eCollisionDetectedErr__to__Gr05Auto_eError"</v>
                                               <n n="EmbeddedTransition" />
                                               <l2 n="EmbeddedTransitionProperties" />
                                               <l2 n="Attributes" cet="SFCAttribute">
@@ -10251,7 +10251,7 @@ END_VAR]]></Declaration>
                                         <o n="ElementList" t="SFCElementList">
                                           <l2 n="InnerList">
                                             <o t="SFCTransition">
-                                              <n n="VariableName" />
+                                              <v n="VariableName">"Branch1_0__Gr05Auto_eChkWorkArea__to__Gr05Auto_eClamp1Close2"</v>
                                               <n n="EmbeddedTransition" />
                                               <l2 n="EmbeddedTransitionProperties" />
                                               <l2 n="Attributes" cet="SFCAttribute">
@@ -10440,7 +10440,7 @@ END_VAR]]></Declaration>
                                                     <o n="ElementList" t="SFCElementList">
                                                       <l2 n="InnerList">
                                                         <o t="SFCTransition">
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Branch1_0_0__Gr05Auto_eClamp1Close2__to__Gr05Auto_eChkAxisClamp1MoveToBackPos"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -10577,7 +10577,7 @@ END_VAR]]></Declaration>
                                                     <o n="ElementList" t="SFCElementList">
                                                       <l2 n="InnerList" cet="SFCTransition">
                                                         <o>
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Branch1_0_1__Gr05Auto_eClamp1Close2__to__Gr05Auto_eClamp2Open1"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -10681,7 +10681,7 @@ END_VAR]]></Declaration>
                                                     <o n="ElementList" t="SFCElementList">
                                                       <l2 n="InnerList">
                                                         <o t="SFCTransition">
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Branch1_0_2__Gr05Auto_eClamp1Close2__to__Gr05Auto_eClamp1Close2Err"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -10864,7 +10864,7 @@ END_VAR]]></Declaration>
                                                           <v n="IdParent">808L</v>
                                                         </o>
                                                         <o t="SFCTransition">
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Gr05Auto_eClamp1Close2Err__to__Gr05Auto_eError"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -11163,7 +11163,7 @@ END_VAR]]></Declaration>
                                                     <o n="ElementList" t="SFCElementList">
                                                       <l2 n="InnerList" cet="SFCTransition">
                                                         <o>
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Branch1_0_0__Gr05Auto_eClamp2Open1__to__Gr05Auto_eAxisClamp1MoveToPos"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -11267,7 +11267,7 @@ END_VAR]]></Declaration>
                                                     <o n="ElementList" t="SFCElementList">
                                                       <l2 n="InnerList">
                                                         <o t="SFCTransition">
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Branch1_0_1__Gr05Auto_eClamp2Open1__to__Gr05Auto_eClamp2Open1Err"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -11450,7 +11450,7 @@ END_VAR]]></Declaration>
                                                           <v n="IdParent">848L</v>
                                                         </o>
                                                         <o t="SFCTransition">
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Gr05Auto_eClamp2Open1Err__to__Gr05Auto_eError"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -11755,7 +11755,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList" cet="SFCTransition">
                                                                     <o>
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_0_0__Gr05Auto_eAxisClamp1MoveToPos__to__Gr05Auto_eAxisClamp1InPos"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -11859,7 +11859,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList">
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_0_1__Gr05Auto_eAxisClamp1MoveToPos__to__Gr05Auto_eAxisClamp1MoveToPosErr"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -12042,7 +12042,7 @@ END_VAR]]></Declaration>
                                                                       <v n="IdParent">895L</v>
                                                                     </o>
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Gr05Auto_eAxisClamp1MoveToPosErr__to__Gr05Auto_eError"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -12341,7 +12341,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList">
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_0_0__Gr05Auto_eAxisClamp1InPos__to__Gr05Auto_eGetClamp1ActPos_02"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -12524,7 +12524,7 @@ END_VAR]]></Declaration>
                                                                       <v n="IdParent">929L</v>
                                                                     </o>
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Gr05Auto_eGetClamp1ActPos_02__to__Dummy_02A"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -12628,7 +12628,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList">
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_0_1__Gr05Auto_eAxisClamp1InPos__to__Gr05Auto_eAxisClamp1InPosErr"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -12811,7 +12811,7 @@ END_VAR]]></Declaration>
                                                                       <v n="IdParent">947L</v>
                                                                     </o>
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Gr05Auto_eAxisClamp1InPosErr__to__Gr05Auto_eError"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -13263,7 +13263,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList" cet="SFCTransition">
                                                                     <o>
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_0_0__Gr05Auto_eAxisClamp2MoveToPos__to__Gr05Auto_eAxisClamp2InPos"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -13367,7 +13367,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList">
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_0_1__Gr05Auto_eAxisClamp2MoveToPos__to__Gr05Auto_eAxisClamp2MoveToPosErr"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -13550,7 +13550,7 @@ END_VAR]]></Declaration>
                                                                       <v n="IdParent">999L</v>
                                                                     </o>
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Gr05Auto_eAxisClamp2MoveToPosErr__to__Gr05Auto_eError"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -13849,7 +13849,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList" cet="SFCTransition">
                                                                     <o>
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_0_0__Gr05Auto_eAxisClamp2InPos__to__Dummy_02B"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -13953,7 +13953,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList">
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_0_1__Gr05Auto_eAxisClamp2InPos__to__Gr05Auto_eAxisClamp2InPosErr"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -14136,7 +14136,7 @@ END_VAR]]></Declaration>
                                                                       <v n="IdParent">1039L</v>
                                                                     </o>
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Gr05Auto_eAxisClamp2InPosErr__to__Gr05Auto_eError"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -14506,7 +14506,7 @@ END_VAR]]></Declaration>
                                               <v n="IdParent">774L</v>
                                             </o>
                                             <o t="SFCTransition">
-                                              <n n="VariableName" />
+                                              <v n="VariableName">"Dummy_02A__to__Gr05Auto_eChkAxisClamp1MoveToBackPos"</v>
                                               <n n="EmbeddedTransition" />
                                               <l2 n="EmbeddedTransitionProperties" />
                                               <l2 n="Attributes" cet="SFCAttribute">
@@ -14695,7 +14695,7 @@ END_VAR]]></Declaration>
                                                     <o n="ElementList" t="SFCElementList">
                                                       <l2 n="InnerList">
                                                         <o t="SFCTransition">
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Branch1_0_0__Gr05Auto_eChkAxisClamp1MoveToBackPos__to__Gr05Auto_eAxisClamp1MoveToBackPos"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -14884,7 +14884,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList" cet="SFCTransition">
                                                                     <o>
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_0_0_0__Gr05Auto_eAxisClamp1MoveToBackPos__to__Gr05Auto_eAxisClamp1InBackPos"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -14988,7 +14988,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList">
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_0_0_1__Gr05Auto_eAxisClamp1MoveToBackPos__to__Gr05Auto_eAxisClamp1MoveToBackPosErr"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -15171,7 +15171,7 @@ END_VAR]]></Declaration>
                                                                       <v n="IdParent">1110L</v>
                                                                     </o>
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Gr05Auto_eAxisClamp1MoveToBackPosErr__to__Gr05Auto_eError"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -15470,7 +15470,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList">
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_0_0_0__Gr05Auto_eAxisClamp1InBackPos__to__Gr05Auto_eGetClamp1ActPos_06"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -15653,7 +15653,7 @@ END_VAR]]></Declaration>
                                                                       <v n="IdParent">1144L</v>
                                                                     </o>
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Gr05Auto_eGetClamp1ActPos_06__to__Gr05Auto_eChkProcessEnd"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -15757,7 +15757,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList">
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_0_0_1__Gr05Auto_eAxisClamp1InBackPos__to__Gr05Auto_eAxisClamp1InBackPosErr"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -15940,7 +15940,7 @@ END_VAR]]></Declaration>
                                                                       <v n="IdParent">1162L</v>
                                                                     </o>
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Gr05Auto_eAxisClamp1InBackPosErr__to__Gr05Auto_eError"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -16187,7 +16187,7 @@ END_VAR]]></Declaration>
                                                     <o n="ElementList" t="SFCElementList">
                                                       <l2 n="InnerList">
                                                         <o t="SFCTransition">
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Branch1_0_1__Gr05Auto_eChkAxisClamp1MoveToBackPos__to__Gr05Auto_ChkPipeEndDetected"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -16324,7 +16324,7 @@ END_VAR]]></Declaration>
                                                     <o n="ElementList" t="SFCElementList">
                                                       <l2 n="InnerList" cet="SFCTransition">
                                                         <o>
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Branch1_0_2__Gr05Auto_eChkAxisClamp1MoveToBackPos__to__Gr05Auto_eClamp2Slide"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -16590,7 +16590,7 @@ END_VAR]]></Declaration>
                                                     <o n="ElementList" t="SFCElementList">
                                                       <l2 n="InnerList" cet="SFCTransition">
                                                         <o>
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Branch1_0_0__Gr05Auto_eClamp2Slide__to__Gr05Auto_eSawingReq"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -16694,7 +16694,7 @@ END_VAR]]></Declaration>
                                                     <o n="ElementList" t="SFCElementList">
                                                       <l2 n="InnerList">
                                                         <o t="SFCTransition">
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Branch1_0_1__Gr05Auto_eClamp2Slide__to__Gr05Auto_eClamp2Err"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -16877,7 +16877,7 @@ END_VAR]]></Declaration>
                                                           <v n="IdParent">1220L</v>
                                                         </o>
                                                         <o t="SFCTransition">
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Gr05Auto_eClamp2Err__to__Gr05Auto_eError"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -17014,7 +17014,7 @@ END_VAR]]></Declaration>
                                                     <o n="ElementList" t="SFCElementList">
                                                       <l2 n="InnerList">
                                                         <o t="SFCTransition">
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Branch1_0_2__Gr05Auto_eClamp2Slide__to__Gr05Auto_eSlideUpErr"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -17197,7 +17197,7 @@ END_VAR]]></Declaration>
                                                           <v n="IdParent">1241L</v>
                                                         </o>
                                                         <o t="SFCTransition">
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Gr05Auto_eSlideUpErr__to__Gr05Auto_eError"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -17490,7 +17490,7 @@ END_VAR]]></Declaration>
                                               <v n="IdParent">774L</v>
                                             </o>
                                             <o t="SFCTransition">
-                                              <n n="VariableName" />
+                                              <v n="VariableName">"Gr05Auto_eSawingReq__to__Gr05Auto_eSawingAck"</v>
                                               <n n="EmbeddedTransition" />
                                               <l2 n="EmbeddedTransitionProperties" />
                                               <l2 n="Attributes" cet="SFCAttribute">
@@ -17673,7 +17673,7 @@ END_VAR]]></Declaration>
                                               <v n="IdParent">774L</v>
                                             </o>
                                             <o t="SFCTransition">
-                                              <n n="VariableName" />
+                                              <v n="VariableName">"Gr05Auto_eSawingAck__to__Gr05Auto_eWfTransportReq"</v>
                                               <n n="EmbeddedTransition" />
                                               <l2 n="EmbeddedTransitionProperties" />
                                               <l2 n="Attributes" cet="SFCAttribute">
@@ -17856,7 +17856,7 @@ END_VAR]]></Declaration>
                                               <v n="IdParent">774L</v>
                                             </o>
                                             <o t="SFCTransition">
-                                              <n n="VariableName" />
+                                              <v n="VariableName">"Gr05Auto_eWfTransportReq__to__Gr05Auto_eTransportAck"</v>
                                               <n n="EmbeddedTransition" />
                                               <l2 n="EmbeddedTransitionProperties" />
                                               <l2 n="Attributes" cet="SFCAttribute">
@@ -18039,7 +18039,7 @@ END_VAR]]></Declaration>
                                               <v n="IdParent">774L</v>
                                             </o>
                                             <o t="SFCTransition">
-                                              <n n="VariableName" />
+                                              <v n="VariableName">"Gr05Auto_eTransportAck__to__Gr05Auto_eSlideDown"</v>
                                               <n n="EmbeddedTransition" />
                                               <l2 n="EmbeddedTransitionProperties" />
                                               <l2 n="Attributes" cet="SFCAttribute">
@@ -18228,7 +18228,7 @@ END_VAR]]></Declaration>
                                                     <o n="ElementList" t="SFCElementList">
                                                       <l2 n="InnerList" cet="SFCTransition">
                                                         <o>
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Branch1_0_0__Gr05Auto_eSlideDown__to__Gr05Auto_eGetProcessPara"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -18338,7 +18338,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList">
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_0_1_0__Gr05Auto_eSlideDown__to__Gr05Auto_eSlideDownErr"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -18521,7 +18521,7 @@ END_VAR]]></Declaration>
                                                                       <v n="IdParent">1336L</v>
                                                                     </o>
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Gr05Auto_eSlideDownErr__to__Gr05Auto_eError"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -18625,7 +18625,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList">
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_0_1_1__Gr05Auto_eSlideDown__to__Gr05Auto_eRemovalBandErr"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -18808,7 +18808,7 @@ END_VAR]]></Declaration>
                                                                       <v n="IdParent">1354L</v>
                                                                     </o>
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Gr05Auto_eRemovalBandErr__to__Gr05Auto_eError"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -19165,7 +19165,7 @@ END_VAR]]></Declaration>
                                         <o n="ElementList" t="SFCElementList">
                                           <l2 n="InnerList">
                                             <o t="SFCTransition">
-                                              <n n="VariableName" />
+                                              <v n="VariableName">"Branch1_1__Gr05Auto_eChkWorkArea__to__Gr05Auto_ChkPipeEndDetected"</v>
                                               <n n="EmbeddedTransition" />
                                               <l2 n="EmbeddedTransitionProperties" />
                                               <l2 n="Attributes" cet="SFCAttribute">
@@ -19354,7 +19354,7 @@ END_VAR]]></Declaration>
                                                     <o n="ElementList" t="SFCElementList">
                                                       <l2 n="InnerList" cet="SFCTransition">
                                                         <o>
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Branch1_1_0__Gr05Auto_ChkPipeEndDetected__to__Gr05Auto_eClamp2Close"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -19458,7 +19458,7 @@ END_VAR]]></Declaration>
                                                     <o n="ElementList" t="SFCElementList">
                                                       <l2 n="InnerList">
                                                         <o t="SFCTransition">
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Branch1_1_1__Gr05Auto_ChkPipeEndDetected__to__Gr05Auto_eClamp12Open"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -19757,7 +19757,7 @@ END_VAR]]></Declaration>
                                                     <o n="ElementList" t="SFCElementList">
                                                       <l2 n="InnerList" cet="SFCTransition">
                                                         <o>
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Branch1_1_0__Gr05Auto_eClamp2Close__to__Gr05Auto_eClamp1Open"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -19861,7 +19861,7 @@ END_VAR]]></Declaration>
                                                     <o n="ElementList" t="SFCElementList">
                                                       <l2 n="InnerList">
                                                         <o t="SFCTransition">
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Branch1_1_1__Gr05Auto_eClamp2Close__to__Gr05Auto_eClamp2CloseErr"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -20044,7 +20044,7 @@ END_VAR]]></Declaration>
                                                           <v n="IdParent">1434L</v>
                                                         </o>
                                                         <o t="SFCTransition">
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Gr05Auto_eClamp2CloseErr__to__Gr05Auto_eError"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -20343,7 +20343,7 @@ END_VAR]]></Declaration>
                                                     <o n="ElementList" t="SFCElementList">
                                                       <l2 n="InnerList" cet="SFCTransition">
                                                         <o>
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Branch1_1_0__Gr05Auto_eClamp1Open__to__Gr05Auto_eAxisClamp1MoveAbsPipeEnde"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -20447,7 +20447,7 @@ END_VAR]]></Declaration>
                                                     <o n="ElementList" t="SFCElementList">
                                                       <l2 n="InnerList">
                                                         <o t="SFCTransition">
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Branch1_1_1__Gr05Auto_eClamp1Open__to__Gr05Auto_eClamp1OpenErr"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -20630,7 +20630,7 @@ END_VAR]]></Declaration>
                                                           <v n="IdParent">1474L</v>
                                                         </o>
                                                         <o t="SFCTransition">
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Gr05Auto_eClamp1OpenErr__to__Gr05Auto_eError"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -20929,7 +20929,7 @@ END_VAR]]></Declaration>
                                                     <o n="ElementList" t="SFCElementList">
                                                       <l2 n="InnerList" cet="SFCTransition">
                                                         <o>
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Branch1_1_0__Gr05Auto_eAxisClamp1MoveAbsPipeEnde__to__Gr05Auto_eWfAxisClamp1MoveAbsPipeEnde"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -21033,7 +21033,7 @@ END_VAR]]></Declaration>
                                                     <o n="ElementList" t="SFCElementList">
                                                       <l2 n="InnerList">
                                                         <o t="SFCTransition">
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Branch1_1_1__Gr05Auto_eAxisClamp1MoveAbsPipeEnde__to__Gr05Auto_eAxisClamp1MoveAbsPipeEndeErr"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -21216,7 +21216,7 @@ END_VAR]]></Declaration>
                                                           <v n="IdParent">1514L</v>
                                                         </o>
                                                         <o t="SFCTransition">
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Gr05Auto_eAxisClamp1MoveAbsPipeEndeErr__to__Gr05Auto_eError"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -21515,7 +21515,7 @@ END_VAR]]></Declaration>
                                                     <o n="ElementList" t="SFCElementList">
                                                       <l2 n="InnerList">
                                                         <o t="SFCTransition">
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Branch1_1_0__Gr05Auto_eWfAxisClamp1MoveAbsPipeEnde__to__Gr05Auto_eAxisClamp1Stop"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -21704,7 +21704,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList" cet="SFCTransition">
                                                                     <o>
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_1_0_0__Gr05Auto_eAxisClamp1Stop__to__Gr05Auto_eWfAxisClamp1Stop"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -21808,7 +21808,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList">
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_1_0_1__Gr05Auto_eAxisClamp1Stop__to__Gr05Auto_eAxisClamp1StopErr"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -21991,7 +21991,7 @@ END_VAR]]></Declaration>
                                                                       <v n="IdParent">1573L</v>
                                                                     </o>
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Gr05Auto_eAxisClamp1StopErr__to__Gr05Auto_eError"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -22290,7 +22290,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList">
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_1_0_0__Gr05Auto_eWfAxisClamp1Stop__to__Gr05Auto_eGetClamp1ActPos_04"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -22473,7 +22473,7 @@ END_VAR]]></Declaration>
                                                                       <v n="IdParent">1607L</v>
                                                                     </o>
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Gr05Auto_eGetClamp1ActPos_04__to__Gr05Auto_eChkNextSawingAngle"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -22577,7 +22577,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList">
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_1_0_1__Gr05Auto_eWfAxisClamp1Stop__to__Gr05Auto_eWfAxisClamp1StopErr"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -22760,7 +22760,7 @@ END_VAR]]></Declaration>
                                                                       <v n="IdParent">1625L</v>
                                                                     </o>
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Gr05Auto_eWfAxisClamp1StopErr__to__Gr05Auto_eError"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -23059,7 +23059,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList">
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_1_0_0__Gr05Auto_eChkNextSawingAngle__to__Gr05Auto_eAxisClamp1MoveVeloPipeEnd"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -23248,7 +23248,7 @@ END_VAR]]></Declaration>
                                                                             <o n="ElementList" t="SFCElementList">
                                                                               <l2 n="InnerList" cet="SFCTransition">
                                                                                 <o>
-                                                                                  <n n="VariableName" />
+                                                                                  <v n="VariableName">"Branch1_1_0_0_0__Gr05Auto_eAxisClamp1MoveVeloPipeEnd__to__Gr05Auto_eWfAxisClamp1MoveVeloPipeEnd"</v>
                                                                                   <n n="EmbeddedTransition" />
                                                                                   <l2 n="EmbeddedTransitionProperties" />
                                                                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -23352,7 +23352,7 @@ END_VAR]]></Declaration>
                                                                             <o n="ElementList" t="SFCElementList">
                                                                               <l2 n="InnerList">
                                                                                 <o t="SFCTransition">
-                                                                                  <n n="VariableName" />
+                                                                                  <v n="VariableName">"Branch1_1_0_0_1__Gr05Auto_eAxisClamp1MoveVeloPipeEnd__to__Gr05Auto_eAxisClamp1MoveVeloPipeEndErr"</v>
                                                                                   <n n="EmbeddedTransition" />
                                                                                   <l2 n="EmbeddedTransitionProperties" />
                                                                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -23535,7 +23535,7 @@ END_VAR]]></Declaration>
                                                                                   <v n="IdParent">1684L</v>
                                                                                 </o>
                                                                                 <o t="SFCTransition">
-                                                                                  <n n="VariableName" />
+                                                                                  <v n="VariableName">"Gr05Auto_eAxisClamp1MoveVeloPipeEndErr__to__Gr05Auto_eError"</v>
                                                                                   <n n="EmbeddedTransition" />
                                                                                   <l2 n="EmbeddedTransitionProperties" />
                                                                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -23834,7 +23834,7 @@ END_VAR]]></Declaration>
                                                                             <o n="ElementList" t="SFCElementList">
                                                                               <l2 n="InnerList" cet="SFCTransition">
                                                                                 <o>
-                                                                                  <n n="VariableName" />
+                                                                                  <v n="VariableName">"Branch1_1_0_0_0__Gr05Auto_eWfAxisClamp1MoveVeloPipeEnd__to__Gr05Auto_eAxisClamp1InPipeEndPos"</v>
                                                                                   <n n="EmbeddedTransition" />
                                                                                   <l2 n="EmbeddedTransitionProperties" />
                                                                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -23938,7 +23938,7 @@ END_VAR]]></Declaration>
                                                                             <o n="ElementList" t="SFCElementList">
                                                                               <l2 n="InnerList">
                                                                                 <o t="SFCTransition">
-                                                                                  <n n="VariableName" />
+                                                                                  <v n="VariableName">"Branch1_1_0_0_1__Gr05Auto_eWfAxisClamp1MoveVeloPipeEnd__to__Gr05Auto_eWfAxisClamp1MoveVeloPipeEndErr"</v>
                                                                                   <n n="EmbeddedTransition" />
                                                                                   <l2 n="EmbeddedTransitionProperties" />
                                                                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -24121,7 +24121,7 @@ END_VAR]]></Declaration>
                                                                                   <v n="IdParent">1724L</v>
                                                                                 </o>
                                                                                 <o t="SFCTransition">
-                                                                                  <n n="VariableName" />
+                                                                                  <v n="VariableName">"Gr05Auto_eWfAxisClamp1MoveVeloPipeEndErr__to__Gr05Auto_eError"</v>
                                                                                   <n n="EmbeddedTransition" />
                                                                                   <l2 n="EmbeddedTransitionProperties" />
                                                                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -24420,7 +24420,7 @@ END_VAR]]></Declaration>
                                                                             <o n="ElementList" t="SFCElementList">
                                                                               <l2 n="InnerList" cet="SFCTransition">
                                                                                 <o>
-                                                                                  <n n="VariableName" />
+                                                                                  <v n="VariableName">"Branch1_1_0_0_0__Gr05Auto_eAxisClamp1InPipeEndPos__to__Gr05Auto_eAxisClamp1Stop_2"</v>
                                                                                   <n n="EmbeddedTransition" />
                                                                                   <l2 n="EmbeddedTransitionProperties" />
                                                                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -24524,7 +24524,7 @@ END_VAR]]></Declaration>
                                                                             <o n="ElementList" t="SFCElementList">
                                                                               <l2 n="InnerList">
                                                                                 <o t="SFCTransition">
-                                                                                  <n n="VariableName" />
+                                                                                  <v n="VariableName">"Branch1_1_0_0_1__Gr05Auto_eAxisClamp1InPipeEndPos__to__Gr05Auto_eWfPipeEndNoDetectedErr"</v>
                                                                                   <n n="EmbeddedTransition" />
                                                                                   <l2 n="EmbeddedTransitionProperties" />
                                                                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -24707,7 +24707,7 @@ END_VAR]]></Declaration>
                                                                                   <v n="IdParent">1764L</v>
                                                                                 </o>
                                                                                 <o t="SFCTransition">
-                                                                                  <n n="VariableName" />
+                                                                                  <v n="VariableName">"Gr05Auto_eWfPipeEndNoDetectedErr__to__Gr05Auto_eError"</v>
                                                                                   <n n="EmbeddedTransition" />
                                                                                   <l2 n="EmbeddedTransitionProperties" />
                                                                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -25006,7 +25006,7 @@ END_VAR]]></Declaration>
                                                                             <o n="ElementList" t="SFCElementList">
                                                                               <l2 n="InnerList" cet="SFCTransition">
                                                                                 <o>
-                                                                                  <n n="VariableName" />
+                                                                                  <v n="VariableName">"Branch1_1_0_0_0__Gr05Auto_eAxisClamp1Stop_2__to__Gr05Auto_eWfAxisClamp1Stop_2"</v>
                                                                                   <n n="EmbeddedTransition" />
                                                                                   <l2 n="EmbeddedTransitionProperties" />
                                                                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -25110,7 +25110,7 @@ END_VAR]]></Declaration>
                                                                             <o n="ElementList" t="SFCElementList">
                                                                               <l2 n="InnerList">
                                                                                 <o t="SFCTransition">
-                                                                                  <n n="VariableName" />
+                                                                                  <v n="VariableName">"Branch1_1_0_0_1__Gr05Auto_eAxisClamp1Stop_2__to__Gr05Auto_eAxisClamp1StopErr_2"</v>
                                                                                   <n n="EmbeddedTransition" />
                                                                                   <l2 n="EmbeddedTransitionProperties" />
                                                                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -25293,7 +25293,7 @@ END_VAR]]></Declaration>
                                                                                   <v n="IdParent">1804L</v>
                                                                                 </o>
                                                                                 <o t="SFCTransition">
-                                                                                  <n n="VariableName" />
+                                                                                  <v n="VariableName">"Gr05Auto_eAxisClamp1StopErr_2__to__Gr05Auto_eError"</v>
                                                                                   <n n="EmbeddedTransition" />
                                                                                   <l2 n="EmbeddedTransitionProperties" />
                                                                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -25592,7 +25592,7 @@ END_VAR]]></Declaration>
                                                                             <o n="ElementList" t="SFCElementList">
                                                                               <l2 n="InnerList" cet="SFCTransition">
                                                                                 <o>
-                                                                                  <n n="VariableName" />
+                                                                                  <v n="VariableName">"Branch1_1_0_0_0__Gr05Auto_eWfAxisClamp1Stop_2__to__Gr05Auto_ChkNextSawingLenght"</v>
                                                                                   <n n="EmbeddedTransition" />
                                                                                   <l2 n="EmbeddedTransitionProperties" />
                                                                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -25696,7 +25696,7 @@ END_VAR]]></Declaration>
                                                                             <o n="ElementList" t="SFCElementList">
                                                                               <l2 n="InnerList">
                                                                                 <o t="SFCTransition">
-                                                                                  <n n="VariableName" />
+                                                                                  <v n="VariableName">"Branch1_1_0_0_1__Gr05Auto_eWfAxisClamp1Stop_2__to__Gr05Auto_eWfAxisClamp1StopErr_2"</v>
                                                                                   <n n="EmbeddedTransition" />
                                                                                   <l2 n="EmbeddedTransitionProperties" />
                                                                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -25879,7 +25879,7 @@ END_VAR]]></Declaration>
                                                                                   <v n="IdParent">1844L</v>
                                                                                 </o>
                                                                                 <o t="SFCTransition">
-                                                                                  <n n="VariableName" />
+                                                                                  <v n="VariableName">"Gr05Auto_eWfAxisClamp1StopErr_2__to__Gr05Auto_eError"</v>
                                                                                   <n n="EmbeddedTransition" />
                                                                                   <l2 n="EmbeddedTransitionProperties" />
                                                                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -26178,7 +26178,7 @@ END_VAR]]></Declaration>
                                                                             <o n="ElementList" t="SFCElementList">
                                                                               <l2 n="InnerList">
                                                                                 <o t="SFCTransition">
-                                                                                  <n n="VariableName" />
+                                                                                  <v n="VariableName">"Branch1_1_0_0_0__Gr05Auto_ChkNextSawingLenght__to__Gr05Auto_eGetClamp1ActPos_05"</v>
                                                                                   <n n="EmbeddedTransition" />
                                                                                   <l2 n="EmbeddedTransitionProperties" />
                                                                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -26367,7 +26367,7 @@ END_VAR]]></Declaration>
                                                                                         <o n="ElementList" t="SFCElementList">
                                                                                           <l2 n="InnerList" cet="SFCTransition">
                                                                                             <o>
-                                                                                              <n n="VariableName" />
+                                                                                              <v n="VariableName">"Branch1_1_0_0_0_0__Gr05Auto_eGetClamp1ActPos_05__to__Dummy_03"</v>
                                                                                               <n n="EmbeddedTransition" />
                                                                                               <l2 n="EmbeddedTransitionProperties" />
                                                                                               <l2 n="Attributes" cet="SFCAttribute">
@@ -26471,7 +26471,7 @@ END_VAR]]></Declaration>
                                                                                         <o n="ElementList" t="SFCElementList">
                                                                                           <l2 n="InnerList">
                                                                                             <o t="SFCTransition">
-                                                                                              <n n="VariableName" />
+                                                                                              <v n="VariableName">"Branch1_1_0_0_0_1__Gr05Auto_eGetClamp1ActPos_05__to__Gr05Auto_eAngleReq"</v>
                                                                                               <n n="EmbeddedTransition" />
                                                                                               <l2 n="EmbeddedTransitionProperties" />
                                                                                               <l2 n="Attributes" cet="SFCAttribute">
@@ -26654,7 +26654,7 @@ END_VAR]]></Declaration>
                                                                                               <v n="IdParent">1903L</v>
                                                                                             </o>
                                                                                             <o t="SFCTransition">
-                                                                                              <n n="VariableName" />
+                                                                                              <v n="VariableName">"Gr05Auto_eAngleReq__to__Gr05Auto_eAngleAck"</v>
                                                                                               <n n="EmbeddedTransition" />
                                                                                               <l2 n="EmbeddedTransitionProperties" />
                                                                                               <l2 n="Attributes" cet="SFCAttribute">
@@ -26837,7 +26837,7 @@ END_VAR]]></Declaration>
                                                                                               <v n="IdParent">1903L</v>
                                                                                             </o>
                                                                                             <o t="SFCTransition">
-                                                                                              <n n="VariableName" />
+                                                                                              <v n="VariableName">"Gr05Auto_eAngleAck__to__Dummy_03"</v>
                                                                                               <n n="EmbeddedTransition" />
                                                                                               <l2 n="EmbeddedTransitionProperties" />
                                                                                               <l2 n="Attributes" cet="SFCAttribute">
@@ -27018,7 +27018,7 @@ END_VAR]]></Declaration>
                                                                             <o n="ElementList" t="SFCElementList">
                                                                               <l2 n="InnerList" cet="SFCTransition">
                                                                                 <o>
-                                                                                  <n n="VariableName" />
+                                                                                  <v n="VariableName">"Branch1_1_0_0_1__Gr05Auto_ChkNextSawingLenght__to__Dummy_03"</v>
                                                                                   <n n="EmbeddedTransition" />
                                                                                   <l2 n="EmbeddedTransitionProperties" />
                                                                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -27199,7 +27199,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList" cet="SFCTransition">
                                                                     <o>
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_1_0_1__Gr05Auto_eChkNextSawingAngle__to__Dummy_03"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -27459,7 +27459,7 @@ END_VAR]]></Declaration>
                                                           <v n="IdParent">1548L</v>
                                                         </o>
                                                         <o t="SFCTransition">
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Dummy_03__to__Gr05Auto_eChkProcessEnd"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -27596,7 +27596,7 @@ END_VAR]]></Declaration>
                                                     <o n="ElementList" t="SFCElementList">
                                                       <l2 n="InnerList">
                                                         <o t="SFCTransition">
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Branch1_1_1__Gr05Auto_eWfAxisClamp1MoveAbsPipeEnde__to__Gr05Auto_eGetClamp1ActPos_03"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -27779,7 +27779,7 @@ END_VAR]]></Declaration>
                                                           <v n="IdParent">1960L</v>
                                                         </o>
                                                         <o t="SFCTransition">
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Gr05Auto_eGetClamp1ActPos_03__to__Gr05Auto_eClamp1Close3"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -27968,7 +27968,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList" cet="SFCTransition">
                                                                     <o>
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_1_1_0__Gr05Auto_eClamp1Close3__to__Gr05Auto_eChkAdjustSawingLength"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -28072,7 +28072,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList">
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_1_1_1__Gr05Auto_eClamp1Close3__to__Gr05Auto_eClamp1Close3Err"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -28255,7 +28255,7 @@ END_VAR]]></Declaration>
                                                                       <v n="IdParent">1997L</v>
                                                                     </o>
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Gr05Auto_eClamp1Close3Err__to__Gr05Auto_eError"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -28554,7 +28554,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList" cet="SFCTransition">
                                                                     <o>
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_1_1_0__Gr05Auto_eChkAdjustSawingLength__to__Gr05Auto_NurWennlrActRemoveLength_0"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -28658,7 +28658,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList">
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_1_1_1__Gr05Auto_eChkAdjustSawingLength__to__Gr05Auto_eChkProcessEnd"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -28951,7 +28951,7 @@ END_VAR]]></Declaration>
                                                           <v n="IdParent">1960L</v>
                                                         </o>
                                                         <o t="SFCTransition">
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Gr05Auto_NurWennlrActRemoveLength_0__to__Gr05Auto_eClamp2Open3"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -29140,7 +29140,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList" cet="SFCTransition">
                                                                     <o>
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_1_1_0__Gr05Auto_eClamp2Open3__to__Gr05Auto_eAxisClamp2MoveToPos2"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -29244,7 +29244,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList">
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_1_1_1__Gr05Auto_eClamp2Open3__to__Gr05Auto_eClamp2Open3Err"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -29427,7 +29427,7 @@ END_VAR]]></Declaration>
                                                                       <v n="IdParent">2077L</v>
                                                                     </o>
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Gr05Auto_eClamp2Open3Err__to__Gr05Auto_eError"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -29726,7 +29726,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList" cet="SFCTransition">
                                                                     <o>
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_1_1_0__Gr05Auto_eAxisClamp2MoveToPos2__to__Gr05Auto_eAxisClamp2InPos2"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -29830,7 +29830,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList">
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_1_1_1__Gr05Auto_eAxisClamp2MoveToPos2__to__Gr05Auto_eAxisClamp2MoveToPos2Err"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -30013,7 +30013,7 @@ END_VAR]]></Declaration>
                                                                       <v n="IdParent">2117L</v>
                                                                     </o>
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Gr05Auto_eAxisClamp2MoveToPos2Err__to__Gr05Auto_eError"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -30312,7 +30312,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList" cet="SFCTransition">
                                                                     <o>
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_1_1_0__Gr05Auto_eAxisClamp2InPos2__to__Gr05Auto_eAxisClamp1MoveToPos2"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -30416,7 +30416,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList">
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_1_1_1__Gr05Auto_eAxisClamp2InPos2__to__Gr05Auto_eAxisClamp2InPos2Err"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -30599,7 +30599,7 @@ END_VAR]]></Declaration>
                                                                       <v n="IdParent">2157L</v>
                                                                     </o>
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Gr05Auto_eAxisClamp2InPos2Err__to__Gr05Auto_eError"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -30898,7 +30898,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList" cet="SFCTransition">
                                                                     <o>
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_1_1_0__Gr05Auto_eAxisClamp1MoveToPos2__to__Gr05Auto_eAxisClamp1InPos2"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -31002,7 +31002,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList">
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_1_1_1__Gr05Auto_eAxisClamp1MoveToPos2__to__Gr05Auto_eAxisClamp1MoveToPos2Err"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -31185,7 +31185,7 @@ END_VAR]]></Declaration>
                                                                       <v n="IdParent">2197L</v>
                                                                     </o>
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Gr05Auto_eAxisClamp1MoveToPos2Err__to__Gr05Auto_eError"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -31484,7 +31484,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList">
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_1_1_0__Gr05Auto_eAxisClamp1InPos2__to__Gr05Auto_eSawingLengthCorrection"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -31667,7 +31667,7 @@ END_VAR]]></Declaration>
                                                                       <v n="IdParent">2231L</v>
                                                                     </o>
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Gr05Auto_eSawingLengthCorrection__to__Gr05Auto_ChkPipeEndDetected"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -31804,7 +31804,7 @@ END_VAR]]></Declaration>
                                                                 <o n="ElementList" t="SFCElementList">
                                                                   <l2 n="InnerList">
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Branch1_1_1_1__Gr05Auto_eAxisClamp1InPos2__to__Gr05Auto_eAxisClamp1InPos2Err"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -31987,7 +31987,7 @@ END_VAR]]></Declaration>
                                                                       <v n="IdParent">2252L</v>
                                                                     </o>
                                                                     <o t="SFCTransition">
-                                                                      <n n="VariableName" />
+                                                                      <v n="VariableName">"Gr05Auto_eAxisClamp1InPos2Err__to__Gr05Auto_eError"</v>
                                                                       <n n="EmbeddedTransition" />
                                                                       <l2 n="EmbeddedTransitionProperties" />
                                                                       <l2 n="Attributes" cet="SFCAttribute">
@@ -32201,7 +32201,7 @@ END_VAR]]></Declaration>
                                                     <o n="ElementList" t="SFCElementList">
                                                       <l2 n="InnerList">
                                                         <o t="SFCTransition">
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Branch1_1_2__Gr05Auto_eWfAxisClamp1MoveAbsPipeEnde__to__Gr05Auto_eWfAxisClamp1MoveAbsPipeEndeErr"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -32384,7 +32384,7 @@ END_VAR]]></Declaration>
                                                           <v n="IdParent">2273L</v>
                                                         </o>
                                                         <o t="SFCTransition">
-                                                          <n n="VariableName" />
+                                                          <v n="VariableName">"Gr05Auto_eWfAxisClamp1MoveAbsPipeEndeErr__to__Gr05Auto_eError"</v>
                                                           <n n="EmbeddedTransition" />
                                                           <l2 n="EmbeddedTransitionProperties" />
                                                           <l2 n="Attributes" cet="SFCAttribute">
@@ -32837,7 +32837,7 @@ END_VAR]]></Declaration>
                             <o n="ElementList" t="SFCElementList">
                               <l2 n="InnerList" cet="SFCTransition">
                                 <o>
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Branch0__Gr05Auto_eClamp12Open__to__Gr05Auto_eEnd"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -32941,7 +32941,7 @@ END_VAR]]></Declaration>
                             <o n="ElementList" t="SFCElementList">
                               <l2 n="InnerList">
                                 <o t="SFCTransition">
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Branch1__Gr05Auto_eClamp12Open__to__Gr05Auto_eClamp1Open2Err"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -33124,7 +33124,7 @@ END_VAR]]></Declaration>
                                   <v n="IdParent">2313L</v>
                                 </o>
                                 <o t="SFCTransition">
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Gr05Auto_eClamp1Open2Err__to__Gr05Auto_eError"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -33261,7 +33261,7 @@ END_VAR]]></Declaration>
                             <o n="ElementList" t="SFCElementList">
                               <l2 n="InnerList">
                                 <o t="SFCTransition">
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Branch2__Gr05Auto_eClamp12Open__to__Gr05Auto_eClamp2Open2Err"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -33444,7 +33444,7 @@ END_VAR]]></Declaration>
                                   <v n="IdParent">2334L</v>
                                 </o>
                                 <o t="SFCTransition">
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Gr05Auto_eClamp2Open2Err__to__Gr05Auto_eError"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -33743,7 +33743,7 @@ END_VAR]]></Declaration>
                             <o n="ElementList" t="SFCElementList">
                               <l2 n="InnerList">
                                 <o t="SFCTransition">
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Branch0__Gr05Auto_eEnd__to__Gr05Auto_eDone"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -33926,7 +33926,7 @@ END_VAR]]></Declaration>
                                   <v n="IdParent">2368L</v>
                                 </o>
                                 <o t="SFCTransition">
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Gr05Auto_eDone__to__Gr05Auto_eNoExecute"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -34030,7 +34030,7 @@ END_VAR]]></Declaration>
                             <o n="ElementList" t="SFCElementList">
                               <l2 n="InnerList">
                                 <o t="SFCTransition">
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Branch1__Gr05Auto_eEnd__to__Gr05Auto_eError"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -34213,7 +34213,7 @@ END_VAR]]></Declaration>
                                   <v n="IdParent">2386L</v>
                                 </o>
                                 <o t="SFCTransition">
-                                  <n n="VariableName" />
+                                  <v n="VariableName">"Gr05Auto_eError__to__Gr05Auto_eNoExecute"</v>
                                   <n n="EmbeddedTransition" />
                                   <l2 n="EmbeddedTransitionProperties" />
                                   <l2 n="Attributes" cet="SFCAttribute">
@@ -34473,7 +34473,7 @@ END_VAR]]></Declaration>
                       <v n="IdParent">68L</v>
                     </o>
                     <o t="SFCTransition">
-                      <n n="VariableName" />
+                      <v n="VariableName">"Gr05Auto_eNoExecute__to__Init"</v>
                       <n n="EmbeddedTransition" />
                       <l2 n="EmbeddedTransitionProperties" />
                       <l2 n="Attributes" cet="SFCAttribute">
@@ -35637,7 +35637,7 @@ END_IF
     <Action Name="Gr05Auto_eSawbandStart_Entry" Id="{020eb7db-6d27-4c83-9b2b-f5583953e4b6}">
       <Implementation>
         <ST><![CDATA[Gr01Control.fbSawband.bExeMoveVelo:= TRUE;
-Gr01Control.fbSawband.lrAutoSpeed := stgGr01HMI.stHMITOPLC.rSawbandAutoSpeed;
+Gr01Control.fbSawband.lrAutoSpeed := stgGr01HMI.stHMITOPLC.lrSawbandAutoSpeed;
 
 ]]></ST>
       </Implementation>

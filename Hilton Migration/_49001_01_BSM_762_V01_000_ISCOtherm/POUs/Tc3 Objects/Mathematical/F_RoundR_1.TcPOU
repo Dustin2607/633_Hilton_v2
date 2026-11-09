@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_RoundR_1" Id="{5e5a241e-8558-4247-b506-c175c408d980}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_RoundR_1 : REAL
+(*
+Function used to round real value with precision
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			17.07.2014
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Enummerations *)
+	
+	(* Variables *)
+	rReal 						:REAL;			(* Input variable *)
+	usnPrecision					:USINT := 2;		(* The number of digits after the decimal point depends on the requested precision *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+	
+	(* Variables *)
+	rFraction						:REAL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+rFraction := F_FracR(ABS(rReal)) * EXPT(10, usnPrecision + 1); 								(* The fraction of the value *)
+
+IF F_ModR(rFraction, 10) < 5
+THEN
+	rFraction := rFraction - F_ModR(rFraction, 10) ;											(* Round down *)
+ELSE
+	rFraction := rFraction + (10 - F_ModR(rFraction, 10));										(* Round up and check the integral increment *)
+END_IF;
+
+IF rReal  < 0																			(* Check the digit of the value *)
+THEN
+	F_RoundR := TRUNC(rReal) - (rFraction / EXPT(10, usnPrecision + 1));
+ELSE
+	F_RoundR := TRUNC(rReal) + (rFraction / EXPT(10, usnPrecision + 1));
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="F_RoundR_1">
+      <LineId Id="40" Count="15" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

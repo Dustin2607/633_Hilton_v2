@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_SignalHandling_1" Id="{5c92eef0-8d07-4a07-b875-58e592b177e6}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_SignalHandling_1 : BOOL
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable					:BOOL;						(* Enable FB signal *)
+	bIn						:BOOL;						(* Input signal *)
+END_VAR
+VAR
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	F_SignalHandling := FALSE;
+    	RETURN;
+END_IF;
+
+F_SignalHandling := bIn;                     (* Set output *)]]></ST>
+    </Implementation>
+    <LineIds Name="F_SignalHandling_1">
+      <LineId Id="8" Count="6" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

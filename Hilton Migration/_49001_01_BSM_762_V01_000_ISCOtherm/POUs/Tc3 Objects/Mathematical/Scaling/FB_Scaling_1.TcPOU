@@ -1,0 +1,97 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Scaling_1" Id="{c2e92590-2183-4d71-ac45-f307534d47b1}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Scaling_1
+(*
+
+The function block used to scaling input signal.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			04.08.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable							:BOOL;						(* Function block enable *)
+	lrInput							:LREAL;						(* Input scaling proces value *)
+	lrXLowLimit						:LREAL;						(* Upper limit of X range *)
+	lrXUpperLimit						:LREAL; 						(*Upper limit of X range  *)
+	lrYLowLimit						:LREAL; 						(* Low limit of Y range  *)
+	lrYUpperLimit						:LREAL; 						(* Upper limit of Y range  *)
+	usiPrecision						:USINT := 2; 					(* The number of digits after the decimal point depends on the requested precision *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	lrOutputRV						:LREAL;						(* Raw Value *)
+	lrOutputPV						:LREAL;						(* Judgment Value  *)
+	bLowLevel						:BOOL;						(* Low level detected *)
+	bGoLevel						:BOOL;						(* Go level detected *)
+	bHighLevel						:BOOL;						(* High level detected *)
+END_VAR
+VAR
+	(* Instances / Instanzen *)
+
+	(* Enumerator  *)
+
+	(* General flags / Allgemeine Variablen *)
+	lra								:LREAL;
+	lrb								:LREAL;
+END_VAR
+VAR CONSTANT
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable THEN
+	lrOutputRV := 0.0;					(* Raw Value *)
+	lrOutputPV := 0.0;					(* Judgment Value *)
+	bLowLevel := FALSE;				(* Low level detected *)
+	bGoLevel := FALSE;					(* Go level detected *)
+	bHighLevel := FALSE;				(* High level detected *)
+	RETURN;
+END_IF
+
+(* Scaling *)
+IF lrInput > lrXUpperLimit															(* Check upper limit of X range *)
+THEN
+	lrOutputRV := lrYUpperLimit;
+	bLowLevel := FALSE;
+	bHighLevel := TRUE;
+	bGoLevel := FALSE;
+ELSIF lrInput <= lrXLowLimit														(* Check low limit of X range *)
+THEN
+	lrOutputRV := lrYLowLimit;
+	bLowLevel := TRUE;
+	bHighLevel := FALSE;
+	bGoLevel := FALSE;
+ELSE
+	IF (((lrXUpperLimit - lrXLowLimit) < 0.01)											(* Check X range *)
+	    AND ((lrXUpperLimit - lrXLowLimit) > -0.01))
+	THEN
+		lrOutputRV := lrYLowLimit;
+		bLowLevel := TRUE;
+		bHighLevel := FALSE;
+		bGoLevel := FALSE;
+	ELSE
+		lra := (lrYUpperLimit - lrYLowLimit) / (lrXUpperLimit - lrXLowLimit);					(* Slope of a straight line, drawed by the range positions *)
+		lrb := lrYUpperLimit - lra * lrXUpperLimit;
+		lrOutputRV := lra * lrInput + lrb;
+		bLowLevel := FALSE;
+		bHighLevel := FALSE;
+		bGoLevel := TRUE;
+	END_IF;
+END_IF
+
+lrOutputPV := F_LRealRound(lrOutputRV, usiPrecision);
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Scaling_1">
+      <LineId Id="44" Count="42" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

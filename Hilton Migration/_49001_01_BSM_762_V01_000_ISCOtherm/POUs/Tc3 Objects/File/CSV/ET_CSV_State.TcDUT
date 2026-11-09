@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_CSV_State" Id="{f1bbbd50-5197-44c1-8f6a-da7066f8fbad}">
+    <Declaration><![CDATA[TYPE ET_CSV_State :
+(
+	ET_CSV_State_eWaitExecute := 0,
+	ET_CSV_State_eCreateDir,
+	ET_CSV_State_eChkCreateDir,
+	ET_CSV_State_eFileOpen,
+	ET_CSV_State_eChkFileOpen,
+	ET_CSV_State_eConvertRecord,
+	ET_CSV_State_eFilePuts,
+	ET_CSV_State_eChkFilePuts,
+	ET_CSV_State_eFileGets,
+	ET_CSV_State_eChkFileGets,
+	ET_CSV_State_eParseSingleRecord,
+	ET_CSV_State_eFileClose,
+	ET_CSV_State_eChkFileClose,
+	ET_CSV_State_eDone := 197,
+	ET_CSV_State_eError := 198,
+	ET_CSV_State_eNoExecute := 199
+);
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

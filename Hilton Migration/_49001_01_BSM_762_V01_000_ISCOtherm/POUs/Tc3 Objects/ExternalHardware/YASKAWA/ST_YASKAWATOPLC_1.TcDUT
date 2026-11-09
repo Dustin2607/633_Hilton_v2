@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_YASKAWATOPLC_1" Id="{0dac257f-c4fd-4075-81ff-dd46847c9d7b}">
+    <Declaration><![CDATA[TYPE ST_YASKAWATOPLC_1 :
+STRUCT
+	bOperatingRunning						:BOOL;					(* Operating running. *)
+	bServoIsOn								:BOOL;					(* Servo is on. *)
+	bTopMasterJob							:BOOL;					(* Top master job. *)
+	bAlarmErrorOccured						:BOOL;					(* Alarm error occured. *)
+	bReducedSpeed							:BOOL;					(* Reduced speed *)
+	bRemoteModeSelected					:BOOL;					(* Remote mode selected. *)
+	bPlayModeSelected						:BOOL;					(* Play mode selected. *)
+	bTeachModeSelected						:BOOL;					(* Teach mode selected. *)
+
+	bHold									:BOOL;					(* Hold. *)
+
+	bInHome									:BOOL;					(* OUT - Robot in home position. *)
+	bPrgDone								:BOOL;					(* OUT - Program done. *)
+	bNotInCrashAreaMachine					:BOOL;					(* OUT - Robot not in crash area with machine. *)
+	bNotMoving								:BOOL;					(* OUT - Robot running. *)
+
+	bHeadSocketAirOpen						:BOOL;					(* OUT - Head socket air open. *)
+	bHeadSocketAirClose						:BOOL;					(* OUT - Head socket air close.*)
+	bHeadUnDock							:BOOL;					(* OUT - Head undock. *)
+	bHeadDock								:BOOL;					(* OUT - Head dock.*)
+	bExeHeadNest							:BOOL;					(* OUT - Execute head nest . *)
+
+	bToolStorageHoodOpen					:BOOL;					(* OUT - Tool storage hood open. *)
+	bToolStorageHoodClose					:BOOL;					(* OUT - Tool storage hood close. *)
+	bExeToolNest							:BOOL;					(* OUT - Execute tool nest . *)
+
+	bSpindleBitClutchOpen						:BOOL;					(* OUT - Spindle bit clutch open. *)
+	bSpindleBitClutchClose					:BOOL;					(* OUT - Spindle bit clutch close.*)
+	bSpindleStart								:BOOL;					(* OUT - Spindle start. *)
+	bSpindleStop								:BOOL;					(* OUT - Spindle stop. *)
+	bSpindlePurgeOpen						:BOOL;					(* OUT - Spindle purge open *)
+	bSpindlePurgeClose						:BOOL;					(* OUT - Spindle purge close *)
+
+	bFurrowingHeadUnlock					:BOOL;					(* OUT - Furrowing head unlock. *)
+	bFurrowingHeadLock						:BOOL;					(* OUT - Furrowing head lock.*)
+	bFurrowingHeadCutterOpen					:BOOL;					(* OUT - Furrowing head cutter open. *)
+	bFurrowingHeadCutterClose				:BOOL;					(* OUT - Furrowing head cutter close.*)
+
+	bStartTouchProbeP1						:BOOL;					(* OUT - Start touch probe P1. *)
+
+	unHeadNo								:UINT;					(* OUT - Head number. *)
+	unToolNo								:UINT;					(* OUT - Hool number. *)
+	nSpindleSpeed							:INT;					(* OUT - Spindle speed. *)
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

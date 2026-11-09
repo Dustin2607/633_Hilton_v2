@@ -1,0 +1,339 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_ExtSetpoint_1" Id="{106a31a6-9d61-4b75-b3f5-8b027858e82f}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ExtSetpoint_1
+(*
+
+The function block used to move axis with an external set value.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			01.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Function block enable *)
+	bNoEStop					:BOOL;						(* No ermergency Stop / Keine Notaus *)
+	
+	byConfig					:BYTE;						(* Bit 0 - external trajectory,
+															   Bit 1 - 
+		
+															*)
+	bStart						:BOOL;						(* Execute start an external set value generator with rising edge *)
+	bStop						:BOOL;						(* Execute stop an external set value generator with rising edge *)
+	lrPosition					:LREAL;						(* Set position from an external set value generator *)
+	lrPositionOffset			:LREAL;						(* Set offset of position *)
+	ePositionType 				:E_PositionType ;			(* Position type - POSITIONTYPE_ABSOLUTE or POSITIONTYPE_RELATIVE *)
+	bNotMoving					:BOOL;						(* Set not moving *)
+	bNegativeDirection			:BOOL;						(* Negative direction *)
+	bPositiveDirection			:BOOL;						(* Positive direction *)
+	lrVelocity					:LREAL;						(* Set velocity from an external set point generator  > 0 *)
+	lrAcceleration				:LREAL;						(* Set acceleration from an external set point generator > 0 *)					
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bEnabled  				:BOOL;						(* Enabled shows the current state of the external set point generator *)
+	bDone					:BOOL;						(* Command done *)
+	bBusy					:BOOL;						(* Command busy *)
+	bError					:BOOL;						(* Command error  *)
+	udnErrorNo				:UDINT;						(* Error number *)
+	sErrorMsg				:STRING; 					(* Error message *)
+END_VAR
+VAR_IN_OUT
+	AxisDest				:AXIS_REF;					(* The AXIS_REF data type  is an interface between the PLC and the NC and contains axis information *)
+END_VAR
+VAR
+	(* Instances / Instanzen *)
+	fbMC_ExtSetPointGenEnable			:MC_ExtSetPointGenEnable;						(* Switch on external set value generator with the function. *)
+	fbMC_ExtSetPointGenDisable			:MC_ExtSetPointGenDisable;						(* Switch off external set value generator with the function. *)
+
+	rtStart								:R_TRIG;
+	rtStop								:R_TRIG;
+	bExtStart							:BOOL;
+	bExtStop							:BOOL;
+	
+	(* Enumerator  *)
+	etExtSetpoint						:ET_ExtSetpoint;								(* Current state *)
+
+	(* General flags / Allgemeine Variablen *)
+	eLastPositionType 					:E_PositionType;
+	lrExtPosition						:LREAL;
+	lrExtVelocity						:LREAL;
+	lrExtAcceleration					:LREAL;
+	dnExtDirection						:DINT;
+	bImediateStop						:BOOL;
+	bFirstTime							:BOOL;
+
+END_VAR
+VAR CONSTANT
+	lrEPSILON				 :LREAL := 1E-6;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	bDone := bStart OR bStop;			(* Command done *)
+	bBusy := bStart OR bStop;			(* Command busy *)
+	bError := FALSE;					(* Command error  *)
+	udnErrorNo := 0;					(* Error number *)
+	sErrorMsg := ''; 					(* Error message *)
+
+	bEnabled := bStart;
+	
+	bFirstTime := FALSE;
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+	bEnabled := FALSE;
+
+	fbMC_ExtSetPointGenEnable(Execute := FALSE, Axis := AxisDest);						(* Reset FB and get Enabled status *)
+	fbMC_ExtSetPointGenDisable(Execute := FALSE, Axis := AxisDest); 						(* Reset FB and get Enabled status *)
+
+	etExtSetpoint := ET_ExtSetpoint_eWaitExecute;
+
+	bFirstTime := TRUE;
+END_IF
+
+bImediateStop := AxisInErrorState(AxisDest.NcToPlc.AxisState);
+IF bImediateStop
+THEN
+	(* Stop generator if axis is in error state *)
+	lrExtVelocity := 0.0;
+	lrExtAcceleration := 0.0;
+	dnExtDirection := 0;
+	bError := TRUE;													(* Command error  *)
+	udnErrorNo :=  AxisDest.NcToPlc.ErrorCode;						(* Error number *)
+	sErrorMsg := ''; 												(* Error message *)
+
+	etExtSetpoint := ET_ExtSetpoint_eError;
+
+ELSE
+	(* Produce the dynamic data for the external setpoint generator interface *)
+	lrExtVelocity := lrVelocity;
+	lrExtAcceleration := lrAcceleration;
+END_IF
+
+lrExtPosition :=  lrPosition + lrPositionOffset;
+
+(*IF bNotMoving
+THEN
+	dnExtDirection := 0;				(* Stand still *)
+ELS*)IF bNegativeDirection
+THEN
+	dnExtDirection := -1;				(* Negative motion *)	
+ELSIF bPositiveDirection
+THEN
+	dnExtDirection := 1;				(* Positive motion *)
+ELSE
+	dnExtDirection := 0;				(* Positive motion *)
+END_IF
+
+rtStart(CLK := AxisDest.Status.Operational);
+bExtStart := (bStart OR rtStart.Q); // AND AxisDest.Status.Operational;
+//rtStop(CLK := dnExtDirection = 0);
+bExtStop := bStop OR rtStop.Q OR (NOT bNoEStop AND bNotMoving);
+
+IF rtStop.Q
+THEN
+	etExtSetpoint := ET_ExtSetpoint_eWaitExecute;
+END_IF
+
+CASE etExtSetpoint
+OF
+	ET_ExtSetpoint_eWaitExecute:
+		IF bExtStop
+		THEN
+			fbMC_ExtSetPointGenEnable(Execute := FALSE, Axis := AxisDest);						(* Reset FB and get Enabled status *)
+			fbMC_ExtSetPointGenDisable(Execute := FALSE, Axis := AxisDest); 					(* Reset FB and get Enabled status *)
+
+			bDone := FALSE;						(* Command done *)
+			bBusy := TRUE;						(* Command busy *)
+			bError := FALSE;						(* Command error  *)
+			udnErrorNo := 0;						(* Error number *)
+			sErrorMsg := ''; 						(* Error message *)
+
+			etExtSetpoint := ET_ExtSetpoint_eDisableExtSetPointGenerator;
+
+		ELSIF bExtStart
+		THEN
+			fbMC_ExtSetPointGenEnable(Execute := TRUE, Axis := AxisDest);						(* Reset FB and get Enabled status *)
+			fbMC_ExtSetPointGenDisable(Execute := FALSE, Axis := AxisDest); 					(* Reset FB and get Enabled status *)
+
+			bDone := FALSE;						(* Command done *)
+			bBusy := TRUE;						(* Command busy *)
+			bError := FALSE;						(* Command error  *)
+			udnErrorNo := 0;						(* Error number *)
+			sErrorMsg := ''; 						(* Error message *)
+
+			etExtSetpoint := ET_ExtSetpoint_eEnableExtSetPointGenerator;
+
+			(* Check for errors *)
+			(* lrExtVelocity < lrEPSILON
+			THEN
+				udnErrorNo := 1;						(* Error number *)
+
+				etMoveExtState := ET_MoveExtState_eError;
+			END_IF
+			IF lrExtAcceleration < lrEPSILON
+			THEN
+				udnErrorNo := 2;						(* Error number *)
+
+				etMoveExtState := ET_MoveExtState_eError;
+			END_IF*)
+		END_IF
+
+	ET_ExtSetpoint_eEnableExtSetPointGenerator:
+		IF fbMC_ExtSetPointGenEnable.Enabled
+		    AND NOT fbMC_ExtSetPointGenEnable.Execute
+		    AND (ePositionType = eLastPositionType)
+		THEN
+			(* Send enable command to set the new target position but do not wait until the command has finished *)
+			fbMC_ExtSetPointGenEnable.Execute := TRUE ;
+			fbMC_ExtSetPointGenEnable.PositionType := ePositionType;
+
+			etExtSetpoint := ET_ExtSetpoint_eDone;
+
+		ELSE
+			(* Enable the set point generator *)
+			fbMC_ExtSetPointGenEnable.Execute := TRUE ;
+			fbMC_ExtSetPointGenEnable.PositionType := ePositionType;
+
+			IF fbMC_ExtSetPointGenEnable.Error
+			     AND NOT fbMC_ExtSetPointGenEnable.Busy
+			THEN
+				udnErrorNo := fbMC_ExtSetPointGenEnable.ErrorID;						(* Error number *)
+				
+				fbMC_ExtSetPointGenEnable.Execute := FALSE ;
+						
+				etExtSetpoint := ET_ExtSetpoint_eError;
+
+			ELSIF fbMC_ExtSetPointGenEnable.Done
+			      AND NOT fbMC_ExtSetPointGenEnable.Busy
+			THEN
+				fbMC_ExtSetPointGenEnable.Execute := FALSE ;
+				
+				eLastPositionType := ePositionType;
+
+				etExtSetpoint := ET_ExtSetpoint_eDone;
+			END_IF
+
+		END_IF
+
+	ET_ExtSetpoint_eDisableExtSetPointGenerator:
+		(* Call the disable external set point generator function block *)
+		fbMC_ExtSetPointGenDisable(Execute := TRUE, Axis := AxisDest);
+		
+		IF fbMC_ExtSetPointGenDisable.Error
+		     AND NOT fbMC_ExtSetPointGenEnable.Busy
+		THEN
+			udnErrorNo := fbMC_ExtSetPointGenDisable.ErrorID;										(* Error number *)
+			
+			fbMC_ExtSetPointGenDisable(Execute := FALSE, Axis:=AxisDest);
+		
+			etExtSetpoint := ET_ExtSetpoint_eError;
+		
+		ELSIF fbMC_ExtSetPointGenDisable.Done
+		      AND NOT fbMC_ExtSetPointGenEnable.Busy
+		THEN
+			fbMC_ExtSetPointGenDisable(Execute := FALSE, Axis:=AxisDest);
+			
+			etExtSetpoint := ET_ExtSetpoint_eDone;
+		END_IF
+
+	ET_ExtSetpoint_eError:
+		bBusy := FALSE;						(* Command busy *)
+		bError := TRUE;						(* Command error  *)
+
+		etExtSetpoint := ET_ExtSetpoint_eNoExecute;
+
+	ET_ExtSetpoint_eDone:
+		bDone := TRUE;						(* Command done *)
+		bBusy := FALSE;						(* Command busy *)
+
+		etExtSetpoint := ET_ExtSetpoint_eNoExecute;
+
+	ET_ExtSetpoint_eNoExecute:
+		IF NOT bExtStart
+		   AND NOT bExtStop
+		THEN
+			(* Reset outputs *)
+			bDone := FALSE;						(* Command done *)
+			bBusy := FALSE;						(* Command busy *)
+			bError := FALSE;						(* Command error  *)
+
+			etExtSetpoint := ET_ExtSetpoint_eWaitExecute;
+		END_IF
+END_CASE
+
+bError := fbMC_ExtSetPointGenEnable.Error							(* Command error  *)
+		  OR fbMC_ExtSetPointGenEnable.Error;
+
+(* The function is used to feed set values from an external set point generator into an axis. *)
+MC_ExtSetPointGenFeed(
+	Position := lrExtPosition,
+	Velocity := lrExtVelocity,
+	Acceleration := lrExtAcceleration,
+	Direction := dnExtDirection,
+	Axis := AxisDest
+);
+
+(* Call the enable external set point generator function block *)
+fbMC_ExtSetPointGenEnable(
+	Position := lrPosition,
+	Enabled => bEnabled,
+	Axis := AxisDest
+ );]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ExtSetpoint_1">
+      <LineId Id="58" Count="6" />
+      <LineId Id="407" Count="0" />
+      <LineId Id="405" Count="0" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="72" Count="21" />
+      <LineId Id="473" Count="0" />
+      <LineId Id="94" Count="12" />
+      <LineId Id="595" Count="0" />
+      <LineId Id="479" Count="0" />
+      <LineId Id="596" Count="1" />
+      <LineId Id="113" Count="0" />
+      <LineId Id="476" Count="0" />
+      <LineId Id="593" Count="0" />
+      <LineId Id="114" Count="2" />
+      <LineId Id="598" Count="1" />
+      <LineId Id="119" Count="0" />
+      <LineId Id="545" Count="1" />
+      <LineId Id="562" Count="0" />
+      <LineId Id="570" Count="0" />
+      <LineId Id="558" Count="0" />
+      <LineId Id="572" Count="2" />
+      <LineId Id="576" Count="0" />
+      <LineId Id="575" Count="0" />
+      <LineId Id="120" Count="3" />
+      <LineId Id="555" Count="0" />
+      <LineId Id="125" Count="11" />
+      <LineId Id="550" Count="0" />
+      <LineId Id="138" Count="45" />
+      <LineId Id="583" Count="1" />
+      <LineId Id="565" Count="1" />
+      <LineId Id="187" Count="4" />
+      <LineId Id="568" Count="1" />
+      <LineId Id="192" Count="9" />
+      <LineId Id="205" Count="3" />
+      <LineId Id="581" Count="1" />
+      <LineId Id="209" Count="0" />
+      <LineId Id="213" Count="0" />
+      <LineId Id="217" Count="5" />
+      <LineId Id="564" Count="0" />
+      <LineId Id="223" Count="26" />
+      <LineId Id="577" Count="1" />
+      <LineId Id="580" Count="0" />
+      <LineId Id="250" Count="15" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

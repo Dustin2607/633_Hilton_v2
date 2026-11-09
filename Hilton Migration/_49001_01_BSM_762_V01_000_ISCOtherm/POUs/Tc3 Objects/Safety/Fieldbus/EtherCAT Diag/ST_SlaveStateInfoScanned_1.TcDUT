@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_SlaveStateInfoScanned_1" Id="{9ba7e390-baa1-440f-ac55-bfdc1bab2e1a}">
+    <Declaration><![CDATA[TYPE ST_SlaveStateInfoScanned_1 :
+STRUCT
+	nIndex 			: DINT;
+	sName 			: STRING; 		(* name of slave given in System Manager *)
+	sType 			: STRING;		(* type of slave, e.g. EK1100*)
+	nECAddr 		: UINT;			(* EtherCAT Slave Addr *)
+	bDifferentName	: BOOL;			(* Name of Scanned configuration differs from Configured configuration *)
+	bDifferentType	: BOOL;			(* Type Of Scanned configuration differs from Configured configuration *)
+	bDifferentAddr	: BOOL;			(* EcAddress of Scanned configuration differs from Configured configuration *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

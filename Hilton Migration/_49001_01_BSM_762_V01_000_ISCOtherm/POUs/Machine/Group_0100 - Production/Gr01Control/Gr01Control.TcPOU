@@ -216,11 +216,13 @@ fbAxisSawBow(
 	tControllerOff := tgGr01ControllerOff,
 	tAdsTimeOut := DEFAULT_ADS_TIMEOUT,
 	bHomeCompleted := bgGr01HomeCompleted,
-	Drive := igGr01DriveSawBow,
-	Axis := igGr01AxisSawBow,
+	Drive := GVL_Gr01Interface.igGr01DriveSawBow,
+	Axis := GVL_Gr01Interface.igGr01AxisSawBow,
+	
+	MasterAxis 				:= GVL_Gr00Interface.iAxisDummy,
 	lrActPosition => stgGr01HMI.stPLCTOHMI.lrAxisSawBowActPos,
 	lrActVelocity => stgGr01HMI.stPLCTOHMI.lrAxisSawBowActVelo,
-	lrActForce => stgGr01HMI.stPLCTOHMI.lrAxisSawBowActForce
+	lrActForce => stgGr01HMI.stPLCTOHMI.lrAxisSawBowActForce,
 );
 
 (* Enable Axis angle *)
@@ -265,8 +267,10 @@ fbAxisAngle(
 	tControllerOff := tgGr01ControllerOff,
 	tAdsTimeOut := DEFAULT_ADS_TIMEOUT,
 	bHomeCompleted := bgGr01HomeCompleted,
-	Drive := igGr01DriveAngle,
-	Axis := igGr01AxisAngle,
+	Drive := GVL_Gr01Interface.igGr01DriveSawAngle,
+	Axis := GVL_Gr01Interface.igGr01AxisSawAngle,
+	
+	MasterAxis 				:= GVL_Gr00Interface.iAxisDummy,
 	lrActPosition => stgGr01HMI.stPLCTOHMI.lrAxisAngleActPos,
 	lrActVelocity => stgGr01HMI.stPLCTOHMI.lrAxisAngleActVelo,
 );
@@ -306,6 +310,61 @@ bgGr01SafetyActive := fbAxisSawBow.bSafetyLock
     <Action Name="A_Sawband" Id="{96a1aa51-3ac5-4b37-a51d-5bd0b216fe25}">
       <Implementation>
         <ST><![CDATA[
+fbSawband(
+	bEnable 			:= TRUE,
+	lrOverride			:= 100.0,
+	etMachineMode 		:= etgGr00MachineMode,
+	etMachineState 		:= etgGr00MachineState,
+	bNoEStop 			:= bgGr00NoEmergencyStop,
+	bPowerSupplyOn 		:=  bgGr00PowerSupplyOk,//fbStoeberPS6A34.bOn, // Keine Eingänge vorhanden
+	bSafetyOK 			:= bgGr01LightCurtainOK
+			        		AND bgGr00AllDoorsClosedLocked,
+	bSafetyDriveEnabled := TRUE,
+	bMachineStandstill 	:= bgGr00MachineStandstill,
+	bCtrlInterrupt 		:= FALSE,
+	bMoveRelease 		:= TRUE, 
+	bSignalReference 	:= FALSE,
+	bSignalHWLimitMax 	:= FALSE,	
+	bSignalHWLimitMin 	:= FALSE,   	
+	lrSoftLimitMax 		:= 0, 
+   	lrSoftLimitMin 		:= 0,
+    bTipPlus 			:= stgGr01HMI.stHMITOPLC.bBtnSawbandPlus,
+    bTipMinus 			:= False,
+	lrTipDistance 		:= 0,
+    bPlusRelease 		:= TRUE, 
+    bMinusRelease 		:= FALSE, 
+	etHomingMode 		:= 1,
+	bExtOverrideEn 		:= FALSE,
+	lrAutoVelocity		:= stgGr01HMI.stHMITOPLC.lrSawbandAutoSpeed  / 3.28084,
+	lrManualVelocity 	:= stgGr01HMI.stHMITOPLC.lrSawbandManualSpeed / 3.28084,
+	lrNoRefVelocity 	:= 30,
+	bVelocityLimitEn 	:= FALSE, 
+	lrAcceleration 		:= 5000,
+	lrDeceleration 		:= 5000,
+	lrJerk 				:= 30000,
+	bEngineTorqueLimitEn:= FALSE,
+	lrEngineTorque 		:= 400,
+	bWithAbsoluteEncoder:= FALSE, //GEÄNDERT
+	bPosLagMonitoringEn := FALSE,
+	dnRatioNumerator 	:= 1,
+	udnRatioDenominator := 1,
+	bVeloForceCtrlEn 	:= FALSE,
+	bConfirmAlarm 		:= bgGr00ConfirmAlarm,
+	bOccupied 			:= FALSE,
+	tControllerOff 		:= tgGr01ControllerOff, 
+	tAdsTimeOut 		:= DEFAULT_ADS_TIMEOUT,
+	bHomeCompleted 		:= bgGr01HomeCompleted,
+	Drive 				:= GVL_Gr01Interface.igGr01DriveSawBand,
+	Axis 				:= GVL_Gr01Interface.igGr01AxisSawBand,
+	MasterAxis 			:= GVL_Gr00Interface.iAxisDummy,
+	
+	lrActPosition 		=> ,
+	lrActVelocity 		=> GVL_Gr01HMI.stgGr01HMI.stPLCTOHMI.lrSawbandActSpeed
+	// bNotMoving			=> GVL_GR01.bSawbandIsNotMoving,
+	// bInVelocity 		=> GVL_GR01.SawbandInVelocity
+);
+
+(* Old FB)
 (* Enable sawband *)
 fbSawband(
 	bEnable := TRUE,
@@ -357,7 +416,8 @@ fbSawband(
 	lrActSpeed => stgGr01HMI.stPLCTOHMI.lrSawbandActSpeed,
 	bSawbandAirOn => boutGr01SawbandAirOn,
 	bVacuumCleanerOn => boutGr01VacuumCleanerOn
-);]]></ST>
+);
+*)]]></ST>
       </Implementation>
     </Action>
     <Action Name="A_Signals" Id="{970ec869-7b46-429c-a071-32fe1da01a64}">
@@ -394,8 +454,8 @@ bAllAxisCtrlEnabled := F_ChkAllAxisEnabled(
 (* Detect all axis stand still *)
 bAllAxisStandStill := F_ChkAllAxisStandStill(
 	bEnable := TRUE,
-	bAxis1StandStill := igGr01AxisSawBow.stAxisStatus.bStandStill,
-	bAxis2StandStill := igGr01AxisAngle.stAxisStatus.bStandStill,
+	bAxis1StandStill := Gr01Control.fbAxisSawBow.bNotMoving, 		// igGr01AxisSawBow.stAxisStatus.bStandStill,
+	bAxis2StandStill := Gr01Control.fbAxisAngle.bNotMoving,		// igGr01AxisAngle.stAxisStatus.bStandStill,
 	bAxis3StandStill := TRUE,
 	bAxis4StandStill := TRUE,
 	bAxis5StandStill := TRUE,
@@ -409,9 +469,8 @@ bAllAxisStandStill := F_ChkAllAxisStandStill(
 (* Detect all axis not moving *)
 bAllAxisNotMoving := F_ChkAllAxisNotMoving(
 	bEnable := TRUE,
-	bAxis1NotMoving := igGr01AxisSawBow.stNcToPlc.stBaseDevice.stCommandPositioning.bNotMoving
-					   AND igGr01AxisSawBow.stNcToPlc.stBaseDevice.stCommandPositioning.dnActVelocity = 0,
-	bAxis2NotMoving := igGr01AxisAngle.stNcToPlc.stBaseDevice.stFastRefereneValue.nMotorSpeed = 0,
+	bAxis1NotMoving := Gr01Control.fbAxisSawBow.bNotMoving, 		
+	bAxis2NotMoving := Gr01Control.fbAxisAngle.bNotMoving,
 	bAxis3NotMoving := TRUE,
 	bAxis4NotMoving := TRUE,
 	bAxis5NotMoving := TRUE,
@@ -495,16 +554,28 @@ fbUtility(
       <LineId Id="0" Count="101" />
     </LineIds>
     <LineIds Name="Gr01Control.A_Axis">
-      <LineId Id="0" Count="108" />
+      <LineId Id="0" Count="48" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="49" Count="48" />
+      <LineId Id="113" Count="1" />
+      <LineId Id="98" Count="10" />
     </LineIds>
     <LineIds Name="Gr01Control.A_Safety">
       <LineId Id="0" Count="18" />
     </LineIds>
     <LineIds Name="Gr01Control.A_Sawband">
-      <LineId Id="0" Count="52" />
+      <LineId Id="272" Count="2" />
+      <LineId Id="327" Count="0" />
+      <LineId Id="276" Count="49" />
+      <LineId Id="215" Count="1" />
+      <LineId Id="106" Count="50" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="326" Count="0" />
     </LineIds>
     <LineIds Name="Gr01Control.A_Signals">
-      <LineId Id="0" Count="73" />
+      <LineId Id="0" Count="47" />
+      <LineId Id="49" Count="24" />
     </LineIds>
     <LineIds Name="Gr01Control.A_Utility">
       <LineId Id="0" Count="45" />

@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_PLCTOBOSCHINDRADRIVECIA402" Id="{ed90313d-af24-4fd7-bbd2-08d7392808f7}">
+    <Declaration><![CDATA[(* Communication structure from plc to drive *)
+
+TYPE ST_PLCTOBOSCHINDRADRIVECIA402 :
+STRUCT
+	wProcessCtrlControlWordP01390				:WORD;					(* The P‑0‑1390 is used as the (cyclic) control word of process control. *)
+	dnProcessCmdValueP01371						:DINT;					(* The command value P‑0‑1371 can be preset by a control unit via the master communicationor an analog input.*)
+	
+	udnPGainOfCtrlP01373						:UDINT;					(* The parameter P‑0‑1373 is used to preset the P-component of the process controller. *)
+	udnIComponentOfCtrlP01374					:UDINT;					(* The parameter P‑0‑1374 is used to preset the I-component (integral-action time) of the process controller. *)
+	
+	dnAnalogInputOffsetP00215					:DINT;			 		(* The parameter P-0-0215 compensating a possible offset of the voltage at the analog input *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

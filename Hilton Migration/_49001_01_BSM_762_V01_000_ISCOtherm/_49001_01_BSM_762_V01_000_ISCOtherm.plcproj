@@ -172,102 +172,253 @@
     <Folder Include="POUs\Machine\Group_0500 - Transport\Gr05MachineMode\Gr05Manual\Gr05ManualProcedure" />
     <Folder Include="POUs\Machine\Group_0500 - Transport\Gr05Persistent" />
     <Folder Include="POUs\Machine\Group_0500 - Transport\Gr05Simulation" />
-    <Folder Include="POUs\Objects" />
-    <Folder Include="POUs\Objects\Alarm" />
-    <Folder Include="POUs\Objects\Automation" />
-    <Folder Include="POUs\Objects\Automation\Axis" />
-    <Folder Include="POUs\Objects\Automation\Axis\Beckhoff" />
-    <Folder Include="POUs\Objects\Automation\Axis\Beckhoff\CommandPositioning" />
-    <Folder Include="POUs\Objects\Automation\Axis\OnOff" />
-    <Folder Include="POUs\Objects\Automation\Axis\OnOff\Motion" />
-    <Folder Include="POUs\Objects\Automation\Axis\Override" />
-    <Folder Include="POUs\Objects\Automation\Axis\Own" />
-    <Folder Include="POUs\Objects\Automation\Axis\Own\Interface" />
-    <Folder Include="POUs\Objects\Automation\Axis\Own\Interface\Drive" />
-    <Folder Include="POUs\Objects\Automation\Axis\SEW" />
-    <Folder Include="POUs\Objects\Automation\Axis\SEW\MOVIDRIVE B" />
-    <Folder Include="POUs\Objects\Automation\Axis\Stöber" />
-    <Folder Include="POUs\Objects\Automation\Axis\Stöber\SDS" />
-    <Folder Include="POUs\Objects\Automation\Axis\Stöber\SDS\CommandPositioning" />
-    <Folder Include="POUs\Objects\Automation\Axis\Stöber\SDS\FastRefereneValue" />
-    <Folder Include="POUs\Objects\Automation\Axis\Stöber\SI6_SC6" />
-    <Folder Include="POUs\Objects\Automation\Axis\Stöber\SI6_SC6\CIA402" />
-    <Folder Include="POUs\Objects\Automation\Axis\VFD" />
-    <Folder Include="POUs\Objects\Automation\Cylinder" />
-    <Folder Include="POUs\Objects\Automation\Cylinder\Hydraulic" />
-    <Folder Include="POUs\Objects\Automation\Cylinder\Pneumatic" />
-    <Folder Include="POUs\Objects\Automation\Cylinder\Position Cylinder" />
-    <Folder Include="POUs\Objects\Automation\Extraction Fan" />
-    <Folder Include="POUs\Objects\Automation\Force" />
-    <Folder Include="POUs\Objects\Automation\Heater" />
-    <Folder Include="POUs\Objects\Automation\MotorOnOff" />
-    <Folder Include="POUs\Objects\Automation\NCiChannel" />
-    <Folder Include="POUs\Objects\Automation\NCiChannel\R-parameters" />
-    <Folder Include="POUs\Objects\Automation\OperationMode" />
-    <Folder Include="POUs\Objects\Automation\Process" />
-    <Folder Include="POUs\Objects\Automation\Sawband" />
-    <Folder Include="POUs\Objects\Automation\Spindle" />
-    <Folder Include="POUs\Objects\Automation\Vacuum" />
-    <Folder Include="POUs\Objects\Basics" />
-    <Folder Include="POUs\Objects\Conversions" />
-    <Folder Include="POUs\Objects\Conversions\BitOriented" />
-    <Folder Include="POUs\Objects\Diagnostic" />
-    <Folder Include="POUs\Objects\Diagnostic\Terminal" />
-    <Folder Include="POUs\Objects\Engineering" />
-    <Folder Include="POUs\Objects\Engineering\Buffer" />
-    <Folder Include="POUs\Objects\Engineering\Dynamics" />
-    <Folder Include="POUs\Objects\Engineering\Dynamics\CalcVeloAccDecJerk" />
-    <Folder Include="POUs\Objects\Engineering\External set value generator" />
-    <Folder Include="POUs\Objects\Engineering\Filter" />
-    <Folder Include="POUs\Objects\Engineering\Position" />
-    <Folder Include="POUs\Objects\Engineering\Position offset" />
-    <Folder Include="POUs\Objects\Engineering\Position\Controller" />
-    <Folder Include="POUs\Objects\Engineering\Position\Controller\PID Components" />
-    <Folder Include="POUs\Objects\Engineering\Position\Controller\PID Controller" />
-    <Folder Include="POUs\Objects\Engineering\Position\Controller\PID Types" />
-    <Folder Include="POUs\Objects\Engineering\Position\Controller\PositionController" />
-    <Folder Include="POUs\Objects\Engineering\Position\Encoder" />
-    <Folder Include="POUs\Objects\Engineering\Position\Residuals" />
-    <Folder Include="POUs\Objects\Engineering\Trajectory model" />
-    <Folder Include="POUs\Objects\ExternalHardware" />
-    <Folder Include="POUs\Objects\ExternalHardware\Beckhoff" />
-    <Folder Include="POUs\Objects\ExternalHardware\Beckhoff\EL..KL600x" />
-    <Folder Include="POUs\Objects\ExternalHardware\Beckhoff\EL3312" />
-    <Folder Include="POUs\Objects\ExternalHardware\Beckhoff\EL3351" />
-    <Folder Include="POUs\Objects\ExternalHardware\Beckhoff\EL3356" />
-    <Folder Include="POUs\Objects\ExternalHardware\Gefran" />
-    <Folder Include="POUs\Objects\ExternalHardware\KUKA" />
-    <Folder Include="POUs\Objects\ExternalHardware\Leister" />
-    <Folder Include="POUs\Objects\ExternalHardware\Munsch" />
-    <Folder Include="POUs\Objects\ExternalHardware\Periphery" />
-    <Folder Include="POUs\Objects\ExternalHardware\YASKAWA" />
-    <Folder Include="POUs\Objects\File" />
-    <Folder Include="POUs\Objects\Logger" />
-    <Folder Include="POUs\Objects\Logic" />
-    <Folder Include="POUs\Objects\Logic\Oscat" />
-    <Folder Include="POUs\Objects\MachineEquipment" />
-    <Folder Include="POUs\Objects\Mathematical" />
-    <Folder Include="POUs\Objects\Mathematical\Delay" />
-    <Folder Include="POUs\Objects\Mathematical\Hysteresis" />
-    <Folder Include="POUs\Objects\Mathematical\Limits" />
-    <Folder Include="POUs\Objects\Mathematical\Scaling" />
-    <Folder Include="POUs\Objects\Measurements" />
-    <Folder Include="POUs\Objects\Measurements\Counter" />
-    <Folder Include="POUs\Objects\Measurements\Oscat" />
-    <Folder Include="POUs\Objects\Measurements\RTC" />
-    <Folder Include="POUs\Objects\Safety" />
-    <Folder Include="POUs\Objects\Safety\Fieldbus" />
-    <Folder Include="POUs\Objects\Signals" />
-    <Folder Include="POUs\Objects\Signals\Force Input">
+    <Folder Include="POUs\Tc3 Objects">
+      <ExcludeFromBuild>false</ExcludeFromBuild>
+    </Folder>
+    <Folder Include="POUs\Tc2 Objects" />
+    <Folder Include="POUs\Tc2 Objects\Alarm" />
+    <Folder Include="POUs\Tc2 Objects\Automation">
+      <ExcludeFromBuild>false</ExcludeFromBuild>
+    </Folder>
+    <Folder Include="POUs\Tc2 Objects\Automation\Axis" />
+    <Folder Include="POUs\Tc2 Objects\Automation\Axis\Beckhoff" />
+    <Folder Include="POUs\Tc2 Objects\Automation\Axis\Beckhoff\CommandPositioning" />
+    <Folder Include="POUs\Tc2 Objects\Automation\Axis\OnOff" />
+    <Folder Include="POUs\Tc2 Objects\Automation\Axis\OnOff\Motion" />
+    <Folder Include="POUs\Tc2 Objects\Automation\Axis\Override" />
+    <Folder Include="POUs\Tc2 Objects\Automation\Axis\Own" />
+    <Folder Include="POUs\Tc2 Objects\Automation\Axis\Own\Interface" />
+    <Folder Include="POUs\Tc2 Objects\Automation\Axis\Own\Interface\Drive" />
+    <Folder Include="POUs\Tc2 Objects\Automation\Axis\SEW" />
+    <Folder Include="POUs\Tc2 Objects\Automation\Axis\SEW\MOVIDRIVE B" />
+    <Folder Include="POUs\Tc2 Objects\Automation\Axis\Stöber">
       <ExcludeFromBuild>true</ExcludeFromBuild>
     </Folder>
-    <Folder Include="POUs\Objects\Signals\Generators" />
-    <Folder Include="POUs\Objects\Signals\Handling" />
-    <Folder Include="POUs\Objects\Signals\Ramp Generators" />
-    <Folder Include="POUs\Objects\Signals\Ramp Generators\Oscat_Ramp" />
-    <Folder Include="POUs\Objects\Signals\Watchdog" />
-    <Folder Include="POUs\Objects\String" />
-    <Folder Include="POUs\Objects\Traceability" />
+    <Folder Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS" />
+    <Folder Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\CommandPositioning" />
+    <Folder Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\FastRefereneValue" />
+    <Folder Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SI6_SC6" />
+    <Folder Include="POUs\Tc2 Objects\Automation\Axis\VFD" />
+    <Folder Include="POUs\Tc2 Objects\Automation\Cylinder" />
+    <Folder Include="POUs\Tc2 Objects\Automation\Cylinder\Hydraulic" />
+    <Folder Include="POUs\Tc2 Objects\Automation\Cylinder\Pneumatic" />
+    <Folder Include="POUs\Tc2 Objects\Automation\Cylinder\Position Cylinder" />
+    <Folder Include="POUs\Tc2 Objects\Automation\Extraction Fan" />
+    <Folder Include="POUs\Tc2 Objects\Automation\Force" />
+    <Folder Include="POUs\Tc2 Objects\Automation\Heater" />
+    <Folder Include="POUs\Tc2 Objects\Automation\MotorOnOff" />
+    <Folder Include="POUs\Tc2 Objects\Automation\NCiChannel" />
+    <Folder Include="POUs\Tc2 Objects\Automation\NCiChannel\R-parameters" />
+    <Folder Include="POUs\Tc2 Objects\Automation\OperationMode" />
+    <Folder Include="POUs\Tc2 Objects\Automation\Process" />
+    <Folder Include="POUs\Tc2 Objects\Automation\Sawband" />
+    <Folder Include="POUs\Tc2 Objects\Automation\Spindle" />
+    <Folder Include="POUs\Tc2 Objects\Automation\Vacuum" />
+    <Folder Include="POUs\Tc2 Objects\Basics" />
+    <Folder Include="POUs\Tc2 Objects\Conversions" />
+    <Folder Include="POUs\Tc2 Objects\Conversions\BitOriented" />
+    <Folder Include="POUs\Tc2 Objects\Diagnostic" />
+    <Folder Include="POUs\Tc2 Objects\Diagnostic\Terminal" />
+    <Folder Include="POUs\Tc2 Objects\Engineering" />
+    <Folder Include="POUs\Tc2 Objects\Engineering\Buffer" />
+    <Folder Include="POUs\Tc2 Objects\Engineering\Dynamics" />
+    <Folder Include="POUs\Tc2 Objects\Engineering\Dynamics\CalcVeloAccDecJerk" />
+    <Folder Include="POUs\Tc2 Objects\Engineering\External set value generator" />
+    <Folder Include="POUs\Tc2 Objects\Engineering\Filter" />
+    <Folder Include="POUs\Tc2 Objects\Engineering\Position" />
+    <Folder Include="POUs\Tc2 Objects\Engineering\Position offset" />
+    <Folder Include="POUs\Tc2 Objects\Engineering\Position\Controller" />
+    <Folder Include="POUs\Tc2 Objects\Engineering\Position\Controller\PID Components" />
+    <Folder Include="POUs\Tc2 Objects\Engineering\Position\Controller\PID Controller" />
+    <Folder Include="POUs\Tc2 Objects\Engineering\Position\Controller\PID Types" />
+    <Folder Include="POUs\Tc2 Objects\Engineering\Position\Controller\PositionController" />
+    <Folder Include="POUs\Tc2 Objects\Engineering\Position\Encoder" />
+    <Folder Include="POUs\Tc2 Objects\Engineering\Position\Residuals" />
+    <Folder Include="POUs\Tc2 Objects\Engineering\Trajectory model" />
+    <Folder Include="POUs\Tc2 Objects\ExternalHardware" />
+    <Folder Include="POUs\Tc2 Objects\ExternalHardware\Beckhoff" />
+    <Folder Include="POUs\Tc2 Objects\ExternalHardware\Beckhoff\EL..KL600x" />
+    <Folder Include="POUs\Tc2 Objects\ExternalHardware\Beckhoff\EL3312" />
+    <Folder Include="POUs\Tc2 Objects\ExternalHardware\Beckhoff\EL3351" />
+    <Folder Include="POUs\Tc2 Objects\ExternalHardware\Beckhoff\EL3356" />
+    <Folder Include="POUs\Tc2 Objects\ExternalHardware\Gefran" />
+    <Folder Include="POUs\Tc2 Objects\ExternalHardware\KUKA" />
+    <Folder Include="POUs\Tc2 Objects\ExternalHardware\Leister" />
+    <Folder Include="POUs\Tc2 Objects\ExternalHardware\Munsch" />
+    <Folder Include="POUs\Tc2 Objects\ExternalHardware\Periphery" />
+    <Folder Include="POUs\Tc2 Objects\ExternalHardware\YASKAWA" />
+    <Folder Include="POUs\Tc2 Objects\File" />
+    <Folder Include="POUs\Tc2 Objects\Logger" />
+    <Folder Include="POUs\Tc2 Objects\Logic" />
+    <Folder Include="POUs\Tc2 Objects\Logic\Oscat" />
+    <Folder Include="POUs\Tc2 Objects\MachineEquipment" />
+    <Folder Include="POUs\Tc2 Objects\Mathematical" />
+    <Folder Include="POUs\Tc2 Objects\Mathematical\Delay" />
+    <Folder Include="POUs\Tc2 Objects\Mathematical\Hysteresis" />
+    <Folder Include="POUs\Tc2 Objects\Mathematical\Limits" />
+    <Folder Include="POUs\Tc2 Objects\Mathematical\Scaling" />
+    <Folder Include="POUs\Tc2 Objects\Measurements" />
+    <Folder Include="POUs\Tc2 Objects\Measurements\Counter" />
+    <Folder Include="POUs\Tc2 Objects\Measurements\Oscat" />
+    <Folder Include="POUs\Tc2 Objects\Measurements\RTC" />
+    <Folder Include="POUs\Tc2 Objects\Safety" />
+    <Folder Include="POUs\Tc2 Objects\Safety\Fieldbus" />
+    <Folder Include="POUs\Tc2 Objects\Signals" />
+    <Folder Include="POUs\Tc2 Objects\Signals\Force Input">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Folder>
+    <Folder Include="POUs\Tc2 Objects\Signals\Generators" />
+    <Folder Include="POUs\Tc2 Objects\Signals\Handling" />
+    <Folder Include="POUs\Tc2 Objects\Signals\Ramp Generators" />
+    <Folder Include="POUs\Tc2 Objects\Signals\Ramp Generators\Oscat_Ramp" />
+    <Folder Include="POUs\Tc2 Objects\Signals\Watchdog" />
+    <Folder Include="POUs\Tc2 Objects\String" />
+    <Folder Include="POUs\Tc2 Objects\Traceability" />
+    <Folder Include="POUs\Tc3 Objects\Alarm">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Folder>
+    <Folder Include="POUs\Tc3 Objects\Automation" />
+    <Folder Include="POUs\Tc3 Objects\Automation\Axis" />
+    <Folder Include="POUs\Tc3 Objects\Automation\Axis\Beckhoff" />
+    <Folder Include="POUs\Tc3 Objects\Automation\Axis\Beckhoff\CommandPositioning" />
+    <Folder Include="POUs\Tc3 Objects\Automation\Axis\Bosch" />
+    <Folder Include="POUs\Tc3 Objects\Automation\Axis\Bosch\CommandPositioning" />
+    <Folder Include="POUs\Tc3 Objects\Automation\Axis\Bosch\CommandPositioning\Beckhoff" />
+    <Folder Include="POUs\Tc3 Objects\Automation\Axis\Bosch\Drive" />
+    <Folder Include="POUs\Tc3 Objects\Automation\Axis\Bosch\Drive\IndraDrive" />
+    <Folder Include="POUs\Tc3 Objects\Automation\Axis\Bosch\ProcessController" />
+    <Folder Include="POUs\Tc3 Objects\Automation\Axis\Stöber" />
+    <Folder Include="POUs\Tc3 Objects\Automation\Axis\Stöber\CommandPositioning" />
+    <Folder Include="POUs\Tc3 Objects\Automation\Axis\Stöber\CommandPositioning\Beckhoff" />
+    <Folder Include="POUs\Tc3 Objects\Automation\Axis\Stöber\Dirve" />
+    <Folder Include="POUs\Tc3 Objects\Automation\Axis\Stöber\Dirve\SI6SC6" />
+    <Folder Include="POUs\Tc3 Objects\Automation\Axis\Stöber\PS6A34" />
+    <Folder Include="POUs\Tc3 Objects\Automation\Cylinder" />
+    <Folder Include="POUs\Tc3 Objects\Automation\Cylinder\Hydraulic" />
+    <Folder Include="POUs\Tc3 Objects\Automation\Cylinder\Pneumatic" />
+    <Folder Include="POUs\Tc3 Objects\Automation\Cylinder\Position Cylinder" />
+    <Folder Include="POUs\Tc3 Objects\Automation\Force" />
+    <Folder Include="POUs\Tc3 Objects\Automation\NCiChannel" />
+    <Folder Include="POUs\Tc3 Objects\Automation\NCiChannel\CfgAxisInExt3DGroup" />
+    <Folder Include="POUs\Tc3 Objects\Automation\NCiChannel\ItpReadRParams" />
+    <Folder Include="POUs\Tc3 Objects\Automation\NCiChannel\ItpWriteRParams" />
+    <Folder Include="POUs\Tc3 Objects\Automation\OperationMode">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Folder>
+    <Folder Include="POUs\Tc3 Objects\Automation\Override" />
+    <Folder Include="POUs\Tc3 Objects\Automation\Process" />
+    <Folder Include="POUs\Tc3 Objects\Automation\Spindle" />
+    <Folder Include="POUs\Tc3 Objects\Automation\Spindle\Clutch" />
+    <Folder Include="POUs\Tc3 Objects\Automation\Spindle\HSD" />
+    <Folder Include="POUs\Tc3 Objects\Automation\Spindle\PDS" />
+    <Folder Include="POUs\Tc3 Objects\Automation\Spindle\Preheat" />
+    <Folder Include="POUs\Tc3 Objects\Automation\Vacuum" />
+    <Folder Include="POUs\Tc3 Objects\Basics">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Folder>
+    <Folder Include="POUs\Tc3 Objects\Communication">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Folder>
+    <Folder Include="POUs\Tc3 Objects\Communication\TCPIP" />
+    <Folder Include="POUs\Tc3 Objects\Communication\TCPIP\ASCII" />
+    <Folder Include="POUs\Tc3 Objects\Communication\TCPIP\ASCII\ClientASCII" />
+    <Folder Include="POUs\Tc3 Objects\Communication\TCPIP\ASCII\ServerASCII" />
+    <Folder Include="POUs\Tc3 Objects\Communication\TCPIP\Binary" />
+    <Folder Include="POUs\Tc3 Objects\Communication\TCPIP\Binary\ClientBinary" />
+    <Folder Include="POUs\Tc3 Objects\Communication\TCPIP\Binary\ServerBinary" />
+    <Folder Include="POUs\Tc3 Objects\Communication\TCPIP\Helper" />
+    <Folder Include="POUs\Tc3 Objects\Conversions">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Folder>
+    <Folder Include="POUs\Tc3 Objects\Conversions\BitOriented" />
+    <Folder Include="POUs\Tc3 Objects\Diagnostic">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Folder>
+    <Folder Include="POUs\Tc3 Objects\Diagnostic\Terminal" />
+    <Folder Include="POUs\Tc3 Objects\Engineering">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Folder>
+    <Folder Include="POUs\Tc3 Objects\Engineering\Buffer" />
+    <Folder Include="POUs\Tc3 Objects\Engineering\Dynamics" />
+    <Folder Include="POUs\Tc3 Objects\Engineering\Dynamics\CalcVeloAccDecJerk" />
+    <Folder Include="POUs\Tc3 Objects\Engineering\External set value generator" />
+    <Folder Include="POUs\Tc3 Objects\Engineering\Filter" />
+    <Folder Include="POUs\Tc3 Objects\Engineering\Motion model" />
+    <Folder Include="POUs\Tc3 Objects\Engineering\Motion model\Contour" />
+    <Folder Include="POUs\Tc3 Objects\Engineering\Motion model\Oval" />
+    <Folder Include="POUs\Tc3 Objects\Engineering\Motion model\Tilt" />
+    <Folder Include="POUs\Tc3 Objects\Engineering\Motion model\Traj" />
+    <Folder Include="POUs\Tc3 Objects\Engineering\Position" />
+    <Folder Include="POUs\Tc3 Objects\Engineering\Position offset" />
+    <Folder Include="POUs\Tc3 Objects\Engineering\Position\Controller" />
+    <Folder Include="POUs\Tc3 Objects\Engineering\Position\Controller\PID Components" />
+    <Folder Include="POUs\Tc3 Objects\Engineering\Position\Controller\PID CO_Ntroller" />
+    <Folder Include="POUs\Tc3 Objects\Engineering\Position\Controller\PID Types" />
+    <Folder Include="POUs\Tc3 Objects\Engineering\Position\Controller\PositionCO_Ntroller" />
+    <Folder Include="POUs\Tc3 Objects\Engineering\Position\Encoder" />
+    <Folder Include="POUs\Tc3 Objects\Engineering\Position\Residuals" />
+    <Folder Include="POUs\Tc3 Objects\ExternalHardware">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Folder>
+    <Folder Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff" />
+    <Folder Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL..KL600x" />
+    <Folder Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3214" />
+    <Folder Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3312" />
+    <Folder Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3351" />
+    <Folder Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3356" />
+    <Folder Include="POUs\Tc3 Objects\ExternalHardware\Cognex" />
+    <Folder Include="POUs\Tc3 Objects\ExternalHardware\Cognex\Scanner" />
+    <Folder Include="POUs\Tc3 Objects\ExternalHardware\Gefran" />
+    <Folder Include="POUs\Tc3 Objects\ExternalHardware\KUKA" />
+    <Folder Include="POUs\Tc3 Objects\ExternalHardware\Munsch" />
+    <Folder Include="POUs\Tc3 Objects\ExternalHardware\Periphery" />
+    <Folder Include="POUs\Tc3 Objects\ExternalHardware\Robot" />
+    <Folder Include="POUs\Tc3 Objects\ExternalHardware\YASKAWA" />
+    <Folder Include="POUs\Tc3 Objects\File">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Folder>
+    <Folder Include="POUs\Tc3 Objects\File\CSV" />
+    <Folder Include="POUs\Tc3 Objects\File\TXT" />
+    <Folder Include="POUs\Tc3 Objects\Logger">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Folder>
+    <Folder Include="POUs\Tc3 Objects\Logic">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Folder>
+    <Folder Include="POUs\Tc3 Objects\Logic\Oscat" />
+    <Folder Include="POUs\Tc3 Objects\Mathematical">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Folder>
+    <Folder Include="POUs\Tc3 Objects\Mathematical\Delay" />
+    <Folder Include="POUs\Tc3 Objects\Mathematical\Hysteresis" />
+    <Folder Include="POUs\Tc3 Objects\Mathematical\Limits" />
+    <Folder Include="POUs\Tc3 Objects\Mathematical\Scaling" />
+    <Folder Include="POUs\Tc3 Objects\Measurements">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Folder>
+    <Folder Include="POUs\Tc3 Objects\Measurements\Counter" />
+    <Folder Include="POUs\Tc3 Objects\Measurements\Oscat" />
+    <Folder Include="POUs\Tc3 Objects\Measurements\RTC" />
+    <Folder Include="POUs\Tc3 Objects\Safety">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Folder>
+    <Folder Include="POUs\Tc3 Objects\Safety\Fieldbus" />
+    <Folder Include="POUs\Tc3 Objects\Safety\Fieldbus\EtherCAT Diag" />
+    <Folder Include="POUs\Tc3 Objects\Signals">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Folder>
+    <Folder Include="POUs\Tc3 Objects\Signals\Force Input" />
+    <Folder Include="POUs\Tc3 Objects\Signals\Generators" />
+    <Folder Include="POUs\Tc3 Objects\Signals\Handling" />
+    <Folder Include="POUs\Tc3 Objects\Signals\Ramp Generators" />
+    <Folder Include="POUs\Tc3 Objects\Signals\Ramp Generators\Oscat_Ramp" />
+    <Folder Include="POUs\Tc3 Objects\Signals\Watchdog" />
+    <Folder Include="POUs\Tc3 Objects\String">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Folder>
+    <Folder Include="POUs\Tc3 Objects\Traceability">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Folder>
     <Folder Include="Visualizations" />
   </ItemGroup>
   <ItemGroup>
@@ -383,8 +534,8 @@
     <Compile Include="Data types\Objects\FB_Alarm\ST_AlarmRef.TcDUT" />
     <Compile Include="Data types\Objects\FB_AxisController\ET_AxisGetLimits.TcDUT" />
     <Compile Include="Data types\Objects\FB_AxisController\ET_AxisSetLimits.TcDUT" />
-    <Compile Include="Data types\Objects\FB_AxisController\ET_STOEBER_AxisGetLimits.TcDUT" />
-    <Compile Include="Data types\Objects\FB_AxisController\ET_STOEBER_AxisSetLimits.TcDUT" />
+    <Compile Include="Data types\Objects\FB_AxisController\ET_STOEBER_AxisGetLimitsTc2.TcDUT" />
+    <Compile Include="Data types\Objects\FB_AxisController\ET_STOEBER_AxisSetLimitsTc2.TcDUT" />
     <Compile Include="Data types\Objects\FB_AxisMoveManual\ET_AxisMoveManualSetLimits.TcDUT" />
     <Compile Include="Data types\Objects\FB_Blinker\ST_Blinker.TcDUT" />
     <Compile Include="Data types\Objects\FB_CalcContour\ET_ContourType.TcDUT" />
@@ -591,275 +742,1220 @@
     <Compile Include="POUs\Machine\Group_0500 - Transport\Gr05Persistent\Gr05Persistent.TcPOU" />
     <Compile Include="POUs\Machine\Group_0500 - Transport\Gr05Simulation\Gr05Simulation.TcPOU" />
     <Compile Include="POUs\MAIN.TcPOU" />
-    <Compile Include="POUs\Objects\Alarm\FB_Alarm.TcPOU" />
-    <Compile Include="POUs\Objects\Alarm\FB_Error.TcPOU" />
-    <Compile Include="POUs\Objects\Alarm\FB_FatalError.TcPOU" />
-    <Compile Include="POUs\Objects\Alarm\FB_Hint.TcPOU" />
-    <Compile Include="POUs\Objects\Alarm\FB_Message.TcPOU" />
-    <Compile Include="POUs\Objects\Alarm\FB_Warning.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Beckhoff\CommandPositioning\FB_AxisController.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Beckhoff\CommandPositioning\FB_AxisMoveAuto.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Beckhoff\CommandPositioning\FB_AxisMoveManual.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Beckhoff\FB_AxisMcBeckhoff.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Beckhoff\FB_AxisMcBeckhoffSEWMoviDriveBVelo.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Beckhoff\FB_AxisMcBeckhoffStoeberSCI6.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Beckhoff\FB_BECKHOFFDRIVE_REF.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\F_ChkAllAxisCoupled.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\F_ChkAllAxisEnabled.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\F_ChkAllAxisFieldbusOK.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\F_ChkAllAxisInSamePos.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\F_ChkAllAxisNotMoving.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\F_ChkAllAxisReferenced.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\F_ChkAllAxisStandStill.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\OnOff\FB_OnOff_AxisController.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\OnOff\FB_OnOff_AxisMoveAuto.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\OnOff\FB_OnOff_AxisMoveManual.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\OnOff\Motion\FB_OnOff_MoveAbsolut.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\OnOff\Motion\FB_OnOff_MoveVelocity.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\OnOff\Motion\FB_OnOff_Power.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\OnOff\Motion\FB_OnOff_Reset.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\OnOff\Motion\FB_OnOff_Stop.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Override\FB_Override.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Override\FB_OverrideSelection.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Own\Interface\Drive\FB_AXIS_REF_V2.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\SEW\MOVIDRIVE B\FB_SEWMOVIDRIVEBCIA402_REF.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_AxisMcStoeber.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_STOEBERSDS_MC_AxisController.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_STOEBERSDS_MC_AxisMoveAuto.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_STOEBERSDS_MC_AxisMoveManual.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_STOEBERSDS_MC_GearIn.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_STOEBERSDS_MC_GearOut.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_STOEBERSDS_MC_Halt_noready.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_STOEBERSDS_MC_Home.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_STOEBERSDS_MC_Jog.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_STOEBERSDS_MC_MoveAbsolut.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_STOEBERSDS_MC_MoveAdditive.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_STOEBERSDS_MC_MoveRelative.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_STOEBERSDS_MC_MoveSuperimposed.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_STOEBERSDS_MC_MoveVelocity.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_STOEBERSDS_MC_Power.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_STOEBERSDS_MC_Reset.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_STOEBERSDS_MC_Stop.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SDS\CommandPositioning\F_MoveToAxisRef.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SDS\FastRefereneValue\FB_AxisStoeberSDS.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SDS\FastRefereneValue\FB_STOEBERSDS_AxisController.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SDS\FastRefereneValue\FB_STOEBERSDS_AxisMoveAuto.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SDS\FastRefereneValue\FB_STOEBERSDS_AxisMoveManual.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SDS\FastRefereneValue\FB_STOEBERSDS_Drive_REF.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SDS\FastRefereneValue\FB_STOEBERSDS_Home.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SDS\FastRefereneValue\FB_STOEBERSDS_Jog.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SDS\FastRefereneValue\FB_STOEBERSDS_MoveAbsolut.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SDS\FastRefereneValue\FB_STOEBERSDS_MoveVelocity.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SDS\FastRefereneValue\FB_STOEBERSDS_Power.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SDS\FastRefereneValue\FB_STOEBERSDS_QuickStop.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SDS\FastRefereneValue\FB_STOEBERSDS_Reset.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SDS\FastRefereneValue\FB_STOEBERSDS_Stop.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SDS\FB_STOEBERSDS_AxisLink.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SDS\FB_STOEBERSDS_ReadStatus.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SI6_SC6\CIA402\FB_AxisStoeberSI6.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SI6_SC6\CIA402\FB_STOEBERSI6SC6CIA402_REF.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SI6_SC6\CIA402\FB_STOEBERSI6_CIA402_AxisController.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SI6_SC6\CIA402\FB_STOEBERSI6_CIA402_AxisLink.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SI6_SC6\CIA402\FB_STOEBERSI6_CIA402_AxisMoveAuto.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SI6_SC6\CIA402\FB_STOEBERSI6_CIA402_AxisMoveManual.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SI6_SC6\CIA402\FB_STOEBERSI6_CIA402_Halt.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SI6_SC6\CIA402\FB_STOEBERSI6_CIA402_Home.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SI6_SC6\CIA402\FB_STOEBERSI6_CIA402_Jog.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SI6_SC6\CIA402\FB_STOEBERSI6_CIA402_MoveAbsolut.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SI6_SC6\CIA402\FB_STOEBERSI6_CIA402_MoveRelative.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SI6_SC6\CIA402\FB_STOEBERSI6_CIA402_MoveSpeed.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SI6_SC6\CIA402\FB_STOEBERSI6_CIA402_Power.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SI6_SC6\CIA402\FB_STOEBERSI6_CIA402_Reset.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SI6_SC6\CIA402\FB_STOEBERSI6_CIA402_Stop.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SI6_SC6\CIA402\FB_STOEBERSI6_ReadStatus.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\Stöber\SI6_SC6\FB_StoeberPS6A34.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\VFD\FB_VFD_AxisController.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\VFD\FB_VFD_AxisLink.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\VFD\FB_VFD_AxisMoveAuto.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\VFD\FB_VFD_AxisMoveManual.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\VFD\FB_VFD_Axis_REF.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\VFD\FB_VFD_Drive_REF.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\VFD\FB_VFD_MoveVelocity.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\VFD\FB_VFD_Power.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\VFD\FB_VFD_Reset.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Axis\VFD\FB_VFD_Stop.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Cylinder\FB_Cylinder.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Cylinder\Hydraulic\FB_HydraulicCylinder.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Cylinder\Pneumatic\FB_PneumaticCylinder.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Cylinder\Position Cylinder\FB_CylinderPos.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Cylinder\Position Cylinder\FB_CylinderPos_MoveAbsolut.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Cylinder\Position Cylinder\F_GetCylinderPos.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Cylinder\Position Cylinder\F_SetCylinderPos.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Extraction Fan\FB_ExtractionFan.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Force\FB_ForceController.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Force\FB_ForceReg.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Force\FB_FORCE_REF.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Force\FB_PID_Regler.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Heater\FB_Heater.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\MotorOnOff\FB_Motor.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\NCiChannel\FB_CfgAxisInExt3DGroup.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\NCiChannel\R-parameters\FB_ItpReadRParams.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\NCiChannel\R-parameters\FB_ItpWriteRParams.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\OperationMode\FB_ModeSelector.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Process\FB_StartProcess.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Sawband\FB_Sawband.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Spindle\FB_CoolingDevice.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Spindle\FB_SpindlePreheat.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Spindle\FB_ToolStorage.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Spindle\FB_VFD_SpindlePreheat.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Spindle\F_SpindleHSDClutchStatus.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Spindle\F_SpindlePDSXLA170ClutchStatus.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Spindle\F_SpindlePDSXLHClutchStatus.TcPOU" />
-    <Compile Include="POUs\Objects\Automation\Vacuum\FB_Vacuum.TcPOU" />
-    <Compile Include="POUs\Objects\Basics\CheckBounds.TcPOU">
+    <Compile Include="POUs\Tc2 Objects\Alarm\FB_Alarm.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Alarm\FB_Error.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Alarm\FB_FatalError.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Alarm\FB_Hint.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Alarm\FB_Message.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Alarm\FB_Warning.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Beckhoff\CommandPositioning\FB_AxisController.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Beckhoff\CommandPositioning\FB_AxisMoveAuto.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Beckhoff\CommandPositioning\FB_AxisMoveManual.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Beckhoff\FB_AxisMcBeckhoff.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Beckhoff\FB_AxisMcBeckhoffSEWMoviDriveBVelo.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Beckhoff\FB_AxisMcBeckhoffStoeberSCI6.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Beckhoff\FB_BECKHOFFDRIVE_REF.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\F_ChkAllAxisCoupled.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\F_ChkAllAxisEnabled.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\F_ChkAllAxisFieldbusOK.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\F_ChkAllAxisInSamePos.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\F_ChkAllAxisNotMoving.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\F_ChkAllAxisReferenced.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\F_ChkAllAxisStandStill.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\OnOff\FB_OnOff_AxisController.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\OnOff\FB_OnOff_AxisMoveAuto.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\OnOff\FB_OnOff_AxisMoveManual.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\OnOff\Motion\FB_OnOff_MoveAbsolut.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\OnOff\Motion\FB_OnOff_MoveVelocity.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\OnOff\Motion\FB_OnOff_Power.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\OnOff\Motion\FB_OnOff_Reset.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\OnOff\Motion\FB_OnOff_Stop.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Override\FB_Override.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Override\FB_OverrideSelection.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Own\Interface\Drive\FB_AXIS_REF_V2.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\SEW\MOVIDRIVE B\FB_SEWMOVIDRIVEBCIA402_REF.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_AxisMcStoeber.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_STOEBERSDS_MC_AxisController.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_STOEBERSDS_MC_AxisMoveAuto.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_STOEBERSDS_MC_AxisMoveManual.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_STOEBERSDS_MC_GearIn.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_STOEBERSDS_MC_GearOut.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_STOEBERSDS_MC_Halt_noready.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_STOEBERSDS_MC_Home.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_STOEBERSDS_MC_Jog.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_STOEBERSDS_MC_MoveAbsolut.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_STOEBERSDS_MC_MoveAdditive.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_STOEBERSDS_MC_MoveRelative.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_STOEBERSDS_MC_MoveSuperimposed.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_STOEBERSDS_MC_MoveVelocity.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_STOEBERSDS_MC_Power.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_STOEBERSDS_MC_Reset.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\CommandPositioning\FB_STOEBERSDS_MC_Stop.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\CommandPositioning\F_MoveToAxisRef.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\FastRefereneValue\FB_AxisStoeberSDS.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\FastRefereneValue\FB_STOEBERSDS_AxisController.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\FastRefereneValue\FB_STOEBERSDS_AxisMoveAuto.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\FastRefereneValue\FB_STOEBERSDS_AxisMoveManual.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\FastRefereneValue\FB_STOEBERSDS_Drive_REF.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\FastRefereneValue\FB_STOEBERSDS_Home.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\FastRefereneValue\FB_STOEBERSDS_Jog.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\FastRefereneValue\FB_STOEBERSDS_MoveAbsolut.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\FastRefereneValue\FB_STOEBERSDS_MoveVelocity.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\FastRefereneValue\FB_STOEBERSDS_Power.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\FastRefereneValue\FB_STOEBERSDS_QuickStop.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\FastRefereneValue\FB_STOEBERSDS_Reset.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\FastRefereneValue\FB_STOEBERSDS_Stop.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\FB_STOEBERSDS_AxisLink.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SDS\FB_STOEBERSDS_ReadStatus.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\Stöber\SI6_SC6\FB_StoeberPS6A34.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\VFD\FB_VFD_AxisController.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\VFD\FB_VFD_AxisLink.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\VFD\FB_VFD_AxisMoveAuto.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\VFD\FB_VFD_AxisMoveManual.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\VFD\FB_VFD_Axis_REF.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\VFD\FB_VFD_Drive_REF.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\VFD\FB_VFD_MoveVelocity.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\VFD\FB_VFD_Power.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\VFD\FB_VFD_Reset.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Axis\VFD\FB_VFD_Stop.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Cylinder\FB_Cylinder.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Cylinder\Hydraulic\FB_HydraulicCylinder.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Cylinder\Pneumatic\FB_PneumaticCylinder.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Cylinder\Position Cylinder\FB_CylinderPos.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Cylinder\Position Cylinder\FB_CylinderPos_MoveAbsolut.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Cylinder\Position Cylinder\F_GetCylinderPos.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Cylinder\Position Cylinder\F_SetCylinderPos.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Extraction Fan\FB_ExtractionFan.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Force\FB_ForceController.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Force\FB_ForceReg.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Force\FB_FORCE_REF.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Force\FB_PID_Regler.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Heater\FB_Heater.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\MotorOnOff\FB_Motor.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\NCiChannel\FB_CfgAxisInExt3DGroup.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\NCiChannel\R-parameters\FB_ItpReadRParams.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\NCiChannel\R-parameters\FB_ItpWriteRParams.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\OperationMode\FB_ModeSelector.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Process\FB_StartProcess.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Sawband\FB_Sawband.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Spindle\FB_CoolingDevice.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Spindle\FB_SpindlePreheat.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Spindle\FB_ToolStorage.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Spindle\FB_VFD_SpindlePreheat.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Spindle\F_SpindleHSDClutchStatus.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Spindle\F_SpindlePDSXLA170ClutchStatus.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Spindle\F_SpindlePDSXLHClutchStatus.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Automation\Vacuum\FB_Vacuum.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Basics\CheckBounds.TcPOU">
       <ExcludeFromBuild>true</ExcludeFromBuild>
     </Compile>
-    <Compile Include="POUs\Objects\Basics\CheckDivReal.TcPOU">
+    <Compile Include="POUs\Tc2 Objects\Basics\CheckDivReal.TcPOU">
       <ExcludeFromBuild>true</ExcludeFromBuild>
     </Compile>
-    <Compile Include="POUs\Objects\Basics\FB_CheckArrayBounds.TcPOU">
+    <Compile Include="POUs\Tc2 Objects\Basics\FB_CheckArrayBounds.TcPOU">
       <ExcludeFromBuild>true</ExcludeFromBuild>
     </Compile>
-    <Compile Include="POUs\Objects\Basics\FB_CheckDivRealInfo.TcPOU">
+    <Compile Include="POUs\Tc2 Objects\Basics\FB_CheckDivRealInfo.TcPOU">
       <ExcludeFromBuild>true</ExcludeFromBuild>
     </Compile>
-    <Compile Include="POUs\Objects\Basics\FB_Get_Time.TcPOU" />
-    <Compile Include="POUs\Objects\Basics\F_AdsError_Text.TcPOU" />
-    <Compile Include="POUs\Objects\Conversions\BitOriented\F_ConvArrBitsToWord.TcPOU" />
-    <Compile Include="POUs\Objects\Diagnostic\Terminal\FB_TerminalDiagnosis.TcPOU" />
-    <Compile Include="POUs\Objects\Diagnostic\Terminal\FB_ToggleBit.TcPOU" />
-    <Compile Include="POUs\Objects\Diagnostic\Terminal\F_StateReturn.TcPOU" />
-    <Compile Include="POUs\Objects\Engineering\Buffer\FB_FiFo.TcPOU" />
-    <Compile Include="POUs\Objects\Engineering\Dynamics\CalcVeloAccDecJerk\FB_CalcVeloAccDecJerk.TcPOU" />
-    <Compile Include="POUs\Objects\Engineering\External set value generator\FB_ExtSetPoint.TcPOU" />
-    <Compile Include="POUs\Objects\Engineering\Filter\FB_PT1.TcPOU" />
-    <Compile Include="POUs\Objects\Engineering\Filter\FB_ValueFilter.TcPOU" />
-    <Compile Include="POUs\Objects\Engineering\Position offset\F_PosOffset.TcPOU" />
-    <Compile Include="POUs\Objects\Engineering\Position\Controller\PID Components\FB_CompD.TcPOU" />
-    <Compile Include="POUs\Objects\Engineering\Position\Controller\PID Components\FB_CompI.TcPOU" />
-    <Compile Include="POUs\Objects\Engineering\Position\Controller\PID Components\FB_CompP.TcPOU" />
-    <Compile Include="POUs\Objects\Engineering\Position\Controller\PID Controller\FB_CtrlOut.TcPOU" />
-    <Compile Include="POUs\Objects\Engineering\Position\Controller\PID Controller\FB_CtrlPI.TcPOU" />
-    <Compile Include="POUs\Objects\Engineering\Position\Controller\PID Controller\FB_CtrlPID.TcPOU" />
-    <Compile Include="POUs\Objects\Engineering\Position\Controller\PID Controller\F_CtrlIn.TcPOU" />
-    <Compile Include="POUs\Objects\Engineering\Position\Controller\PID Types\FB_TypePI.TcPOU" />
-    <Compile Include="POUs\Objects\Engineering\Position\Controller\PID Types\FB_TypePID.TcPOU" />
-    <Compile Include="POUs\Objects\Engineering\Position\Controller\PID Types\FB_TypePIDW.TcPOU" />
-    <Compile Include="POUs\Objects\Engineering\Position\Controller\PID Types\FB_TypePIW.TcPOU" />
-    <Compile Include="POUs\Objects\Engineering\Position\Controller\PositionController\FB_PosCtrlIn.TcPOU" />
-    <Compile Include="POUs\Objects\Engineering\Position\Controller\PositionController\FB_PosCtrlOut.TcPOU" />
-    <Compile Include="POUs\Objects\Engineering\Position\Controller\PositionController\FB_PositionController.TcPOU" />
-    <Compile Include="POUs\Objects\Engineering\Position\Encoder\FB_PositionEncoder.TcPOU" />
-    <Compile Include="POUs\Objects\Engineering\Position\F_ModuloDistance.TcPOU" />
-    <Compile Include="POUs\Objects\Engineering\Position\Residuals\F_ConvertActPosResiduals.TcPOU" />
-    <Compile Include="POUs\Objects\Engineering\Position\Residuals\F_ConvertSetPosResiduals.TcPOU" />
-    <Compile Include="POUs\Objects\Engineering\Trajectory model\FB_ExtContour.TcPOU" />
-    <Compile Include="POUs\Objects\Engineering\Trajectory model\FB_ExtTraj.TcPOU" />
-    <Compile Include="POUs\Objects\Engineering\Trajectory model\F_CalcContour.TcPOU" />
-    <Compile Include="POUs\Objects\Engineering\Trajectory model\F_CalcTrajPos.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\Beckhoff\EL..KL600x\FB_KL600xData.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\Beckhoff\EL..KL600x\FB_KL600xString.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\Beckhoff\EL3312\FB_EL3312.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\Beckhoff\EL3312\FB_EL3312ChannelDiagnosis.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\Beckhoff\EL3312\FB_EL3312CoE.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\Beckhoff\EL3351\FB_EL3351.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\Beckhoff\EL3351\FB_EL3351ChannelDiagnosis.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\Beckhoff\EL3351\FB_EL3351CoE.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\Beckhoff\EL3351\FB_EL3351Measuring.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\Beckhoff\EL3356\FB_EL3356.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\Beckhoff\EL3356\FB_EL3356ChannelDiagnosis.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\Beckhoff\EL3356\FB_EL3356CoE.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\Gefran\FB_GFX4IRCtrlZone.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\Gefran\FB_GFX4IRZones.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\Gefran\FB_GFX4IR_REF.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\Gefran\F_ChkAllZonesNotEnabled.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\KUKA\FB_KUKA_Enable.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\KUKA\FB_KUKA_Power.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\KUKA\FB_KUKA_Prg.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\KUKA\FB_KUKA_REF.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\KUKA\FB_KUKA_Reset.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\KUKA\FB_KUKA_StartProg.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\KUKA\FB_MoveToKukaRef.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\Leister\FB_LeisterExtruder_Extruder.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\Leister\FB_LeisterExtruder_Heater.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\Leister\FB_LEISTER_EXTRUDER_REF.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\Munsch\FB_MunschExtruder.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\Munsch\FB_MunschExtruderAir.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\Munsch\FB_MunschExtruder_AirTemp.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\Munsch\FB_MunschExtruder_Extruding.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\Munsch\FB_MunschExtruder_Heat.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\Munsch\FB_MunschExtruder_MaterialTemp.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\Munsch\FB_MunschExtruder_ReadStatus.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\Munsch\FB_MUNSCH_EXTRUDER_REF.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\Munsch\F_MunschCMD.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\Munsch\F_MunschRES.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\Periphery\FB_PERIPHERY_REF.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\YASKAWA\FB_YASKAWA_Controller.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\YASKAWA\FB_YASKAWA_Power.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\YASKAWA\FB_YASKAWA_REF.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\YASKAWA\FB_YASKAWA_Reset.TcPOU" />
-    <Compile Include="POUs\Objects\ExternalHardware\YASKAWA\FB_YASKAWA_StartPrg.TcPOU" />
-    <Compile Include="POUs\Objects\File\FB_FileHandler.TcPOU" />
-    <Compile Include="POUs\Objects\File\FB_FileHandlerBinary.TcPOU" />
-    <Compile Include="POUs\Objects\File\FB_LoadFromFile.TcPOU" />
-    <Compile Include="POUs\Objects\Logger\FB_Logger.TcPOU" />
-    <Compile Include="POUs\Objects\Logger\FB_LoggerFile.TcPOU" />
-    <Compile Include="POUs\Objects\Logic\F_DwordToBitReal.TcPOU" />
-    <Compile Include="POUs\Objects\Logic\F_RealToBitDword.TcPOU" />
-    <Compile Include="POUs\Objects\Logic\F_ResetBitOfDWord.TcPOU" />
-    <Compile Include="POUs\Objects\Logic\F_SetBitOfDWord.TcPOU" />
-    <Compile Include="POUs\Objects\Logic\Oscat\CHECK_PARITY.TcPOU" />
-    <Compile Include="POUs\Objects\MachineEquipment\F_AxisClamp2Pos.TcPOU" />
-    <Compile Include="POUs\Objects\MachineEquipment\F_kAngleActuatorSpeedLin.TcPOU" />
-    <Compile Include="POUs\Objects\MachineEquipment\F_kFeedReductionSlowGuidings.TcPOU" />
-    <Compile Include="POUs\Objects\Mathematical\Delay\FB_Delay.TcPOU" />
-    <Compile Include="POUs\Objects\Mathematical\FB_Differential.TcPOU" />
-    <Compile Include="POUs\Objects\Mathematical\FB_Integral.TcPOU" />
-    <Compile Include="POUs\Objects\Mathematical\F_Exp10.TcPOU" />
-    <Compile Include="POUs\Objects\Mathematical\F_FloorDN.TcPOU" />
-    <Compile Include="POUs\Objects\Mathematical\F_FracR.TcPOU" />
-    <Compile Include="POUs\Objects\Mathematical\F_GCD.TcPOU" />
-    <Compile Include="POUs\Objects\Mathematical\F_LRealRound.TcPOU" />
-    <Compile Include="POUs\Objects\Mathematical\F_MM_TO_DEG.TcPOU" />
-    <Compile Include="POUs\Objects\Mathematical\F_ModDW.TcPOU" />
-    <Compile Include="POUs\Objects\Mathematical\F_ModR.TcPOU" />
-    <Compile Include="POUs\Objects\Mathematical\F_RoundR.TcPOU" />
-    <Compile Include="POUs\Objects\Mathematical\Hysteresis\FB_Hysteresis.TcPOU" />
-    <Compile Include="POUs\Objects\Mathematical\Limits\FB_Limiter.TcPOU" />
-    <Compile Include="POUs\Objects\Mathematical\Limits\F_DeadZone.TcPOU" />
-    <Compile Include="POUs\Objects\Mathematical\Limits\F_WordToRange.TcPOU" />
-    <Compile Include="POUs\Objects\Mathematical\Scaling\FB_Scaling.TcPOU" />
-    <Compile Include="POUs\Objects\Mathematical\Scaling\FB_ScalingOffset.TcPOU" />
-    <Compile Include="POUs\Objects\Measurements\Counter\FB_Counter.TcPOU" />
-    <Compile Include="POUs\Objects\Measurements\Counter\FB_DistanceCounter.TcPOU" />
-    <Compile Include="POUs\Objects\Measurements\Counter\FB_TimeHoursCounter.TcPOU" />
-    <Compile Include="POUs\Objects\Measurements\FB_TemperaturOK.TcPOU" />
-    <Compile Include="POUs\Objects\Measurements\FB_Timer.TcPOU" />
-    <Compile Include="POUs\Objects\Measurements\Oscat\T_PLC_MS.TcPOU" />
-    <Compile Include="POUs\Objects\Measurements\RTC\FB_RTC.TcPOU" />
-    <Compile Include="POUs\Objects\Safety\FB_AirPressure.TcPOU" />
-    <Compile Include="POUs\Objects\Safety\FB_LightCurtain.TcPOU" />
-    <Compile Include="POUs\Objects\Safety\FB_NoEmergencyStop.TcPOU" />
-    <Compile Include="POUs\Objects\Safety\FB_PowerSupply.TcPOU" />
-    <Compile Include="POUs\Objects\Safety\FB_Temperature.TcPOU" />
-    <Compile Include="POUs\Objects\Safety\Fieldbus\FB_EtherCATDiag.TcPOU" />
-    <Compile Include="POUs\Objects\Safety\Fieldbus\FB_EtherCATFrameDiag.TcPOU" />
-    <Compile Include="POUs\Objects\Safety\Fieldbus\FB_Fieldbus.TcPOU" />
-    <Compile Include="POUs\Objects\Safety\Fieldbus\FB_Fieldbus_v2.TcPOU" />
-    <Compile Include="POUs\Objects\Signals\Force Input\FB_ForceBit.TcPOU" />
-    <Compile Include="POUs\Objects\Signals\Force Input\FB_ForceByte.TcPOU" />
-    <Compile Include="POUs\Objects\Signals\Generators\FB_Blinker.TcPOU" />
-    <Compile Include="POUs\Objects\Signals\Handling\FB_SignalHandlingDelay.TcPOU" />
-    <Compile Include="POUs\Objects\Signals\Handling\FB_SignalHandlingEdge.TcPOU" />
-    <Compile Include="POUs\Objects\Signals\Handling\F_SignalHandling.TcPOU" />
-    <Compile Include="POUs\Objects\Signals\Ramp Generators\FB_RampDirector.TcPOU" />
-    <Compile Include="POUs\Objects\Signals\Ramp Generators\Oscat_Ramp\FB_RMP_W.TcPOU" />
-    <Compile Include="POUs\Objects\Signals\Ramp Generators\Oscat_Ramp\_RMP_W.TcPOU" />
-    <Compile Include="POUs\Objects\Signals\Watchdog\FB_SignalWatchdog.TcPOU" />
-    <Compile Include="POUs\Objects\Signals\Watchdog\FB_SignalWatchdog2.TcPOU" />
-    <Compile Include="POUs\Objects\String\F_CheckStringIsReal.TcPOU" />
-    <Compile Include="POUs\Objects\String\F_RealToStrf.TcPOU" />
-    <Compile Include="POUs\Objects\Traceability\FB_Traceability.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Basics\FB_Get_Time.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Basics\F_AdsError_Text.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Conversions\BitOriented\F_ConvArrBitsToWord.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Diagnostic\Terminal\FB_TerminalDiagnosis.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Diagnostic\Terminal\FB_ToggleBit.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Diagnostic\Terminal\F_StateReturn.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Engineering\Buffer\FB_FiFo.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Engineering\Dynamics\CalcVeloAccDecJerk\FB_CalcVeloAccDecJerk.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Engineering\External set value generator\FB_ExtSetPoint.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Engineering\Filter\FB_PT1.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Engineering\Filter\FB_ValueFilter.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Engineering\Position offset\F_PosOffset.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Engineering\Position\Controller\PID Components\FB_CompD.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Engineering\Position\Controller\PID Components\FB_CompI.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Engineering\Position\Controller\PID Components\FB_CompP.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Engineering\Position\Controller\PID Controller\FB_CtrlOut.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Engineering\Position\Controller\PID Controller\FB_CtrlPI.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Engineering\Position\Controller\PID Controller\FB_CtrlPID.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Engineering\Position\Controller\PID Controller\F_CtrlIn.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Engineering\Position\Controller\PID Types\FB_TypePI.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Engineering\Position\Controller\PID Types\FB_TypePID.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Engineering\Position\Controller\PID Types\FB_TypePIDW.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Engineering\Position\Controller\PID Types\FB_TypePIW.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Engineering\Position\Controller\PositionController\FB_PosCtrlIn.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Engineering\Position\Controller\PositionController\FB_PosCtrlOut.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Engineering\Position\Controller\PositionController\FB_PositionController.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Engineering\Position\Encoder\FB_PositionEncoder.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Engineering\Position\F_ModuloDistance.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Engineering\Position\Residuals\F_ConvertActPosResiduals.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Engineering\Position\Residuals\F_ConvertSetPosResiduals.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Engineering\Trajectory model\FB_ExtContour.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Engineering\Trajectory model\FB_ExtTraj.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Engineering\Trajectory model\F_CalcContour.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Engineering\Trajectory model\F_CalcTrajPos.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\Beckhoff\EL..KL600x\FB_KL600xData.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\Beckhoff\EL..KL600x\FB_KL600xString.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\Beckhoff\EL3312\FB_EL3312.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\Beckhoff\EL3312\FB_EL3312ChannelDiagnosis.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\Beckhoff\EL3312\FB_EL3312CoE.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\Beckhoff\EL3351\FB_EL3351.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\Beckhoff\EL3351\FB_EL3351ChannelDiagnosis.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\Beckhoff\EL3351\FB_EL3351CoE.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\Beckhoff\EL3351\FB_EL3351Measuring.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\Beckhoff\EL3356\FB_EL3356.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\Beckhoff\EL3356\FB_EL3356ChannelDiagnosis.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\Beckhoff\EL3356\FB_EL3356CoE.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\Gefran\FB_GFX4IRCtrlZone.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\Gefran\FB_GFX4IRZones.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\Gefran\FB_GFX4IR_REF.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\Gefran\F_ChkAllZonesNotEnabled.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\KUKA\FB_KUKA_Enable.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\KUKA\FB_KUKA_Power.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\KUKA\FB_KUKA_Prg.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\KUKA\FB_KUKA_REF.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\KUKA\FB_KUKA_Reset.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\KUKA\FB_KUKA_StartProg.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\KUKA\FB_MoveToKukaRef.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\Leister\FB_LeisterExtruder_Extruder.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\Leister\FB_LeisterExtruder_Heater.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\Leister\FB_LEISTER_EXTRUDER_REF.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\Munsch\FB_MunschExtruder.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\Munsch\FB_MunschExtruderAir.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\Munsch\FB_MunschExtruder_AirTemp.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\Munsch\FB_MunschExtruder_Extruding.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\Munsch\FB_MunschExtruder_Heat.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\Munsch\FB_MunschExtruder_MaterialTemp.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\Munsch\FB_MunschExtruder_ReadStatus.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\Munsch\FB_MUNSCH_EXTRUDER_REF.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\Munsch\F_MunschCMD.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\Munsch\F_MunschRES.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\Periphery\FB_PERIPHERY_REF.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\YASKAWA\FB_YASKAWA_Controller.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\YASKAWA\FB_YASKAWA_Power.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\YASKAWA\FB_YASKAWA_REF.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\YASKAWA\FB_YASKAWA_Reset.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\ExternalHardware\YASKAWA\FB_YASKAWA_StartPrg.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\File\FB_FileHandler.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\File\FB_FileHandlerBinary.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\File\FB_LoadFromFile.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Logger\FB_Logger.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Logger\FB_LoggerFile.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Logic\F_DwordToBitReal.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Logic\F_RealToBitDword.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Logic\F_ResetBitOfDWord.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Logic\F_SetBitOfDWord.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Logic\Oscat\CHECK_PARITY.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\MachineEquipment\F_AxisClamp2Pos.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\MachineEquipment\F_kAngleActuatorSpeedLin.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\MachineEquipment\F_kFeedReductionSlowGuidings.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Mathematical\Delay\FB_Delay.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Mathematical\FB_Differential.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Mathematical\FB_Integral.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Mathematical\F_Exp10.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Mathematical\F_FloorDN.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Mathematical\F_FracR.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Mathematical\F_GCD.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Mathematical\F_LRealRound.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Mathematical\F_MM_TO_DEG.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Mathematical\F_ModDW.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Mathematical\F_ModR.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Mathematical\F_RoundR.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Mathematical\Hysteresis\FB_Hysteresis.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Mathematical\Limits\FB_Limiter.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Mathematical\Limits\F_DeadZone.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Mathematical\Limits\F_WordToRange.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Mathematical\Scaling\FB_Scaling.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Mathematical\Scaling\FB_ScalingOffset.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Measurements\Counter\FB_Counter.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Measurements\Counter\FB_DistanceCounter.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Measurements\Counter\FB_TimeHoursCounter.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Measurements\FB_TemperaturOK.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Measurements\FB_Timer.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Measurements\Oscat\T_PLC_MS.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Measurements\RTC\FB_RTC.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Safety\FB_AirPressure.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Safety\FB_LightCurtain.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Safety\FB_NoEmergencyStop.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Safety\FB_PowerSupply.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Safety\FB_Temperature.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Safety\Fieldbus\FB_EtherCATDiag.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Safety\Fieldbus\FB_EtherCATFrameDiag.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Safety\Fieldbus\FB_Fieldbus.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Safety\Fieldbus\FB_Fieldbus_v2.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Signals\Force Input\FB_ForceBit.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Signals\Force Input\FB_ForceByte.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Signals\Generators\FB_Blinker.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Signals\Handling\FB_SignalHandlingDelay.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Signals\Handling\FB_SignalHandlingEdge.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Signals\Handling\F_SignalHandling.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Signals\Ramp Generators\FB_RampDirector.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Signals\Ramp Generators\Oscat_Ramp\FB_RMP_W.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Signals\Ramp Generators\Oscat_Ramp\_RMP_W.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Signals\Watchdog\FB_SignalWatchdog.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Signals\Watchdog\FB_SignalWatchdog2.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\String\F_CheckStringIsReal.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\String\F_RealToStrf.TcPOU" />
+    <Compile Include="POUs\Tc2 Objects\Traceability\FB_Traceability.TcPOU" />
+    <Compile Include="POUs\Tc3 Objects\Alarm\ET_AlarmType_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Alarm\FB_Alarm_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Alarm\FB_Error_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Alarm\FB_FatalError_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Alarm\FB_Hint_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Alarm\FB_Message_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Alarm\FB_Warning_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Alarm\GVL_FB_Alarm_1.TcGVL">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Alarm\ST_AlarmIn_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Alarm\ST_AlarmOut_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Alarm\ST_AlarmProperties_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Alarm\ST_AlarmRef_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Alarm\ST_Alarm_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Beckhoff\CommandPositioning\ET_BECKHOFF_AxisGetLimits.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Beckhoff\CommandPositioning\ET_BECKHOFF_AxisSetLimits.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Beckhoff\CommandPositioning\ET_BECKHOFF_ManualSetLimits.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Beckhoff\CommandPositioning\FB_BECKHOFF_AxisController.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Beckhoff\CommandPositioning\FB_BECKHOFF_AxisMoveAuto.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Beckhoff\CommandPositioning\FB_BECKHOFF_AxisMoveManual.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Bosch\CommandPositioning\Beckhoff\ET_BOSCH_AxisGetLimits.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Bosch\CommandPositioning\Beckhoff\ET_BOSCH_AxisSetLimits.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Bosch\CommandPositioning\Beckhoff\ET_BOSCH_Home.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Bosch\CommandPositioning\Beckhoff\ET_BOSCH_ManualSetLimits.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Bosch\CommandPositioning\Beckhoff\ET_BOSCH_Reset.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Bosch\CommandPositioning\Beckhoff\FB_AxisMcBeckhoffBoschIndraDrive.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Bosch\CommandPositioning\Beckhoff\FB_BOSCH_AxisController.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Bosch\CommandPositioning\Beckhoff\FB_BOSCH_AxisMoveAuto.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Bosch\CommandPositioning\Beckhoff\FB_BOSCH_AxisMoveManual.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Bosch\CommandPositioning\Beckhoff\FB_BOSCH_Home.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Bosch\CommandPositioning\Beckhoff\FB_BOSCH_Reset.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Bosch\Drive\FB_BOSCH_DriveLink.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Bosch\Drive\IndraDrive\FB_BOSCHINDRADRIVECIA402_REF.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Bosch\Drive\IndraDrive\ST_BOSCHINDRADRIVECIA402TOPLC.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Bosch\Drive\IndraDrive\ST_BOSCHINDRADRIVECIA402_REF.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Bosch\Drive\IndraDrive\ST_PLCTOBOSCHINDRADRIVECIA402.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Bosch\ProcessController\ET_BOSCH_ProcessCtrl.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Bosch\ProcessController\ET_BOSCH_ProcessCtrlGetValue.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Bosch\ProcessController\ET_BOSCH_ProcessCtrlSetValue.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Bosch\ProcessController\FB_BOSCH_ProcessCtrl.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Bosch\ProcessController\FB_BOSCH_ProcessCtrlLink.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Bosch\ProcessController\FB_BOSCH_ProcessCtrl_Reset.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Bosch\ProcessController\FB_BOSCH_ProcessCtrl_Start.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Bosch\ProcessController\FB_BOSCH_ProcessCtrl_Stop.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Bosch\ProcessController\ST_FWS_MLDPCx_PRE_01Vxx_MPxx.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\F_ChkAllAxisCoupled_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\F_ChkAllAxisEnabled_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\F_ChkAllAxisInSamePos_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\F_ChkAllAxisNotMoving_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\F_ChkAllAxisReferenced_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\F_ChkAllAxisStandStill_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\F_ChkAxisError.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Stöber\CommandPositioning\Beckhoff\ET_STOEBER_AxisGetLimits.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Stöber\CommandPositioning\Beckhoff\ET_STOEBER_AxisSetLimits.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Stöber\CommandPositioning\Beckhoff\ET_STOEBER_ManualSetLimits.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Stöber\CommandPositioning\Beckhoff\FB_STOEBER_AxisController.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Stöber\CommandPositioning\Beckhoff\FB_STOEBER_AxisMoveAuto.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Stöber\CommandPositioning\Beckhoff\FB_STOEBER_AxisMoveManual.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Stöber\Dirve\SI6SC6\FB_STOEBERSI6SC6CIA402_REF.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Stöber\Dirve\SI6SC6\ST_PLCTOSTOEBERSI6SC6CIA402_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Stöber\Dirve\SI6SC6\ST_STOEBERSI6SC6CIA402TOPLC_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Stöber\Dirve\SI6SC6\ST_STOEBERSI6SC6CIA402_REF_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Axis\Stöber\PS6A34\ST_STOEBER_PS6A34Status_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Cylinder\FB_Cylinder_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Cylinder\Hydraulic\FB_HydraulicCylinder_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Cylinder\Pneumatic\FB_PneumaticCylinder_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Cylinder\Position Cylinder\FB_PosCylinder.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Cylinder\Position Cylinder\FB_PosCylinder_MoveAbsolut.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Cylinder\Position Cylinder\F_GetPosCylinder.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Cylinder\Position Cylinder\F_SetPosCylinder.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Force\FB_ForceController_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Force\FB_ForceReg_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Force\FB_PID_Regler_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\NCiChannel\CfgAxisInExt3DGroup\ET_CfgAxisInExt3DGroup_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\NCiChannel\CfgAxisInExt3DGroup\FB_CfgAxisInExt3DGroup_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\NCiChannel\ItpReadRParams\ET_ItpReadRParams_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\NCiChannel\ItpReadRParams\FB_ItpReadRParams_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\NCiChannel\ItpWriteRParams\ET_ItpWriteRParams_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\NCiChannel\ItpWriteRParams\FB_ItpWriteRParams_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\OperationMode\ET_MachineMode_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\OperationMode\ET_MachineState_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\OperationMode\ET_MaintenanceType.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\OperationMode\FB_ModeSelector_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Override\FB_OverrideSelection_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Override\FB_Override_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Process\FB_StartProcess_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Spindle\Clutch\ET_SpindleClutchStatus_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Spindle\Clutch\F_SpindleClutchStatus.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Spindle\FB_CoolingDevice_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Spindle\HSD\F_SpindleHSDES951ClutchStatus.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Spindle\HSD\ST_SpindleHSDES951ClutchStatus.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Spindle\PDS\F_SpindlePDSXLA170ClutchStatus_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Spindle\PDS\ST_SpindlePDSXLA170ClutchStatus_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Spindle\Preheat\ET_SpindlePreheat_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Spindle\Preheat\FB_SpindlePreheat_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Spindle\Preheat\ST_SpindlePreheat_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Automation\Vacuum\FB_Vacuum_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Basics\CheckBounds_1.TcPOU">
+      <SubType>Code</SubType>
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Basics\CheckDivReal_1.TcPOU">
+      <SubType>Code</SubType>
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Basics\FB_CheckArrayBounds_1.TcPOU">
+      <SubType>Code</SubType>
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Basics\FB_CheckDivRealInfo_1.TcPOU">
+      <SubType>Code</SubType>
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Basics\FB_Get_Time_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Basics\F_AdsError_Text_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Communication\TCPIP\ASCII\ClientASCII\FB_ClientASCIConnection.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Communication\TCPIP\ASCII\ClientASCII\FB_ClientLogger.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Communication\TCPIP\ASCII\ClientASCII\FB_ClientReceiveMsg.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Communication\TCPIP\ASCII\ClientASCII\FB_ClientSendMsg.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Communication\TCPIP\ET_TCPIP_ConnectionState.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Communication\TCPIP\GVL_TCPIP.TcGVL">
+      <SubType>Code</SubType>
+      <LinkAlways>true</LinkAlways>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Communication\TCPIP\Helper\FB_FrameFifo.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Communication\TCPIP\Helper\FB_LogFifo.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Conversions\BitOriented\F_ConvArrBitsToWord_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Diagnostic\Terminal\FB_TerminalDiagnosis_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Diagnostic\Terminal\FB_ToggleBit_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Diagnostic\Terminal\FUN_StateReturn.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Diagnostic\Terminal\ST_TerminalState_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Buffer\FB_FiFo_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Dynamics\CalcVeloAccDecJerk\FB_CalcVeloAccDecJerk_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\External set value generator\ET_ExtSetpoint.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\External set value generator\FB_ExtSetpoint_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Filter\FB_PT1_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Filter\FB_ValueFilter_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Motion model\Contour\ET_ContourType_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Motion model\Contour\FB_ExtContour_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Motion model\Contour\F_CalcContour_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Motion model\Oval\ET_CalcExtOvalState.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Motion model\Oval\FB_ExtOval.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Motion model\Oval\F_CalcOval.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Motion model\Tilt\ET_CalcExtTiltState.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Motion model\Tilt\FB_ExtTilt.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Motion model\Tilt\F_CalcTiltPos.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Motion model\Traj\ET_CalcExtTrajState_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Motion model\Traj\FB_ExtTraj_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Motion model\Traj\F_CalcTrajPos_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Position offset\F_PosOffset_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Position\Controller\PID Components\FB_CompD_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Position\Controller\PID Components\FB_CompI_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Position\Controller\PID Components\FB_CompP_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Position\Controller\PID CO_Ntroller\FB_CtrlOut_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Position\Controller\PID CO_Ntroller\FB_CtrlPID_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Position\Controller\PID CO_Ntroller\FB_CtrlPI_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Position\Controller\PID CO_Ntroller\F_CtrlIn_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Position\Controller\PID Types\FB_TypePIDW_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Position\Controller\PID Types\FB_TypePID_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Position\Controller\PID Types\FB_TypePIW_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Position\Controller\PID Types\FB_TypePI_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Position\Controller\PositionCO_Ntroller\FB_PosCtrlIn_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Position\Controller\PositionCO_Ntroller\FB_PosCtrlOut_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Position\Controller\PositionCO_Ntroller\FB_PositionController_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Position\Encoder\FB_PositionEncoder_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Position\F_ModuloDistance_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Position\Residuals\F_ConvertActPosResiduals_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Engineering\Position\Residuals\F_ConvertSetPosResiduals_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL..KL600x\FB_KL600xData_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL..KL600x\FB_KL600xString_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3214\ET_EL3214RTDElement.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3214\FB_EL3214.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3214\FB_EL3214ChannelDiagnosis.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3214\FB_EL3214CoE.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3214\ST_EL3214ChannelState.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3214\ST_EL3214CoeInfo.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3214\ST_EL3214CoeReadData.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3214\ST_EL3214CoeWriteData.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3312\ET_EL3312ThermocoupleTyp_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3312\FB_EL3312ChannelDiagnosis_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3312\FB_EL3312CoE_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3312\FB_EL3312_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3312\ST_EL3312ChannelState_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3312\ST_EL3312CoeInfo_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3312\ST_EL3312CoeReadData_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3312\ST_EL3312CoeWriteData_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3351\FB_EL3351ChannelDiagnosis_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3351\FB_EL3351CoE_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3351\FB_EL3351Measuring_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3351\FB_EL3351_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3351\ST_EL3351ChannelState_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3351\ST_EL3351CoeInfo_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3351\ST_EL3351CoeReadData_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3351\ST_EL3351CoeWriteData_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3356\FB_EL3356ChannelDiagnosis_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3356\FB_EL3356CoE_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3356\FB_EL3356_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3356\ST_EL3356ChannelCtrl_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3356\ST_EL3356ChannelState_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3356\ST_EL3356CoeInfo_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3356\ST_EL3356CoeReadData_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3356\ST_EL3356CoeWriteData_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Cognex\Scanner\ET_COGNEX_ScannerCtrl.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Cognex\Scanner\FB_DatamanScanner.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Cognex\Scanner\FB_Scanner.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Gefran\ET_GFX4IR_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Gefran\FB_GFX4IRCtrlZone_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Gefran\FB_GFX4IRZones_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Gefran\FB_GFX4IR_REF_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Gefran\F_ChkAllZonesNotEnabled_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Gefran\GVL_GFX4IR.TcGVL">
+      <SubType>Code</SubType>
+      <LinkAlways>true</LinkAlways>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Gefran\ST_GFX4IRTOPLC_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Gefran\ST_GFX4IR_REF_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Gefran\ST_PLCTOGFX4IR_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\KUKA\ET_KukaStart_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\KUKA\FB_KUKA_Enable_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\KUKA\FB_KUKA_Power_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\KUKA\FB_KUKA_Prg_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\KUKA\FB_KUKA_REF_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\KUKA\FB_KUKA_Reset_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\KUKA\FB_KUKA_StartProg_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\KUKA\FB_MoveToKukaRef_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\KUKA\ST_KUKATOPLC_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\KUKA\ST_KUKA_REF_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\KUKA\ST_PLCTOKUKA_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Munsch\FB_MunschExtruderAir_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Munsch\FB_MunschExtruder_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Munsch\FB_MunschExtruder_AirTemp_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Munsch\FB_MunschExtruder_Heat_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Munsch\FB_MunschExtruder_MaterialTemp_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Munsch\FB_MunschExtruder_ReadStatus_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Munsch\FB_MUNSCH_EXTRUDER_REF_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Munsch\F_MunschCMD_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Munsch\F_MunschRES_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Periphery\FB_PERIPHERY_REF_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Periphery\ST_PERIPHERY_REF_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Periphery\ST_PLC01TOPLC02.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Periphery\ST_PLC02TOPLC01.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Periphery\ST_PLC02TOPLC03.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Periphery\ST_PLC03TOPLC02.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Robot\ST_PLCTOROBOT_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\Robot\ST_ROBOTTOPLC_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\YASKAWA\ET_YaskawaStart_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\YASKAWA\FB_YASKAWA_Controller_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\YASKAWA\FB_YASKAWA_Power_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\YASKAWA\FB_YASKAWA_REF_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\YASKAWA\FB_YASKAWA_Reset_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\YASKAWA\FB_YASKAWA_StartPrg_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\YASKAWA\ST_PLCTOYASKAWA_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\YASKAWA\ST_YASKAWATOPLC_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\ExternalHardware\YASKAWA\ST_YASKAWA_REF_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\File\CSV\ET_CSV_State.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\File\CSV\FB_FileCSVHandler.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\File\CSV\GVL_CSV.TcGVL">
+      <SubType>Code</SubType>
+      <LinkAlways>true</LinkAlways>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\File\TXT\ET_LoadFromFile_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\File\TXT\FB_FileHandlerBinary_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\File\TXT\FB_FileHandler_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\File\TXT\FB_LoadFromFile_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\File\TXT\GVL_FB_LoadFromFile_1.TcGVL">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Logger\FB_LoggerFile_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Logger\FB_Logger_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Logger\GVL_Logger.TcGVL">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Logger\ST_LoggerVar_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Logger\ST_Logger_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Logic\F_DwordToBitReal_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Logic\F_RealToBitDword_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Logic\F_ResetBitOfDWord_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Logic\F_SetBitOfDWord_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Logic\Oscat\CHECK_PARITY_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Mathematical\Delay\FB_Delay_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Mathematical\FB_Differential_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Mathematical\FB_Integral_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Mathematical\F_Exp10_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Mathematical\F_FloorDN_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Mathematical\F_FracR_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Mathematical\F_GCD_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Mathematical\F_LRealRound_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Mathematical\F_ModDW_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Mathematical\F_ModR_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Mathematical\F_RoundR_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Mathematical\Hysteresis\FB_Hysteresis_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Mathematical\Limits\FB_Limiter_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Mathematical\Limits\F_DeadZone_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Mathematical\Limits\F_WordToRange_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Mathematical\Scaling\FB_ScalingOffset_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Mathematical\Scaling\FB_Scaling_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Measurements\Counter\FB_Counter_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Measurements\Counter\FB_DistanceCounter_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Measurements\Counter\FB_TimeHoursCounter_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Measurements\Counter\ST_TimeHoursCounter_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Measurements\FB_MeanValue.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Measurements\FB_TemperaturOK_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Measurements\FB_Timer_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Measurements\Oscat\T_PLC_MS_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Measurements\RTC\FB_RTC_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Measurements\ST_Time_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Safety\FB_AirPressure_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Safety\FB_LightCurtain_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Safety\FB_NoEmergencyStop_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Safety\FB_PowerSupply_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Safety\FB_Temperature_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Safety\Fieldbus\EtherCAT Diag\ET_EtherCATDiag_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Safety\Fieldbus\EtherCAT Diag\E_EcCommState_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Safety\Fieldbus\EtherCAT Diag\FB_EtherCATDiag_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Safety\Fieldbus\EtherCAT Diag\FB_EtherCATFrameDiag_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Safety\Fieldbus\EtherCAT Diag\ST_EcMasterDevState_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Safety\Fieldbus\EtherCAT Diag\ST_SlaveStateInfoScanned_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Safety\Fieldbus\EtherCAT Diag\ST_SlaveStateInfo_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Safety\Fieldbus\EtherCAT Diag\ST_SlaveState_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Safety\Fieldbus\EtherCAT Diag\ST_TopologyData_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Safety\Fieldbus\FB_Fieldbus_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Safety\Fieldbus\ST_FieldbusStatus_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Signals\Force Input\FB_ForceBit_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Signals\Force Input\FB_ForceByte_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Signals\Force Input\FB_ForceInput.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Signals\Generators\FB_Blinker_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Signals\Generators\ST_Blinker_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Signals\Handling\FB_SignalHandlingDelay_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Signals\Handling\FB_SignalHandlingEdge_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Signals\Handling\F_SignalHandling_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Signals\Ramp Generators\ET_RampGenerator_1.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Signals\Ramp Generators\FB_RampDirector_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Signals\Ramp Generators\Oscat_Ramp\FB_RMP_W_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Signals\Ramp Generators\Oscat_Ramp\_RMP_W_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Signals\Watchdog\FB_SignalWatchdogLimit.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Signals\Watchdog\FB_SignalWatchdog_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\String\F_CheckStringIsReal_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\String\F_CheckSyntaxReal.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\String\F_CheckSyntaxString.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\String\F_RealToStrf_1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Traceability\ET_TRACE_State.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Traceability\FB_TraceCycle.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Traceability\FB_TraceSingle.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Tc3 Objects\Traceability\GVL_Trace.TcGVL">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Recipe Manager.TcRMO">
       <ExcludeFromBuild>true</ExcludeFromBuild>
     </Compile>

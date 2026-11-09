@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_SpindleHSDES951ClutchStatus" Id="{83720faf-94f5-471f-9709-c0b97cfadbff}">
+    <Declaration><![CDATA[TYPE ST_SpindleHSDES951ClutchStatus :
+STRUCT
+	bToolUnlockedS2				:BOOL;						(* Tool unlocked S2 *)
+	bToolLockedS1S4S5			:BOOL;						(* Tool locked S1+S4+S5 *)
+	bStillstandS3					:BOOL;						(* Spindle stillstand S3 *)
+	bElectronicsOk				:BOOL;						(* Electronics Ok *)
+	bNoTool						:BOOL;						(* Tool not present *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

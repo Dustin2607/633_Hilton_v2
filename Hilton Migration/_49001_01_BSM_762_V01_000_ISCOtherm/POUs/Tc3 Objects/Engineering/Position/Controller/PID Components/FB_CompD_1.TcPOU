@@ -1,0 +1,104 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_CompD_1" Id="{a3b087de-bbf9-4bd9-a13f-619c47a72b89}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_CompD_1
+(*
+Function block used to calculate differential typ.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			03.06.2014
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+
+VAR_INPUT
+	(* Enummerations *)
+
+	(* Variables *)
+	bEnable								:BOOL := TRUE;					(* Enable FB *)
+	lrInSignal								:LREAL;							(* Input signal *)
+	lrDifferentialValue						:LREAL := 1.0;						(* Differential value *)
+	lrTaskCycle							:LREAL := 1.0; 					(* Cycle time *)
+
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR
+VAR_OUTPUT
+	(* Enummerations *)
+
+	(* Variables *)
+	lrOutSignal							:LREAL;							(* Output signal *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	bFirstTime							:BOOL;							(* First cycle *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbDifferential								:FB_Differential;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+
+	fbDifferential(
+		bEnable := FALSE,
+		lrInSignal := lrInSignal,
+		lrDifferentialValue := lrDifferentialValue,
+		lrTaskCycle := lrTaskCycle,
+		lrOutSignal => lrOutSignal
+	);
+
+	bFirstTime := FALSE;
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+	bFirstTime := TRUE;
+END_IF
+
+A_CalcDifferential();
+]]></ST>
+    </Implementation>
+    <Action Name="A_CalcDifferential" Id="{0b41511e-c548-4d03-b026-e0557aba418d}">
+      <Implementation>
+        <ST><![CDATA[
+fbDifferential(
+	bEnable := TRUE,
+	lrInSignal := lrInSignal,
+	lrDifferentialValue := lrDifferentialValue,
+	lrTaskCycle := lrTaskCycle,
+	lrOutSignal => lrOutSignal
+);]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_CompD_1">
+      <LineId Id="57" Count="21" />
+    </LineIds>
+    <LineIds Name="FB_CompD_1.A_CalcDifferential">
+      <LineId Id="0" Count="7" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

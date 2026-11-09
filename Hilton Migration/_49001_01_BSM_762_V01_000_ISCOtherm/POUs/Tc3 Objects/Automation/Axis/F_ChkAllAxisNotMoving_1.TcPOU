@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_ChkAllAxisNotMoving_1" Id="{97dcd695-c7a7-4899-aecd-a439ba6f99fa}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_ChkAllAxisNotMoving_1 : BOOL
+(*
+
+The function used to detect if all axis not moving.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			23.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Signal FB enable *)
+	bAxis1NotMoving				:BOOL;						(* Axis not moving *)
+	bAxis2NotMoving				:BOOL;						(* Axis not moving *)
+	bAxis3NotMoving				:BOOL;						(* Axis not moving *)
+	bAxis4NotMoving				:BOOL;						(* Axis not moving *)
+	bAxis5NotMoving				:BOOL;						(* Axis not moving *)
+	bAxis6NotMoving				:BOOL;						(* Axis not moving *)
+	bAxis7NotMoving				:BOOL;						(* Axis not moving *)
+	bAxis8NotMoving				:BOOL;						(* Axis not moving *)
+	bAxis9NotMoving				:BOOL;						(* Axis not moving *)
+	bAxis10NotMoving			:BOOL;						(* Axis not moving *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable							(* Signal FB enable *)
+THEN
+	F_ChkAllAxisNotMoving := FALSE;
+
+	RETURN;
+END_IF
+
+F_ChkAllAxisNotMoving := bAxis1NotMoving
+					   AND bAxis2NotMoving
+					   AND bAxis3NotMoving
+					   AND bAxis4NotMoving
+					   AND bAxis5NotMoving
+					   AND bAxis6NotMoving
+					   AND bAxis7NotMoving
+					   AND bAxis8NotMoving
+					   AND bAxis9NotMoving
+					   AND bAxis10NotMoving;]]></ST>
+    </Implementation>
+    <LineIds Name="F_ChkAllAxisNotMoving_1">
+      <LineId Id="40" Count="17" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

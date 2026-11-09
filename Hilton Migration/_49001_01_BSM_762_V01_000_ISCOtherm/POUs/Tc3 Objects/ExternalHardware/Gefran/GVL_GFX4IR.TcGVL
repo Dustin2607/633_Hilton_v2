@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <GVL Name="GVL_GFX4IR" Id="{4cf04c45-faaf-4b4d-94de-7f1c43babdcb}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL CONSTANT
+	nZONES_MAX_NO			:UINT := 4;			(* Amount of control zones *)
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

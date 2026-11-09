@@ -1,0 +1,1584 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_BOSCH_AxisController" Id="{184e3efb-c0bd-47f3-80e8-41c34eb3ac0d}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_BOSCH_AxisController
+(*
+
+The function block used to control axis.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			23.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Signal FB enable *)
+	etMachineMode				:ET_MachineMode;			(* Machine mode *)
+	etMachineState				:ET_MachineState;			(* Machine state *)
+	bNoEStop					:BOOL;						(* No ermergency Stop / Keine Notaus *)
+	bRegulatorOn				:BOOL;						(* Enable the power stage *)
+	bReset						:BOOL;						(* Signal reset *)
+	bCMDInterrupt				:BOOL;						(* Signal interrupt *)
+	bTerminalOK					:BOOL;						(* Terminal Ok *)
+	bExeReset					:BOOL;						(* Execute auto reset *)
+	bExeSetPos					:BOOL;						(* Execute set position *)
+	lrSetPosition				:LREAL;						(* Position value to which the axis position is to be set. *)
+	bExeGearIn					:BOOL;						(* Execute gear in *)
+	bExeGearOut					:BOOL;						(* Execute gear out *)
+	dnRatioNumerator			:DINT;						(* Gear ratio numerator. Alternatively, the gear ratio can be specified in the numerator as a floating comma value, if the denominator is 1. *)
+	udnRatioDenominator			:UDINT;						(* Gear ratio denominator *)
+	lrOverride					:LREAL;						(* Override 100% percent *)
+	bWithAbsoluteEncoder		:BOOL; 						(* Encoder is an absolute one / Absolutwertgeber *)
+	bPosLagMonitoringEn			:BOOL;						(* Enable position lag monitoring *)
+	lrPositionBias				:LREAL;						(* Position bias *)
+	bHWSignalLimitMax			:BOOL;						(* Signal position limit switch maximum *)
+	bHWSignalLimitMin			:BOOL;						(* Signal position limit switch minimum *)
+	lrSoftLimitMax				:LREAL; 					(* Position limit switch maximum *)
+	lrSoftLimitMin				:LREAL; 					(* Position limit switch minimum *)
+	lrAcceleration				:LREAL;						(* Value of the acceleration (always positive) *)
+	lrDeceleration				:LREAL;						(* Value of deceleration (always positive) *)
+	lrJerk						:LREAL;						(* Value of jerk (always positive) *)
+	lrActTemp					:LREAL;						(* Current temperatur *)
+	tAdsTimeOut 				:TIME := T#2S;				(* Timout for ads commands *)
+	pDrive						:POINTER TO ST_BOSCHINDRADRIVECIA402_REF;			(* The DRIVE_REF data type  is an interface between the PLC and the DRIVE and contains axis information *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bStatus						:BOOL;						(* Feedback *)
+	bStatusDelay				:BOOL;						(* Feedback delay *)
+	bReseted					:BOOL;						(* Reset completed *)
+	bError						:BOOL;						(* Controller error *)
+	bErrorInit					:BOOL;						(* Controller initialization error *)
+	udnErrorNo					:UDINT;						(* Error number *)
+	lrActPos					:LREAL;						(* Actual position *)
+	lrActAbsPos					:LREAL;						(* Actual absolut position *)
+	lrActVelo					:LREAL;						(* Actual velocity *)
+	bNotMoving					:BOOL;						(* Status of moving *)
+	bReferenced					:BOOL;						(* Referenced *)
+	bCoupled					:BOOL;						(* Coupled *)
+	lrVeloLimitMax				:LREAL;						(* Velocity limit maximum *)
+	lrAccLimitMax				:LREAL;						(* Acceleration limit maximum *)
+	lrDecLimitMax				:LREAL;						(* Deceleration limit maximum *)
+	lrJerkLimitMax				:LREAL;						(* Jerk limit maximum *)
+	bHardLimitMaxExceeded		:BOOL;						(* Position limit switch maximum is exceeded *)
+	bHardLimitMinExceeded		:BOOL;						(* Position limit switch minimum is exceeded *)
+	bSoftLimitMaxExceeded		:BOOL;						(* Position limit switch maximum is exceeded *)
+	bSoftLimitMinExceeded		:BOOL;						(* Position limit switch minimum is exceeded *)
+END_VAR
+VAR_IN_OUT
+	Axis						:AXIS_REF;					(* The AXIS_REF data type  is an interface between the PLC and the NC and contains axis information *)
+	MasterAxis					:AXIS_REF;					(* The AXIS_REF data type  is an interface between the PLC and the NC and contains axis information *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	etAxisGetLimits				:ET_BOSCH_AxisGetLimits;
+	bGetLimitsExe				:BOOL;						(* Progam execute *)
+	bGetLimitsDone 				:BOOL;                      (* Program done *)
+	bGetLimitsBusy 				:BOOL;                      (* Program busy *)
+	bGetLimitsError 			:BOOL;                      (* Program error *)
+	bGetLimitsInitDone 			:BOOL;                      (* Program initialization done *)
+	udnGetLimitsErrorNo 		:UDINT;                     (* Error number *)
+	unGetValueWatchdog			:UINT;
+	
+	etAxisSetLimits				:ET_BOSCH_AxisSetLimits;
+	bSetLimitsExe				:BOOL;						(* Progam execute *)
+	bSetLimitsDone 				:BOOL;                      (* Program done *)
+	bSetLimitsBusy 				:BOOL;                      (* Program busy *)
+	bSetLimitsError 			:BOOL;                      (* Program error *)
+	bSetLimitsInitDone 			:BOOL;                      (* Program initialization done *)
+	bSetLimitsInitError 		:BOOL;                      (* Program initialization error *)
+	udnSetLimitsErrorNo 		:UDINT;                     (* Error number *)
+	unSetValueWatchdog			:UINT;
+	
+	tStatusDelay				:TIME := T#1S;				(* Status delay time *)
+	tRegulatorOffDelay			:TIME := T#50MS;			(* Regulator off delay time *)
+
+	dwReferenceSystem			:DWORD;						(* Reference system: 0 - INC, 1 - ABS, 2 - ABS MODULO *)
+	lrPositionBiasCache			:LREAL;						(* Position bias *)
+	lrSoftLimitMaxCache			:LREAL; 					(* Position limit switch maximum *)
+	lrSoftLimitMinCache			:LREAL; 					(* Position limit switch minimum *)
+	lrScalingFactorCache		:LREAL; 					(* Scaling factor *)
+	
+	tonFirstInit				:TON;						(* First initialization *)
+	bFirstTime					:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbMcPower					:MC_Power;					(* The function block is used to enable for an axis *)
+	rtNoEStop					:R_TRIG;
+	tofRegulatorOn				:TOF;						(* Delay controller disable *)
+	tonStatusDelay				:TON;						(* Delay controller enabled status *)
+	fbMcReset					:FB_BOSCH_Reset;			(* An axis reset is carried out with the function block *)
+	fbMcSetPosition				:MC_SetPosition;			(* Sets the current axis position to a parameterisable value. *)
+	fbMcGearIn					:MC_GearInDyn;				(* The function block is used to couples a slave axis to a master axis using a floating point gear ratio. *)
+	fbMcGearOut					:MC_GearOut;				(* The function block  is used to decoupling the slave from the master axis.  *)
+	fbMcReadParameter 			:MC_ReadParameter;			(* The function block is used to read an axis parameter. *)
+	fbMcWriteParameter 			:MC_WriteParameter;			(* The function block is used to write an axis parameter. *)
+	fbMcWriteBoolParameter 		:MC_WriteBoolParameter;		(* The function block is used to write bool value an axis parameter. *)
+	fbSetpointPositon			:MC_SetPosition;			(* The function block is used to update setpoint position *)
+	fbAdsWrite					:ADSWRITE;					(* The function block permits execution of an ADS write command, for the transfer of data to an ADS device. *)
+	fbAdsRead					:ADSREAD;					(* The function block permits execution of an ADS read command, for the transfer of data to an ADS device. *)
+	tofRepeateSetLimitsInit		:TOF;
+	tofRepeateGetLimitsInit		:TOF;
+END_VAR
+VAR CONSTANT
+	dwIdxGrMainPara				:DWORD := 16#00004000;		(* Index group for main parameters of axis *)
+	dwIdxGrNCEncPara			:DWORD := 16#00005000;		(* Index group for nc-encoder parameters of axis *)
+	dwIdxGrNCCtrlPara			:DWORD := 16#00006000;		(* Index group for nc-controller parameters of axis *)
+	dwIdxGrNCDrivePara			:DWORD := 16#00007000;		(* Index group for nc-drive parameters of axis *)
+	
+	tFirstInit					:TIME := T#2S;				(* First initialization *)
+	tRepeateInit				:TIME := T#1S;				(* Repeate initialization *)
+	
+	unWatchdogMax				:UINT := 150;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable							(* Signal FB enable *)
+THEN
+	bStatus := FALSE;						(* Feedback *)
+	bStatusDelay := FALSE;				(* Feedback *)
+	bError := FALSE;						(* Controller error *)
+	udnErrorNo := 0;						(* Error number *)
+
+	bFirstTime := FALSE;
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+	tonFirstInit(IN := FALSE);					(* Program execute *)
+	bGetLimitsDone := FALSE;                                	(* Program done *)
+	bGetLimitsBusy := FALSE;                                 	(* Program not busy *)
+	bGetLimitsError := FALSE;                                 	(* Program not error *)
+	bGetLimitsInitDone := FALSE;				(* Program initialization done *)
+	udnGetLimitsErrorNo := 0;                                 		(* Error number *)
+	unGetValueWatchdog := 0;
+	
+	etAxisGetLimits := ET_BECKHOFF_AxisGetLimits.eWaitExecute;       			(* Next step *)
+
+	bSetLimitsExe := FALSE;					(* Program execute *)
+	bSetLimitsDone := FALSE;                                	(* Program done *)
+	bSetLimitsBusy := FALSE;                                 	(* Program not busy *)
+	bSetLimitsError := FALSE;                                	 	(* Program not error *)
+	bSetLimitsInitDone := FALSE;                            	(* Program initialization done *)
+	bSetLimitsInitError := FALSE;				(* Program initialization error *)
+	udnSetLimitsErrorNo := 0;                                 		(* Error number *)
+	unSetValueWatchdog := 0;
+	
+	etAxisSetLimits := ET_BECKHOFF_AxisSetLimits.eWaitExecute;       			(* Next step *)
+
+	(* Actual position *)
+	lrActAbsPos := Axis.NcToPlc.ActPos;
+	lrActAbsPos := F_LRealRound(lrReal := lrActAbsPos, usiPrecision := 3);
+
+	bFirstTime := TRUE;
+END_IF;
+
+A_MCPower();
+A_MCReset();
+A_MCSetPosition();
+A_MCGearCoupling();
+A_SetpointPosition();
+A_Utility();
+A_GetLimits();
+A_SetLimits();
+A_Error();
+
+(* Actual position *)
+lrActPos := Axis.NcToPlc.ActPos;
+lrActPos := F_LRealRound(lrReal := lrActPos, usiPrecision := 2);
+
+(* Actual velocity *)
+lrActVelo := Axis.NcToPlc.ActVelo;
+lrActVelo := F_LRealRound(lrReal := lrActVelo, usiPrecision := 2);
+
+(* Current engine torque *)
+(*nActEngineTorque := Axis.stNcToPlc.stCommandPositioning.nActEngineTorque;*)
+
+(* Reference signal *)
+bReferenced := Axis.NcToPlc.StateDWord.1;                               (* In Reference *)
+
+
+(* Status not moving *)
+bNotMoving := Axis.NcToPlc.StateDWord.2;
+
+(* Status coupling *)
+bCoupled := Axis.NcToPlc.CoupleState = 2
+		      OR Axis.NcToPlc.CoupleState = 3;]]></ST>
+    </Implementation>
+    <Action Name="A_Error" Id="{6324b530-ac39-4b3d-9689-279b541652b6}">
+      <Implementation>
+        <ST><![CDATA[
+bError := SEL(pDrive^.bDriveAF, fbMcPower.Error, FALSE)
+		OR fbMcReset.bError
+	  	OR fbMcSetPosition.Error
+		OR fbMcGearIn.Error
+		OR fbMcGearOut.Error
+		OR fbSetpointPositon.Error
+		OR Axis.NcToPlc.StateDWord.31
+		OR MasterAxis.NcToPlc.StateDWord.31;
+
+bErrorInit := bGetLimitsError
+		      OR bSetLimitsError;]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_GetLimits" Id="{8e141e23-6a99-48de-bf1d-05bb6cb7bdc9}">
+      <Implementation>
+        <ST><![CDATA[
+(* Status hardware limit switch *)
+bHardLimitMaxExceeded := bHWSignalLimitMax;						(* Position limit switch maximum is exceeded *)
+bHardLimitMinExceeded := bHWSignalLimitMin;						(* Position limit switch minimum is exceeded *)
+
+(* Status software limit switch *)
+bSoftLimitMaxExceeded := Axis.NcToPlc.StateDWord.27 AND lrSoftLimitMax <> lrSoftLimitMin;			(* Position limit switch maximum is exceeded *)
+bSoftLimitMinExceeded := Axis.NcToPlc.StateDWord.26 AND  lrSoftLimitMax <> lrSoftLimitMin;			(* Position limit switch minimum is exceeded *)
+
+(* Get limits execute *)
+tofRepeateGetLimitsInit(
+	IN := bGetLimitsError,
+	PT := tRepeateInit
+);
+
+tonFirstInit(
+	IN:= bTerminalOK
+		 AND NOT bGetLimitsInitDone,
+	PT := tFirstInit
+);
+
+bGetLimitsExe := (tonFirstInit.Q
+				  OR bGetLimitsInitDone)
+				  AND NOT tofRepeateGetLimitsInit.Q;
+    
+(* Get axis limits *)
+CASE etAxisGetLimits OF
+
+	ET_BOSCH_AxisGetLimits.eWaitExecute:
+		IF bGetLimitsExe
+		   AND bTerminalOK
+		THEN
+			unGetValueWatchdog := 0;
+			bGetLimitsDone := FALSE;                                	(* Program done *)
+			bGetLimitsBusy := FALSE;                                 	(* Program not busy *)
+			bGetLimitsError := FALSE;                                 	(* Program not error *)
+			udnGetLimitsErrorNo := 0;                                 	(* Error number *)
+			
+			fbMcReadParameter(
+				Enable:= FALSE,
+				Axis := Axis
+			);
+
+			fbAdsRead(
+				NETID := '',
+				READ := FALSE,
+				TMOUT := tAdsTimeOut
+			 );
+			
+			etAxisGetLimits := ET_BOSCH_AxisGetLimits.eReadVeloMax;         		(* Next step *)
+		END_IF
+
+	ET_BOSCH_AxisGetLimits.eReadVeloMax:
+		fbMcReadParameter.Enable := TRUE;
+		fbMcReadParameter.ParameterNumber:= MaxVelocityAppl;
+
+		unGetValueWatchdog := unGetValueWatchdog + 1;
+		
+		IF fbMcReadParameter.Busy
+		THEN
+			etAxisGetLimits := ET_BOSCH_AxisGetLimits.eWfReadVeloMax;         		(* Next step *)
+
+		ELSIF fbMcReadParameter.Error
+			  OR unGetValueWatchdog > unWatchdogMax
+		THEN
+			fbMcReadParameter(
+				Enable:= FALSE,
+				Axis := Axis
+			);
+
+			udnGetLimitsErrorNo := 1;                                 	(* Error number *)
+			
+			etAxisGetLimits := ET_BOSCH_AxisGetLimits.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_AxisGetLimits.eWfReadVeloMax:
+		IF NOT fbMcReadParameter.Busy
+		     AND NOT fbMcReadParameter.Error
+		THEN
+			fbMcReadParameter(
+				Enable:= FALSE,
+				Axis := Axis
+			);
+
+			lrVeloLimitMax := fbMcReadParameter.Value;
+
+			unGetValueWatchdog := 0;
+			
+			etAxisGetLimits := ET_BOSCH_AxisGetLimits.eReadAccMax;         		(* Next step *)
+
+		ELSIF fbMcReadParameter.Error
+			  OR unGetValueWatchdog > unWatchdogMax
+		THEN
+			fbMcReadParameter(
+				Enable:= FALSE,
+				Axis := Axis
+			);
+
+			udnGetLimitsErrorNo := 2;                                 	(* Error number *)
+			
+			etAxisGetLimits := ET_BOSCH_AxisGetLimits.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_AxisGetLimits.eReadAccMax:
+		fbMcReadParameter.Enable := TRUE;
+		fbMcReadParameter.ParameterNumber:= MaxAccelerationAppl;
+
+		unGetValueWatchdog := unGetValueWatchdog + 1;
+		
+		IF fbMcReadParameter.Busy
+		THEN
+			etAxisGetLimits := ET_BOSCH_AxisGetLimits.eWfReadAccMax;         		(* Next step *)
+
+		ELSIF fbMcReadParameter.Error
+			  OR unGetValueWatchdog > unWatchdogMax
+		THEN
+			fbMcReadParameter(
+				Enable:= FALSE,
+				Axis := Axis
+			);
+
+			udnGetLimitsErrorNo := 3;                                 	(* Error number *)
+			
+			etAxisGetLimits := ET_BOSCH_AxisGetLimits.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_AxisGetLimits.eWfReadAccMax:
+		IF NOT fbMcReadParameter.Busy
+		     AND NOT fbMcReadParameter.Error
+		THEN
+			fbMcReadParameter(
+				Enable:= FALSE,
+				Axis := Axis
+			);
+
+			lrAccLimitMax := fbMcReadParameter.Value;
+
+			unGetValueWatchdog := 0;
+			
+			etAxisGetLimits := ET_BOSCH_AxisGetLimits.eReadDecMax;         		(* Next step *)
+
+		ELSIF fbMcReadParameter.Error
+			  OR unGetValueWatchdog > unWatchdogMax
+		THEN
+			fbMcReadParameter(
+				Enable:= FALSE,
+				Axis := Axis
+			);
+
+			udnGetLimitsErrorNo := 4;                                 	(* Error number *)
+			
+			etAxisGetLimits := ET_BOSCH_AxisGetLimits.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_AxisGetLimits.eReadDecMax:
+		fbMcReadParameter.Enable := TRUE;
+		fbMcReadParameter.ParameterNumber:= MaxDecelerationAppl;
+
+		unGetValueWatchdog := unGetValueWatchdog + 1;
+		
+		IF fbMcReadParameter.Busy
+		THEN
+			etAxisGetLimits := ET_BOSCH_AxisGetLimits.eWfReadDecMax;         		(* Next step *)
+
+		ELSIF fbMcReadParameter.Error
+			  OR unGetValueWatchdog > unWatchdogMax
+		THEN
+			fbMcReadParameter(
+				Enable:= FALSE,
+				Axis := Axis
+			);
+
+			udnGetLimitsErrorNo := 5;                                 	(* Error number *)
+			
+			etAxisGetLimits := ET_BOSCH_AxisGetLimits.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_AxisGetLimits.eWfReadDecMax:
+		IF NOT fbMcReadParameter.Busy
+		     AND NOT fbMcReadParameter.Error
+		THEN
+			fbMcReadParameter(
+				Enable:= FALSE,
+				Axis := Axis
+			);
+
+			lrDecLimitMax := fbMcReadParameter.Value;
+
+			unGetValueWatchdog := 0;
+			
+			etAxisGetLimits := ET_BOSCH_AxisGetLimits.eReadJerkMax;         		(* Next step *)
+
+		ELSIF fbMcReadParameter.Error
+			  OR unGetValueWatchdog > unWatchdogMax
+		THEN
+			fbMcReadParameter(
+				Enable:= FALSE,
+				Axis := Axis
+			);
+
+			udnGetLimitsErrorNo := 6;                                 	(* Error number *)
+			
+			etAxisGetLimits := ET_BOSCH_AxisGetLimits.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_AxisGetLimits.eReadJerkMax:
+		fbMcReadParameter.Enable := TRUE;
+		fbMcReadParameter.ParameterNumber:= MaxJerkAppl;
+
+		unGetValueWatchdog := unGetValueWatchdog + 1;
+		
+		IF fbMcReadParameter.Busy
+		THEN
+			etAxisGetLimits := ET_BOSCH_AxisGetLimits.eWfReadJerkMax;         		(* Next step *)
+
+		ELSIF fbMcReadParameter.Error
+			  OR unGetValueWatchdog > unWatchdogMax
+		THEN
+			fbMcReadParameter(
+				Enable:= FALSE,
+				Axis := Axis
+			);
+
+			udnGetLimitsErrorNo := 7;                                 	(* Error number *)
+			
+			etAxisGetLimits := ET_BOSCH_AxisGetLimits.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_AxisGetLimits.eWfReadJerkMax:
+		IF NOT fbMcReadParameter.Busy
+		     AND NOT fbMcReadParameter.Error
+		THEN
+			fbMcReadParameter(
+				Enable:= FALSE,
+				Axis := Axis
+			);
+
+			lrJerkLimitMax := fbMcReadParameter.Value;
+
+			unGetValueWatchdog := 0;
+			
+			etAxisGetLimits := ET_BOSCH_AxisGetLimits.eReadSoftLimitMax;         		(* Next step *)
+
+		ELSIF fbMcReadParameter.Error
+			  OR unGetValueWatchdog > unWatchdogMax
+		THEN
+			fbMcReadParameter(
+				Enable:= FALSE,
+				Axis := Axis
+			);
+
+			udnGetLimitsErrorNo := 8;                                 	(* Error number *)
+			
+			etAxisGetLimits := ET_BOSCH_AxisGetLimits.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_AxisGetLimits.eReadSoftLimitMax:
+		fbMcReadParameter.Enable := TRUE;
+		fbMcReadParameter.ParameterNumber:= SWLimitPos;
+
+		unGetValueWatchdog := unGetValueWatchdog + 1;
+		
+		IF fbMcReadParameter.Busy
+		THEN
+			etAxisGetLimits := ET_BOSCH_AxisGetLimits.eWfReadSoftLimitMax;         		(* Next step *)
+
+		ELSIF fbMcReadParameter.Error
+			  OR unGetValueWatchdog > unWatchdogMax
+		THEN
+			fbMcReadParameter(
+				Enable:= FALSE,
+				Axis := Axis
+			);
+
+			udnGetLimitsErrorNo := 9;                                 	(* Error number *)
+			
+			etAxisGetLimits := ET_BOSCH_AxisGetLimits.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_AxisGetLimits.eWfReadSoftLimitMax:
+		IF NOT fbMcReadParameter.Busy
+		     AND NOT fbMcReadParameter.Error
+		THEN
+			fbMcReadParameter(
+				Enable:= FALSE,
+				Axis := Axis
+			);
+
+			lrSoftLimitMax := fbMcReadParameter.Value;
+
+			unGetValueWatchdog := 0;
+			
+			etAxisGetLimits := ET_BOSCH_AxisGetLimits.eReadSoftLimitMin;         		(* Next step *)
+
+		ELSIF fbMcReadParameter.Error
+			  OR unGetValueWatchdog > unWatchdogMax
+		THEN
+			fbMcReadParameter(
+				Enable:= FALSE,
+				Axis := Axis
+			);
+
+			udnGetLimitsErrorNo := 10;                                 	(* Error number *)
+			
+			etAxisGetLimits := ET_BOSCH_AxisGetLimits.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_AxisGetLimits.eReadSoftLimitMin:
+		fbMcReadParameter.Enable := TRUE;
+		fbMcReadParameter.ParameterNumber := SWLimitNeg;
+
+		unGetValueWatchdog := unGetValueWatchdog + 1;
+		
+		IF fbMcReadParameter.Busy
+		THEN
+			etAxisGetLimits := ET_BOSCH_AxisGetLimits.eWfReadSoftLimitMin;         		(* Next step *)
+
+		ELSIF fbMcReadParameter.Error
+			  OR unGetValueWatchdog > unWatchdogMax
+		THEN
+			fbMcReadParameter(
+				Enable:= FALSE,
+				Axis := Axis
+			);
+
+			udnGetLimitsErrorNo := 11;                                 	(* Error number *)
+			
+			etAxisGetLimits := ET_BOSCH_AxisGetLimits.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_AxisGetLimits.eWfReadSoftLimitMin:
+		IF NOT fbMcReadParameter.Busy
+		     AND NOT fbMcReadParameter.Error
+		THEN
+			fbMcReadParameter(
+				Enable:= FALSE,
+				Axis := Axis
+			);
+
+			lrSoftLimitMin := fbMcReadParameter.Value;
+
+			unGetValueWatchdog := 0;
+			
+			etAxisGetLimits := ET_BOSCH_AxisGetLimits.eGetScalingFactor;         		(* Next step *)
+
+		ELSIF fbMcReadParameter.Error
+			  OR unGetValueWatchdog > unWatchdogMax
+		THEN
+			fbMcReadParameter(
+				Enable:= FALSE,
+				Axis := Axis
+			);
+
+			udnGetLimitsErrorNo := 12;                                 	(* Error number *)
+			
+			etAxisGetLimits := ET_BOSCH_AxisGetLimits.eError;         		(* Next step *)
+
+		END_IF
+		
+	ET_BOSCH_AxisGetLimits.eGetScalingFactor:
+		fbMcReadParameter.Enable := TRUE;
+		fbMcReadParameter.ParameterNumber := AxisEncoderScalingFactor;
+
+		unGetValueWatchdog := unGetValueWatchdog + 1;
+		
+		IF fbMcReadParameter.Busy
+		THEN
+			etAxisGetLimits := ET_BOSCH_AxisGetLimits.eWfGetScalingFactor;         		(* Next step *)
+
+		ELSIF fbMcReadParameter.Error
+			  OR unGetValueWatchdog > unWatchdogMax
+		THEN
+			fbMcReadParameter(
+				Enable:= FALSE,
+				Axis := Axis
+			);
+
+			udnGetLimitsErrorNo := 13;                                 	(* Error number *)
+			
+			etAxisGetLimits := ET_BOSCH_AxisGetLimits.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_AxisGetLimits.eWfGetScalingFactor:
+		IF NOT fbMcReadParameter.Busy
+		     AND NOT fbMcReadParameter.Error
+		THEN
+			fbMcReadParameter(
+				Enable:= FALSE,
+				Axis := Axis
+			);
+
+			pDrive^.lrScalingFactor := fbMcReadParameter.Value;
+
+			unGetValueWatchdog := 0;
+			
+			etAxisGetLimits := ET_BOSCH_AxisGetLimits.eDone;         		(* Next step *)
+
+		ELSIF fbMcReadParameter.Error
+			  OR unGetValueWatchdog > unWatchdogMax
+		THEN
+			fbMcReadParameter(
+				Enable:= FALSE,
+				Axis := Axis
+			);
+
+			udnGetLimitsErrorNo := 14;                                 	(* Error number *)
+			
+			etAxisGetLimits := ET_BOSCH_AxisGetLimits.eError;         		(* Next step *)
+
+		END_IF	
+
+	ET_BOSCH_AxisGetLimits.eDone:
+		bGetLimitsDone := TRUE;                                     		(* Program done, in position *)
+		bGetLimitsBusy := FALSE;                                     		(* Program not busy *)
+		bGetLimitsInitDone := TRUE;                             		(* Program initialization done *)
+
+		etAxisGetLimits := ET_BOSCH_AxisGetLimits.eNoExecute;            	(* Next step *)
+
+	ET_BOSCH_AxisGetLimits.eError:
+		bGetLimitsDone := FALSE;                                     		(* Program done, in position *)
+		bGetLimitsError := TRUE;                                     		(* Program error *)
+		bGetLimitsBusy := FALSE;                                     		(* Program not busy *)
+		bGetLimitsInitDone := FALSE;                             		(* Program initialization done *)
+
+		etAxisGetLimits := ET_BOSCH_AxisGetLimits.eNoExecute;           	(* Next step *)
+
+	ET_BOSCH_AxisGetLimits.eNoExecute:
+		IF NOT bGetLimitsExe
+		THEN
+			bGetLimitsDone := FALSE;                                     		(* Program done, in position *)
+			bGetLimitsError := FALSE;                                     		(* Program error *)
+			bGetLimitsBusy := FALSE;                                     		(* Program not busy *)
+
+			etAxisGetLimits := ET_BOSCH_AxisGetLimits.eWaitExecute;       (* Next step *)
+		END_IF
+
+END_CASE;
+
+fbMcReadParameter(
+	ReadMode := READMODE_ONCE,
+	Axis := Axis
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_MCGearCoupling" Id="{7a9a8ba1-087f-472b-a1ac-63114fd9cd5e}">
+      <Implementation>
+        <ST><![CDATA[
+(* The function block MC_GearInDyn couples a slave axis to a master axis using a floating point gear ratio. The gear ratio can be dynamically modified every PLC cycle as long as the Execute input is TRUE *)
+IF udnRatioDenominator = 0
+THEN
+	fbMCGearIn.GearRatio := 0;
+ELSE
+	fbMCGearIn.GearRatio:= dnRatioNumerator / udnRatioDenominator;
+END_IF
+
+
+IF NOT bCMDInterrupt
+THEN
+
+	(* The function block MC_GearIn used to coupling with ratio between the velocity of the slave and master axis  *)
+	fbMCGearIn(
+		Enable := bExeGearIn,
+		Acceleration := lrAcceleration,
+		Deceleration := lrDeceleration,
+		Jerk := lrJerk,
+		Options := ,
+		Master := MasterAxis,
+		Slave := Axis
+	);
+	
+	(* The function block MC_GearOut used to decoupling the Slave from the Master axis.  *)
+	fbMCGearOut(
+		Execute := bExeGearOut,
+		Slave := Axis,
+	);
+
+	(* Weiter für die GearIn und GearOut entwickeln*)
+	(*Axis.bCmdInterrupted := FALSE;*)
+
+ELSE
+	(* The function block MC_GearIn used to coupling with ratio between the velocity of the slave and master axis  *)
+	fbMCGearIn(
+		Enable := FALSE,
+		Master := MasterAxis,
+		Slave := Axis
+	);
+
+	(* The function block MC_GearOut used to decoupling the Slave from the Master axis.  *)
+	fbMCGearOut(
+		Execute := FALSE,
+		Slave := Axis
+	);
+
+	(*Axis.bCmdInterrupted := TRUE;*)
+END_IF
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_MCPower" Id="{ff0d5f47-7ffa-43b1-bca0-c40f43399191}">
+      <Implementation>
+        <ST><![CDATA[
+tofRegulatorOn(
+	IN := bRegulatorOn,
+	PT := tRegulatorOffDelay
+);
+
+fbMCPower(
+	Enable := tofRegulatorOn.Q
+			  OR Axis.Status.Moving,
+	Enable_Positive := (bRegulatorOn
+					AND NOT bHWSignalLimitMax)                          			(* HW limit switch maximum *)
+					OR Axis.NcToPlc.HomingState <> 0,
+	Enable_Negative := (bRegulatorOn
+					   AND NOT bHWSignalLimitMin)                         			(* HW Limit switch minimum *)
+					   OR Axis.NcToPlc.HomingState <> 0,
+	Override := lrOverride,
+	Axis := Axis,
+	Status => bStatus,
+);
+
+IF bStatus
+   AND pDrive^.bDriveAF
+THEN
+	tonStatusDelay.IN := TRUE;
+ELSIF NOT pDrive^.bDriveAF
+THEN
+	tonStatusDelay.IN := FALSE;	
+END_IF
+
+tonStatusDelay(
+	PT := SEL(etMachineMode = ET_MachineMode_eManual, tStatusDelay, T#0S),
+	Q => bStatusDelay
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_MCReset" Id="{112fc709-75a7-4c2b-a1dd-af6412b03462}">
+      <Implementation>
+        <ST><![CDATA[
+rtNoEStop(CLK := bNoEStop);
+
+fbMCReset(
+	bExecute := rtNoEStop.Q
+				OR bReset
+			    OR bExeReset,
+	pDrive := pDrive,
+	Axis := Axis,
+	bDone => bReseted
+);
+ 
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_MCSetPosition" Id="{b6d22ce2-a705-41f9-a006-a36b6b245949}">
+      <Implementation>
+        <ST><![CDATA[
+fbMCSetPosition(
+	Execute := bExeSetPos,
+	Position := lrSetPosition,
+	Mode := FALSE,
+	Options := ,
+	Axis := Axis
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_SetLimits" Id="{ea069010-e186-422f-b978-b227cc2257bc}">
+      <Implementation>
+        <ST><![CDATA[
+(* Set limits execute *)
+tofRepeateSetLimitsInit(
+	IN := bSetLimitsError,
+	PT := tRepeateInit
+);
+
+bSetLimitsExe := SEL(
+						bSetLimitsInitDone,
+						NOT bSetLimitsInitError,
+						NOT bSetLimitsInitError
+						AND (lrPositionBias <> lrPositionBiasCache
+							   OR lrSoftLimitMaxCache <> lrSoftLimitMax
+							   OR lrSoftLimitMinCache <> lrSoftLimitMin)
+					);
+
+(* Set axis limits *)
+CASE etAxisSetLimits OF
+
+	ET_BOSCH_AxisSetLimits.eWaitExecute:
+		IF bSetLimitsExe
+		   AND bTerminalOK
+		   AND bNotMoving
+		   AND bGetLimitsDone
+		THEN
+			unSetValueWatchdog := 0;
+			bSetLimitsDone := FALSE;                                	(* Program done *)
+			bSetLimitsBusy := FALSE;                                 	(* Program not busy *)
+			bSetLimitsError := FALSE;                                	 	(* Program not error *)
+			udnSetLimitsErrorNo := 0;                                 		(* Error number *)
+
+			fbMcWriteParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			fbMcWriteBoolParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+	
+			fbAdsWrite(
+				NETID := '',
+				WRITE := FALSE,
+				TMOUT := tAdsTimeOut
+			 );
+
+			etAxisSetLimits := ET_BOSCH_AxisSetLimits.eSetReferenceSystem;         		(* Next step *)
+
+		END_IF;
+
+	ET_BOSCH_AxisSetLimits.eSetReferenceSystem:
+		dwReferenceSystem := BOOL_TO_DWORD(bWithAbsoluteEncoder);
+		
+		unSetValueWatchdog := unSetValueWatchdog + 1;
+		
+		fbAdsWrite(
+			PORT := 501,
+			WRITE := TRUE,
+			IDXGRP := dwIdxGrNCEncPara + Axis.NcToPlc.AxisId,
+			IDXOFFS := 16#00000019,
+			LEN := SIZEOF(dwReferenceSystem),
+			SRCADDR := ADR(dwReferenceSystem)
+		);
+		
+		IF NOT fbAdsWrite.Busy
+		   AND NOT fbAdsWrite.ERR
+		THEN
+			fbAdsWrite(
+				WRITE := FALSE,
+			);
+
+			unSetValueWatchdog := 0;
+			
+			etAxisSetLimits := ET_BOSCH_AxisSetLimits.eSetPositionBias;         		(* Next step *)
+
+		ELSIF fbAdsWrite.ERR
+			  OR unSetValueWatchdog > unWatchdogMax
+		THEN
+			fbAdsWrite(
+				WRITE := FALSE,
+			);
+
+			etAxisSetLimits := ET_BOSCH_AxisSetLimits.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_AxisSetLimits.eSetPositionBias:
+		lrPositionBiasCache := lrPositionBias;
+
+		unSetValueWatchdog := unSetValueWatchdog + 1;
+		
+		IF bWithAbsoluteEncoder
+		THEN
+			fbAdsWrite(
+				PORT := 501,
+				WRITE := TRUE,
+				IDXGRP := dwIdxGrNCEncPara + Axis.NcToPlc.AxisId,
+				IDXOFFS := 16#00000007,
+				LEN := SIZEOF(lrPositionBiasCache),
+				SRCADDR := ADR(lrPositionBiasCache)
+			);
+		
+			IF NOT fbAdsWrite.Busy
+				 AND NOT fbAdsWrite.ERR
+			THEN
+				fbAdsWrite(
+					WRITE := FALSE,
+				);
+	
+				unSetValueWatchdog := 0;
+				
+				etAxisSetLimits := ET_BOSCH_AxisSetLimits.eSetLimitPos;         		(* Next step *)
+	
+			ELSIF fbAdsWrite.ERR
+				  OR unSetValueWatchdog > unWatchdogMax
+			THEN
+				fbAdsWrite(
+					WRITE := FALSE,
+				);
+
+				etAxisSetLimits := ET_BOSCH_AxisSetLimits.eError;         		(* Next step *)
+	
+			END_IF
+		ELSE
+			etAxisSetLimits := ET_BOSCH_AxisSetLimits.eSetLimitPos;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_AxisSetLimits.eSetLimitPos:
+		lrSoftLimitMaxCache := lrSoftLimitMax;
+
+		fbMcWriteParameter.Execute := TRUE;
+		fbMcWriteParameter.ParameterNumber := SWLimitPos;
+		fbMcWriteParameter.Value := lrSoftLimitMax;
+
+		unSetValueWatchdog := unSetValueWatchdog + 1;
+		
+		IF fbMcWriteParameter.Busy
+		THEN
+			etAxisSetLimits := ET_BOSCH_AxisSetLimits.eWfSetLimitPos;         		(* Next step *)
+
+		ELSIF fbMcWriteParameter.Error
+			  OR unSetValueWatchdog > unWatchdogMax
+		THEN
+			fbMcWriteParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			etAxisSetLimits := ET_BOSCH_AxisSetLimits.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_AxisSetLimits.eWfSetLimitPos:
+		IF NOT fbMcWriteParameter.Busy
+		     AND NOT fbMcWriteParameter.Error
+		THEN
+			fbMcWriteParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			unSetValueWatchdog := 0;
+			
+			etAxisSetLimits := ET_BOSCH_AxisSetLimits.eSetLimitNeg;         		(* Next step *)
+
+		ELSIF fbMcWriteParameter.Error
+			  OR unSetValueWatchdog > unWatchdogMax
+		THEN
+			fbMcWriteParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			etAxisSetLimits := ET_BOSCH_AxisSetLimits.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_AxisSetLimits.eSetLimitNeg:
+		lrSoftLimitMinCache := lrSoftLimitMin;
+
+		fbMcWriteParameter.Execute := TRUE;
+		fbMcWriteParameter.ParameterNumber := SWLimitNeg;
+		fbMcWriteParameter.Value := lrSoftLimitMin;
+
+		unSetValueWatchdog := unSetValueWatchdog + 1;
+		
+		IF fbMcWriteParameter.Busy
+		THEN
+			etAxisSetLimits := ET_BOSCH_AxisSetLimits.eWfSetLimitNeg;         		(* Next step *)
+
+		ELSIF fbMcWriteParameter.Error
+			  OR unSetValueWatchdog > unWatchdogMax
+		THEN
+			fbMcWriteParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			etAxisSetLimits := ET_BOSCH_AxisSetLimits.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_AxisSetLimits.eWfSetLimitNeg:
+		IF NOT fbMcWriteParameter.Busy
+		     AND NOT fbMcWriteParameter.Error
+		THEN
+			fbMcWriteParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			unSetValueWatchdog := 0;
+			
+			etAxisSetLimits := ET_BOSCH_AxisSetLimits.eEnableLimitPos;         		(* Next step *)
+
+		ELSIF fbMcWriteParameter.Error
+			  OR unSetValueWatchdog > unWatchdogMax
+		THEN
+			fbMcWriteParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			etAxisSetLimits := ET_BOSCH_AxisSetLimits.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_AxisSetLimits.eEnableLimitPos:
+		fbMcWriteBoolParameter.Execute := TRUE;
+		fbMcWriteBoolParameter.ParameterNumber := EnableLimitPos;
+		fbMcWriteBoolParameter.Value := lrSoftLimitMax <> lrSoftLimitMin;
+
+		unSetValueWatchdog := unSetValueWatchdog + 1;
+		
+		IF fbMcWriteBoolParameter.Busy
+		THEN
+			etAxisSetLimits := ET_BOSCH_AxisSetLimits.eWfEnableLimitPos;         		(* Next step *)
+
+		ELSIF fbMcWriteBoolParameter.Error
+			  OR unSetValueWatchdog > unWatchdogMax
+		THEN
+			fbMcWriteBoolParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			etAxisSetLimits := ET_BOSCH_AxisSetLimits.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_AxisSetLimits.eWfEnableLimitPos:
+		IF NOT fbMcWriteBoolParameter.Busy
+		     AND NOT fbMcWriteBoolParameter.Error
+		THEN
+			fbMcWriteBoolParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			unSetValueWatchdog := 0;
+			
+			etAxisSetLimits := ET_BOSCH_AxisSetLimits.eEnableLimitNeg;         		(* Next step *)
+
+		ELSIF fbMcWriteBoolParameter.Error
+			  OR unSetValueWatchdog > unWatchdogMax
+		THEN
+			fbMcWriteBoolParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			etAxisSetLimits := ET_BOSCH_AxisSetLimits.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_AxisSetLimits.eEnableLimitNeg:
+		fbMcWriteBoolParameter.Execute := TRUE;
+		fbMcWriteBoolParameter.ParameterNumber := EnableLimitNeg;
+		fbMcWriteBoolParameter.Value := lrSoftLimitMax <> lrSoftLimitMin;
+
+		unSetValueWatchdog := unSetValueWatchdog + 1;
+		
+		IF fbMcWriteBoolParameter.Busy
+		THEN
+			etAxisSetLimits := ET_BOSCH_AxisSetLimits.eWfEnableLimitNeg;         		(* Next step *)
+
+		ELSIF fbMcWriteBoolParameter.Error
+			  OR unSetValueWatchdog > unWatchdogMax
+		THEN
+			fbMcWriteBoolParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			etAxisSetLimits := ET_BOSCH_AxisSetLimits.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_AxisSetLimits.eWfEnableLimitNeg:
+		IF NOT fbMcWriteBoolParameter.Busy
+		     AND NOT fbMcWriteBoolParameter.Error
+		THEN
+			fbMcWriteBoolParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			unSetValueWatchdog := 0;
+			
+			etAxisSetLimits := ET_BOSCH_AxisSetLimits.eEnablePosLagMonitoring;         		(* Next step *)
+
+		ELSIF fbMcWriteBoolParameter.Error
+			  OR unSetValueWatchdog > unWatchdogMax
+		THEN
+			fbMcWriteBoolParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			etAxisSetLimits := ET_BOSCH_AxisSetLimits.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_AxisSetLimits.eEnablePosLagMonitoring:
+		fbMcWriteBoolParameter.Execute := TRUE;
+		fbMcWriteBoolParameter.ParameterNumber := EnablePosLagMonitoring;
+		fbMcWriteBoolParameter.Value := bPosLagMonitoringEn;
+
+		unSetValueWatchdog := unSetValueWatchdog + 1;
+		
+		IF fbMcWriteBoolParameter.Busy
+		THEN
+			etAxisSetLimits := ET_BOSCH_AxisSetLimits.eWfEnablePosLagMonitoring;         		(* Next step *)
+
+		ELSIF fbMcWriteBoolParameter.Error
+			  OR unSetValueWatchdog > unWatchdogMax
+		THEN
+			fbMcWriteBoolParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			etAxisSetLimits := ET_BOSCH_AxisSetLimits.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_AxisSetLimits.eWfEnablePosLagMonitoring:
+		IF NOT fbMcWriteBoolParameter.Busy
+		     AND NOT fbMcWriteBoolParameter.Error
+		THEN
+			fbMcWriteBoolParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			unSetValueWatchdog := 0;
+			
+			etAxisSetLimits := ET_BOSCH_AxisSetLimits.eDone;         		(* Next step *)
+
+		ELSIF fbMcWriteBoolParameter.Error
+			  OR unSetValueWatchdog > unWatchdogMax
+		THEN
+			fbMcWriteBoolParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			etAxisSetLimits := ET_BOSCH_AxisSetLimits.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_AxisSetLimits.eDone:
+		bSetLimitsDone := TRUE;                                     		(* Program done, in position *)
+		bSetLimitsBusy := FALSE;                                     		(* Program not busy *)
+		bSetLimitsInitDone := TRUE;                             		(* Program initialization done *)
+
+		etAxisSetLimits := ET_BOSCH_AxisSetLimits.eNoExecute;            	(* Next step *)
+
+	ET_BOSCH_AxisSetLimits.eError:
+		bSetLimitsDone := FALSE;                                     		(* Program done, in position *)
+		bSetLimitsError := TRUE;                                     		(* Program error *)
+		bSetLimitsBusy := FALSE;                                     		(* Program not busy *)
+		bSetLimitsInitDone := FALSE;                             		(* Program initialization done *)
+
+		etAxisSetLimits := ET_BOSCH_AxisSetLimits.eNoExecute;           	(* Next step *)
+
+	ET_BOSCH_AxisSetLimits.eNoExecute:
+		IF NOT bSetLimitsExe
+		THEN
+			bSetLimitsDone := FALSE;                                     		(* Program done, in position *)
+			bSetLimitsError := FALSE;                                     		(* Program error *)
+			bSetLimitsBusy := FALSE;                                     		(* Program not busy *)
+
+			etAxisSetLimits := ET_BOSCH_AxisSetLimits.eWaitExecute;       (* Next step *)
+		END_IF;
+
+END_CASE;
+
+fbMcWriteParameter(
+	Axis := Axis
+);
+
+fbMcWriteBoolParameter(
+	Axis := Axis
+);
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_SetpointPosition" Id="{415972ff-f847-41fa-b995-10e5ab57042a}">
+      <Implementation>
+        <ST><![CDATA[
+fbSetpointPositon.Options.ClearPositionLag := TRUE;
+
+fbSetpointPositon(
+	Execute := pDrive^.bDriveAF 
+			   AND NOT fbMCPower.Status
+			   AND NOT fbSetpointPositon.Done,
+	Position := DINT_TO_LREAL(pDrive^.stBoschToPlc.dnPositionFeedback1ValueS00051) * pDrive^.lrScalingFactor, 
+	Mode := FALSE,
+	Axis := Axis
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Utility" Id="{ea28118a-5677-4889-9ce6-84e7a4778bbb}">
+      <Implementation>
+        <ST><![CDATA[
+;]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_BOSCH_AxisController">
+      <LineId Id="128" Count="17" />
+      <LineId Id="147" Count="0" />
+      <LineId Id="470" Count="0" />
+      <LineId Id="148" Count="9" />
+      <LineId Id="471" Count="0" />
+      <LineId Id="158" Count="13" />
+      <LineId Id="329" Count="0" />
+      <LineId Id="172" Count="25" />
+    </LineIds>
+    <LineIds Name="FB_BOSCH_AxisController.A_Error">
+      <LineId Id="0" Count="5" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="6" Count="4" />
+    </LineIds>
+    <LineIds Name="FB_BOSCH_AxisController.A_GetLimits">
+      <LineId Id="0" Count="9" />
+      <LineId Id="539" Count="2" />
+      <LineId Id="536" Count="0" />
+      <LineId Id="535" Count="0" />
+      <LineId Id="521" Count="0" />
+      <LineId Id="526" Count="0" />
+      <LineId Id="520" Count="0" />
+      <LineId Id="523" Count="0" />
+      <LineId Id="527" Count="0" />
+      <LineId Id="542" Count="1" />
+      <LineId Id="551" Count="0" />
+      <LineId Id="548" Count="0" />
+      <LineId Id="546" Count="0" />
+      <LineId Id="14" Count="4" />
+      <LineId Id="534" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="552" Count="0" />
+      <LineId Id="20" Count="2" />
+      <LineId Id="567" Count="0" />
+      <LineId Id="23" Count="2" />
+      <LineId Id="27" Count="1" />
+      <LineId Id="428" Count="0" />
+      <LineId Id="430" Count="3" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="429" Count="0" />
+      <LineId Id="30" Count="5" />
+      <LineId Id="553" Count="0" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="554" Count="0" />
+      <LineId Id="37" Count="4" />
+      <LineId Id="610" Count="0" />
+      <LineId Id="42" Count="4" />
+      <LineId Id="568" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="569" Count="0" />
+      <LineId Id="48" Count="13" />
+      <LineId Id="570" Count="0" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="571" Count="0" />
+      <LineId Id="63" Count="2" />
+      <LineId Id="611" Count="0" />
+      <LineId Id="66" Count="4" />
+      <LineId Id="584" Count="0" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="585" Count="0" />
+      <LineId Id="72" Count="6" />
+      <LineId Id="555" Count="0" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="556" Count="0" />
+      <LineId Id="80" Count="4" />
+      <LineId Id="612" Count="0" />
+      <LineId Id="85" Count="4" />
+      <LineId Id="586" Count="0" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="587" Count="0" />
+      <LineId Id="91" Count="13" />
+      <LineId Id="572" Count="0" />
+      <LineId Id="105" Count="0" />
+      <LineId Id="573" Count="0" />
+      <LineId Id="106" Count="2" />
+      <LineId Id="613" Count="0" />
+      <LineId Id="109" Count="4" />
+      <LineId Id="588" Count="0" />
+      <LineId Id="114" Count="0" />
+      <LineId Id="589" Count="0" />
+      <LineId Id="115" Count="6" />
+      <LineId Id="557" Count="0" />
+      <LineId Id="122" Count="0" />
+      <LineId Id="558" Count="0" />
+      <LineId Id="123" Count="4" />
+      <LineId Id="614" Count="0" />
+      <LineId Id="128" Count="4" />
+      <LineId Id="590" Count="0" />
+      <LineId Id="133" Count="0" />
+      <LineId Id="591" Count="0" />
+      <LineId Id="134" Count="13" />
+      <LineId Id="574" Count="0" />
+      <LineId Id="148" Count="0" />
+      <LineId Id="575" Count="0" />
+      <LineId Id="149" Count="2" />
+      <LineId Id="615" Count="0" />
+      <LineId Id="152" Count="4" />
+      <LineId Id="592" Count="0" />
+      <LineId Id="157" Count="0" />
+      <LineId Id="593" Count="0" />
+      <LineId Id="158" Count="6" />
+      <LineId Id="559" Count="0" />
+      <LineId Id="165" Count="0" />
+      <LineId Id="560" Count="0" />
+      <LineId Id="166" Count="4" />
+      <LineId Id="616" Count="0" />
+      <LineId Id="171" Count="4" />
+      <LineId Id="594" Count="0" />
+      <LineId Id="176" Count="0" />
+      <LineId Id="595" Count="0" />
+      <LineId Id="177" Count="13" />
+      <LineId Id="576" Count="0" />
+      <LineId Id="191" Count="0" />
+      <LineId Id="577" Count="0" />
+      <LineId Id="192" Count="2" />
+      <LineId Id="617" Count="0" />
+      <LineId Id="195" Count="4" />
+      <LineId Id="596" Count="0" />
+      <LineId Id="200" Count="0" />
+      <LineId Id="597" Count="0" />
+      <LineId Id="201" Count="6" />
+      <LineId Id="561" Count="0" />
+      <LineId Id="208" Count="0" />
+      <LineId Id="562" Count="0" />
+      <LineId Id="209" Count="4" />
+      <LineId Id="618" Count="0" />
+      <LineId Id="214" Count="4" />
+      <LineId Id="598" Count="0" />
+      <LineId Id="219" Count="0" />
+      <LineId Id="599" Count="0" />
+      <LineId Id="220" Count="13" />
+      <LineId Id="578" Count="0" />
+      <LineId Id="234" Count="0" />
+      <LineId Id="579" Count="0" />
+      <LineId Id="235" Count="2" />
+      <LineId Id="619" Count="0" />
+      <LineId Id="238" Count="4" />
+      <LineId Id="600" Count="0" />
+      <LineId Id="243" Count="0" />
+      <LineId Id="601" Count="0" />
+      <LineId Id="244" Count="6" />
+      <LineId Id="563" Count="0" />
+      <LineId Id="251" Count="0" />
+      <LineId Id="564" Count="0" />
+      <LineId Id="252" Count="4" />
+      <LineId Id="620" Count="0" />
+      <LineId Id="257" Count="4" />
+      <LineId Id="602" Count="0" />
+      <LineId Id="262" Count="0" />
+      <LineId Id="603" Count="0" />
+      <LineId Id="263" Count="13" />
+      <LineId Id="580" Count="0" />
+      <LineId Id="277" Count="0" />
+      <LineId Id="581" Count="0" />
+      <LineId Id="278" Count="2" />
+      <LineId Id="621" Count="0" />
+      <LineId Id="281" Count="4" />
+      <LineId Id="604" Count="0" />
+      <LineId Id="286" Count="0" />
+      <LineId Id="605" Count="0" />
+      <LineId Id="287" Count="2" />
+      <LineId Id="463" Count="0" />
+      <LineId Id="479" Count="2" />
+      <LineId Id="565" Count="0" />
+      <LineId Id="482" Count="0" />
+      <LineId Id="566" Count="0" />
+      <LineId Id="483" Count="4" />
+      <LineId Id="622" Count="0" />
+      <LineId Id="488" Count="4" />
+      <LineId Id="606" Count="0" />
+      <LineId Id="493" Count="0" />
+      <LineId Id="607" Count="0" />
+      <LineId Id="494" Count="13" />
+      <LineId Id="582" Count="0" />
+      <LineId Id="508" Count="0" />
+      <LineId Id="583" Count="0" />
+      <LineId Id="509" Count="2" />
+      <LineId Id="623" Count="0" />
+      <LineId Id="512" Count="4" />
+      <LineId Id="608" Count="0" />
+      <LineId Id="517" Count="0" />
+      <LineId Id="609" Count="0" />
+      <LineId Id="518" Count="1" />
+      <LineId Id="465" Count="0" />
+      <LineId Id="476" Count="0" />
+      <LineId Id="291" Count="3" />
+      <LineId Id="296" Count="7" />
+      <LineId Id="306" Count="18" />
+    </LineIds>
+    <LineIds Name="FB_BOSCH_AxisController.A_MCGearCoupling">
+      <LineId Id="0" Count="50" />
+    </LineIds>
+    <LineIds Name="FB_BOSCH_AxisController.A_MCPower">
+      <LineId Id="0" Count="18" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="30" Count="1" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="22" Count="2" />
+    </LineIds>
+    <LineIds Name="FB_BOSCH_AxisController.A_MCReset">
+      <LineId Id="13" Count="1" />
+      <LineId Id="0" Count="2" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="4" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="5" Count="2" />
+      <LineId Id="10" Count="1" />
+    </LineIds>
+    <LineIds Name="FB_BOSCH_AxisController.A_MCSetPosition">
+      <LineId Id="0" Count="7" />
+    </LineIds>
+    <LineIds Name="FB_BOSCH_AxisController.A_SetLimits">
+      <LineId Id="0" Count="1" />
+      <LineId Id="479" Count="4" />
+      <LineId Id="495" Count="6" />
+      <LineId Id="478" Count="0" />
+      <LineId Id="12" Count="5" />
+      <LineId Id="476" Count="0" />
+      <LineId Id="546" Count="0" />
+      <LineId Id="502" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="503" Count="0" />
+      <LineId Id="19" Count="26" />
+      <LineId Id="399" Count="0" />
+      <LineId Id="504" Count="1" />
+      <LineId Id="418" Count="0" />
+      <LineId Id="421" Count="4" />
+      <LineId Id="419" Count="0" />
+      <LineId Id="416" Count="1" />
+      <LineId Id="435" Count="5" />
+      <LineId Id="522" Count="0" />
+      <LineId Id="441" Count="0" />
+      <LineId Id="523" Count="0" />
+      <LineId Id="442" Count="2" />
+      <LineId Id="534" Count="0" />
+      <LineId Id="445" Count="6" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="87" Count="2" />
+      <LineId Id="506" Count="0" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="507" Count="0" />
+      <LineId Id="91" Count="1" />
+      <LineId Id="428" Count="0" />
+      <LineId Id="430" Count="4" />
+      <LineId Id="429" Count="0" />
+      <LineId Id="426" Count="1" />
+      <LineId Id="452" Count="6" />
+      <LineId Id="520" Count="1" />
+      <LineId Id="459" Count="2" />
+      <LineId Id="535" Count="0" />
+      <LineId Id="462" Count="3" />
+      <LineId Id="519" Count="0" />
+      <LineId Id="467" Count="1" />
+      <LineId Id="112" Count="4" />
+      <LineId Id="137" Count="6" />
+      <LineId Id="508" Count="0" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="509" Count="0" />
+      <LineId Id="145" Count="4" />
+      <LineId Id="536" Count="0" />
+      <LineId Id="150" Count="17" />
+      <LineId Id="524" Count="0" />
+      <LineId Id="168" Count="0" />
+      <LineId Id="525" Count="0" />
+      <LineId Id="169" Count="2" />
+      <LineId Id="537" Count="0" />
+      <LineId Id="172" Count="15" />
+      <LineId Id="510" Count="0" />
+      <LineId Id="188" Count="0" />
+      <LineId Id="511" Count="0" />
+      <LineId Id="189" Count="4" />
+      <LineId Id="538" Count="0" />
+      <LineId Id="194" Count="17" />
+      <LineId Id="526" Count="0" />
+      <LineId Id="212" Count="0" />
+      <LineId Id="527" Count="0" />
+      <LineId Id="213" Count="2" />
+      <LineId Id="539" Count="0" />
+      <LineId Id="216" Count="13" />
+      <LineId Id="512" Count="0" />
+      <LineId Id="230" Count="0" />
+      <LineId Id="513" Count="0" />
+      <LineId Id="231" Count="4" />
+      <LineId Id="540" Count="0" />
+      <LineId Id="236" Count="17" />
+      <LineId Id="528" Count="0" />
+      <LineId Id="254" Count="0" />
+      <LineId Id="529" Count="0" />
+      <LineId Id="255" Count="2" />
+      <LineId Id="541" Count="0" />
+      <LineId Id="258" Count="13" />
+      <LineId Id="514" Count="0" />
+      <LineId Id="272" Count="0" />
+      <LineId Id="515" Count="0" />
+      <LineId Id="273" Count="4" />
+      <LineId Id="542" Count="0" />
+      <LineId Id="278" Count="17" />
+      <LineId Id="530" Count="0" />
+      <LineId Id="296" Count="0" />
+      <LineId Id="531" Count="0" />
+      <LineId Id="297" Count="2" />
+      <LineId Id="543" Count="0" />
+      <LineId Id="300" Count="13" />
+      <LineId Id="516" Count="0" />
+      <LineId Id="314" Count="0" />
+      <LineId Id="517" Count="0" />
+      <LineId Id="315" Count="4" />
+      <LineId Id="544" Count="0" />
+      <LineId Id="320" Count="17" />
+      <LineId Id="532" Count="0" />
+      <LineId Id="338" Count="0" />
+      <LineId Id="533" Count="0" />
+      <LineId Id="339" Count="2" />
+      <LineId Id="545" Count="0" />
+      <LineId Id="342" Count="13" />
+      <LineId Id="357" Count="7" />
+      <LineId Id="366" Count="21" />
+      <LineId Id="392" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_BOSCH_AxisController.A_SetpointPosition">
+      <LineId Id="37" Count="0" />
+      <LineId Id="42" Count="8" />
+      <LineId Id="27" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_BOSCH_AxisController.A_Utility">
+      <LineId Id="0" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

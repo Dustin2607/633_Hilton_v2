@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_BOSCH_AxisGetLimits" Id="{8ce03f63-3965-4297-b63f-9a415dc230da}">
+    <Declaration><![CDATA[TYPE ET_BOSCH_AxisGetLimits :
+(
+	eWaitExecute := 0,
+	eReadVeloMax,
+	eWfReadVeloMax,
+	eReadAccMax,
+	eWfReadAccMax,
+	eReadDecMax,
+	eWfReadDecMax,
+	eReadJerkMax,
+	eWfReadJerkMax,
+	eReadSoftLimitMax,
+	eWfReadSoftLimitMax,
+	eReadSoftLimitMin,
+	eWfReadSoftLimitMin,
+	eGetScalingFactor,
+	eWfGetScalingFactor,
+	eDone := 197,
+	eError := 198,
+	eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

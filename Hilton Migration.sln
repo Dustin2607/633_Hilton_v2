@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.35116.124
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{B1E792BE-AA5F-4E3C-8C82-674BF9C0715B}") = "Hilton Migration", "Hilton Migration\Hilton Migration.tsproj", "{8546310E-61A9-44FB-A4FE-FF0603998963}"
 EndProject
-Project("{FE7A1B72-C5B7-4D7C-BB7D-76384D4DE8E1}") = "TC3HMI", "..\TC3HMI\TC3HMI\TC3HMI.hmiproj", "{D1D8DE2F-1CAF-4989-AED7-FD64F6AF9BF5}"
+Project("{FE7A1B72-C5B7-4D7C-BB7D-76384D4DE8E1}") = "TC3HMI", "TC3HMI\TC3HMI\TC3HMI.hmiproj", "{D1D8DE2F-1CAF-4989-AED7-FD64F6AF9BF5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

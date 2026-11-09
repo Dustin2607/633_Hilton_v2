@@ -1,0 +1,107 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_ForceController_1" Id="{664dcb02-8d9c-4fa5-a0a1-f0de3f1b6b98}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ForceController_1
+(*
+
+The function block used to 
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			17.02.2016
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable					:BOOL;					(* Signal FB enable *)
+	bControllerOn				:BOOL;					(* Controler on *)
+	lrVeloKp					:LREAL := 0.1;				(* Kp Proportionalfaktor, deltaF x Kp -> v *)
+	lrVeloTi					:LREAL := 10000;			(* Ti Integrationsfaktor*)
+	lrPreCtrlVelo				:LREAL := 0.01;			(* Feedforward velocity precontrol wieghting =  0..1 *)
+	lrPVForce				:LREAL;					(* Process variable of force *)
+	lrSPForce				:LREAL;					(* Set point of force *)
+	lrMaxForce				:LREAL;					(* Maximum force *)
+	lrDeltaMax				:LREAL := 0.01;
+	lrVeloMax				:LREAL := 10.0;			(* Maximum velocity [%] *)
+	lrVeloMin				:LREAL := 0.0;				(* Minimum velocity [%] *)
+	lrTaskCycle				:LREAL;					(* Task cycle *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	lrCVVelo					:LREAL;					(* Controller value of velocity [%] *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbActForceFilter				:FB_ValueFilter;					(* Actual position filter *)
+	fbCtrlPID						:FB_CtrlPID;
+
+END_VAR
+VAR CONSTANT
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+	lrCVVelo := 100;
+	RETURN;
+END_IF
+
+(* Current force value filtering *)
+fbActForceFilter(
+	bEnable := TRUE,
+	lrInSignal := lrPVForce,
+	lrDeltaMax := lrDeltaMax,
+);
+
+IF bControllerOn
+     AND fbActForceFilter.lrOutSignal < lrMaxForce
+THEN
+
+	fbCtrlPID(
+		bEnable := TRUE,
+		lrSetPoint := lrSPForce,
+		lrProcessVariable := fbActForceFilter.lrOutSignal,
+		lrDeadZone := 1.0,
+		lrSignalOffset := 0.0,
+		lrKp := lrVeloKp,
+		lrTi := lrVeloTi,
+		lrTd := 0.0,
+		lrTaskCycle := lrTaskCycle,
+		bManual := ,
+		lrManualSignal:= ,
+		lrLimitMin := lrVeloMin,
+		lrLimitMax := lrVeloMax,
+		lrProcessErr => ,
+		bLimitMin => ,
+		bLimitMax => );
+
+	(*lrCVVelo := MAX(0.0, (fbCtrlPID.lrCtrlVariable * (1.0 - MIN(lrPreCtrlVelo, 1))) + (fbActForceFilter.lrOutSignal * MIN(lrPreCtrlVelo, 1))); (* where lrPreCtrlVelo := 0.01 *)*)
+	lrCVVelo := MAX(0.0, (fbCtrlPID.lrCtrlVariable * (1.0 - MIN(lrPreCtrlVelo, 1))) + (lrCVVelo * MIN(lrPreCtrlVelo, 1)));				       (* where lrPreCtrlVelo := 0.99 *)
+
+ELSE
+	lrCVVelo := 0.0;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ForceController_1">
+      <LineId Id="53" Count="35" />
+      <LineId Id="147" Count="0" />
+      <LineId Id="90" Count="4" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

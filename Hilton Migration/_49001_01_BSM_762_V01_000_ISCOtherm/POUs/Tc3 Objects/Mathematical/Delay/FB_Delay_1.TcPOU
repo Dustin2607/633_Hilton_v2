@@ -1,0 +1,109 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Delay_1" Id="{00f611f2-edb0-4264-8007-36daa0c068ee}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Delay_1
+(*
+Function block used to caculate delay
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			14.07.2014
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Enummerations *)
+
+	(* Variables *)
+	bEnable								:BOOL := TRUE;					(* Enable FB *)
+
+	lrInSignal								:LREAL;							(* Input signal *)
+	tDeadTime							:TIME := t#200ms;					(* Dead time *)
+	tTaskCycle							:TIME := t#10ms; 					(* Cycle time *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+END_VAR
+VAR_OUTPUT
+	(* Enummerations *)
+	
+	(* Variables *)
+	lrOutSignal							:LREAL;							(* Output signal *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	bFirstTime							:BOOL;							(* First cycle *)
+
+	lrTimeRatio							:LREAL;
+	lrLastSignal							:LREAL;							(* Last signal *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	tpClock								:TP;
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	lrOutSignal := lrInSignal;
+
+	bFirstTime := FALSE;
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+	lrOutSignal := lrInSignal;
+
+	tpClock(
+		IN := FALSE,
+		PT := tTaskCycle
+	);
+
+	bFirstTime := TRUE;
+END_IF
+
+
+tpClock();
+
+IF NOT tpClock.Q
+THEN
+	tpClock(IN := FALSE);
+
+	IF tDeadTime > t#0ms
+	THEN
+		lrTimeRatio := TIME_TO_LREAL(tTaskCycle) / TIME_TO_LREAL(tDeadTime);
+
+		lrOutSignal := lrLastSignal + (lrInSignal - lrLastSignal) * lrTimeRatio;
+	ELSE
+		lrOutSignal := lrLastSignal;
+	END_IF
+
+	tpClock(IN := TRUE);
+END_IF
+
+lrLastSignal := lrOutSignal;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Delay_1">
+      <LineId Id="59" Count="39" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

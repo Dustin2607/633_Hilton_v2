@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_EL3351CoeWriteData_1" Id="{cb762ef3-9ef5-442f-9dd3-9644b12674f1}">
+    <Declaration><![CDATA[TYPE ST_EL3351CoeWriteData_1 :
+STRUCT
+	wIdx: WORD;
+	bySubIdx: BYTE;
+	bWriteOK: BOOL;
+	nData: DWORD;
+	nSize: UDINT;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

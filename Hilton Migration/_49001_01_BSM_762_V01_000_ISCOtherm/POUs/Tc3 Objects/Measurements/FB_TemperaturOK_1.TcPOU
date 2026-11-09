@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_TemperaturOK_1" Id="{3b054c07-6bba-4a4b-9667-edd75cc60ffe}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_TemperaturOK_1
+VAR_INPUT
+	bEnable						:BOOL;			(* Enable FB signal *)
+	bIn							:BOOL;			(* Temperature OK *)
+	tTimeOutTempOK				:TIME := t#5s;		(* Temperature OK timeout *)
+	tTimeOutTempNOK			:TIME := t#5s;		(* Temperature NOK timeout *)
+END_VAR
+VAR_OUTPUT
+	bOut					:BOOL;			(* Temperature OK *)
+	bError					:BOOL;			(* Error by temperature NOK *)
+	udnErrorNo				:UDINT;
+	udnMessageNo			:UDINT;
+	sMsg					:STRING;
+END_VAR
+VAR
+	bFirstTime			:BOOL;			(* First cycle *)
+	tonDelayOK			:TON;			(* Temperatur delay ok *)
+	tofWatchDog			:TOF;			(* Timer to off *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bFirstTime
+THEN
+	bError := FALSE;
+	udnErrorNo := 0;
+	udnMessageNo := 0;
+	sMsg := '';
+	tonDelayOK(
+		IN := FALSE,
+	          PT := tTimeOutTempOK
+	);
+	tofWatchDog(
+		IN := FALSE,
+	         PT := tTimeOutTempNOK
+	);
+	bFirstTime := TRUE;
+END_IF;
+
+(* Timer starts when came rising edge of signal *)
+tonDelayOK(
+	IN := bIn,
+         PT := tTimeOutTempOK
+);
+
+tofWatchDog(
+	IN := bIn,
+         PT := tTimeOutTempNOK
+);
+
+IF tonDelayOK.Q
+THEN
+	bOut := TRUE;
+    
+ELSIF NOT tofWatchDog.Q
+THEN
+	bOut := FALSE;
+    
+END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_TemperaturOK_1">
+      <LineId Id="20" Count="37" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

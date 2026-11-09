@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_FieldbusStatus_1" Id="{73fd698c-1fb0-44ef-8110-25f754a6b633}">
+    <Declaration><![CDATA[TYPE ST_FieldbusStatus_1 :
+STRUCT
+	wFrmXWcState				:WORD; (* link to task related ethercat frame state FrmXWcState *)
+	nMasterDeviceId				:UINT;
+	nMasterSlaveCount			:UINT;
+	nMasterDevState				:UINT;
+	arrMasterNetId				:T_AmsNetIdArr;
+	nMasterSlaveCountCfg			:UINT;
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

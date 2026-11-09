@@ -1,0 +1,286 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_BOSCH_ProcessCtrl_Stop" Id="{395ea3b9-c684-4901-ba7e-29057777a2ed}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_BOSCH_ProcessCtrl_Stop
+(*
+
+The function block used to stop Bosch process controller. 
+
+Constructor:		Patryk Panylo
+Company:			E. Riexinger GmbH
+Date:				05.02.2019
+Version:			1.00
+
+Date:				Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bExecute					:BOOL;			(* Execut the function block *)
+	tAdsTimeOut 				:TIME := T#2S;				(* Timout for ads commands *)	
+	pProcessCtrl				:POINTER TO ST_FWS_MLDPCx_PRE_01Vxx_MPxx;		
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bDone						:BOOL;			(* Program done *)
+	bBusy						:BOOL;			(* Program busy *)
+	bError						:BOOL;			(* Error *)
+	udnErrorNo					:UDINT;			(* Error number *)
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+	etProcessCtrl				:ET_BOSCH_ProcessCtrl := ET_BOSCH_ProcessCtrl_eInit;
+	
+	(* Variables *)
+	dwProcessCtrlConfig			:DWORD;						(* P-0-1370, Configuration *) 
+	
+	unWatchdog					:UINT;
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbEcSoERead					:FB_EcSoERead;
+	fbEcSoEWrite				:FB_EcSoEWrite;
+	rtExecute					:R_TRIG;
+
+END_VAR
+VAR CONSTANT
+	wIdxPPara					:WORD := 16#8000;						(* Index offset for P Parameters *)
+	wProcessCtrlConfigPara		:WORD := wIdxPPara + 1370;				(* P-0-1370, Configuration *)
+	
+	unWatchdogMax				:UINT := 150;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+rtExecute(CLK := bExecute);	                          (* Stop execute  *)
+
+IF rtExecute.Q
+THEN
+	etProcessCtrl := ET_BOSCH_ProcessCtrl_eInit;                                   (* Next step *)
+
+END_IF;
+
+CASE etProcessCtrl OF
+
+	ET_BOSCH_ProcessCtrl_eInit:
+		bBusy := FALSE;                 (* Program not busy *)
+		bError := FALSE;                (* Program not error *)
+
+		IF rtExecute.Q
+		THEN
+			unWatchdog := 0;
+			bDone := FALSE;				(* Program done, in position *)
+			bBusy := TRUE;				(* Program busy *)
+			udnErrorNo := 0;            (* Error number *)
+
+			fbEcSoERead(
+				sNetId := pProcessCtrl^.sNetId, 
+				nSlaveAddr := pProcessCtrl^.unSlaveAddr, 
+				nElement := 16#40, 
+				nDriveNo := 0, 
+				bCommand := FALSE,
+				bExecute := FALSE,  
+				tTimeout := tAdsTimeOut 
+			);
+			
+			fbEcSoEWrite(
+				sNetId := pProcessCtrl^.sNetId, 
+				nSlaveAddr := pProcessCtrl^.unSlaveAddr, 
+				nElement := 0, 
+				nDriveNo := 0, 
+				bCommand := FALSE,
+				bExecute := FALSE, 
+				tTimeout := tAdsTimeOut 
+			);
+			
+			etProcessCtrl := ET_BOSCH_ProcessCtrl_eGetProcessCtrlConfig;			(* Next step *)
+			
+		END_IF;
+
+	ET_BOSCH_ProcessCtrl_eGetProcessCtrlConfig:
+		(* P-0-1370, Configuration *) 	
+		fbEcSoERead(
+			bExecute := TRUE,
+			nIdn := wProcessCtrlConfigPara,			
+			pDstBuf := ADR(dwProcessCtrlConfig),
+			cbBufLen := SIZEOF(dwProcessCtrlConfig)
+		);
+		
+		unWatchdog := unWatchdog + 1;
+		
+		IF NOT fbEcSoERead.bBusy
+		   AND NOT fbEcSoERead.bError
+		THEN
+			fbEcSoERead(
+				bExecute := FALSE
+			);
+
+			unWatchdog := 0;
+			
+			etProcessCtrl := ET_BOSCH_ProcessCtrl_eSetProcessCtrlConfig;         		(* Next step *)
+
+		ELSIF fbEcSoERead.bError
+		THEN
+			fbEcSoERead(
+				bExecute := FALSE
+			);
+
+			udnErrorNo := 1;
+			
+			etProcessCtrl := ET_BOSCH_ProcessCtrl_eError;                              (* Next step *)
+
+		ELSIF unWatchdog > unWatchdogMax
+		THEN
+			fbEcSoERead(
+				bExecute := FALSE
+			);
+
+			udnErrorNo := 99;
+			
+			etProcessCtrl := ET_BOSCH_ProcessCtrl_eError;                              (* Next step *)
+		END_IF
+				
+	ET_BOSCH_ProcessCtrl_eSetProcessCtrlConfig:
+		(* P-0-1370, Configuration*)
+		dwProcessCtrlConfig.2 := FALSE;			(* Position limit value monitoring deactive *)
+		
+		fbEcSoEWrite(
+			bExecute := TRUE,
+			nIdn := wProcessCtrlConfigPara,			
+			pSrcBuf := ADR(dwProcessCtrlConfig), 
+			cbBufLen := SIZEOF(dwProcessCtrlConfig) 
+		);
+		
+		unWatchdog := unWatchdog + 1;
+		
+		IF NOT fbEcSoEWrite.bBusy
+		   AND NOT fbEcSoEWrite.bError
+		THEN
+			fbEcSoEWrite(
+				bExecute := FALSE
+			);
+
+			unWatchdog := 0;
+					
+			etProcessCtrl := ET_BOSCH_ProcessCtrl_eActivate;			(* Next step *)
+
+		ELSIF fbEcSoEWrite.bError
+		THEN
+			fbEcSoEWrite(
+				bExecute := FALSE
+			);
+
+			udnErrorNo := 2;                                    (* Error number *)
+			
+			etProcessCtrl := ET_BOSCH_ProcessCtrl_eError;                              (* Next step *)
+
+		ELSIF unWatchdog > unWatchdogMax
+		THEN
+			fbEcSoEWrite(
+				bExecute := FALSE
+			);
+
+			udnErrorNo := 99;                                    (* Error number *)
+			
+			etProcessCtrl := ET_BOSCH_ProcessCtrl_eError;                              (* Next step *)
+			
+		END_IF
+		
+	ET_BOSCH_ProcessCtrl_eActivate:
+		unWatchdog := unWatchdog + 1;
+
+		pProcessCtrl^.bEnable := FALSE;			(* Enable controller *)
+		
+		IF NOT pProcessCtrl^.bEnabled              	(* Controller is ready for operation. *)
+		THEN
+			unWatchdog := 0;
+
+			etProcessCtrl := ET_BOSCH_ProcessCtrl_eDone;                              (* Next step *)
+			
+		ELSIF pProcessCtrl^.bError				(* An error in process control has occurred. *)
+		THEN
+			pProcessCtrl^.bEnable := FALSE;		(* Enable controller *)
+
+			udnErrorNo := 3;                                    (* Error number *)
+
+			etProcessCtrl := ET_BOSCH_ProcessCtrl_eError;                              (* Next step *)
+			
+		ELSIF unWatchdog > unWatchdogMax
+		THEN
+			pProcessCtrl^.bEnable := FALSE;		(* Enable controller *)
+
+			udnErrorNo := 99;                                    (* Error number *)
+
+			etProcessCtrl := ET_BOSCH_ProcessCtrl_eError;                              (* Next step *)
+		END_IF;
+
+	ET_BOSCH_ProcessCtrl_eDone:
+		unWatchdog := 0;
+		bDone := TRUE;			(* Program done, in position *)
+		bBusy := FALSE;			(* Program not busy *)
+
+		etProcessCtrl := ET_BOSCH_ProcessCtrl_eNotExecute;            (* Next step *)
+
+	ET_BOSCH_ProcessCtrl_eError:
+		unWatchdog := 0;
+		bDone := FALSE;			(* Program done, in position *)
+		bError := TRUE;			(* Program error *)
+		bBusy := FALSE;			(* Program not busy *)
+
+		pProcessCtrl^.bEnable := FALSE;		(* Enable controller *)
+		
+        etProcessCtrl := ET_BOSCH_ProcessCtrl_eNotExecute;			(*Next step *)
+
+	ET_BOSCH_ProcessCtrl_eNotExecute:
+		IF NOT bExecute
+		THEN
+			unWatchdog := 0;
+			pProcessCtrl^.bCmdLock := FALSE;
+
+			bDone := FALSE;					(* Program done, in position *)
+			bBusy := FALSE;                 (* Program not busy *)
+			bError := FALSE;                (* Program not error *)
+
+			etProcessCtrl := ET_BOSCH_ProcessCtrl_eInit;			(* Next step *)
+
+		END_IF;
+END_CASE;
+
+IF pProcessCtrl^.bError
+   AND pProcessCtrl^.bFaultReset
+THEN
+	pProcessCtrl^.bEnable := FALSE;		(* Enable controller *)
+	pProcessCtrl^.bCmdLock := FALSE;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_BOSCH_ProcessCtrl_Stop">
+      <LineId Id="598" Count="0" />
+      <LineId Id="603" Count="1" />
+      <LineId Id="611" Count="0" />
+      <LineId Id="613" Count="0" />
+      <LineId Id="615" Count="0" />
+      <LineId Id="628" Count="5" />
+      <LineId Id="635" Count="3" />
+      <LineId Id="640" Count="24" />
+      <LineId Id="667" Count="3" />
+      <LineId Id="855" Count="46" />
+      <LineId Id="1037" Count="0" />
+      <LineId Id="903" Count="17" />
+      <LineId Id="928" Count="0" />
+      <LineId Id="931" Count="26" />
+      <LineId Id="1036" Count="0" />
+      <LineId Id="959" Count="4" />
+      <LineId Id="972" Count="16" />
+      <LineId Id="997" Count="24" />
+      <LineId Id="1023" Count="12" />
+      <LineId Id="601" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

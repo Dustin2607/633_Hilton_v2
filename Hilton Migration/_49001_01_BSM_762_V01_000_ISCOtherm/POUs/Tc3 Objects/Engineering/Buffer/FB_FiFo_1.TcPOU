@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_FiFo_1" Id="{da6bcb36-1584-4636-be58-0802f5f8f339}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_FiFo_1
+(*
+FiFo buffer of strings.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			14.05.2013
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	bAdd				:BOOL;
+	bClear				:BOOL;
+	sItem				:STRING;
+END_VAR
+VAR_OUTPUT
+
+END_VAR
+VAR_IN_OUT
+	arsBuffer				:ARRAY[0..unSize] OF STRING;			(* Circular buffer *)
+END_VAR
+VAR
+	bNoBufferEmpty		:BOOL;									(* Buffer empty *)
+	nIdx					:INT;
+
+	rtAdd				:R_TRIG;
+	rtClear				:R_TRIG;
+END_VAR
+VAR CONSTANT
+	unSize				:UINT := 100;								(* Buffer size *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* Add date to buffor *)
+rtAdd(CLK := bAdd);
+
+IF rtAdd.Q
+THEN
+	FOR nIdx := unSize - 1 TO 0 BY -1
+	DO
+		arsBuffer[nIdx + 1] := arsBuffer[nIdx];
+	END_FOR
+
+	arsBuffer[0] := sItem;
+
+	RETURN;
+END_IF
+
+(* Clear buffor *)
+rtClear(CLK := bClear);
+
+IF rtClear.Q
+THEN
+	MEMSET(ADR(arsBuffer), 0, SIZEOF(arsBuffer));
+	nIdx := 0;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_FiFo_1">
+      <LineId Id="34" Count="22" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

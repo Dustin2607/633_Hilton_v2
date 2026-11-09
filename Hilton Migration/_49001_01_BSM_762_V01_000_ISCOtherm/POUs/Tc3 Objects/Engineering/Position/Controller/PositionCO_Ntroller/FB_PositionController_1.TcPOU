@@ -1,0 +1,159 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_PositionController_1" Id="{d2715c31-f3ac-40d7-b1fd-f4e461ea1625}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_PositionController_1
+(*
+Position controller with PID.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			20.01.2014
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Enummerations *)
+
+	(* Variables *)
+	bEnable								:BOOL;							(* Enable FB *)
+
+	dnSetPos							:DINT;							(* Set position - set point - SP  [inc] *)
+
+	stCtrlCfg								:ST_VeloControllerConfig;				(* Controller configuration *)
+
+	lrPosMin								:LREAL := -1E40;					(* Position limit minimum [inc] *)
+	lrPosMax							:LREAL := 1E40;					(* Position limit maximum [inc] *)
+
+	(* References *)
+
+	(* Interfaces *)
+	pAxis								:POINTER TO ST_AXIS_REF_V2;
+
+	(* Instances *)
+
+END_VAR
+VAR_OUTPUT
+	(* Enummerations *)
+
+	(* Variables *)
+	lrVeloOut								:LREAL;							(* Controller variable output signal - velocity output  - CV  [technical units / sec] *)
+	lrProcessErr							:LREAL;							(* Process error, e(t) = SP - PV *)
+	bVeloMin							:BOOL;							(* Velocity minimum reached *)
+	bVeloMax							:BOOL;							(* Velocity maximum reached *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+	
+	(* Variables *)
+	bFirstTime							:BOOL;							(* First cycle *)
+
+	lrActVelo								:LREAL;
+	bSetToZero							:BOOL;
+
+	dnEncPos							:DINT;
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbPosCtrlIn							:FB_PosCtrlIn;
+	fbCtrlPID								:FB_CtrlPID;
+	fbPosCtrlOut							:FB_PosCtrlOut;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	bFirstTime := FALSE;
+
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+	A_Init();
+
+	bFirstTime := TRUE;
+END_IF
+
+(* Set controller input *)
+fbPosCtrlIn(
+	dnSetPos:= dnSetPos, (* inc *)
+	dnActPos := pAxis^.stPosition.dwActPos, (* inc *)
+	lrSetVelo := pAxis^.stDynamics.lrSetVelo, (* technical units / sec *)
+	lrDeltaMax := stCtrlCfg.lrDeltaMax,
+	lrKpPT1 := stCtrlCfg.lrVeloKpFilter,
+	tT1PT1 := stCtrlCfg.tVeloT1Filter,
+	tDeadTime := stCtrlCfg.tDeadTime,
+	tTaskCycle := LREAL_TO_TIME(pAxis^.stScaling.lrTaskCycle * 1000), (* sec *)
+);
+
+IF pAxis^.stAxisCtrl.bEnable
+THEN
+
+	(* Start pid controller *)
+	fbCtrlPID(
+		bEnable := TRUE,
+		lrSetPoint := fbPosCtrlIn.lrDelaySetPos,
+		lrProcessVariable := fbPosCtrlIn.lrFilterActPos,
+		lrDeadZone := stCtrlCfg.lrDeadZone,
+		lrSignalOffset := 0.0,
+		lrKp := stCtrlCfg.lrKp,
+		lrTi := stCtrlCfg.lrTi,
+		lrTd := stCtrlCfg.lrTd,
+		lrLimitMin := lrPosMin,
+		lrLimitMax := lrPosMax,
+		lrTaskCycle := pAxis^.stScaling.lrTaskCycle,
+		bSetToZero := bSetToZero,
+		lrProcessErr => lrProcessErr
+	 );
+
+	lrActVelo := fbPosCtrlIn.lrFilterSetVelo * stCtrlCfg.lrPreCtrlVelo + (fbCtrlPID.lrCtrlVariable * (1 - stCtrlCfg.lrPreCtrlVelo)) / (pAxis^.stScaling.lrTaskCycle * pAxis^.stScaling.lrScaleFactor (* inc / technical units *));
+
+	(*lrActVelo := MIN(stCtrlCfg.lrVeloMax,
+					MAX(stCtrlCfg.lrVeloMin,
+					fbPosCtrlIn.lrFilterSetVelo * stCtrlCfg.lrPreCtrlVelo + (fbCtrlPID.lrCtrlVariable * (1 - stCtrlCfg.lrPreCtrlVelo)) / (pAxis^.stScaling.lrTaskCycle * pAxis^.stScaling.lrScaleFactor (* inc / technical units *))));*)
+
+ELSE
+	lrActVelo := fbPosCtrlIn.lrFilterSetVelo;
+
+END_IF
+
+
+(* Set controller output *)
+fbPosCtrlOut(
+	lrCtrlVelo	:= lrActVelo,							(* Controller variable output signal - velocity output  - CV  [technical units / sec] *)
+	lrCtrlVeloMin  := stCtrlCfg.lrVeloMin,				(* Controller velocity limit minimum [technical units / sec] *)
+	lrCtrlVeloMax := stCtrlCfg.lrVeloMax,				(* Controller velocity limit maximum [technical units / sec] *)
+	lrRefVeloMin := -16384,							(* Speed reference value limit minimum *)
+	lrRefVeloMax	 := 16384,							(* Speed reference value limit maximum *)
+	lrRefVeloVeloLimitMin := -16384,					(*  Speed reference limit minimum *)
+	lrRefVeloVeloLimitMax := 16384, 					(*  Speed reference limit maximum *)
+	lrOutSignal => lrVeloOut,
+);
+
+]]></ST>
+    </Implementation>
+    <Action Name="A_Init" Id="{1fc2c218-5239-4fa3-97d3-38cff797a6a1}">
+      <Implementation>
+        <ST><![CDATA[;]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_PositionController_1">
+      <LineId Id="70" Count="70" />
+    </LineIds>
+    <LineIds Name="FB_PositionController_1.A_Init">
+      <LineId Id="0" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_Logger_1" Id="{68f4daca-9230-493c-9105-8441f71ad85e}">
+    <Declaration><![CDATA[TYPE ST_Logger_1 :
+STRUCT
+	arstLoggerWaitInterrupt					:ARRAY[1..GVL_Logger.unLOG_BEFOR_MAX_NO] OF ST_LoggerVar;
+	arstLoggerDuringInterrupt				:ARRAY[1..GVL_Logger.unLOG_DURING_MAX_NO] OF ST_LoggerVar;
+	arstLoggerAfterInterrupt					:ARRAY[1..GVL_Logger.unLOG_AFTER_MAX_NO] OF ST_LoggerVar;
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_GetPosCylinder" Id="{276da450-10e9-4a89-ae27-b425b18186b9}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_GetPosCylinder : LREAL
+VAR_INPUT
+	wInPos			:WORD;					(* Current position *)
+	lrPosOffset		:LREAL;					(* Position offset *)
+	lrOriginShiftPos	:LREAL;					(* Origin shift position *)
+	etDirection		:ET_MC_Direction;			(* Direction: -1 Negative, +1 Positive *)
+	usnCodingType	:USINT;
+END_VAR
+VAR
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[F_GetPosCylinder := 99999.0 * etDirection;
+(* 00 - WORK_BASE *)
+IF ((wInPos  = 2#0000_0000_0000_0001) AND usnCodingType = 0)
+     OR ((wInPos  = 2#0000_0000_0001_0101) AND usnCodingType = 1)
+THEN
+	F_GetPosCylinder := 0.0 * lrPosOffset * etDirection + lrOriginShiftPos;
+
+ELSIF ((wInPos  = 2#0000_0000_0000_0010) AND usnCodingType = 0)
+	    OR ((wInPos = 2#0000_0000_0001_0110) AND usnCodingType = 1)
+THEN
+	F_GetPosCylinder := 1.0 * lrPosOffset * etDirection + lrOriginShiftPos;
+
+ELSIF ((wInPos  = 2#0000_0000_0000_0100) AND usnCodingType = 0)
+	    OR ((wInPos = 2#0000_0000_0001_1001) AND usnCodingType = 1)
+THEN
+	F_GetPosCylinder := 2.0 * lrPosOffset * etDirection + lrOriginShiftPos;
+
+ELSIF ((wInPos  = 2#0000_0000_0000_1000) AND usnCodingType = 0)
+	    OR ((wInPos = 2#0000_0000_0001_1010) AND usnCodingType = 1)
+THEN
+	F_GetPosCylinder := 3.0 * lrPosOffset * etDirection + lrOriginShiftPos;
+
+ELSIF ((wInPos  = 2#0000_0000_0001_0000) AND usnCodingType = 0)
+	    OR ((wInPos = 2#0000_0000_0010_0101) AND usnCodingType = 1)
+THEN
+	F_GetPosCylinder := 4.0 * lrPosOffset * etDirection + lrOriginShiftPos;
+
+ELSIF ((wInPos  = 2#0000_0000_0010_0000) AND usnCodingType = 0)
+	    OR ((wInPos = 2#0000_0000_0010_0110) AND usnCodingType = 1)
+THEN
+	F_GetPosCylinder := 5.0 * lrPosOffset * etDirection + lrOriginShiftPos;
+
+ELSIF ((wInPos  = 2#0000_0000_0100_0000) AND usnCodingType = 0)
+	    OR ((wInPos = 2#0000_0000_0010_1001) AND usnCodingType = 1)
+THEN
+	F_GetPosCylinder := 6.0 * lrPosOffset * etDirection + lrOriginShiftPos;
+
+ELSIF ((wInPos  = 2#0000_0000_1000_0000) AND usnCodingType = 0)
+	    OR ((wInPos = 2#0000_0000_0010_1010) AND usnCodingType = 1)
+THEN
+	F_GetPosCylinder := 7.0 * lrPosOffset * etDirection + lrOriginShiftPos;
+
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="F_GetPosCylinder">
+      <LineId Id="10" Count="42" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

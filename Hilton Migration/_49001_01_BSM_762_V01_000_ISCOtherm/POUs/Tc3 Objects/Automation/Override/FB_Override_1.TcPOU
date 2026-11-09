@@ -1,0 +1,170 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Override_1" Id="{8abe827a-d4ad-4a2a-ab46-75ed75976fcc}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Override_1
+(*
+
+The function block used to control override of axis.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			23.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Signal FB enable *)
+	bBypassAccDec				:BOOL;						(* Bypassing acceleratin und deceleration rActOverride = rSetOverride *)
+	bSetOverideMax				:BOOL;						(* Set maximum override *)
+	rAcc							:REAL;						(* Accerlation of Override [%/s] *)
+	rDec						:REAL;						(* Decerlation of Override [%/s] *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	rActOverride					:REAL;						(* Actual Override *)
+END_VAR
+VAR_IN_OUT
+	rSetOverride					:REAL;						(* Set Override *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	rSetOverrideInternal			:REAL;						(* Internal Set Override limited *)
+	rAccOverridePerCycle			:REAL;						(* Override accerleration per cycle *)
+	rDecOverridePerCycle			:REAL;						(* Override deceleration per cycle *)
+	tCycleTime					:TIME;						(* Detected cycle Time *)
+	bFirstTime					:BOOL;						(* First run *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	tonChkCycleTime				:TON;						(* Check cycle time *)
+	rtSetOverideMax				:R_TRIG;
+END_VAR
+VAR CONSTANT
+	rMIN_OVERRIDE				:REAL := 0.0;					(* Minimum override *)
+	rMAX_OVERRIDE				:REAL := 100.0;				(* Maximum override *)
+	rACC_MIN					:REAL := 0.1;					(* Minimum accerleration *)
+	rDEC_MIN					:REAL := 0.1;					(* Minimum decerleration *)
+	tMAX_CYCLE_TIME			:TIME := t#1s;					(* Maximum cycle time *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	bFirstTime := FALSE;								(* First run *)
+	rActOverride := 100.0;								(* Set Override *)
+	RETURN;
+END_IF;
+
+IF NOT bFirstTime                                             					 (* First run after bEnable *)
+THEN
+	tonChkCycleTime(					   				 (* Start Timer to check  cycle time *)
+		IN := TRUE,
+		PT := tMAX_CYCLE_TIME
+	);
+	
+	IF tonChkCycleTime.ET <> t#0s                              			 (* Timer was running one circle *)
+	THEN
+		tCycleTime := tonChkCycleTime.ET;                     		 (* Detectet circle time *)
+
+		tonChkCycleTime(					 			 (* Stop Timer *)
+			IN := FALSE,
+			PT := tMAX_CYCLE_TIME
+		);
+
+		bFirstTime := TRUE;                                     			(* First run *)
+	END_IF;
+END_IF;
+
+(* Set max overide *)
+rtSetOverideMax(CLK := bSetOverideMax);
+IF rtSetOverideMax.Q
+THEN
+	rSetOverride := rMAX_OVERRIDE;
+END_IF
+
+(* Check Limits *)
+rSetOverrideInternal := LIMIT(                      					 (* Internal Override Limited *)
+	rMIN_OVERRIDE,              							 (* Minimum Override *)
+	rSetOverride,              							 	 (* Set Override *)
+	rMAX_OVERRIDE               							 (* Maximum Overide *)
+);
+
+IF bBypassAccDec
+THEN
+	rActOverride := rSetOverrideInternal;                  			 (* Actual Override = Set Override *)
+ELSE
+	IF tCycleTime <> t#0s
+	THEN
+
+		A_Acceleration();
+
+		A_Deceleration();
+
+	END_IF;
+END_IF;]]></ST>
+    </Implementation>
+    <Action Name="A_Acceleration" Id="{23804645-b414-40b6-955f-7c8ad82e5d66}">
+      <Implementation>
+        <ST><![CDATA[
+IF rSetOverrideInternal > rActOverride                          	(* Override has to be added *)
+THEN
+	(* Check if accerlaeration zero *)
+	IF rAcc <= 0
+	THEN
+		rAcc := rACC_MIN;                                         	(* Set accerlaeration to minimum *)
+	END_IF;
+
+	(* Calculate Accerleration per cycle *)
+	rAccOverridePerCycle := rAcc / (TIME_TO_REAL(tMAX_CYCLE_TIME)
+							     / TIME_TO_REAL(tCycleTime));
+	
+	rActOverride := rActOverride + rAccOverridePerCycle;        (* Add Override *)
+	IF rActOverride > rSetOverrideInternal                      		 (* Actoverride  run over Set Override ? *)
+	THEN
+		rActOverride := rSetOverrideInternal;             (* Set  Override equal *)
+	END_IF;
+END_IF;]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Deceleration" Id="{3a547fbb-d787-4617-b4fa-56ce860a5622}">
+      <Implementation>
+        <ST><![CDATA[
+IF rSetOverrideInternal < rActOverride                             (* Override has to subed *)
+THEN
+	(* Check if decerlaeration zero *)
+	IF rDec <= 0
+	THEN
+		rDec := rDEC_MIN;                                         	(* Set decerlaeration to minimum *)
+	END_IF;
+
+	(* Calculate decerleration per cycle *)
+	rDecOverridePerCycle := rDec / (TIME_TO_REAL(tMAX_CYCLE_TIME) /
+								TIME_TO_REAL(tCycleTime));
+	
+	rActOverride := rActOverride - rDecOverridePerCycle;        (* Sub Override *)
+	IF rActOverride < rSetOverrideInternal                        		 (* Actoverride  run over Set Override ? *)
+	THEN
+	    rActOverride := rSetOverrideInternal;                  (* Set  Override equal *)
+	END_IF;
+END_IF;]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_Override_1">
+      <LineId Id="54" Count="53" />
+    </LineIds>
+    <LineIds Name="FB_Override_1.A_Acceleration">
+      <LineId Id="0" Count="18" />
+    </LineIds>
+    <LineIds Name="FB_Override_1.A_Deceleration">
+      <LineId Id="0" Count="18" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

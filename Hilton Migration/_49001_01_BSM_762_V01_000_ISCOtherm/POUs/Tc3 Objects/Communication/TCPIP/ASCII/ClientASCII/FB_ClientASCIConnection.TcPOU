@@ -1,0 +1,697 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_ClientASCIConnection" Id="{4b2f14ad-5908-4f67-ba35-ecf0b2db8ce8}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ClientASCIConnection
+(*
+
+The function block used to establish or remove a simple TCP/IP client connection.
+
+Basie on orginal Beckhoffs example.
+
+Constructor: 	Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			18.02.2019
+Version:		1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL := FALSE;				(* TRUE => Enable/connect, FALSE => Disable/disconnect *)
+	bReset						:BOOL := FALSE;				(* Reset connection after error *)
+	bFullDuplex					:BOOL := FALSE;				(* TRUE => Enable full duplex communication, FALSE => Disable *)	
+	sSrvNetID					:T_AmsNetID	:= '';			(* TwinCAT TCP/IP server network address *)
+	sRemoteHost					:T_IPv4Addr	:= '127.0.0.1';	(* IP address of remote server *)
+	udnRemotePort				:UDINT := 23;				(* Remote server port *)
+	tReconnect					:TIME := T#45S;				(* Try to reconnect after this time *)
+	tReceiveTimeout				:TIME := T#100MS;			(* Recive time the which the answer is expected to come *)
+	bLoggerEn					:BOOL := FALSE;				(* TRUE => Enable log message output, FALSE => Disable *)
+	sDelimiter					:STRING := '';				(* Delimiter (null) *)	
+	sPrefix						:STRING := '';				(* Log message description string (allows the identification of log message source) *)	
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bConnected					:BOOL := FALSE;				(* TCP/IP connection state connected *)
+	bDisconnected				:BOOL := FALSE;				(* TCP/IP connection state disconnected *)
+	bRcvDataValid				:BOOL := FALSE;				(* Recive data valid *)	
+	bNoDataRcv 					:BOOL := FALSE;				(* No data receive *)
+	bSndBusy					:BOOL := FALSE;				(* Tx function busy *)
+	bRcvBusy					:BOOL := FALSE;				(* Rx function busy *)	
+	bSndSocketBusy 				:BOOL := FALSE;				(* Send socket busy *)
+	bRcvSocketBusy 				:BOOL := FALSE;				(* Recive socket busy *)
+	bError						:BOOL := FALSE;				(* Program error *)
+	bErrorConnect				:BOOL := FALSE;				(* Connect error *)
+	bErrorSnd 					:BOOL := FALSE;				(* Send error *)
+	bErrorRcvFifoOverflow 		:BOOL := FALSE;				(* Recive fifo overflow error *)
+	bErrorRcv 					:BOOL := FALSE;				(* Receive error *)	
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	fbTx 						:FB_FrameFifo;				(* Tx fifo *)
+	fbRx 						:FB_FrameFifo;				(* Rx fifo *)
+	fbLoggger					:FB_LogFifo;				(* Logger message fifo *)
+END_VAR
+VAR
+	(* Enummerations *)
+	etConnState					:ET_TCPIP_ConnectionState := ET_TCPIP_ConnState_eConnect;
+	etSocketConneState			:E_SocketConnectionState := eSOCKET_DISCONNECTED;(* TCP/IP connection state *)
+	
+	(* Variables *)
+	bDisconnect					:BOOL := FALSE;				(* Disconnect flag, if set the socket will be closed *)
+
+	
+	
+	sTxFrame					:T_MaxString := '';
+	sRxFrame					:T_MaxString := '';
+	arbyBuffer					:ARRAY[0..GVL_TCPIP.BUFFER_SIZE] OF BYTE;(* Temp. RX buffer *)	
+	udnCntRcvBytes				:UDINT := 0;						(* Count of received data bytes *)
+	udnLenRcvString				:UDINT := 0;						(* Byte length of received string *)
+	udnIdxBytes					:UDINT := 0;
+	
+	bEndOfString				:BOOL := FALSE;
+	udnLenOfString				:UDINT := 0;						(* String length inclusive the null delimiter *)
+	bFirstTime 					:BOOL := FALSE;						(* Initialization *)
+	
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbClientServerConnection 	:FB_ClientServerConnection;			(* Create/release TCP/IP connection *)
+	fbSocketSend				:FB_SocketSend;						(* Send TCP/IP data *)
+	fbSocketReceive				:FB_SocketReceive;					(* Receive TCP/IP data *)
+	tonPollTimer				:TON;								(* Receive poll timer *)
+	tonResponseTimer			:TON;								(* Response timeout timer *)
+	tonReconnectTimer 			:TON;								(* Reconnect timer *)
+			
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bFirstTime
+THEN
+	tonReconnectTimer(IN := FALSE);
+
+	etConnState := ET_TCPIP_ConnState_eIdle;
+	
+	bFirstTime := TRUE;
+END_IF;
+	
+IF bReset
+   AND bError
+THEN
+	bErrorConnect := FALSE;
+	bErrorSnd := FALSE;
+	bErrorRcvFifoOverflow := FALSE;
+	bErrorRcv := FALSE;
+	
+	etConnState := ET_TCPIP_ConnState_eIdle;
+END_IF
+
+CASE etConnState 
+OF
+	ET_TCPIP_ConnState_eIdle:
+		fbClientServerConnection( 	
+			sSrvNetID := sSrvNetID,
+			nMode := SEL(bLoggerEn, 0, CONNECT_MODE_ENABLEDBG),			(* Enable/disable debug messages? *)
+			sRemoteHost := sRemoteHost, 
+			nRemotePort := udnRemotePort,
+			bEnable := FALSE, 
+			tReconnect := tReconnect,
+			eState => etSocketConneState 
+		);
+				
+		(* Please wait some seconds and then try to connect again *)
+		tonReconnectTimer(
+			IN := NOT fbClientServerConnection.bBusy
+				  AND NOT fbClientServerConnection.bError
+		);
+		
+		IF tonReconnectTimer.Q 
+		THEN
+			fbSocketSend(bExecute := FALSE);
+			fbSocketReceive(bExecute := FALSE);
+			
+			bSndSocketBusy := FALSE;
+			bRcvSocketBusy := FALSE;
+			bSndBusy := FALSE;
+			bRcvBusy := FALSE;
+			bDisconnect := FALSE;
+			bRcvDataValid := FALSE;
+			bNoDataRcv := FALSE;
+			udnCntRcvBytes := 0;
+			
+			bErrorConnect := FALSE;
+			bErrorSnd := FALSE;
+			bErrorRcvFifoOverflow := FALSE;
+			bErrorRcv := FALSE;
+					
+			tonPollTimer(IN := FALSE, PT := T#0S);
+			tonResponseTimer(IN := FALSE, PT := tReceiveTimeout);
+			tonReconnectTimer(IN := FALSE, PT := tReconnect);
+			
+			(* Clear Tx frame *)
+			MEMSET(ADR(sTxFrame),0,SIZEOF(sTxFrame));
+			(* Clear Rx frame *)
+			MEMSET(ADR(sRxFrame),0,SIZEOF(sRxFrame));
+			(* Clear buffer *)
+			MEMSET(ADR(arbyBuffer),0,SIZEOF(arbyBuffer));
+			
+			(* Clear TX fifo (optional) *)
+			fbTx.Clear( 
+				sPrefix := CONCAT(sPrefix, 'FB_FrameFifo(sender)::' ), 
+				bLog := bLoggerEn 
+			);
+			(* Clear RX fifo (optional) *)
+			fbRx.Clear( 
+				sPrefix := CONCAT(sPrefix, 'FB_FrameFifo(receiver)::' ), 
+				bLog := bLoggerEn );
+			(* Clear log fifo (optional) *)
+			fbLoggger.Clear(
+				sPrefix := sPrefix, 
+				bLog := bLoggerEn 
+			);
+					
+			etConnState := ET_TCPIP_ConnState_eConnect;
+			
+		END_IF
+					
+	ET_TCPIP_ConnState_eConnect:
+		fbClientServerConnection( 	
+			bEnable := bEnable, 
+			eState => etSocketConneState 
+		);
+		
+		IF NOT fbClientServerConnection.bBusy 
+		   AND NOT fbClientServerConnection.bError
+		THEN
+			IF etSocketConneState = eSOCKET_CONNECTED		(* Connected *)
+			THEN			
+				(* Connection established *)	
+				fbLoggger.Message(
+					sMessage := 'Connection established!', 
+					hSocket := fbClientServerConnection.hSocket 
+				);
+				
+				etConnState := ET_TCPIP_ConnState_eDataExchsnge;
+			END_IF
+			
+		ELSIF NOT fbClientServerConnection.bBusy 
+			  AND fbClientServerConnection.bError
+		THEN
+			bErrorConnect := TRUE;			(* Connect error *)
+		
+			(* Connect error *)
+			fbLoggger.Error(
+				sMessage := 'FB_ClientServerConnection()', 
+				nErrID := fbClientServerConnection.nErrId
+			);
+					
+		END_IF
+		
+		IF NOT bEnable
+		   AND bErrorConnect
+		THEN
+			//tonReconnectTimer(IN := FALSE, PT := T#0S);
+		
+			etConnState := ET_TCPIP_ConnState_eIdle;
+		END_IF
+		
+	ET_TCPIP_ConnState_eDataExchsnge:
+		bDisconnect := NOT bEnable OR bDisconnect;(* User/internal disconnect requested? *)
+		
+		IF bDisconnect 
+		   AND NOT bSndSocketBusy 
+		   AND NOT bRcvSocketBusy
+		THEN
+			bDisconnect := FALSE;			(* Reset flag *)
+			
+			fbLoggger.Message(
+				sMessage := 'Closing connection!', 
+				hSocket := fbClientServerConnection.hSocket
+			);
+
+			etConnState := ET_TCPIP_ConnState_eDisconnect;
+		ELSE
+
+			(* ------------------ Send tx data -------------------------------------- *)
+			IF NOT bDisconnect 
+			   AND NOT bSndSocketBusy
+			THEN
+				IF bFullDuplex
+				   OR (NOT bFullDuplex AND NOT bRcvBusy)
+				THEN							
+					fbTx.RemoveHead(sGet => sTxFrame);			(* Remove oldest string entry *)
+	
+					IF fbTx.bOk			(* Success *)
+					THEN
+						bSndBusy := TRUE;
+						bSndSocketBusy := TRUE;
+						
+						bRcvDataValid := FALSE;				(* Recive data valid *)	
+						bNoDataRcv := FALSE;				(* No data receive *)
+						tonPollTimer(IN := FALSE, PT := T#0S);
+						tonResponseTimer(IN := FALSE);									(* Bytes received => disable timeout check *)
+						
+						CONCAT(sTxFrame, sDelimiter);				(* Add delimiter *)
+												
+						fbSocketSend(bExecute := FALSE);
+						fbSocketSend(	
+							sSrvNetID := sSrvNetID,
+							hSocket := fbClientServerConnection.hSocket,
+							cbLen := INT_TO_UDINT(LEN(sTxFrame)), (* Send string *)
+							pSrc := ADR(sTxFrame),(* Address of the string variable *)
+							bExecute := TRUE
+						);						
+					END_IF	 				
+				END_IF
+			ELSE			(* Wait until send not busy *)
+				fbSocketSend(bExecute := FALSE);				
+				
+				IF NOT fbSocketSend.bBusy 
+				   AND NOT fbSocketSend.bError
+				THEN
+					bSndBusy := FALSE;
+					bSndSocketBusy := FALSE;
+			
+				ELSIF NOT fbSocketSend.bBusy 
+				   	  AND fbSocketSend.bError
+				THEN
+					bSndBusy := FALSE;
+					bSndSocketBusy := FALSE;
+					bRcvDataValid := FALSE;
+					bNoDataRcv := FALSE;				 
+ 					bErrorSnd := TRUE;			(* Send error *)					
+					bDisconnect := TRUE;
+ 
+					(* Send error => log error and disconnect *)
+					fbLoggger.Error( 
+						sMessage := 'FB_SocketSend()', 
+						nErrID := fbSocketSend.nErrId
+					);
+	
+				END_IF
+			END_IF
+			(* ---------------------------------------------------------------------- *)
+
+
+			(* ---------------------- Get rx data ----------------------------------- *)
+			IF NOT bDisconnect 
+			   AND NOT bRcvSocketBusy 
+			THEN
+				bRcvDataValid := FALSE;				(* Recive data valid *)	
+				bNoDataRcv := FALSE;				(* No data receive *)
+				tonPollTimer(IN := SEL(bFullDuplex, NOT bSndBusy, TRUE));
+				
+				IF tonPollTimer.Q 
+				THEN
+					bRcvBusy := TRUE;
+					
+					IF fbRx.cbFree >= SIZEOF(sRxFrame)			(* Check free rx fifo space *)
+					THEN
+						bRcvSocketBusy := TRUE;
+						tonPollTimer(IN := FALSE, PT := GVL_TCPIP.RECEIVE_POLLING_TIME);
+						
+						fbSocketReceive(bExecute := FALSE);
+						fbSocketReceive( 
+							sSrvNetId := sSrvNetID,
+							hSocket := fbClientServerConnection.hSocket,
+							cbLen := SIZEOF(arbyBuffer) - udnCntRcvBytes,
+							pDest := ADR(arbyBuffer) + udnCntRcvBytes,
+							bExecute := TRUE
+						);						
+					END_IF
+				END_IF
+				
+			ELSE			(* Wait until receive not busy *)
+				fbSocketReceive(bExecute := FALSE);
+			
+				IF NOT fbSocketReceive.bBusy
+				   AND NOT fbSocketReceive.bError  
+				THEN
+					bRcvSocketBusy := FALSE;					
+				
+					IF fbSocketReceive.nRecBytes > 0 			(* Bytes received *)
+					THEN				
+						tonPollTimer(IN := FALSE, PT := T#0S);							(* Bytes received => increase the read (polling) speed *)
+						tonResponseTimer(IN := FALSE);									(* Bytes received => disable timeout check *)
+						udnCntRcvBytes := udnCntRcvBytes + fbSocketReceive.nRecBytes;	(* Calculate the number of received data bytes *)
+
+						(* Parse received bytes and extract strings *)
+						REPEAT
+							bEndOfString := TRUE;
+							
+							IF udnCntRcvBytes > 0
+							THEN
+								(* Search for string null delimiter *)
+								FOR udnIdxBytes := 0 TO udnCntRcvBytes - INT_TO_UDINT(LEN(sDelimiter)) BY 1
+								DO
+									(* End of string position found *)
+									IF arbyBuffer[udnIdxBytes] = F_ToASC(sDelimiter)			
+									THEN
+										udnLenRcvString := udnIdxBytes + INT_TO_UDINT(LEN(sDelimiter));							(* Calculate the length of string *)
+										MEMSET(ADR(sRxFrame),0,SIZEOF(sRxFrame));												(* Clear Rx frame *)			
+										MEMCPY(ADR(sRxFrame), ADR(arbyBuffer), MIN(udnLenRcvString, SIZEOF(sRxFrame)));			(* Copy string bytes to temp string variable *)
+
+										fbRx.AddTail(sPut := sRxFrame);			(* Add string to the rx fifo *)
+										IF fbRx.bOk 
+										THEN
+											MEMSET(ADR(arbyBuffer), 0, udnLenRcvString);				(* Clear Rx buffer *)
+											MEMMOVE(ADR(arbyBuffer), ADR(arbyBuffer) + udnLenRcvString, udnCntRcvBytes - udnLenRcvString);			(* Move/shift remaining bytes in buffer *)
+											udnCntRcvBytes := udnCntRcvBytes - udnLenRcvString;			(* Recalculate the remaining data length *)
+
+											IF fbRx.cbFree >= SIZEOF(sRxFrame)			(* Check free rx buffer space *)
+											THEN
+												bRcvSocketBusy := FALSE;
+												bRcvBusy := FALSE;
+												bRcvDataValid := TRUE;				(* Recive data valid *)	
+												bNoDataRcv := FALSE;				(* No data receive *)
+												
+												bEndOfString := FALSE;						(* Try to parse the next string *)
+												
+											END_IF
+											
+										ELSE			(* Fifo overflow => log error and disconnect *)
+											bRcvSocketBusy := FALSE;
+											bRcvBusy := FALSE;
+											bRcvDataValid := FALSE;
+											bNoDataRcv := FALSE;
+											bErrorRcvFifoOverflow := TRUE;			(* Fifo overflow error *)	
+											bDisconnect := TRUE;
+											
+											fbLoggger.Error(
+												sMessage := 'FB_FrameFifo(receiver)', 
+												nErrID := GVL_TCPIP.ERROR_RECFIFO_OVERFLOW
+											);
+			
+											RETURN;
+										END_IF
+
+										EXIT;
+									END_IF
+								END_FOR
+
+							END_IF (* IF cbReceived > 0 THEN *)
+
+						UNTIL bEndOfString
+						END_REPEAT																
+						
+					ELSE			(* No bytes received *)
+						tonResponseTimer(IN := tonResponseTimer.PT > T#0S);			(* No bytes received => enable timeout check *)
+						
+						IF bError
+						   OR tonResponseTimer.Q	 				(* Timeout error*)
+						THEN
+							bRcvSocketBusy := FALSE;
+							bRcvBusy := FALSE;						
+							bRcvDataValid := FALSE;				(* Recive data valid *)	
+							bNoDataRcv := TRUE;				(* No data receive *)				
+							bDisconnect := bFullDuplex;
+							
+							MEMSET(ADR(sRxFrame),0,SIZEOF(sRxFrame));												(* Clear Rx frame *)
+							tonResponseTimer(IN := FALSE);									(* Bytes received => disable timeout check *)
+							
+							fbLoggger.Error(
+								sMessage := 'FB_SocketReceive()', 
+								nErrID := GVL_TCPIP.ERROR_RECEIVE_TIMEOUT
+							);
+		
+						END_IF
+							
+					END_IF(* IF fbReceive.nRecBytes > 0 THEN *)														
+							
+				ELSIF NOT fbSocketReceive.bBusy
+				   	  AND fbSocketReceive.bError
+				THEN
+					bRcvSocketBusy := FALSE;
+					bRcvBusy := FALSE;
+					bRcvDataValid := FALSE;
+					bNoDataRcv := FALSE;
+					bErrorRcv:= TRUE;
+					bDisconnect := TRUE;
+
+					(* Receive error => log error and disconnect *)
+					fbLoggger.Error(
+						sMessage := 'FB_SocketReceive()', 
+						nErrID := fbSocketReceive.nErrId
+					);
+
+				END_IF
+				
+			END_IF(* IF NOT bDisconnect AND NOT bRcvBusy THEN *)
+			(* ---------------------------------------------------------------------- *)
+			
+		END_IF(* IF bDisconnect AND NOT bSndBusy AND NOT bRcvBusy THEN *)
+		
+	ET_TCPIP_ConnState_eDisconnect:		
+		fbClientServerConnection(
+			bEnable := FALSE, 
+			eState => etSocketConneState 
+		);
+		
+		IF etSocketConneState = eSOCKET_DISCONNECTED 
+		THEN
+			etConnState := ET_TCPIP_ConnState_eIdle;
+
+		END_IF
+
+END_CASE
+			
+(* TCP/IP connection state *)
+bConnected := etSocketConneState = eSOCKET_CONNECTED;
+bDisconnected := etSocketConneState = eSOCKET_DISCONNECTED;
+bError := bErrorConnect
+		  OR bErrorSnd
+		  OR bErrorRcvFifoOverflow
+		  OR bErrorRcv;
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ClientASCIConnection">
+      <LineId Id="686" Count="2" />
+      <LineId Id="947" Count="0" />
+      <LineId Id="946" Count="0" />
+      <LineId Id="721" Count="0" />
+      <LineId Id="689" Count="1" />
+      <LineId Id="544" Count="0" />
+      <LineId Id="535" Count="0" />
+      <LineId Id="949" Count="0" />
+      <LineId Id="951" Count="0" />
+      <LineId Id="958" Count="0" />
+      <LineId Id="1396" Count="0" />
+      <LineId Id="962" Count="2" />
+      <LineId Id="1009" Count="1" />
+      <LineId Id="952" Count="0" />
+      <LineId Id="948" Count="0" />
+      <LineId Id="172" Count="0" />
+      <LineId Id="1011" Count="0" />
+      <LineId Id="751" Count="0" />
+      <LineId Id="801" Count="7" />
+      <LineId Id="794" Count="0" />
+      <LineId Id="933" Count="2" />
+      <LineId Id="1393" Count="0" />
+      <LineId Id="1395" Count="0" />
+      <LineId Id="1394" Count="0" />
+      <LineId Id="936" Count="2" />
+      <LineId Id="974" Count="7" />
+      <LineId Id="1367" Count="0" />
+      <LineId Id="1336" Count="0" />
+      <LineId Id="982" Count="1" />
+      <LineId Id="1003" Count="3" />
+      <LineId Id="1001" Count="0" />
+      <LineId Id="984" Count="0" />
+      <LineId Id="1025" Count="0" />
+      <LineId Id="1000" Count="0" />
+      <LineId Id="986" Count="0" />
+      <LineId Id="1309" Count="4" />
+      <LineId Id="1307" Count="1" />
+      <LineId Id="987" Count="12" />
+      <LineId Id="972" Count="1" />
+      <LineId Id="943" Count="0" />
+      <LineId Id="941" Count="0" />
+      <LineId Id="753" Count="0" />
+      <LineId Id="932" Count="0" />
+      <LineId Id="173" Count="1" />
+      <LineId Id="177" Count="1" />
+      <LineId Id="204" Count="1" />
+      <LineId Id="217" Count="0" />
+      <LineId Id="225" Count="0" />
+      <LineId Id="220" Count="0" />
+      <LineId Id="226" Count="0" />
+      <LineId Id="243" Count="0" />
+      <LineId Id="310" Count="0" />
+      <LineId Id="240" Count="0" />
+      <LineId Id="305" Count="3" />
+      <LineId Id="241" Count="0" />
+      <LineId Id="222" Count="0" />
+      <LineId Id="319" Count="0" />
+      <LineId Id="314" Count="1" />
+      <LineId Id="313" Count="0" />
+      <LineId Id="1362" Count="1" />
+      <LineId Id="320" Count="0" />
+      <LineId Id="317" Count="0" />
+      <LineId Id="322" Count="2" />
+      <LineId Id="1364" Count="0" />
+      <LineId Id="221" Count="0" />
+      <LineId Id="218" Count="0" />
+      <LineId Id="1399" Count="0" />
+      <LineId Id="1404" Count="0" />
+      <LineId Id="1400" Count="3" />
+      <LineId Id="1398" Count="0" />
+      <LineId Id="1397" Count="0" />
+      <LineId Id="338" Count="1" />
+      <LineId Id="462" Count="0" />
+      <LineId Id="340" Count="0" />
+      <LineId Id="455" Count="0" />
+      <LineId Id="460" Count="1" />
+      <LineId Id="1361" Count="0" />
+      <LineId Id="1360" Count="0" />
+      <LineId Id="342" Count="0" />
+      <LineId Id="463" Count="2" />
+      <LineId Id="657" Count="0" />
+      <LineId Id="343" Count="4" />
+      <LineId Id="474" Count="0" />
+      <LineId Id="472" Count="0" />
+      <LineId Id="873" Count="0" />
+      <LineId Id="889" Count="0" />
+      <LineId Id="874" Count="0" />
+      <LineId Id="876" Count="0" />
+      <LineId Id="1322" Count="0" />
+      <LineId Id="878" Count="1" />
+      <LineId Id="1499" Count="0" />
+      <LineId Id="880" Count="0" />
+      <LineId Id="1501" Count="0" />
+      <LineId Id="1368" Count="0" />
+      <LineId Id="1333" Count="0" />
+      <LineId Id="1498" Count="0" />
+      <LineId Id="1345" Count="0" />
+      <LineId Id="1598" Count="0" />
+      <LineId Id="1324" Count="1" />
+      <LineId Id="882" Count="0" />
+      <LineId Id="1019" Count="0" />
+      <LineId Id="1023" Count="0" />
+      <LineId Id="1020" Count="2" />
+      <LineId Id="1016" Count="0" />
+      <LineId Id="1024" Count="0" />
+      <LineId Id="875" Count="0" />
+      <LineId Id="856" Count="0" />
+      <LineId Id="358" Count="1" />
+      <LineId Id="1343" Count="0" />
+      <LineId Id="496" Count="0" />
+      <LineId Id="507" Count="0" />
+      <LineId Id="497" Count="0" />
+      <LineId Id="1590" Count="0" />
+      <LineId Id="508" Count="0" />
+      <LineId Id="900" Count="0" />
+      <LineId Id="513" Count="0" />
+      <LineId Id="512" Count="0" />
+      <LineId Id="509" Count="0" />
+      <LineId Id="1591" Count="0" />
+      <LineId Id="515" Count="0" />
+      <LineId Id="1370" Count="0" />
+      <LineId Id="1369" Count="0" />
+      <LineId Id="1358" Count="0" />
+      <LineId Id="901" Count="0" />
+      <LineId Id="1357" Count="0" />
+      <LineId Id="498" Count="0" />
+      <LineId Id="500" Count="3" />
+      <LineId Id="648" Count="0" />
+      <LineId Id="491" Count="0" />
+      <LineId Id="367" Count="5" />
+      <LineId Id="518" Count="1" />
+      <LineId Id="1594" Count="1" />
+      <LineId Id="374" Count="0" />
+      <LineId Id="520" Count="0" />
+      <LineId Id="375" Count="0" />
+      <LineId Id="521" Count="0" />
+      <LineId Id="898" Count="0" />
+      <LineId Id="1497" Count="0" />
+      <LineId Id="376" Count="0" />
+      <LineId Id="522" Count="0" />
+      <LineId Id="1346" Count="0" />
+      <LineId Id="377" Count="0" />
+      <LineId Id="728" Count="0" />
+      <LineId Id="378" Count="1" />
+      <LineId Id="523" Count="0" />
+      <LineId Id="380" Count="3" />
+      <LineId Id="524" Count="0" />
+      <LineId Id="385" Count="3" />
+      <LineId Id="390" Count="0" />
+      <LineId Id="527" Count="0" />
+      <LineId Id="559" Count="1" />
+      <LineId Id="546" Count="0" />
+      <LineId Id="1028" Count="1" />
+      <LineId Id="578" Count="1" />
+      <LineId Id="581" Count="2" />
+      <LineId Id="1113" Count="0" />
+      <LineId Id="1164" Count="13" />
+      <LineId Id="1301" Count="0" />
+      <LineId Id="1178" Count="3" />
+      <LineId Id="1302" Count="0" />
+      <LineId Id="1182" Count="4" />
+      <LineId Id="1330" Count="0" />
+      <LineId Id="1332" Count="0" />
+      <LineId Id="1372" Count="0" />
+      <LineId Id="1374" Count="0" />
+      <LineId Id="1373" Count="0" />
+      <LineId Id="1187" Count="0" />
+      <LineId Id="1356" Count="0" />
+      <LineId Id="1188" Count="4" />
+      <LineId Id="1375" Count="1" />
+      <LineId Id="1354" Count="0" />
+      <LineId Id="1193" Count="0" />
+      <LineId Id="1353" Count="0" />
+      <LineId Id="1194" Count="3" />
+      <LineId Id="1202" Count="10" />
+      <LineId Id="618" Count="0" />
+      <LineId Id="915" Count="0" />
+      <LineId Id="620" Count="1" />
+      <LineId Id="631" Count="0" />
+      <LineId Id="622" Count="0" />
+      <LineId Id="1015" Count="0" />
+      <LineId Id="632" Count="0" />
+      <LineId Id="911" Count="0" />
+      <LineId Id="913" Count="0" />
+      <LineId Id="1377" Count="0" />
+      <LineId Id="1351" Count="0" />
+      <LineId Id="644" Count="0" />
+      <LineId Id="1350" Count="0" />
+      <LineId Id="1492" Count="0" />
+      <LineId Id="1348" Count="1" />
+      <LineId Id="624" Count="0" />
+      <LineId Id="639" Count="3" />
+      <LineId Id="626" Count="0" />
+      <LineId Id="1027" Count="0" />
+      <LineId Id="577" Count="0" />
+      <LineId Id="571" Count="0" />
+      <LineId Id="562" Count="0" />
+      <LineId Id="566" Count="0" />
+      <LineId Id="563" Count="1" />
+      <LineId Id="917" Count="0" />
+      <LineId Id="1384" Count="1" />
+      <LineId Id="1382" Count="0" />
+      <LineId Id="572" Count="0" />
+      <LineId Id="1379" Count="0" />
+      <LineId Id="646" Count="1" />
+      <LineId Id="650" Count="2" />
+      <LineId Id="654" Count="0" />
+      <LineId Id="565" Count="0" />
+      <LineId Id="660" Count="0" />
+      <LineId Id="450" Count="2" />
+      <LineId Id="326" Count="2" />
+      <LineId Id="693" Count="0" />
+      <LineId Id="702" Count="3" />
+      <LineId Id="694" Count="0" />
+      <LineId Id="706" Count="0" />
+      <LineId Id="920" Count="1" />
+      <LineId Id="700" Count="1" />
+      <LineId Id="329" Count="1" />
+      <LineId Id="259" Count="0" />
+      <LineId Id="251" Count="0" />
+      <LineId Id="256" Count="0" />
+      <LineId Id="954" Count="3" />
+      <LineId Id="254" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

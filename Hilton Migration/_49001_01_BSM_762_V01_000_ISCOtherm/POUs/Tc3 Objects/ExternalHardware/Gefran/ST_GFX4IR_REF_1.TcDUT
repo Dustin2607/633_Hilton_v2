@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_GFX4IR_REF_1" Id="{5b80a7dc-e61f-4fff-a0e6-7d8353272631}">
+    <Declaration><![CDATA[TYPE ST_GFX4IR_REF_1 : FB_GFX4IR_REF;
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

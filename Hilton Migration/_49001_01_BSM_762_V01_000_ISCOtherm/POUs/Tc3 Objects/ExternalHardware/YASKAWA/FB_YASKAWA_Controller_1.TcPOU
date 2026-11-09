@@ -1,0 +1,159 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_YASKAWA_Controller_1" Id="{b1788864-6efc-4ad2-a9ee-0975594c1385}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_YASKAWA_Controller_1
+(*
+
+The function block used to control axis.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			20.06.2018
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Signal FB enable *)
+	etMachineMode				:ET_MachineMode;			(* Machine mode *)
+	etMachineState				:ET_MachineState;			(* Machine state *)
+	bDrivesOn					:BOOL;						(* Enable the drives *)
+	bMoveOn					:BOOL;						(* Enable the move enable *)
+	bReset						:BOOL;						(* Signal reset *)
+	bExeReset					:BOOL;						(* Execute auto reset *)
+	lrOverride					:LREAL;						(* Override 100% percent *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bStatus						:BOOL;						(* Feedback *)
+	bStatusDelay					:BOOL;						(* Feedback delay *)
+	bReseted					:BOOL;						(* Reset completed *)
+	bError						:BOOL;						(* Controller error *)
+	udnErrorNo					:UDINT;						(* Error number *)
+	bInHome						:BOOL;						(* In home *)
+	bNotMoving					:BOOL;						(* Status of moving *)
+	bNotInCrashAreaMachine		:BOOL;						(* Status not in crash area *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	Yaskawa					:ST_YASKAWA_REF;				(* The YASKAWA_REF data type  is an interface between the PLC and the YASKAWA and contains axis information *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	tStatusDelay					:TIME := t#1s;					(* Status delay time *)
+
+	bFirstTime					:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbPower						:FB_YASKAWA_Power;		(* The function block is used to enable for an axis *)
+	tonStatusDelay				:TON;						(* Delay controller enabled status *)
+	fbReset						:FB_YASKAWA_Reset;			(* An axis reset is carried out with the function block *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable							(* Signal FB enable *)
+THEN
+	bStatus := FALSE;						(* Feedback *)
+	bStatusDelay := FALSE;				(* Feedback *)
+	bError := FALSE;						(* Controller error *)
+	udnErrorNo := 0;						(* Error number *)
+
+	bFirstTime := FALSE;
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+
+	bFirstTime := TRUE;
+END_IF;
+
+A_Power();
+A_Reset();
+A_Error();
+
+(* In home *)
+bInHome := Yaskawa.stYaskawaToPlc.bInHome;
+
+(* Status not moving *)
+bNotMoving := Yaskawa.stYaskawaToPlc.bNotMoving;
+
+(* Status not in crash area *)
+bNotInCrashAreaMachine := Yaskawa.stYaskawaToPlc.bNotInCrashAreaMachine;
+
+
+
+
+
+
+]]></ST>
+    </Implementation>
+    <Action Name="A_Error" Id="{6f5c0f9d-94d1-420c-8838-34482f5306a1}">
+      <Implementation>
+        <ST><![CDATA[
+bError := fbReset.bError
+	         OR fbPower.bError;]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Power" Id="{e5e8f7c6-9525-4f72-9b35-420b2b2fa879}">
+      <Implementation>
+        <ST><![CDATA[
+fbPower(
+	bEnable := TRUE,
+	bAutoHand := etMachineMode = ET_MachineMode_eHome
+			         OR etMachineMode = ET_MachineMode_eStepping
+			         OR etMachineMode = ET_MachineMode_eAutomatic
+					 OR etMachineMode = ET_MachineMode_eMaintenance,
+	bDrivesOn :=  bDrivesOn,
+	bMoveOn := bMoveOn,
+	lrOverride := lrOverride,
+	Yaskawa := Yaskawa
+ );
+
+tonStatusDelay(
+	IN := fbPower.bStatus,
+	PT := SEL(etMachineMode = ET_MachineMode_eManual, tStatusDelay, t#0ms),
+	Q => bStatusDelay
+);
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Reset" Id="{49c588b0-4c99-4880-83b4-1d69f991ed11}">
+      <Implementation>
+        <ST><![CDATA[
+fbReset(
+	bExecute := bReset
+	            	     XOR bExeReset,
+	Yaskawa := Yaskawa,
+	bDone => bReseted
+);
+]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_YASKAWA_Controller_1">
+      <LineId Id="58" Count="36" />
+    </LineIds>
+    <LineIds Name="FB_YASKAWA_Controller_1.A_Error">
+      <LineId Id="0" Count="2" />
+    </LineIds>
+    <LineIds Name="FB_YASKAWA_Controller_1.A_Power">
+      <LineId Id="0" Count="5" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="6" Count="12" />
+    </LineIds>
+    <LineIds Name="FB_YASKAWA_Controller_1.A_Reset">
+      <LineId Id="0" Count="7" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

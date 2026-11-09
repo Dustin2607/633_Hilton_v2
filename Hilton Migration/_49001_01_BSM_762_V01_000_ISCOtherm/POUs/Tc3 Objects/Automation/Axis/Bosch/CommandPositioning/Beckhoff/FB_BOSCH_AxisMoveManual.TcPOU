@@ -1,0 +1,323 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_BOSCH_AxisMoveManual" Id="{804d190d-ba4d-4a9d-900c-1954112f6583}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_BOSCH_AxisMoveManual
+(*
+
+The function block used to manual control of axis.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			23.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Signal FB enable *)
+	bOccupied					:BOOL;						(* Axis occupied *)
+	etMachineMode				:ET_MachineMode;			(* Machine mode *)
+	etMachineState				:ET_MachineState;			(* Machine state *)
+	bCtrlEnabled				:BOOL;						(* Controller enabled *)
+	bReset						:BOOL;						(* Reset *)
+	bMovePlus					:BOOL;						(* Move in plus direction *)
+	bMoveMinus					:BOOL;						(* Move in minus direction *)
+	lrTipDistance				:LREAL;						(* Relative distance for movements *)
+	bLimitMax					:BOOL;						(* Limit max *)
+	bLimitMin					:BOOL;						(* Limit min *)
+	bPlusRelease				:BOOL;						(* Plus move release *)
+	bMinusRelease				:BOOL;						(* Minus move release *)
+	lrVelocity					:LREAL;						(* Target velocity *)
+	lrAcceleration				:LREAL;						(* Value of the acceleration (always positive) *)
+	lrDeceleration				:LREAL;						(* Value of deceleration (always positive) *)
+	lrJerk						:LREAL;						(* Value of jerk (always positive) *)
+	tControllerOff				:TIME := T#60S;				(* Time to switch controller off *)
+	pDrive						:POINTER TO ST_BOSCHINDRADRIVECIA402_REF;			(* The DRIVE_REF data type  is an interface between the PLC and the DRIVE and contains axis information *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bMoving						:BOOL;						(* Axis moving *)
+	bControllerOff				:BOOL;						(* Switch controller off *)
+	bBusy						:BOOL;						(* Program busy *)
+	bError						:BOOL;						(* Program error *)
+	udnErrorNo					:UDINT;						(* Error number *)
+END_VAR
+VAR_IN_OUT
+	bHomeCompleted				:BOOL;						(* Home completed *)
+	Axis						:AXIS_REF;					(* The AXIS_REF data type  is an interface between the PLC and the NC and contains axis information *)
+	MasterAxis					:AXIS_REF;					(* The AXIS_REF data type  is an interface between the PLC and the NC and contains axis information *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	etAxisSetLimits				:ET_BOSCH_ManualSetLimits;
+	bSetLimitsDone 				:BOOL;                             		   	(* Program done *)
+	bSetLimitsBusy 				:BOOL;                                 		(* Program not busy *)
+	bSetLimitsError 			:BOOL;                                 		(* Program not error *)
+	udnSetLimitsErrorNo 		:UDINT;                                 		(* Error number *)
+
+	bFirstTime					:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbMcJog						:MC_Jog;					(* The function block is used to manual control an axis *)
+	fbMcWriteParameter 			:MC_WriteParameter;			(* The function block is used to write an axis parameter. *)
+	fbTipPlus					:FB_SignalWatchdog;
+	fbTipMinus					:FB_SignalWatchdog;
+	rtMovePlus					:R_TRIG;
+	rtMoveMinus					:R_TRIG;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable							(* Signal FB enable *)
+     OR  bOccupied
+THEN
+	fbMcJog(
+		JogForward := FALSE,
+		JogBackwards := FALSE,
+		Axis := Axis,
+		Busy => bBusy,					(* Program busy  *)
+		Active => bMoving,				(* Axis moving *)
+		Error => bError,					(* Program error *)
+		ErrorID => udnErrorNo				(* Error number *)
+	);
+
+	fbTipPlus(
+		bEnable := FALSE,
+		tWatchdog := tControllerOff
+	);
+
+	fbTipMinus(
+		bEnable := FALSE,
+		tWatchdog := tControllerOff
+	);
+
+	bControllerOff := NOT bEnable;
+
+	bFirstTime := FALSE;
+
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+	bSetLimitsDone := FALSE;                                	(* Program done *)
+	bSetLimitsBusy := FALSE;                                 	(* Program not busy *)
+	bSetLimitsError := FALSE;                                	 	(* Program not error *)
+	udnSetLimitsErrorNo := 0;                                 		(* Error number *)
+
+	etAxisSetLimits := ET_BOSCH_ManualSetLimits.eWaitExecute;       			(* Next step *)
+
+	bFirstTime := TRUE;
+END_IF
+
+IF bReset
+     AND bError
+THEN
+	fbMcJog(
+		JogForward := FALSE,
+		JogBackwards := FALSE,
+		Axis := Axis,
+		Busy => bBusy,					(* Program busy  *)
+		Active => bMoving,				(* Axis moving *)
+		Error => bError,					(* Program error *)
+		ErrorID => udnErrorNo				(* Error number *)
+	);
+END_IF;
+
+A_SetLimits();
+
+IF bCtrlEnabled
+    AND NOT Axis.NcToPlc.StateDWord.5			(* Check axis is not slave *)
+    AND NOT bSetLimitsBusy
+    AND etMachineMode = ET_MachineMode_eManual
+THEN
+	rtMovePlus(CLK := bMovePlus);
+	rtMoveMinus(CLK := bMoveMinus);
+
+	IF NOT bMovePlus
+	     AND NOT bMoveMinus
+	THEN
+		fbMcJog.JogForward := FALSE;
+		fbMcJog.JogBackwards := FALSE;
+
+	ELSIF bMovePlus
+	             AND NOT bMoveMinus
+	THEN
+		fbMcJog.JogForward := (lrTipDistance = 0 OR rtMovePlus.Q)
+							 AND bPlusRelease AND NOT bLimitMax;
+		fbMcJog.JogBackwards := FALSE;
+
+	ELSIF NOT bMovePlus
+	     	    AND bMoveMinus
+	THEN
+		fbMcJog.JogForward := FALSE;
+		fbMcJog.JogBackwards := (lrTipDistance = 0 OR rtMoveMinus.Q)
+							       AND bMinusRelease AND NOT bLimitMin;
+
+	END_IF;
+
+	fbMcJog(
+		Mode := SEL(lrTipDistance <> 0, MC_JOGMODE_STANDARD_FAST, MC_JOGMODE_INCHING),
+		Position := lrTipDistance,
+		Velocity := lrVelocity,
+		Acceleration := lrAcceleration,
+		Deceleration := lrDeceleration,
+		Jerk := lrJerk,
+		Axis := Axis,
+		Busy => bBusy,
+		Active => bMoving,
+		Error => bError,
+		ErrorID => udnErrorNo
+	);
+
+ELSE
+	fbMcJog(
+		JogForward := FALSE,
+		JogBackwards := FALSE,
+		Axis := Axis,
+		Busy => bBusy,					(* Program busy  *)
+		Active => bMoving,				(* Axis moving *)
+		Error => bError,					(* Program error *)
+		ErrorID => udnErrorNo				(* Error number *)
+	);
+
+END_IF
+
+fbTipPlus(
+	bEnable := etMachineMode = ET_MachineMode_eManual,
+	bIn := bMovePlus
+		  AND bPlusRelease
+		  AND NOT bLimitMax,
+	tWatchdog := tControllerOff
+);
+
+fbTipMinus(
+	bEnable := etMachineMode = ET_MachineMode_eManual,
+	bIn := bMoveMinus
+		  AND bMinusRelease
+		  AND NOT bLimitMin,
+	tWatchdog := tControllerOff
+);
+
+bControllerOff := SEL( Axis.NcToPlc.StateDWord.5, 			(* Check axis is slave *)
+				      NOT (fbTipPlus.bOut OR fbTipMinus.bOut),
+				      NOT MasterAxis.PlcToNc.ControlDWord.0)
+			    AND etMachineMode = ET_MachineMode_eManual;
+
+IF bMoving
+THEN
+	bHomeCompleted := FALSE;
+END_IF;
+
+bError := fbMcJog.Error;]]></ST>
+    </Implementation>
+    <Action Name="A_SetLimits" Id="{127ea89b-5ee2-4583-91d5-3195d61a1738}">
+      <Implementation>
+        <ST><![CDATA[
+(* Set axis limits *)
+
+CASE etAxisSetLimits OF
+
+	ET_BOSCH_ManualSetLimits.eWaitExecute:
+		bSetLimitsBusy := FALSE;                                 	(* Program not busy *)
+		bSetLimitsError := FALSE;                                	 	(* Program not error *)
+
+		IF bMovePlus
+		     OR bMoveMinus
+		THEN
+			bSetLimitsDone := FALSE;                                (* Program done *)
+			bSetLimitsBusy := TRUE;                                 	(* Program not busy *)
+
+			etAxisSetLimits := ET_BOSCH_ManualSetLimits.eSetVelo;         		(* Next step *)
+		END_IF;
+
+	ET_BOSCH_ManualSetLimits.eSetVelo:
+		fbMcWriteParameter.Execute := TRUE;
+		fbMcWriteParameter.ParameterNumber := AxisManualVelocityFast;
+		fbMcWriteParameter.Value := lrVelocity;
+
+		IF fbMcWriteParameter.Busy
+		THEN
+			etAxisSetLimits := ET_BOSCH_ManualSetLimits.eWfSetVelo;         		(* Next step *)
+
+		ELSIF fbMcWriteParameter.Error
+		THEN
+			fbMcWriteParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			etAxisSetLimits := ET_BOSCH_ManualSetLimits.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_ManualSetLimits.eWfSetVelo:
+		IF NOT fbMcWriteParameter.Busy
+		     AND NOT fbMcWriteParameter.Error
+		THEN
+			fbMcWriteParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			etAxisSetLimits := ET_BOSCH_ManualSetLimits.eDone;         		(* Next step *)
+
+		ELSIF fbMcWriteParameter.Error
+		THEN
+			fbMcWriteParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			etAxisSetLimits := ET_BOSCH_ManualSetLimits.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_ManualSetLimits.eDone:
+		bSetLimitsDone := TRUE;                                     		(* Program done, in position *)
+		bSetLimitsBusy := FALSE;                                     		(* Program not busy *)
+
+		etAxisSetLimits := ET_BOSCH_ManualSetLimits.eNoExecute;            	(* Next step *)
+
+	ET_BOSCH_ManualSetLimits.eError:
+		bSetLimitsDone := FALSE;                                     		(* Program done, in position *)
+		bSetLimitsError := TRUE;                                     		(* Program error *)
+		bSetLimitsBusy := FALSE;                                     		(* Program not busy *)
+		udnSetLimitsErrorNo := 1;                                 		(* Error number *)
+
+		etAxisSetLimits := ET_BOSCH_ManualSetLimits.eNoExecute;           	(* Next step *)
+
+	ET_BOSCH_ManualSetLimits.eNoExecute:
+		IF NOT bMovePlus
+		     AND NOT bMoveMinus
+		THEN
+			bSetLimitsDone := FALSE;                                     		(* Program done, in position *)
+			bSetLimitsError := FALSE;                                     		(* Program error *)
+			bSetLimitsBusy := FALSE;                                     		(* Program not busy *)
+
+			etAxisSetLimits := ET_BOSCH_ManualSetLimits.eWaitExecute;       (* Next step *)
+		END_IF;
+
+END_CASE;
+
+fbMcWriteParameter(
+	Axis := Axis
+);]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_BOSCH_AxisMoveManual">
+      <LineId Id="72" Count="142" />
+    </LineIds>
+    <LineIds Name="FB_BOSCH_AxisMoveManual.A_SetLimits">
+      <LineId Id="0" Count="89" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

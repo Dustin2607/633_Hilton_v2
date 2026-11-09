@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_ROBOTTOPLC_1" Id="{7a28659b-f213-4d99-bf9e-c64597959bc1}">
+    <Declaration><![CDATA[TYPE ST_ROBOTTOPLC_1 :
+STRUCT
+	arbyInput				:ARRAY[0..31] OF BYTE;
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

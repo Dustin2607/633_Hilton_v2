@@ -1,0 +1,207 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_DatamanScanner" Id="{cff0f39e-88ef-4552-baeb-6b4437f4a8f6}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_DatamanScanner
+(*
+
+The function block used to control scanner.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			24.01.2019
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	sSrvNetID				:T_AmsNetID	:= '';						(* TwinCAT TCP/IP server network address *)
+	sRemoteHost				:T_IPv4Addr := '192.168.10.1';			(* Server network address *)
+	nRemotePort				:UDINT := 23;							(* Server port number *)
+	bEnable					:BOOL := FALSE;							(* TRUE => enable client data exchange, FALSE => disable *)
+	bReset					:BOOL := FALSE;							(* Confirm alarm *)
+	bExecute 				:BOOL := FALSE;							(* Send execute command *)
+	bLoggerEn				:BOOL := FALSE;							(* TRUE => Enable log message output, FALSE => Disable *)
+	sSndMsg					:T_MaxString := 'BEEP 2 2';				(* Send command is an ASCII typable string possibly followed by data. *)
+	sPrefix					:STRING := '||>';						(* Send command prefix *)
+	sSuffix					:STRING := '$R$N';						(* Send/Receive command suffix *)	
+	sDelimiter				:STRING := '';							(* Delimiter (null) *)
+	tReceiveTimeout			:TIME := T#100MS;						(* Recive time the which the answer is expected to come *)	
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	sRcvMsg					:T_MaxString := '';						(* Receive an ASCII typable string data. *)										
+	arsRcvMsg				:ARRAY[1..GVL_TCPIP.RECEIVE_MESSAGE_MAX] OF T_MaxString;			(* Get message of received an ASCII typable string data. *)
+	bConnected				:BOOL := FALSE;							(* TCP/IP connection state connected *)
+	bDisconnected			:BOOL := FALSE;							(* TCP/IP connection state disconnected *)
+	bRcvDataValid			:BOOL := FALSE;							(* Recive data valid *)	
+	bNoDataRcv 				:BOOL := FALSE;							(* No data receive *)	
+	bError					:BOOL := FALSE;							(* Program error *)
+	bErrorInit				:BOOL := FALSE;							(* Program error initialize *)				
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+	
+	(* Variables *)	
+	bInitialize				:BOOL := TRUE;
+	
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbCloseAll				:FB_SocketCloseAll;						(* Close all connection handles (TCP/IP and UDP sockets) that were opened by a PLC runtime system.  *)
+	fbConnection			:FB_ClientASCIConnection;				(* Client data exchange control function block. *)
+	fbSendMsg 				:FB_ClientSendMsg;						(* Client send cyclic message strings. *)
+	fbReceiveMsg 			:FB_ClientReceiveMsg;					(* Client received message strings. *)
+	fbLogger 				:FB_ClientLogger;						(* Client get log/error messages from log fifo. *)
+	fbTx 					:FB_FrameFifo;							(* Tx fifo *)
+	fbRx 					:FB_FrameFifo;							(* Rx fifo *)
+	fbLog					:FB_LogFifo;							(* Log/debug/error fifo *)
+	fbInitialize			:FB_SignalHandlingDelay;				(* Connection initialize delay *)
+	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+(* On PLC reset or program download close all old (opened) connections *)
+fbInitialize(
+	bEnable := TRUE, 
+	bIn := bInitialize, 
+	tDelay := T#2S
+);
+
+fbCloseAll(
+	sSrvNetID := sSrvNetID, 
+	bExecute := bInitialize 
+);
+
+IF fbCloseAll.bBusy 
+   OR fbCloseAll.bError 
+THEN
+	bErrorInit := fbInitialize.bOut;
+	RETURN;
+ELSE
+	bErrorInit := FALSE;
+	bInitialize := FALSE;
+END_IF
+
+(* Establish connection and data exchange *)
+fbConnection(
+	bEnable := bEnable, 
+	bReset := bReset, 
+	bFullDuplex := FALSE, 
+	sSrvNetID := sSrvNetID,
+	sRemoteHost := sRemoteHost, 
+	udnRemotePort := nRemotePort,
+	tReconnect := T#45S,
+	tReceiveTimeout := tReceiveTimeout,
+	bLoggerEn := bLoggerEn, 
+	sDelimiter := sDelimiter, 
+	sPrefix := 'CLIENT::',
+	fbTx := fbTx, 
+	fbRx := fbRx, 
+	fbLoggger := fbLog, 
+	bConnected => bConnected,
+	bDisconnected => bDisconnected,
+	bRcvDataValid => bRcvDataValid,
+	bNoDataRcv => bNoDataRcv,	
+	bError => bError
+);
+
+(* Send message *)	
+fbSendMsg(
+	bEnable := bConnected,
+	bExecute := bExecute, 
+	sMsg := sSndMsg, 
+	sPrefix := sPrefix, 
+	sSuffix := sSuffix, 
+	fbTx := fbTx, 
+	fbLoggger := fbLog,
+	arsMsg := arsRcvMsg
+);
+
+(* Receive message *)	
+fbReceiveMsg(
+	bEnable := bConnected,
+	sSuffix := sSuffix,
+	fbRx := fbRx,
+	sMsg => sRcvMsg,
+	arsMsg := arsRcvMsg
+);
+
+(* Log message *)	
+fbLogger(
+	bEnable := bConnected,
+	fbLoggger := fbLog
+);
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_DatamanScanner">
+      <LineId Id="158" Count="0" />
+      <LineId Id="162" Count="0" />
+      <LineId Id="657" Count="4" />
+      <LineId Id="656" Count="0" />
+      <LineId Id="163" Count="0" />
+      <LineId Id="317" Count="0" />
+      <LineId Id="319" Count="1" />
+      <LineId Id="664" Count="0" />
+      <LineId Id="164" Count="0" />
+      <LineId Id="321" Count="1" />
+      <LineId Id="420" Count="0" />
+      <LineId Id="165" Count="0" />
+      <LineId Id="418" Count="0" />
+      <LineId Id="421" Count="0" />
+      <LineId Id="662" Count="0" />
+      <LineId Id="166" Count="0" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="366" Count="0" />
+      <LineId Id="388" Count="1" />
+      <LineId Id="369" Count="0" />
+      <LineId Id="390" Count="1" />
+      <LineId Id="372" Count="1" />
+      <LineId Id="589" Count="0" />
+      <LineId Id="374" Count="2" />
+      <LineId Id="394" Count="1" />
+      <LineId Id="393" Count="0" />
+      <LineId Id="396" Count="3" />
+      <LineId Id="365" Count="0" />
+      <LineId Id="400" Count="0" />
+      <LineId Id="227" Count="0" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="140" Count="0" />
+      <LineId Id="325" Count="0" />
+      <LineId Id="141" Count="2" />
+      <LineId Id="404" Count="0" />
+      <LineId Id="145" Count="0" />
+      <LineId Id="139" Count="0" />
+      <LineId Id="524" Count="0" />
+      <LineId Id="309" Count="0" />
+      <LineId Id="348" Count="0" />
+      <LineId Id="146" Count="0" />
+      <LineId Id="148" Count="0" />
+      <LineId Id="344" Count="0" />
+      <LineId Id="522" Count="0" />
+      <LineId Id="291" Count="0" />
+      <LineId Id="290" Count="0" />
+      <LineId Id="523" Count="0" />
+      <LineId Id="292" Count="0" />
+      <LineId Id="349" Count="0" />
+      <LineId Id="294" Count="0" />
+      <LineId Id="150" Count="0" />
+      <LineId Id="346" Count="0" />
+      <LineId Id="345" Count="0" />
+      <LineId Id="347" Count="0" />
+      <LineId Id="296" Count="0" />
+      <LineId Id="295" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

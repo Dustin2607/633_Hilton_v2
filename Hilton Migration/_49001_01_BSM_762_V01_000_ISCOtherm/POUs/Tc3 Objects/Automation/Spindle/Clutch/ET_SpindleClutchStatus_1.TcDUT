@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_SpindleClutchStatus_1" Id="{dc92c81e-8c76-40ba-b768-64277a6d5408}">
+    <Declaration><![CDATA[(* Status of spindle *)
+
+TYPE ET_SpindleClutchStatus_1 :
+(
+	ET_SpindleClutchStatus_SignalWrong := -1,					(* Clutch signals are wrong *)
+	ET_SpindleClutchStatus_ClosedWithoutTool := 0,				(* Clutch is closed without tool *)
+	ET_SpindleClutchStatus_ClosedWithTool := 1,					(* Clutch is closed with tool *)
+	ET_SpindleClutchStatus_Opened := 2,						(* Clutch is opened *)
+	ET_SpindleClutchStatus_RotatingNoClosed := 3,				(* Clutch rotating and not closed *)
+	ET_SpindleClutchStatus_NoDefined := 999
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

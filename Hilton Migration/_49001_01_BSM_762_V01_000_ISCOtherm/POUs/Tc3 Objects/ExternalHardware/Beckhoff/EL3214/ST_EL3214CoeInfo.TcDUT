@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_EL3214CoeInfo" Id="{e9fb050f-d67d-4346-874f-552556f4ca46}">
+    <Declaration><![CDATA[TYPE ST_EL3214CoeInfo :
+STRUCT
+	bEnableUserScale 				:BOOL := FALSE;
+	bPresentation					:BOOL := FALSE;
+	bSiemensBits					:BOOL := FALSE;
+	bEnableFilter 					:BOOL := FALSE;
+	bEnableLimit1 					:BOOL := FALSE;
+	bEnableLimit2 					:BOOL := FALSE;
+	bEnableAutomaticCalibration		:BOOL := FALSE;
+	bEnableUserCalibration 			:BOOL := FALSE;
+	bEnableVendorCalibration 		:BOOL := TRUE;
+	nUserScaleOffset 				:INT := 0;
+	dnUserScaleGain 				:DINT := 65536;
+	nLimit1 						:INT := 0;
+	nLimit2 						:INT := 0;
+	dwFilterSettings 				:DWORD := 0;
+	nUserCalibrationOffset 			:INT := 0;
+	unUserCalibrationGain 			:UINT := 65535;
+	dwRTDElement 					:DWORD := 0;
+	dwConnectionTechnology			:DWORD := 0;
+	bWireCalibration				:INT := 0;
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

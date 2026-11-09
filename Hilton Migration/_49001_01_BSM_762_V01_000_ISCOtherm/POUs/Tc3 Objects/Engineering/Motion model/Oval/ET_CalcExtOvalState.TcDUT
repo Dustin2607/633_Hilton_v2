@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_CalcExtOvalState" Id="{083810db-f660-4d9b-97cf-0d8c4e446380}">
+    <Declaration><![CDATA[TYPE ET_CalcExtOvalState :
+(
+	ET_CalcExtOvalState_eWaitExecute := 0,
+	ET_CalcExtOvalState_eCalcOvalPos := 5,
+	ET_CalcExtOvalState_eDone := 197,
+	ET_CalcExtOvalState_eError := 198,
+	ET_CalcExtOvalState_eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

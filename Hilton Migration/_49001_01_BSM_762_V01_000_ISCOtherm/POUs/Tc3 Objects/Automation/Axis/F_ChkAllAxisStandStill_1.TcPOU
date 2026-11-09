@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_ChkAllAxisStandStill_1" Id="{3d9a75a5-ac64-461a-81b1-699c5b5d61cf}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_ChkAllAxisStandStill_1 : BOOL
+(*
+
+The function used to detect if all axis stand still.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			23.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;					(* Signal FB enable *)
+	bAxis1StandStill				:BOOL;					(* Axis stand still *)
+	bAxis2StandStill				:BOOL;					(* Axis stand still *)
+	bAxis3StandStill				:BOOL;					(* Axis stand still *)
+	bAxis4StandStill				:BOOL;					(* Axis stand still *)
+	bAxis5StandStill				:BOOL;					(* Axis stand still *)
+	bAxis6StandStill				:BOOL;					(* Axis stand still *)
+	bAxis7StandStill				:BOOL;					(* Axis stand still *)
+	bAxis8StandStill				:BOOL;					(* Axis stand still *)
+	bAxis9StandStill				:BOOL;					(* Axis stand still *)
+	bAxis10StandStill				:BOOL;					(* Axis stand still *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable							(* Signal FB enable *)
+THEN
+	F_ChkAllAxisStandStill := FALSE;
+
+	RETURN;
+END_IF
+
+F_ChkAllAxisStandStill := bAxis1StandStill
+					   AND bAxis2StandStill
+					   AND bAxis3StandStill
+					   AND bAxis4StandStill
+					   AND bAxis5StandStill
+					   AND bAxis6StandStill
+					   AND bAxis7StandStill
+					   AND bAxis8StandStill
+					   AND bAxis9StandStill
+					   AND bAxis10StandStill;]]></ST>
+    </Implementation>
+    <LineIds Name="F_ChkAllAxisStandStill_1">
+      <LineId Id="40" Count="17" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

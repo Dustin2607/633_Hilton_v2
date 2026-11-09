@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_BOSCHINDRADRIVECIA402TOPLC" Id="{4c7d58ff-e698-4efe-93dd-ffe0ed6ae19e}">
+    <Declaration><![CDATA[(* Communikation structure from drive to plc *)
+
+TYPE ST_BOSCHINDRADRIVECIA402TOPLC :
+STRUCT	
+	wDriveStatuswordS00135						:WORD;						(* The parameter S-0-0135 used for drives with SERCOS interface the master status word is cyclicallytransmitted from drive to master. *)
+	dnPositionFeedback1ValueS00051	 			:DINT;						(* The parameter S-0-0051, the actual position value of encoder 1 shows the current position of the motor encoder. *)
+	wProcessCtrlStatusWordP01410				:WORD;						(* The parameter P‑0‑1410 is used as the status word of process control. *)
+	dnAnalogProcessFeedbackValueP01372			:DINT;						(* The feedback value P‑0‑1372 for the process controller. *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

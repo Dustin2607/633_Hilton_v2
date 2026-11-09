@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_EL3214ChannelDiagnosis" Id="{6059daf8-0f59-4202-915e-d196748f7833}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_EL3214ChannelDiagnosis
+VAR_INPUT
+	stChannelState				:ST_EL3214ChannelState;
+END_VAR
+VAR_OUTPUT
+	bChannelOK					:BOOL;
+END_VAR
+VAR
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+(* General Channel Status *)
+IF stChannelState.bUnderrange = 0
+    AND stChannelState.bOverrange = 0
+    AND stChannelState.bError = 0
+    AND stChannelState.bState = 0
+THEN
+	bChannelOK := TRUE;
+ELSE
+	bChannelOK := FALSE;
+END_IF
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_EL3214ChannelDiagnosis">
+      <LineId Id="12" Count="10" />
+      <LineId Id="29" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

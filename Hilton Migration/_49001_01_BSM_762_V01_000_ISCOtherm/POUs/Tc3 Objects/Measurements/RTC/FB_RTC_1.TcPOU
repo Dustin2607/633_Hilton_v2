@@ -1,0 +1,156 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_RTC_1" Id="{177c10ed-33c8-4fc6-ae89-7385ff72734d}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_RTC_1
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+	(* Variables *)
+	bTimeValid							:BOOL;
+	dtRTC        						:DT;
+	dtRTCEX      						:DT;
+	stDateTime							:ST_DateTime;
+END_VAR
+VAR
+	(* Enummerations *)
+	
+	(* Variables *)
+	bFirstTime							:BOOL;	
+	bBusy								:BOOL;
+	bError								:BOOL;
+	udnErrorNo							:UDINT;			
+
+	actSysTimeDate						:TIMESTRUCT;				(* Structure SysTimeDate *)
+	
+	bValidRTC      						:BOOL;	
+	bValidRTCEX    						:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+   	fbGetLocalTime  					:NT_GetTime;
+	tonSyncTimer       					:TON;
+	ftSyncTrigger     					:F_TRIG;
+
+	rtFirstTime						:R_TRIG;
+
+	fbRTC           						:RTC;
+	fbRTCEX        						:RTC_EX;
+
+	(* Information given by the RTC *)
+	wYear								:WORD;
+	wMonth								:WORD;
+	wDay								:WORD;
+	wHour								:WORD;
+	wMinute								:WORD;
+	wSecond							:WORD;
+	wMilliseconds						:WORD;
+	
+	dtDatTimePunktHilfv :STRING;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bFirstTime
+THEN
+	bFirstTime := TRUE;
+	
+END_IF
+
+
+(* Get RTC *)
+rtFirstTime(CLK := bFirstTime);
+
+(* Time synchronization *)
+tonSyncTimer(
+	IN := NOT tonSyncTimer.Q,
+	PT := T#100MS,
+);
+
+(* This function provides the time (seconds) which has passed since 01.01.1970 00:00:00 (RTC). *)
+fbGetLocalTime(
+	NETID := '',
+	START := tonSyncTimer.Q
+			 OR rtFirstTime.Q,
+	TMOUT := T#5S,
+	BUSY => bBusy,
+	ERR => bError,
+	ERRID => udnErrorNo
+);
+
+actSysTimeDate := fbGetLocalTime.TIMESTR;
+
+(*This function converts the time given into format SysTimeDate.*)
+ftSyncTrigger(CLK := bBusy AND NOT bError);
+
+fbRTC(
+	EN := ftSyncTrigger.Q, 
+	PDT := SYSTEMTIME_TO_DT(actSysTimeDate), 
+	Q => bValidRTC, 
+	CDT => dtRTC 
+);
+
+fbRTCEX(
+	EN := ftSyncTrigger.Q,
+	PDT := SYSTEMTIME_TO_DT(actSysTimeDate),
+	PMSEK := actSysTimeDate.wMilliseconds,
+	Q => bValidRTCEX, 
+	CDT => dtRTCEX 
+);
+
+(*The structure SysTimeDate contains detailed information on the system time, 
+split up into a readable format, e.g.:*)
+
+wYear := actSysTimeDate.wYear;
+wMonth := actSysTimeDate.wMonth;
+wDay := actSysTimeDate.wDay;
+wHour := actSysTimeDate.wHour;
+wMinute := actSysTimeDate.wMinute;
+wSecond := actSysTimeDate.wSecond;
+wMilliseconds := actSysTimeDate.wMilliseconds;
+
+stDateTime.dtDateTime := dtRTC;
+stDateTime.dtDateTimeEx := dtRTCEX;
+
+stDateTime.sDate := CONCAT(WORD_TO_STRING(wYear),
+		 CONCAT(SEL(LEN(WORD_TO_STRING(wMonth))=1 ,WORD_TO_STRING(wMonth),CONCAT('0',WORD_TO_STRING(wMonth))),
+				SEL(LEN(WORD_TO_STRING(wDay))=1 ,WORD_TO_STRING(wDay),CONCAT('0',WORD_TO_STRING(wDay)))));
+
+stDateTime.sTime := CONCAT(SEL(LEN(WORD_TO_STRING(wHour))=1 ,WORD_TO_STRING(wHour),CONCAT('0',WORD_TO_STRING(wHour))),
+		 CONCAT(SEL(LEN(WORD_TO_STRING(wMinute))=1 ,WORD_TO_STRING(wMinute),CONCAT('0',WORD_TO_STRING(wMinute))),
+				SEL(LEN(WORD_TO_STRING(wSecond))=1 ,WORD_TO_STRING(wSecond),CONCAT('0',WORD_TO_STRING(wSecond)))));
+
+stDateTime.sTimeEx := CONCAT(stDateTime.sTime, SEL(LEN(WORD_TO_STRING(wMilliseconds))=1 , SEL(LEN(WORD_TO_STRING(wMilliseconds))=2 , WORD_TO_STRING(wMilliseconds), CONCAT('0',WORD_TO_STRING(wMilliseconds))), CONCAT('00',WORD_TO_STRING(wMilliseconds))));
+				
+stDateTime.sDateTime := CONCAT(stDateTime.sDate,CONCAT('_', stDateTime.sTime));
+
+stDateTime.sDateTimeEx := CONCAT(stDateTime.sDate,CONCAT('_', stDateTime.sTimeEx));
+
+
+dtDatTimePunktHilfv := DELETE(DT_TO_STRING(stDateTime.dtDateTime),4,0);
+stDateTime.dtDateTimePunkt :=REPLACE(dtDatTimePunktHilfv,' ',1,11);
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_RTC_1">
+      <LineId Id="54" Count="3" />
+      <LineId Id="307" Count="0" />
+      <LineId Id="58" Count="12" />
+      <LineId Id="73" Count="28" />
+      <LineId Id="103" Count="11" />
+      <LineId Id="258" Count="0" />
+      <LineId Id="257" Count="0" />
+      <LineId Id="115" Count="7" />
+      <LineId Id="198" Count="0" />
+      <LineId Id="123" Count="0" />
+      <LineId Id="199" Count="0" />
+      <LineId Id="124" Count="0" />
+      <LineId Id="200" Count="1" />
+      <LineId Id="255" Count="1" />
+      <LineId Id="358" Count="0" />
+      <LineId Id="143" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

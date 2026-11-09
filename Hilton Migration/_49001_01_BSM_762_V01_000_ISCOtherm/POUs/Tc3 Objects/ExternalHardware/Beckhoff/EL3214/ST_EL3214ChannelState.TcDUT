@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_EL3214ChannelState" Id="{b985f0c0-1c7c-43b4-912d-e2afaa6764b9}">
+    <Declaration><![CDATA[TYPE ST_EL3214ChannelState :
+STRUCT
+	bUnderrange				:BOOL;			(* State underrange *)
+	bOverrange				:BOOL;			(* State overrange *)
+	bError 					:BOOL;			(* State error *)
+	bState 					:BOOL;			(* State *)
+	bToggle					:BOOL;			(* TxPDO Toggle *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

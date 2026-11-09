@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_CheckStringIsReal_1" Id="{ae82aefa-421d-4a99-9102-adf0ae0e6bbd}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_CheckStringIsReal_1 : BOOL (* TRUE if STR does not contain capital letters *)
+VAR_INPUT
+	str : T_MaxString;
+END_VAR
+VAR
+	L : INT;
+	pt : POINTER TO BYTE;
+	pt2 : POINTER TO BYTE;
+	pos: INT;
+	pos2: INT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[pt := ADR(str);
+pt2 := ADR(str);
+L := LEN(str);
+
+FOR pos := 1 TO L DO
+
+	IF pt^ = 43 (* + *)
+	     AND (pos <> 1)
+	THEN
+		F_CheckStringIsReal := FALSE;
+		RETURN;
+
+	ELSIF pt^ = 44 (* , *)
+	THEN
+		IF (pos = 1 (*OR pos = L*))
+		THEN
+			F_CheckStringIsReal := FALSE;
+			RETURN;
+		ELSE
+			FOR pos2 := 1 TO L DO
+				IF pos <> pos2
+				THEN
+					IF pt2^ = 44 OR pt2^ = 46
+					THEN
+						F_CheckStringIsReal := FALSE;
+						RETURN;
+					END_IF
+				END_IF
+				pt2 := pt2 + 1;
+			END_FOR
+		END_IF;
+	ELSIF pt^ = 45 (* - *)
+	     AND (pos <> 1)
+	THEN
+		F_CheckStringIsReal := FALSE;
+		RETURN;
+	ELSIF pt^ = 46 (* . *)
+	THEN
+		IF (pos = 1 (*OR pos = L*))
+		THEN
+			F_CheckStringIsReal := FALSE;
+			RETURN;
+		ELSE
+			FOR pos2 := 1 TO L DO
+				IF pos <> pos2
+				THEN
+					IF pt2^ = 44 OR pt2^ = 46
+					THEN
+						F_CheckStringIsReal := FALSE;
+						RETURN;
+					END_IF
+				END_IF
+				pt2 := pt2 + 1;
+			END_FOR
+		END_IF;
+	ELSIF NOT (pt^ > 47 AND pt^ < 58)	(* 0 .. 9 *)
+	     	    AND pt^ <> 43 (* + *)
+	    	    AND pt^ <> 44 (* , *)
+	             AND pt^ <> 45 (* - *)
+	     	    AND pt^ <> 46 (* . *)
+	THEN
+		F_CheckStringIsReal := FALSE;
+		RETURN;
+	END_IF;
+
+    	pt := pt + 1;
+END_FOR;
+F_CheckStringIsReal := L > 0;]]></ST>
+    </Implementation>
+    <LineIds Name="F_CheckStringIsReal_1">
+      <LineId Id="98" Count="66" />
+      <LineId Id="87" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

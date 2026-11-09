@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_ModR_1" Id="{e8cbb879-d92e-4be3-b10e-de46e2ba2306}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_ModR_1 : REAL
+(*
+Modulo function for real numbers (dividend mod divisor).
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			20.01.2014
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	rDividend						:REAL;
+	rDivisor							:REAL := 1.0;
+END_VAR
+VAR
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+F_ModR := rDivisor;
+
+IF rDivisor <> 0.0 
+THEN
+	F_ModR := rDividend - DINT_TO_REAL(F_FloorDN(rDividend / rDivisor)) * rDivisor;
+END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="F_ModR_1">
+      <LineId Id="19" Count="6" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

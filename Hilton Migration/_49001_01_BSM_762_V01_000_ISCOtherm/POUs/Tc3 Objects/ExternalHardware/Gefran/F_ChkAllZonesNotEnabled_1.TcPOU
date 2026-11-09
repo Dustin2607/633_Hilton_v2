@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_ChkAllZonesNotEnabled_1" Id="{d2102f18-9011-483a-a70e-a408dacbb55b}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_ChkAllZonesNotEnabled_1 : BOOL
+(*
+
+The function used to detect if all controller are enabled.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			23.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Signal FB enable *)
+	GFX4IR1						:ST_GFX4IR_REF;				(* The ST_GFX4IRTOPLC data type  is an interface between the PLC and the GFX4IR and contains controller information *)
+	GFX4IR2						:ST_GFX4IR_REF;				(* The ST_GFX4IRTOPLC data type  is an interface between the PLC and the GFX4IR and contains controller information *)
+	GFX4IR3						:ST_GFX4IR_REF;				(* The ST_GFX4IRTOPLC data type  is an interface between the PLC and the GFX4IR and contains controller information *)
+	GFX4IR4						:ST_GFX4IR_REF;				(* The ST_GFX4IRTOPLC data type  is an interface between the PLC and the GFX4IR and contains controller information *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable							(* Signal FB enable *)
+THEN
+	F_ChkAllZonesNotEnabled := FALSE;
+
+	RETURN;
+END_IF
+
+F_ChkAllZonesNotEnabled := GFX4IR1.Gfx4IRToPlc[1].nProcessVariable = 0
+						   AND GFX4IR1.Gfx4IRToPlc[2].nProcessVariable = 0
+						   AND GFX4IR1.Gfx4IRToPlc[3].nProcessVariable = 0
+						   AND GFX4IR1.Gfx4IRToPlc[4].nProcessVariable = 0
+						   AND GFX4IR2.Gfx4IRToPlc[1].nProcessVariable = 0
+						   AND GFX4IR2.Gfx4IRToPlc[2].nProcessVariable = 0
+						   AND GFX4IR2.Gfx4IRToPlc[3].nProcessVariable = 0
+						   AND GFX4IR2.Gfx4IRToPlc[4].nProcessVariable = 0
+						   AND GFX4IR3.Gfx4IRToPlc[1].nProcessVariable = 0
+						   AND GFX4IR3.Gfx4IRToPlc[2].nProcessVariable = 0
+						   AND GFX4IR3.Gfx4IRToPlc[3].nProcessVariable = 0
+						   AND GFX4IR3.Gfx4IRToPlc[4].nProcessVariable = 0
+						   AND GFX4IR4.Gfx4IRToPlc[1].nProcessVariable = 0
+						   AND GFX4IR4.Gfx4IRToPlc[2].nProcessVariable = 0
+						   AND GFX4IR4.Gfx4IRToPlc[3].nProcessVariable = 0
+						   AND GFX4IR4.Gfx4IRToPlc[4].nProcessVariable = 0;]]></ST>
+    </Implementation>
+    <LineIds Name="F_ChkAllZonesNotEnabled_1">
+      <LineId Id="34" Count="23" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

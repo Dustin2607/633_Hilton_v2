@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_PLC03TOPLC02" Id="{39ed9910-7ba4-48a2-885c-e33256190960}">
+    <Declaration><![CDATA[TYPE ST_PLC03TOPLC02 :
+STRUCT
+	bShuttleMillingReq					:BOOL;						(* Shuttle request *)
+	bShuttleWeldingAck					:BOOL;						(* Shuttle acknowledge *)
+	lrShuttleWeldingActPos				:LREAL;						(* Actual position of shuttel [mm] *)
+	lrShuttleWeldingSetPos				:LREAL;						(* Set position of shuttel [mm] *)
+	
+	arbWeldingActive					:ARRAY[0..GVL_FB_LoadFromFile.usnFileArrayMaxDimR] OF BOOL; 			(* Process welding active *)	
+	arbWeldingDone						:ARRAY[0..GVL_FB_LoadFromFile.usnFileArrayMaxDimR] OF BOOL; 			(* Process welding done *)	
+	
+	bWeldingDriveEnabled				:BOOL;						(* Drive enabled *)
+	bWeldingDriveEnable					:BOOL;						(* Drive enable *)
+	
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

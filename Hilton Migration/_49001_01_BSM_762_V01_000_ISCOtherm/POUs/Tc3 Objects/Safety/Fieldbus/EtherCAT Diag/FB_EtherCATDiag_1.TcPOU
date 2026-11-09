@@ -1,0 +1,614 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_EtherCATDiag_1" Id="{7686b73d-673a-455d-9d86-7ed47ea0e6fb}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_EtherCATDiag_1
+(*
+
+The function block used to control fieldbus.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			22.11.2018
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Enable FB signal *)
+	sNetID						:T_AmsNetId; 				(* AmsNetId*)
+	sMasterNetID					:T_AmsNetId; 				(* AmsNetId of the Fieldbus master device *)
+	nMasterDevID				:UINT;
+	nMasterDevState				:WORD;
+	nSlaveCount 					:UINT;
+	nSlaveCountCfg 				:UINT;
+	bAllFrameWcStatesOK			:BOOL;
+	tTimeout						:TIME := T#5s;
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bDone						:BOOL;
+	bBusy						:BOOL;
+	bError						:BOOL;
+	iErrorID						:UDINT;
+	bEtherCATOK				:BOOL;
+	bFrameWcStateError			:BOOL;
+	bSlaveCountError				:BOOL;
+	bMasterDevStateError			:BOOL;
+	stMasterDevState				:ST_EcMasterDevState;
+END_VAR
+VAR_IN_OUT
+	arstDiagSlaveInfo 				:ARRAY [0..3] OF ST_SlaveStateInfo;
+	arstDiagSlaveInfoScanned		:ARRAY [0..3] OF ST_SlaveStateInfoScanned;
+END_VAR
+VAR
+	(* Enummerations *)
+	etEtherCATDiag				:ET_EtherCATDiag;
+
+	(* Variables *)
+	nMasterDevStatePrev			:WORD;
+	bSlaveCountErrorPrev			:BOOL;
+	bAllFrameWcStatesOKPrev		:BOOL;
+	bDiagReq					:BOOL := TRUE;
+	dnInc						:DINT;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+
+	(* -- Get Slave Addresses *)
+	fbGetSlaveAddresses 			:FB_EcGetAllSlaveAddr;
+	arrSlaveAddresses 			:ARRAY[0..iSLAVEADDR_ARR_SIZE] OF UINT;
+	unNumOfSlavesRead			:UINT;
+
+	(* -- Get Slave States *)
+	fbGetAllSlaveStates			:FB_EcGetAllSlaveStates;
+	arrSlaveStates 				:ARRAY[0..iSLAVEADDR_ARR_SIZE] OF ST_EcSlaveState;
+
+	(* -- Get Topology Data *)
+	iTopologyData				:UDINT;
+	fbGetTopologyData			:ADSREAD;
+	arrTopologyData				:ARRAY[0..iSLAVEADDR_ARR_SIZE] OF ST_TopologyData;
+
+	(* -- Check Topology *)
+	iDiagIndex					:ARRAY [0..3] OF UINT;
+	iDiagPort					:ARRAY [0..3] OF UINT;
+	iIdx							:DINT;
+
+	(* -- Scan Slaves *)
+	fbEcGetScannedSlaves		:FB_EcGetScannedSlaves;
+	arrScannedSlaveInfo			:ARRAY [0..iSLAVEADDR_ARR_SIZE] OF ST_EcSlaveScannedData;
+	nScannedSlaves				:UINT;
+
+	(* -- Get Slave Identities *)
+	fbGetSlaveIdentity				:FB_EcGetSlaveIdentity;
+	stIdentity 						:ST_EcSlaveIdentity;
+
+	(* -- Get Slave Names *)
+	fbGetSlaveName 				:IOF_GetBoxNameByAddr;
+	strName						:STRING;
+
+	arrSlaveInfo 					:ARRAY [0..iSLAVEADDR_ARR_SIZE] OF ST_SlaveStateInfo;
+	arrSlaveInfoScanned			:ARRAY [0..iSLAVEADDR_ARR_SIZE] OF ST_SlaveStateInfoScanned;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* cyclic diag *)
+bFrameWcStateError := NOT bAllFrameWcStatesOK;
+
+bSlaveCountError := (nSlaveCount <> nSlaveCountCfg) OR (nSlaveCount = 0);
+IF (bSlaveCountError AND NOT bSlaveCountErrorPrev) OR (NOT bSlaveCountError AND bSlaveCountErrorPrev)
+THEN
+	bSlaveCountErrorPrev := bSlaveCountError;
+	bDiagReq := TRUE;
+END_IF
+
+IF (bAllFrameWcStatesOK AND NOT bAllFrameWcStatesOKPrev) OR (NOT bAllFrameWcStatesOK AND bAllFrameWcStatesOKPrev)
+THEN
+	bAllFrameWcStatesOKPrev := bAllFrameWcStatesOK;
+	bDiagReq := TRUE;
+END_IF
+
+IF (nMasterDevState <> nMasterDevStatePrev) THEN
+	A_CheckMasterDevState();
+	bDiagReq := TRUE;
+END_IF
+
+(* acyclic diag *)
+CASE etEtherCATDiag OF
+
+	ET_EtherCATDiag_eIdle:
+
+		IF bDiagReq THEN
+			bDiagReq := FALSE;
+
+			IF sMasterNetID <> '' AND sMasterNetID <> '0.0.0.0.0.0'
+			THEN
+				bDone := FALSE;
+				bBusy := TRUE;
+				etEtherCATDiag := ET_EtherCATDiag_eGetSlaveAdresses;			(* Next step *)
+			ELSE
+				bError := TRUE;
+				iErrorID := 7;
+			END_IF
+
+			bEtherCATOK := FALSE;
+		ELSE
+			IF (bSlaveCountError OR bMasterDevStateError OR NOT bAllFrameWcStatesOK) AND NOT (arrSlaveInfo[iDiagIndex[0]].bDiagData)
+			THEN
+				bEtherCATOK := FALSE;
+				bDiagReq := TRUE;
+			ELSIF (bSlaveCountError AND NOT bSlaveCountErrorPrev) OR (NOT bSlaveCountError AND bSlaveCountErrorPrev)
+			THEN
+				bSlaveCountErrorPrev := bSlaveCountError;
+				bEtherCATOK := FALSE;
+				bDiagReq := TRUE;
+			ELSIF (nMasterDevState <> nMasterDevStatePrev)
+			THEN
+				bEtherCATOK := FALSE;
+				bDiagReq := TRUE;
+			ELSIF (bAllFrameWcStatesOK AND NOT bAllFrameWcStatesOKPrev) OR (NOT bAllFrameWcStatesOK AND bAllFrameWcStatesOKPrev)
+			THEN
+				bAllFrameWcStatesOKPrev := bAllFrameWcStatesOK;
+				bEtherCATOK := FALSE;
+				bDiagReq := TRUE;
+			ELSIF (bSlaveCountError OR bMasterDevStateError OR NOT bAllFrameWcStatesOK OR arrSlaveInfo[iDiagIndex[0]].bDiagData)
+			THEN
+				bEtherCATOK := FALSE;
+			ELSE
+				bEtherCATOK := TRUE;
+			END_IF
+		END_IF
+
+	ET_EtherCATDiag_eGetSlaveAdresses:
+		A_GetSlaveAdresses();
+
+	ET_EtherCATDiag_eGetSlaveStates:
+		A_GetSlaveStates();
+
+	ET_EtherCATDiag_eGetTopologyDataLen:
+		A_GetTopoDataLen();
+
+	ET_EtherCATDiag_eGetTopologyData:
+		A_GetTopoData();
+
+	ET_EtherCATDiag_eScanSlaves:
+		A_ScanSlaves();
+
+	ET_EtherCATDiag_eGetSlaveIdentity:
+		A_GetSlaveIdentity();
+
+	ET_EtherCATDiag_eGetSlaveName:
+		A_GetSlaveName();
+
+	ET_EtherCATDiag_eGetScannedSlaveName:
+		A_GetScannedSlaveName();
+
+	ET_EtherCATDiag_eDone:
+		bDone := TRUE;
+		bBusy := FALSE;
+		etEtherCATDiag := ET_EtherCATDiag_eIdle;			(* Next step *)
+
+
+END_CASE]]></ST>
+    </Implementation>
+    <Action Name="A_CheckMasterDevState" Id="{0708a5da-adcf-4eee-b45d-3e80273a8d19}">
+      <Implementation>
+        <ST><![CDATA[(* check master errors based on devstate *)
+bMasterDevStateError := nMasterDevState <> 0;
+stMasterDevState.bLinkError := ((nMasterDevState AND 16#000F) = 1) OR ((nMasterDevState AND 16#000F) = 4);
+stMasterDevState.bResetRequired := ((nMasterDevState AND 16#000F) = 2) OR ((nMasterDevState AND 16#FFF0) = 16#10);
+stMasterDevState.bMissFrmRedMode := (nMasterDevState AND 16#000F) = 8;
+stMasterDevState.bWatchdogTriggerd := (nMasterDevState AND 16#20) = 16#20;
+stMasterDevState.bDriverNotFound := (nMasterDevState AND 16#40) = 16#40;
+stMasterDevState.bResetActive := (nMasterDevState AND 16#80) = 16#80;
+stMasterDevState.bAtLeastOneNotInOp := ((nMasterDevState AND 16#100) = 16#100) OR ((nMasterDevState AND 16#200) = 16#200) OR
+										((nMasterDevState AND 16#400) = 16#400) OR ((nMasterDevState AND 16#800) = 16#800);
+stMasterDevState.bDcNotInSync := (nMasterDevState AND 16#1000) = 16#1000;
+nMasterDevStatePrev := nMasterDevState;
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_GetScannedSlaveName" Id="{5f26db9e-655a-4ce0-b5af-a56777a9463d}">
+      <Implementation>
+        <ST><![CDATA[fbGetSlaveName(
+	NETID := sNetID,
+	DEVICEID := nMasterDevID,
+	BOXADDR := arrScannedSlaveInfo[iDiagIndex[iIdx]].nAddr,
+	START := TRUE,
+	TMOUT := tTimeout,
+	BOXNAME => strName
+);
+
+IF NOT fbGetSlaveName.BUSY
+THEN
+	fbGetSlaveName(START:= FALSE);
+
+	(* add scanned info *)
+	arrSlaveInfoScanned[iDiagIndex[iIdx]].nIndex 	:= iDiagIndex[iIdx] + 1;
+	IF arrScannedSlaveInfo[iDiagIndex[iIdx]].nAddr <> 0
+	THEN
+		IF NOT fbGetSlaveName.ERR
+		THEN
+			arrSlaveInfoScanned[iDiagIndex[iIdx]].sName := strName;
+		END_IF
+	ELSE
+		arrSlaveInfoScanned[iDiagIndex[iIdx]].sType := '';
+	END_IF
+
+	IF (iDiagIndex[iIdx] < nScannedSlaves)
+	THEN
+		arrSlaveInfoScanned[iDiagIndex[iIdx]].sType := F_ConvProductCodeToString(arrScannedSlaveInfo[iDiagIndex[iIdx]].stSlaveIdentity);
+	ELSE
+		arrSlaveInfoScanned[iDiagIndex[iIdx]].sType := '';
+	END_IF
+
+	arrSlaveInfoScanned[iDiagIndex[iIdx]].nECAddr := arrScannedSlaveInfo[iDiagIndex[iIdx]].nAddr;
+
+	IF arrSlaveInfoScanned[iDiagIndex[iIdx]].sName <> arrSlaveInfo[iDiagIndex[iIdx]].sName
+	THEN
+		arrSlaveInfoScanned[iDiagIndex[iIdx]].bDifferentName := TRUE;
+	ELSE
+		arrSlaveInfoScanned[iDiagIndex[iIdx]].bDifferentName := FALSE;
+	END_IF
+
+	IF arrSlaveInfoScanned[iDiagIndex[iIdx]].nECAddr <> arrSlaveInfo[iDiagIndex[iIdx]].nECAddr
+	THEN
+		arrSlaveInfoScanned[iDiagIndex[iIdx]].bDifferentAddr := TRUE;
+	ELSE
+		arrSlaveInfoScanned[iDiagIndex[iIdx]].bDifferentAddr := FALSE;
+	END_IF
+
+	IF arrSlaveInfoScanned[iDiagIndex[iIdx]].sType <> arrSlaveInfo[iDiagIndex[iIdx]].sType
+	THEN
+		arrSlaveInfoScanned[iDiagIndex[iIdx]].bDifferentType := TRUE;
+	ELSE
+		arrSlaveInfoScanned[iDiagIndex[iIdx]].bDifferentType := FALSE;
+	END_IF
+
+	IF iIdx < 3
+	THEN
+		iIdx := iIdx + 1;
+
+		etEtherCATDiag := ET_EtherCATDiag_eGetSlaveIdentity;			(* Next step *)
+	ELSE
+		iIdx := 0;
+
+		FOR dnInc := 0 TO 3 DO
+			IF iDiagPort[dnInc] <> 0 THEN
+				arstDiagSlaveInfo[dnInc] := arrSlaveInfo[iDiagIndex[dnInc]];
+				arstDiagSlaveInfoScanned[dnInc] := arrSlaveInfoScanned[iDiagIndex[dnInc]];
+			ELSE
+				MEMSET(ADR(arstDiagSlaveInfo[dnInc]), 0, SIZEOF(arstDiagSlaveInfo[dnInc]));
+				MEMSET(ADR(arstDiagSlaveInfoScanned[dnInc]), 0, SIZEOF(arstDiagSlaveInfoScanned[dnInc]));
+			END_IF
+		END_FOR
+
+		etEtherCATDiag := ET_EtherCATDiag_eDone;			(* Next step *)
+
+	END_IF
+END_IF
+
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_GetSlaveAdresses" Id="{f3b4cc7c-87b2-49d9-afaf-1839b7593a01}">
+      <Implementation>
+        <ST><![CDATA[fbGetSlaveAddresses(
+	sNetId := sMasterNetID,
+	pAddrBuf := ADR(arrSlaveAddresses),
+	cbBufLen := SIZEOF(arrSlaveAddresses),
+	bExecute := TRUE,
+	tTimeout	:= tTimeout,
+	nSlaves => unNumOfSlavesRead
+);
+
+IF NOT fbGetSlaveAddresses.bBusy
+THEN
+	fbGetSlaveAddresses(bExecute:= FALSE);
+
+	IF NOT fbGetSlaveAddresses.bError
+	THEN
+		FOR dnInc := 0 TO MIN(unNumOfSlavesRead, iSLAVEADDR_ARR_SIZE)
+		DO
+			arrSlaveInfo[dnInc].nECAddr := arrSlaveAddresses[dnInc];
+		END_FOR
+	END_IF
+
+	etEtherCATDiag := ET_EtherCATDiag_eGetSlaveStates;			(* Next step *)
+END_IF
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_GetSlaveIdentity" Id="{f60bb38d-1254-4ac8-aa1b-04a908b368d5}">
+      <Implementation>
+        <ST><![CDATA[fbGetSlaveIdentity(
+	sNetId := sMasterNetID,
+	nSlaveAddr := arrSlaveInfo[iDiagIndex[iIdx]].nECAddr,
+	bExecute := TRUE,
+	tTimeout	:= tTimeout,
+	identity => stIdentity
+);
+
+IF NOT fbGetSlaveIdentity.bBusy
+THEN
+	fbGetSlaveIdentity(bExecute:= FALSE);
+
+	IF NOT fbGetSlaveIdentity.bError
+	THEN
+		IF iDiagPort[iIdx] <> 0
+		THEN
+			arrSlaveInfo[iDiagIndex[iIdx]].nIndex	:= iDiagIndex[iIdx] + 1;
+			arrSlaveInfo[iDiagIndex[iIdx]].sType 	:= F_ConvProductCodeToString(stSlaveIdentity := stIdentity);
+		END_IF
+	END_IF
+
+	etEtherCATDiag := ET_EtherCATDiag_eGetSlaveName;			(* Next step *)
+END_IF
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_GetSlaveName" Id="{249e010c-4911-4cc8-b9e5-4e1be0a4906a}">
+      <Implementation>
+        <ST><![CDATA[fbGetSlaveName(
+	NETID := sNetID,
+	DEVICEID := nMasterDevID,
+	BOXADDR := arrSlaveInfo[iDiagIndex[iIdx]].nECAddr,
+	START := TRUE,
+	TMOUT := tTimeout,
+	BOXNAME => strName
+);
+
+IF NOT fbGetSlaveName.BUSY
+THEN
+	fbGetSlaveName(START:= FALSE);
+
+	IF NOT fbGetSlaveName.ERR
+	THEN
+		IF iDiagPort[iIdx] <> 0
+		THEN
+			arrSlaveInfo[iDiagIndex[iIdx]].sName 	:= strName;
+		END_IF
+	END_IF
+
+	etEtherCATDiag := ET_EtherCATDiag_eGetScannedSlaveName;			(* Next step *)
+END_IF
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_GetSlaveStates" Id="{86595e81-897c-446b-b7a9-ac324ba09b92}">
+      <Implementation>
+        <ST><![CDATA[fbGetAllSlaveStates(
+	sNetId := sMasterNetID,
+	pStateBuf := ADR(arrSlaveStates),
+	cbBufLen := SIZEOF(arrSlaveStates),
+	bExecute := TRUE,
+	tTimeout := tTimeout,
+	nSlaves => unNumOfSlavesRead
+);
+
+IF NOT fbGetAllSlaveStates.bBusy
+THEN
+	fbGetAllSlaveStates(bExecute:= FALSE);
+
+	IF NOT fbGetAllSlaveStates.bError
+	THEN
+		IF unNumOfSlavesRead = nSlaveCountCfg
+		THEN
+			FOR dnInc := 0 TO 3
+			DO
+				iDiagIndex[dnInc] := 0;
+			END_FOR
+
+			(* split slave state and link state *)
+			FOR dnInc := 0 TO MIN(unNumOfSlavesRead, iSLAVEADDR_ARR_SIZE)
+			DO
+				(* slave state*)
+				arrSlaveInfo[dnInc].stState.eEcState := arrSlaveStates[dnInc].deviceState AND 16#0F;
+				arrSlaveInfo[dnInc].stState.bError := arrSlaveStates[dnInc].deviceState.4;
+				arrSlaveInfo[dnInc].stState.bInvalidVPRS := arrSlaveStates[dnInc].deviceState.5;
+				(* link state *)
+				arrSlaveInfo[dnInc].stState.bNoCommToSlave := arrSlaveStates[dnInc].linkState.0;
+				arrSlaveInfo[dnInc].stState.bLinkError := arrSlaveStates[dnInc].linkState.1;
+				arrSlaveInfo[dnInc].stState.bMissingLink := arrSlaveStates[dnInc].linkState.2;
+				arrSlaveInfo[dnInc].stState.bUnexpectedLink := arrSlaveStates[dnInc].linkState.3;
+				arrSlaveInfo[dnInc].stState.bPortA := arrSlaveStates[dnInc].linkState.4;
+				arrSlaveInfo[dnInc].stState.bPortB := arrSlaveStates[dnInc].linkState.5;
+				arrSlaveInfo[dnInc].stState.bPortC := arrSlaveStates[dnInc].linkState.6;
+				arrSlaveInfo[dnInc].stState.bPortD := arrSlaveStates[dnInc].linkState.7;
+				(* DiagData *)
+				arrSlaveInfo[dnInc].bDiagData := ((arrSlaveStates[dnInc].deviceState AND 16#F0) <> 0) OR
+					(((arrSlaveStates[dnInc].deviceState AND 16#0F) > 0) AND ((arrSlaveStates[dnInc].deviceState AND 16#0F) < 8)) OR
+					(arrSlaveStates[dnInc].linkState <> 0);
+
+				IF arrSlaveInfo[dnInc].bDiagData
+				THEN
+					IF dnInc = 0
+					THEN
+						iDiagIndex[0] := 0;
+					ELSE
+						IF (iDiagIndex[0] = 0) AND NOT arrSlaveInfo[0].bDiagData
+						THEN
+							iDiagIndex[0] :=  DINT_TO_UINT(dnInc);
+						END_IF
+					END_IF
+				END_IF
+			END_FOR
+		END_IF
+	END_IF
+
+	IF arrSlaveInfo[iDiagIndex[0]].bDiagData
+	THEN
+		etEtherCATDiag := ET_EtherCATDiag_eGetTopologyDataLen;			(* Next step *)
+	ELSE
+		FOR dnInc := 0 TO 3
+		DO
+			MEMSET(ADR(arstDiagSlaveInfo[dnInc]), 0, SIZEOF(arstDiagSlaveInfo[dnInc]));
+			MEMSET(ADR(arstDiagSlaveInfoScanned[dnInc]), 0, SIZEOF(arstDiagSlaveInfoScanned[dnInc]));
+		END_FOR
+
+		etEtherCATDiag := ET_EtherCATDiag_eDone;			(* Next step *)
+	END_IF
+END_IF
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_GetTopoData" Id="{8e7982b6-3f58-443a-a19a-d8f4b8dfc420}">
+      <Implementation>
+        <ST><![CDATA[fbGetTopologyData(
+	NETID := sMasterNetID,
+	PORT := 16#FFFF,
+	IDXGRP := 16#22,
+	IDXOFFS := 0,
+	LEN	 := iTopologyData * SIZEOF(arrTopologyData[0]),
+	DESTADDR:= ADR(arrTopologyData),
+	READ := TRUE,
+	TMOUT := tTimeout,
+);
+
+IF NOT fbGetTopologyData.BUSY
+THEN
+	fbGetTopologyData(READ := FALSE);
+
+	IF NOT fbGetTopologyData.ERR
+	THEN
+		iDiagPort[0] := arrTopologyData[iDiagIndex[0]].iOwnPhysicalAddr;
+		iDiagPort[1] := arrTopologyData[iDiagIndex[0]].stPhysicalAddr.portB;
+		iDiagPort[2] := arrTopologyData[iDiagIndex[0]].stPhysicalAddr.portC;
+		iDiagPort[3] := arrTopologyData[iDiagIndex[0]].stPhysicalAddr.portD;
+
+		(* clear diag index  *)
+		iDiagIndex[1] := 0;
+		iDiagIndex[2] := 0;
+		iDiagIndex[3] := 0;
+
+		(* find slaves on PortB of first slave with diag *)
+		IF iDiagPort[1] <> 0
+		THEN
+			FOR dnInc := 0 TO MIN(iTopologyData-1,iSLAVEADDR_ARR_SIZE)
+			DO
+				IF arrTopologyData[dnInc].iOwnPhysicalAddr = iDiagPort[1]
+				THEN
+					iDiagIndex[1] :=  DINT_TO_UINT(dnInc);
+					EXIT;
+				END_IF
+			END_FOR
+		END_IF
+
+		(* find slaves on PortC of first slave with diag *)
+		IF iDiagPort[2] <> 0
+		THEN
+			FOR dnInc := 0 TO MIN(iTopologyData-1,iSLAVEADDR_ARR_SIZE)
+			DO
+				IF arrTopologyData[dnInc].iOwnPhysicalAddr = iDiagPort[2]
+				THEN
+					iDiagIndex[2] :=  DINT_TO_UINT(dnInc);
+					EXIT;
+				END_IF
+			END_FOR
+		END_IF
+
+		(* find slaves on PortD of first slave with diag *)
+		IF iDiagPort[3] <> 0
+		THEN
+			FOR dnInc := 0 TO MIN(iTopologyData-1,iSLAVEADDR_ARR_SIZE)
+			DO
+				IF arrTopologyData[dnInc].iOwnPhysicalAddr = iDiagPort[3]
+				THEN
+					iDiagIndex[3] :=  DINT_TO_UINT(dnInc);
+					EXIT;
+				END_IF
+			END_FOR
+		END_IF
+	END_IF
+
+	iIdx := 0;
+	etEtherCATDiag := ET_EtherCATDiag_eScanSlaves;
+END_IF
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_GetTopoDataLen" Id="{96efa79e-ebd8-4c09-b5e6-7021bbbb03a6}">
+      <Implementation>
+        <ST><![CDATA[fbGetTopologyData(
+	NETID := sMasterNetID,
+	PORT := 16#FFFF,
+	IDXGRP := EC_ADS_IGRP_MASTER_COUNT_SLAVE,
+	IDXOFFS := EC_ADS_IOFFS_MASTER_COUNT_SLAVE,
+	LEN	 := SIZEOF(iTopologyData),
+	DESTADDR := ADR(iTopologyData),
+	READ := TRUE,
+	TMOUT := tTimeout,
+);
+
+IF NOT fbGetTopologyData.BUSY
+THEN
+	fbGetTopologyData(READ := FALSE);
+
+	etEtherCATDiag := ET_EtherCATDiag_eGetTopologyData;			(* Next step *)
+END_IF
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_ScanSlaves" Id="{7cbeeeb1-d908-4250-be57-fd86ae4f7c2e}">
+      <Implementation>
+        <ST><![CDATA[fbEcGetScannedSlaves(
+	bExecute := TRUE,
+	sNetId := sMasterNetID,
+	pArrEcScannedSlaveInfo := ADR(arrScannedSlaveInfo),
+	cbBufLen := SIZEOF(arrScannedSlaveInfo),
+	tTimeout := tTimeout
+);
+
+IF NOT fbEcGetScannedSlaves.bBusy
+THEN
+	fbEcGetScannedSlaves(bExecute := FALSE);
+
+	IF fbEcGetScannedSlaves.bError THEN
+		nScannedSlaves := 0;
+	ELSE
+		nScannedSlaves := fbEcGetScannedSlaves.nSlaves;
+	END_IF
+
+	etEtherCATDiag := ET_EtherCATDiag_eGetSlaveIdentity;
+END_IF
+]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_EtherCATDiag_1">
+      <LineId Id="95" Count="97" />
+    </LineIds>
+    <LineIds Name="FB_EtherCATDiag_1.A_CheckMasterDevState">
+      <LineId Id="0" Count="12" />
+    </LineIds>
+    <LineIds Name="FB_EtherCATDiag_1.A_GetScannedSlaveName">
+      <LineId Id="0" Count="79" />
+    </LineIds>
+    <LineIds Name="FB_EtherCATDiag_1.A_GetSlaveAdresses">
+      <LineId Id="0" Count="23" />
+    </LineIds>
+    <LineIds Name="FB_EtherCATDiag_1.A_GetSlaveIdentity">
+      <LineId Id="0" Count="23" />
+    </LineIds>
+    <LineIds Name="FB_EtherCATDiag_1.A_GetSlaveName">
+      <LineId Id="0" Count="23" />
+    </LineIds>
+    <LineIds Name="FB_EtherCATDiag_1.A_GetSlaveStates">
+      <LineId Id="0" Count="72" />
+    </LineIds>
+    <LineIds Name="FB_EtherCATDiag_1.A_GetTopoData">
+      <LineId Id="0" Count="70" />
+    </LineIds>
+    <LineIds Name="FB_EtherCATDiag_1.A_GetTopoDataLen">
+      <LineId Id="0" Count="17" />
+    </LineIds>
+    <LineIds Name="FB_EtherCATDiag_1.A_ScanSlaves">
+      <LineId Id="0" Count="20" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_TCPIP_ConnectionState" Id="{7a591767-2ff6-4d79-b5d8-c1f22c38ebd3}">
+    <Declaration><![CDATA[TYPE ET_TCPIP_ConnectionState :
+(
+	ET_TCPIP_ConnState_eIdle := 0,
+	ET_TCPIP_ConnState_eConnect,
+	ET_TCPIP_ConnState_eDataExchsnge,
+	ET_TCPIP_ConnState_eDisconnect
+);
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

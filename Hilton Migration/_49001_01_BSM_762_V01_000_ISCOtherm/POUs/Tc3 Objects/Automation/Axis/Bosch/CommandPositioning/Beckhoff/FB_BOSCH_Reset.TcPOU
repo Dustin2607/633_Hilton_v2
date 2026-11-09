@@ -1,0 +1,351 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_BOSCH_Reset" Id="{1276650d-020c-4254-aa77-e90bb7a85943}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_BOSCH_Reset
+(*
+
+The function block used to reset axis. 
+
+Constructor:		Patryk Panylo
+Company:			E. Riexinger GmbH
+Date:				08.02.2019
+Version:			1.00
+
+Date:				Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bExecute					:BOOL;			(* Execut the function block *)
+	pDrive						:POINTER TO ST_BOSCHINDRADRIVECIA402_REF;			(* The DRIVE_REF data type  is an interface between the PLC and the DRIVE and contains axis information *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bDone						:BOOL;			(* Program done *)
+	bBusy						:BOOL;			(* Program busy *)
+	bError						:BOOL;			(* Error *)
+	udnErrorNo					:UDINT;			(* Error number:
+													1: Drive is not enabled error
+													2: MLD not running error
+   													3: Process controller error
+													99: Watchdog error *)				
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	Axis						:AXIS_REF;		(* The AXIS_REF data type  is an interface between the PLC and the NC and contains axis information *)
+END_VAR
+VAR
+	(* Enummerations *)
+	etBoschReset				:ET_BOSCH_Reset := ET_BOSCH_Reset.eInit;
+
+	(* Variables *)
+	wDriveStatusWord			:WORD;				(* S-0-0135, Drive status word *)
+	
+	unWatchdog					:UINT;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbMCReset					:MC_Reset;					(* Reset the motion control *)
+	fbEcSoERead					:FB_EcSoERead;
+	fbEcSoEWrite				:FB_EcSoEWrite;
+	
+	rtExecute					:R_TRIG;
+
+END_VAR
+VAR CONSTANT
+	unWatchdogMax				:UINT := 5;
+
+	wIdxPPara					:WORD := 16#8000;			(* Index offset for P Parameters *)
+	wDriveStatusWordPara		:WORD := 135;				(* S-0-0135, Drive status word *)
+	wResetDriveErrorPara		:WORD := 99;				(* S-0-0099, C0500 Reset class 1 diagnostics *)
+	
+	wStartResetCmd				:WORD := 2#11;				(* 2#11 = Start command *)
+	wStopResetCmd				:WORD := 2#00;				(* 2#00 = Stop command *)	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+rtExecute(CLK := bExecute);
+
+IF rtExecute.Q
+THEN
+	etBoschReset := ET_BOSCH_Reset.eInit;                     (* Next step *)
+
+END_IF;
+
+CASE etBoschReset OF
+
+	ET_BOSCH_Reset.eInit:
+		bBusy := FALSE;                 (* Program not busy *)
+		bError := FALSE;                (* Program not error *)
+
+		IF rtExecute.Q
+		   AND NOT Axis.NcToPlc.StateDWord.8	(* Axis has job *)
+		   (* AND NOT Axis.NcToPlc.StateDWord.29	(* Axis has job *) *)
+		THEN
+			unWatchdog := 0;
+			bDone := FALSE;				(* Program done, in position *)
+			bBusy := TRUE;				(* Program busy *)
+			udnErrorNo := 0;            (* Error number *)
+
+			fbMCReset(
+				Execute := FALSE,
+				Axis := Axis,
+			);			
+ 
+			fbEcSoERead(
+				sNetId := Axis.DriveAddress.NetID, 
+				nSlaveAddr := Axis.DriveAddress.SlaveAddress, 
+				nElement := 16#40, 
+				nDriveNo := 0, 
+				bCommand := FALSE,
+				bExecute := FALSE, 
+				tTimeout := DEFAULT_ADS_TIMEOUT 
+			);
+			
+			fbEcSoEWrite(
+				sNetId := Axis.DriveAddress.NetID, 
+				nSlaveAddr := Axis.DriveAddress.SlaveAddress,
+				nElement := 0, 
+				nDriveNo := 0, 
+				bCommand := FALSE,
+				bExecute := FALSE, 
+				tTimeout := DEFAULT_ADS_TIMEOUT 
+			);		 
+			
+			etBoschReset := ET_BOSCH_Reset.eReadDriveError;                              (* Next step *)
+
+		END_IF;
+		
+	ET_BOSCH_Reset.eReadDriveError:	
+		(* S-0-0135, Drive status word *)
+		fbEcSoERead(
+			bExecute := TRUE,
+			nIdn := wDriveStatusWordPara,			
+			pDstBuf := ADR(wDriveStatusWord),
+			cbBufLen := SIZEOF(wDriveStatusWord)
+		);
+				
+		IF NOT fbEcSoERead.bBusy
+		   AND NOT fbEcSoERead.bError
+		THEN
+			fbEcSoERead(
+				bExecute := FALSE
+			);
+	
+			IF unWatchdog < unWatchdogMax 
+			   AND wDriveStatusWord.13	(* Drive error *)
+			THEN
+				unWatchdog := unWatchdog + 1;
+			
+				etBoschReset := ET_BOSCH_Reset.eWriteResetDriver;         		(* Next step *)
+			ELSE
+				unWatchdog := 0;	
+			
+				etBoschReset := ET_BOSCH_Reset.eEraseResetDriver;         		(* Next step *)
+			END_IF
+			
+		ELSIF fbEcSoERead.bError
+		THEN
+			fbEcSoERead(
+				bExecute := FALSE
+			);
+
+			etBoschReset := ET_BOSCH_Reset.eError;         		(* Next step *)
+
+		END_IF
+		
+	ET_BOSCH_Reset.eWriteResetDriver:	
+		(* S-0-0099, C0500 Reset class 1 diagnostics *)			
+		fbEcSoEWrite(
+			bExecute := TRUE,
+			nIdn := wResetDriveErrorPara,		
+			pSrcBuf := ADR(wStartResetCmd),
+			cbBufLen := SIZEOF(wStartResetCmd) 
+		); 
+		
+		IF NOT fbEcSoEWrite.bBusy
+		   AND NOT fbEcSoEWrite.bError
+		THEN
+			fbEcSoEWrite(
+				bExecute := FALSE
+			); 
+			
+			etBoschReset := ET_BOSCH_Reset.eReadDriveError;         		(* Next step *)
+
+		ELSIF fbEcSoEWrite.bError
+		THEN
+			fbEcSoEWrite(
+				bExecute := FALSE
+			);
+
+			etBoschReset := ET_BOSCH_Reset.eError;         		(* Next step *)
+
+		END_IF
+		
+	ET_BOSCH_Reset.eEraseResetDriver:	
+		(* S-0-0099, C0500 Reset class 1 diagnostics *)			
+		fbEcSoEWrite(
+			bExecute := TRUE,
+			nIdn := wResetDriveErrorPara,			
+			pSrcBuf := ADR(wStopResetCmd),
+			cbBufLen := SIZEOF(wStopResetCmd)
+		);
+		
+		IF NOT fbEcSoEWrite.bBusy
+		   AND NOT fbEcSoEWrite.bError
+		THEN
+			fbEcSoEWrite(
+				bExecute := FALSE
+			); 
+			
+			etBoschReset := ET_BOSCH_Reset.eChMCReset;         		(* Next step *)
+
+		ELSIF fbEcSoEWrite.bError
+		THEN
+			fbEcSoEWrite(
+				bExecute := FALSE
+			);
+
+			etBoschReset := ET_BOSCH_Reset.eError;         		(* Next step *)
+
+		END_IF
+		
+	ET_BOSCH_Reset.eChMCReset:
+		IF Axis.NcToPlc.StateDWord.31 
+		THEN
+			etBoschReset := ET_BOSCH_Reset.eMCReset;						(* Next Step *)
+		ELSE
+			etBoschReset := ET_BOSCH_Reset.eDone;				(* Next Step *)
+		END_IF;
+
+	ET_BOSCH_Reset.eMCReset:
+		fbMCReset.Execute := TRUE;
+
+		IF fbMCReset.Busy
+		THEN
+			etBoschReset := ET_BOSCH_Reset.eWfMCReset;         		(* Next step *)
+
+		ELSIF fbMCReset.Error
+		THEN
+			fbMCReset.Execute := FALSE;
+
+			etBoschReset := ET_BOSCH_Reset.eError;         		(* Next step *)
+
+		END_IF
+	
+	ET_BOSCH_Reset.eWfMCReset:
+		IF fbMCReset.Done
+		THEN
+			fbMCReset.Execute := FALSE;
+
+			etBoschReset := ET_BOSCH_Reset.eDone;		(* Next step *)
+
+		ELSIF fbMCReset.Error
+		THEN
+			fbMCReset.Execute := FALSE;
+
+			etBoschReset := ET_BOSCH_Reset.eError;         					(* Next step *)
+
+		END_IF				
+
+	ET_BOSCH_Reset.eDone:
+		bDone := TRUE;			(* Program done, in position *)
+		bBusy := FALSE;			(* Program not busy *)
+
+		etBoschReset := ET_BOSCH_Reset.eNotExecute;            (* Next step *)
+
+	ET_BOSCH_Reset.eError:
+		bDone := FALSE;			(* Program done, in position *)
+		bError := TRUE;			(* Program error *)
+		bBusy := FALSE;			(* Program not busy *)
+		
+        etBoschReset := ET_BOSCH_Reset.eNotExecute;			(*Next step *)
+
+	ET_BOSCH_Reset.eNotExecute:
+		IF NOT bExecute
+		THEN			
+			bDone := FALSE;					(* Program done, in position *)
+			bBusy := FALSE;                 (* Program not busy *)
+			bError := FALSE;                (* Program not error *)
+
+			etBoschReset := ET_BOSCH_Reset.eInit;			(* Next step *)
+
+		END_IF;
+END_CASE;
+
+fbMCReset(
+	Axis := Axis
+);]]></ST>
+    </Implementation>
+    <LineIds Name="FB_BOSCH_Reset">
+      <LineId Id="62" Count="2" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="89" Count="4" />
+      <LineId Id="95" Count="4" />
+      <LineId Id="1439" Count="0" />
+      <LineId Id="100" Count="4" />
+      <LineId Id="258" Count="0" />
+      <LineId Id="260" Count="2" />
+      <LineId Id="105" Count="0" />
+      <LineId Id="1427" Count="0" />
+      <LineId Id="2017" Count="5" />
+      <LineId Id="2035" Count="0" />
+      <LineId Id="2023" Count="8" />
+      <LineId Id="2034" Count="0" />
+      <LineId Id="2032" Count="0" />
+      <LineId Id="1414" Count="0" />
+      <LineId Id="107" Count="0" />
+      <LineId Id="110" Count="0" />
+      <LineId Id="117" Count="1" />
+      <LineId Id="241" Count="0" />
+      <LineId Id="1723" Count="1" />
+      <LineId Id="2038" Count="0" />
+      <LineId Id="2040" Count="2" />
+      <LineId Id="2039" Count="0" />
+      <LineId Id="2036" Count="1" />
+      <LineId Id="1956" Count="26" />
+      <LineId Id="1742" Count="1" />
+      <LineId Id="1577" Count="1" />
+      <LineId Id="2046" Count="0" />
+      <LineId Id="2048" Count="2" />
+      <LineId Id="2047" Count="0" />
+      <LineId Id="2045" Count="0" />
+      <LineId Id="2044" Count="0" />
+      <LineId Id="1983" Count="16" />
+      <LineId Id="1598" Count="1" />
+      <LineId Id="1810" Count="1" />
+      <LineId Id="2053" Count="0" />
+      <LineId Id="2055" Count="2" />
+      <LineId Id="2054" Count="0" />
+      <LineId Id="2051" Count="1" />
+      <LineId Id="2000" Count="16" />
+      <LineId Id="1829" Count="1" />
+      <LineId Id="1782" Count="0" />
+      <LineId Id="1850" Count="0" />
+      <LineId Id="1854" Count="0" />
+      <LineId Id="1851" Count="2" />
+      <LineId Id="1783" Count="1" />
+      <LineId Id="1855" Count="1" />
+      <LineId Id="1858" Count="25" />
+      <LineId Id="1620" Count="0" />
+      <LineId Id="165" Count="1" />
+      <LineId Id="168" Count="5" />
+      <LineId Id="175" Count="2" />
+      <LineId Id="180" Count="5" />
+      <LineId Id="189" Count="0" />
+      <LineId Id="191" Count="6" />
+      <LineId Id="297" Count="0" />
+      <LineId Id="299" Count="0" />
+      <LineId Id="302" Count="0" />
+      <LineId Id="298" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_BOSCH_ProcessCtrl" Id="{5c5a517e-4e81-4d4d-b2ba-de88869dd9e9}">
+    <Declaration><![CDATA[TYPE ET_BOSCH_ProcessCtrl :
+(
+	ET_BOSCH_ProcessCtrl_eWaitExecute := 0,
+	ET_BOSCH_ProcessCtrl_eInit,
+	ET_BOSCH_ProcessCtrl_eSetCtrlLimitUpper,
+	ET_BOSCH_ProcessCtrl_eSetCtrlLimitLower,
+	ET_BOSCH_ProcessCtrl_eSetPosLimitUpper,
+	ET_BOSCH_ProcessCtrl_eSetPosLimitLower,
+	ET_BOSCH_ProcessCtrl_eActivate,
+	ET_BOSCH_ProcessCtrl_eGetProcessCtrlConfig,
+	ET_BOSCH_ProcessCtrl_eSetProcessCtrlConfig,
+	ET_BOSCH_ProcessCtrl_eAbort,
+	ET_BOSCH_ProcessCtrl_eDone := 197,
+	ET_BOSCH_ProcessCtrl_eError := 198,
+	ET_BOSCH_ProcessCtrl_eNotExecute := 199
+);
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

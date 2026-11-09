@@ -1,0 +1,84 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Integral_1" Id="{e3df85b4-33e3-46b3-8c6e-712c4ad1d275}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Integral_1
+(*
+Function block used to calculate integral
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			05.06.2014
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Enummerations *)
+
+	(* Variables *)
+	bEnable								:BOOL := TRUE;					(* Enable FB *)
+
+	lrInSignal								:LREAL;							(* Input signal *)
+	lrIntegralValue						:LREAL := 1.0;						(* Integration value in 1/sec *)
+	lrTaskCycle							:LREAL := 1.0; 					(* Cycle time *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR_IN_OUT
+	(* Enummerations *)
+	
+	(* Variables *)
+	lrOutSignal							:LREAL;							(* Output signal *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+END_VAR
+VAR
+	(* Enummerations *)
+	
+	(* Variables *)
+	bFirstTime							:BOOL;							(* First cycle *)
+
+	lrLastSignal							:LREAL;							(* Last signal *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	bFirstTime := FALSE;
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+	lrLastSignal := lrInSignal;
+	bFirstTime := TRUE;
+END_IF
+
+lrOutSignal := lrIntegralValue * lrTaskCycle * (lrInSignal + lrLastSignal) * 0.5 + lrOutSignal;
+lrLastSignal := lrInSignal;
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Integral_1">
+      <LineId Id="59" Count="14" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_EL3214RTDElement" Id="{fb3bb0b1-2143-4199-8ae2-06df786eee9e}">
+    <Declaration><![CDATA[TYPE ET_EL3214RTDElement :
+(	
+	ePt1000 := 0, 								(* -200...850°C *)
+	eNI1000_100 := 2, 							(* TK5000, AT 100 °C 1500 Ohm -30 to 160 °C *)
+	eNI1000 := 3, 								(* -60...250°C *)
+	eNTC_5k := 4, 								(* 0°C: 16325 Ohm, -40...100°C *)
+	eNTC_10k_1 := 5, 							(* 0°C: 32650 Ohm, -30...150°C *)
+	eNTC_10k_2 := 6, 							(* 0°C: 29490 Ohm, -30...150°C *)
+	eNTC_10k_3 := 7, 							(* 0°C: 27280 Ohm, -40...110°C, as Ffor KL3204-0030 *)
+	eNTC_20k := 8, 								(* 0°C: 70200 Ohm, -20...150°C *)
+	eFet := 9, 									(* -30...150°C *)
+	eResolution_1 := 101, 						(* 1/10 Ohm (0 TO 6553.5 Ohm *)
+	eResolution_2 := 102, 						(* 1/10 Ohm (0 TO 65535 Ohm *)
+	eResolution_3 := 103, 						(* 1/10 Ohm (0 TO 240 kOhm *)
+	eRTD_table := 110, 							(* for further parameters see 0x80n1[} 174] *)
+	eB_parameter_equation := 111, 				(* for further parameters see 0x80n2 [} 175] *)
+	eDIN_IEC_60751_equation := 112, 			(* for further parameters see 0x80n3 [} 175] *)
+	eSteinhart_Hart_equation := 113,			(* for further parameters see 0x80n4 [} 176] *)
+	eNoConn := 999								(* No connected *)
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

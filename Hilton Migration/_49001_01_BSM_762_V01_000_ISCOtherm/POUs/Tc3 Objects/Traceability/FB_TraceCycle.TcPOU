@@ -1,0 +1,296 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_TraceCycle" Id="{2f8a66d0-e96c-4948-9d6b-2a233f53acaf}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_TraceCycle
+(*
+
+This function block is used to traceability of data.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			02.09.2016
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+21.02.2018		0.01			PPA						Additional logger for samples
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;					(* Enable FB *)
+	sFilePath					:STRING := 'C:\Riex\Traceability\NewData\';	(* Path to file e.g. 'c:\', \Hard Disk\ *)
+	sFileName					:STRING := 'default';	(* Name of file *)
+	bExecute					:BOOL;					(* Execute write data *)
+	bAbort						:BOOL;					(* Abort write data *)
+	bReset						:BOOL;					(* Reset write data *)			
+	udnSampleTime				:UDINT := 100;			(* Sample time [ms] *)
+	tMaxTime					:TIME := T#0S;			(* Maximal write time *)
+	arsNameRecords				:ARRAY[0..GVL_Trace.MAX_TRACE_ROWS, 0..GVL_Trace.MAX_TRACE_COLUMNS] OF STRING(GVL_Trace.MAX_TRACE_FIELD_LENGTH);
+	arsValueRecords				:ARRAY[0..GVL_Trace.MAX_TRACE_ROWS, 0..GVL_Trace.MAX_TRACE_COLUMNS] OF STRING(GVL_Trace.MAX_TRACE_FIELD_LENGTH);
+	tTimeout					:TIME := T#1S;			(* States the time before the function is cancelled *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bBusy						:BOOL;					(* Program busy *)
+	bDone						:BOOL;					(* Program done *)
+	bError						:BOOL;					(* Program error *)
+	udnErrNo					:UDINT;					(* Error number *)
+END_VAR
+VAR_IN_OUT
+	fbFileHandler				:FB_FileCSVHandler;				(* Traceability *)
+END_VAR
+VAR
+	(* Enummerations *)
+	etTraceState				:ET_TRACE_State := ET_TRACE_State_eWaitExecute;
+	
+	(* Variables *)
+	udnWriteCounter				:UDINT;
+	
+	udnRowCounter				:UDINT;
+	udnColumnCounter			:UDINT;
+
+	bFirstTime					:BOOL;					(* First PLC cycle *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtExecute					:R_TRIG;
+	fbCycleTime					:FB_Timer;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable				(* Enable FB *)
+THEN
+	bFirstTime := FALSE;		(* First PLC cycle *)
+	bBusy := FALSE;			(* Program busy *)
+	bDone := FALSE;			(* Program done *)
+	bError := FALSE;			(* Program error *)
+	udnErrNo := 0;				(* Error number *)
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+
+	bFirstTime := TRUE;
+END_IF
+
+IF bReset
+   AND bError
+THEN
+	bBusy := FALSE;
+	bDone := FALSE;
+	bError := FALSE;
+	
+	fbCycleTime(bReset := TRUE);
+	
+	etTraceState := ET_TRACE_State_eWaitExecute;
+END_IF
+
+(* Measuring time of cycle *)
+fbCycleTime(
+	bEnable := TRUE,
+	bReset := FALSE,
+	bStartStop := bExecute,
+	bStop := NOT bExecute OR bAbort,
+	tMaxTime := tMaxTime
+);
+
+rtExecute(CLK := bExecute);
+
+CASE etTraceState
+OF
+	ET_TRACE_State_eWaitExecute:
+		IF rtExecute.Q
+		   AND NOT fbFileHandler.bBusy
+		THEN	
+			bBusy := TRUE;
+			bDone := FALSE;
+			bError := FALSE;
+			udnErrNo := 0;
+
+			fbFileHandler.bExecute := FALSE;
+			fbFileHandler.sFilePath := sFilePath;
+			fbFileHandler.sFileName := sFileName; 
+			
+			udnWriteCounter := 0;
+			udnRowCounter := 0;
+			udnColumnCounter := 0;
+			
+			FOR udnRowCounter := 0 TO GVL_Trace.MAX_TRACE_ROWS
+			DO 
+				FOR udnColumnCounter := 0 TO GVL_Trace.MAX_TRACE_COLUMNS
+				DO 
+					fbFileHandler.arsWriteRecords[udnRowCounter, udnColumnCounter] := arsNameRecords[udnRowCounter, udnColumnCounter];
+				END_FOR	
+			END_FOR		
+			
+			udnRowCounter := 0;
+			
+			etTraceState := ET_TRACE_State_eDataWrite;
+		END_IF
+
+	ET_TRACE_State_eGetData:
+		IF NOT fbCycleTime.bTimeStarted
+		   OR fbCycleTime.stActTime.dwMiliSec >= udnSampleTime * udnWriteCounter
+		THEN
+			udnRowCounter := GVL_Trace.MAX_TRACE_ROWS;
+			udnWriteCounter := udnWriteCounter + 1;
+		
+			arsValueRecords[udnRowCounter, 0] := UDINT_TO_STRING(udnWriteCounter);
+		
+			FOR udnColumnCounter := 0 TO GVL_Trace.MAX_TRACE_COLUMNS
+			DO 
+				IF NOT fbCycleTime.bTimeStarted
+				THEN
+					fbFileHandler.arsWriteRecords[0, udnColumnCounter] := '';			
+				ELSE
+					fbFileHandler.arsWriteRecords[0, udnColumnCounter] := arsValueRecords[udnRowCounter, udnColumnCounter];
+				END_IF
+				
+			END_FOR		
+			
+			etTraceState := ET_TRACE_State_eDataWrite;
+		END_IF
+	
+	ET_TRACE_State_eDataWrite:
+		fbFileHandler.bExecute := TRUE;
+			
+		IF fbFileHandler.bBusy
+		   AND NOT fbFileHandler.bError
+		THEN
+			etTraceState := ET_TRACE_State_eWfDataWrite;
+			
+		ELSIF fbFileHandler.bError
+		THEN
+			fbFileHandler.bExecute := FALSE;
+
+			etTraceState := ET_TRACE_State_eError;
+		END_IF
+		
+	ET_TRACE_State_eWfDataWrite:
+		IF fbFileHandler.bDone
+		    AND NOT fbFileHandler.bError
+		THEN
+			fbFileHandler.bExecute := FALSE;
+		
+			IF fbCycleTime.bTimeStarted
+			THEN	
+				etTraceState := ET_TRACE_State_eGetData;
+			ELSE
+				etTraceState := ET_TRACE_State_eDone;	
+			END_IF
+			
+		ELSIF fbFileHandler.bError
+		THEN
+			fbFileHandler.bExecute := FALSE;
+
+			etTraceState := ET_TRACE_State_eError;
+		END_IF
+
+	ET_Trace_State_eDone:
+		bBusy := FALSE;
+		bDone := TRUE;
+		bError := FALSE;
+		
+		etTraceState := ET_TRACE_State_eNoExecute;					(* Next step *)
+
+	ET_Trace_State_eError:
+		bBusy := FALSE;
+		bDone := FALSE;
+		bError := TRUE;
+
+		etTraceState := ET_TRACE_State_eNoExecute;					(* Next step *)
+
+	ET_Trace_State_eNoExecute:
+		IF NOT bExecute
+		THEN
+			bBusy := FALSE;
+			bDone := FALSE;
+			bError := FALSE;
+
+			etTraceState := ET_TRACE_State_eWaitExecute;			(* Next step *)
+
+		END_IF		
+END_CASE
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_TraceCycle">
+      <LineId Id="53" Count="14" />
+      <LineId Id="763" Count="7" />
+      <LineId Id="776" Count="0" />
+      <LineId Id="775" Count="0" />
+      <LineId Id="771" Count="1" />
+      <LineId Id="718" Count="0" />
+      <LineId Id="720" Count="2" />
+      <LineId Id="752" Count="0" />
+      <LineId Id="724" Count="2" />
+      <LineId Id="719" Count="0" />
+      <LineId Id="68" Count="1" />
+      <LineId Id="131" Count="2" />
+      <LineId Id="135" Count="1" />
+      <LineId Id="717" Count="0" />
+      <LineId Id="137" Count="0" />
+      <LineId Id="436" Count="1" />
+      <LineId Id="434" Count="1" />
+      <LineId Id="470" Count="0" />
+      <LineId Id="469" Count="0" />
+      <LineId Id="573" Count="0" />
+      <LineId Id="463" Count="1" />
+      <LineId Id="631" Count="1" />
+      <LineId Id="698" Count="0" />
+      <LineId Id="697" Count="0" />
+      <LineId Id="797" Count="1" />
+      <LineId Id="513" Count="0" />
+      <LineId Id="515" Count="0" />
+      <LineId Id="517" Count="0" />
+      <LineId Id="516" Count="0" />
+      <LineId Id="799" Count="0" />
+      <LineId Id="801" Count="0" />
+      <LineId Id="806" Count="1" />
+      <LineId Id="141" Count="1" />
+      <LineId Id="645" Count="0" />
+      <LineId Id="731" Count="1" />
+      <LineId Id="868" Count="0" />
+      <LineId Id="143" Count="0" />
+      <LineId Id="805" Count="0" />
+      <LineId Id="786" Count="1" />
+      <LineId Id="784" Count="1" />
+      <LineId Id="709" Count="1" />
+      <LineId Id="870" Count="1" />
+      <LineId Id="877" Count="0" />
+      <LineId Id="874" Count="1" />
+      <LineId Id="872" Count="0" />
+      <LineId Id="711" Count="0" />
+      <LineId Id="704" Count="0" />
+      <LineId Id="876" Count="0" />
+      <LineId Id="729" Count="0" />
+      <LineId Id="708" Count="0" />
+      <LineId Id="648" Count="0" />
+      <LineId Id="699" Count="0" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="668" Count="0" />
+      <LineId Id="147" Count="2" />
+      <LineId Id="151" Count="0" />
+      <LineId Id="509" Count="0" />
+      <LineId Id="152" Count="5" />
+      <LineId Id="510" Count="0" />
+      <LineId Id="158" Count="3" />
+      <LineId Id="665" Count="1" />
+      <LineId Id="636" Count="0" />
+      <LineId Id="638" Count="0" />
+      <LineId Id="640" Count="2" />
+      <LineId Id="639" Count="0" />
+      <LineId Id="635" Count="0" />
+      <LineId Id="166" Count="5" />
+      <LineId Id="475" Count="0" />
+      <LineId Id="477" Count="7" />
+      <LineId Id="493" Count="4" />
+      <LineId Id="499" Count="9" />
+      <LineId Id="195" Count="1" />
+      <LineId Id="578" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

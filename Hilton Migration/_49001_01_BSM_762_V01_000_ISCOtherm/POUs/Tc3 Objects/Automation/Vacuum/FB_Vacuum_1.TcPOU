@@ -1,0 +1,417 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Vacuum_1" Id="{896a7c4d-ab88-4132-b415-cf9cb58e4d62}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Vacuum_1
+(*
+Base class of vacuum.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			13.05.2016
+Version:			1.01
+
+Date:			Revision:		Who:				Comment
+27.10.2016		.01				PPA					Monitoring of pump engine
+
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;			(* Signal FB enable *)
+	bAirPressure				:BOOL;			(*  Signal air pressure *)
+	bSafetyOk					:BOOL;			(* Safety OK  *)
+	bEngineOk					:BOOL;			(*  Pump engine is ok *)
+	bReset						:BOOL;			(*  Signal reset *)
+	bAutoHand 					:BOOL;			(*  Auto := TRUE, Hand := FALSE *)
+	bHandOpen					:BOOL;			(*  Hand open *)
+	bHandClose					:BOOL;			(*  Hand close *)
+	bAutoOpen					:BOOL;			(*  Auto open *)
+	bAutoClose					:BOOL;			(*  Auto close *)
+	bOpened						:BOOL;			(* Valve opened *)
+	bClosed						:BOOL;			(* Valve closed *)
+	bOpenRelease 				:BOOL;			(* Open release *)
+	bCloseRelease				:BOOL;			(* Close release *)
+	bControlStateOn				:BOOL;			(* TRUE - control with input state *)
+	bControlOff					:BOOL;			(* TRUE - controle off *)
+	tControlOff					:TIME;			(* Time > 0 delay to control off *)
+	bValveErrOff				:BOOL;			(* TRUE -  valve off if error *)
+	bErrorOff					:BOOL;			(* TRUE - error diagnose off *)
+	tTimeOut					:TIME := T#5S;	(* TimeOut *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bOpen						:BOOL;			(* Valve open *)
+	bClose						:BOOL;			(* Valve close *)
+	bEndOpened					:BOOL;			(* Open reached *)
+	bEndClosed					:BOOL;			(* Close reached *)
+	bNoEndPos					:BOOL;			(* End position not reached *)
+	bSafetyLock					:BOOL;			(* Lock safety because of moving *)
+	bError						:BOOL;			(* Error *)
+	udnErrorNo					:UDINT;			(* Error number *)
+	sErrorMsg					:STRING;		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	bHomeCompleted				:BOOL;			(* Home completed *)
+END_VAR
+VAR
+	tonWatchDog					:TON;
+	rtHandOpen					:R_TRIG;
+	rtHandClose					:R_TRIG;
+	rtAutoOpen					:R_TRIG;
+	rtAutoClose					:R_TRIG;
+	tonControlOff					:TON;
+	bTargetOpen					:BOOL;
+	bTargetClose					:BOOL;
+	bFirstTime					:BOOL;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+	bOpen := FALSE;                  		(* Valve open *)
+	bClose := FALSE;				(* Valve close *)
+	bEndOpened := FALSE;               	(* Valve opended *)
+	bEndClosed := FALSE;               	(* Valve closed *)
+	bError := FALSE;
+	udnErrorNo := 0;                   		(* Error number *)
+	sErrorMsg := '';                   		(* Error message *)
+
+	tonWatchDog(
+		IN := FALSE,
+	         PT := tTimeOut
+	);
+	tonControlOff(
+		IN := FALSE,
+	         PT := tControlOff
+	);
+
+	bFirstTime := FALSE;
+	RETURN;
+END_IF;
+
+
+IF NOT bFirstTime
+THEN
+	bOpen := FALSE;                    		(* Valve open *)
+	bClose := FALSE;                  		(* Valve close *)
+	bEndOpened := FALSE;              	(* Valve opended *)
+	bEndClosed := FALSE;               	(* Valve closed *)
+	bFirstTime := TRUE;
+	RETURN;
+END_IF;
+
+
+(* Air pressure ok / Luftdruck ok *)
+IF NOT bAirPressure
+     OR NOT bEngineOk
+THEN
+	bOpen := FALSE;
+	bClose := FALSE;
+	bTargetOpen := FALSE;
+	bTargetClose := FALSE;
+	bSafetyLock := FALSE;
+	RETURN;
+END_IF;
+
+(* Safety lock *)
+bSafetyLock := bHandOpen
+			   OR bHandClose;
+
+(* Check inputs  *)
+rtHandOpen(CLK := bHandOpen AND bSafetyOk);
+rtHandClose(CLK := bHandClose AND bSafetyOk);
+rtAutoOpen(CLK := bAutoOpen AND bOpenRelease AND (NOT bControlOff OR tControlOff > T#0MS) AND bSafetyOk);
+rtAutoClose(CLK := bAutoClose AND bCloseRelease AND (NOT bControlOff OR tControlOff > T#0MS) AND bSafetyOk);
+
+
+(* Check operating mode *)
+IF bAutoHand                    (* Automatic *)
+THEN
+	IF rtAutoOpen.Q
+	    AND NOT bError
+	THEN
+		bTargetOpen := TRUE;
+		bTargetClose := FALSE;
+	END_IF;
+	
+	IF rtAutoClose.Q
+	    AND NOT bError
+	THEN
+		bTargetOpen := FALSE;
+		bTargetClose := TRUE;
+	END_IF;
+    
+ELSE                        (* Manual *)
+	IF rtHandOpen.Q
+	   AND bOpenRelease
+	   (* AND NOT #bError *)
+	THEN
+		bTargetOpen := TRUE;
+		bTargetClose := FALSE;
+	END_IF;
+	
+	IF rtHandClose.Q
+	    AND bCloseRelease
+	    (* AND NOT #bError *)
+	THEN
+		bTargetOpen := FALSE;
+		bTargetClose := TRUE;
+	END_IF;
+    
+END_IF;
+
+
+(* Set outputs valve open *)
+IF bOpenRelease
+THEN
+	IF bTargetOpen
+	     AND NOT bOpen
+	THEN
+		bOpen := TRUE;
+		bClose := FALSE;
+		tonWatchDog(
+			IN := FALSE,
+			PT := tTimeOut
+		);
+
+		tonControlOff(
+			IN := FALSE,
+			PT := tControlOff
+		);
+	END_IF;
+    
+ELSE
+	IF bTargetOpen
+	    AND bOpen
+	THEN
+		bOpen := FALSE;
+	
+		IF NOT bAutoHand
+		THEN
+		    bTargetOpen := FALSE;
+		END_IF;
+	
+	END_IF;
+END_IF;
+
+(* Set outputs valve close *)
+IF bCloseRelease
+THEN
+	IF bTargetClose
+	    AND NOT bClose
+	THEN
+		bOpen := FALSE;
+		bClose := TRUE;
+		tonWatchDog(
+			IN := FALSE,
+			PT := tTimeOut
+		);
+
+		tonControlOff(
+			IN := FALSE,
+			PT := tControlOff
+		);
+	END_IF;
+    
+ELSE
+	IF bTargetClose
+	     AND bClose
+	THEN
+		bClose := FALSE;
+
+		IF NOT bAutoHand
+		THEN
+			bTargetClose := FALSE;
+		END_IF;
+	
+	END_IF;
+END_IF;
+
+IF NOT bAutoHand
+     AND (bOpen OR bClose)
+THEN
+	bHomeCompleted := FALSE;
+END_IF;
+
+(* Error reset *)
+IF bReset
+    AND bError
+THEN
+	udnErrorNo := 0;                    (* Error number *)
+	sErrorMsg := '';                    (* Error message *)
+	tonWatchDog(
+		IN := FALSE,
+	         PT := tTimeOut
+	);
+
+END_IF;
+
+(* Timer starts when valve is not opened and work position *)
+tonWatchDog(
+	IN := NOT bErrorOff
+		AND (
+			(bClose AND NOT bClosed)
+			  OR (bOpen AND NOT bOpened)
+			  OR (NOT bOpened AND NOT bClosed)
+			  OR (bOpened AND bClosed)),
+	PT := tTimeOut
+);
+
+(* Error if valve does not reach open or work sensor *)
+IF tonWatchDog.Q
+    AND NOT bError
+THEN
+	IF bClose
+	THEN
+		IF NOT bClosed AND NOT bOpened
+		THEN
+			udnErrorNo := 1;                                (* Set error number *)
+			sErrorMsg := 'Work position not reached';
+		ELSIF NOT bClosed AND bOpened
+		THEN
+			udnErrorNo := 2;                                (* Set error number *)
+			sErrorMsg := 'Not move in work position';
+		ELSIF bClosed AND bOpened
+		THEN
+			udnErrorNo := 5;                                    (* Set error number *)
+			sErrorMsg := 'Both position reached';
+		END_IF;
+	ELSIF bOpen
+	THEN
+		IF NOT bClosed AND NOT bOpened
+		THEN
+			udnErrorNo := 3;                                (* Set error number *)
+			sErrorMsg := 'Base position not reached';
+		ELSIF bClosed AND NOT bOpened
+		THEN
+			udnErrorNo := 4;                                (* Set error number *)
+			sErrorMsg := 'Not move in base position';
+		ELSIF bClosed AND bOpened
+		THEN
+			udnErrorNo := 5;                                    (* Set error number *)
+			sErrorMsg := 'Both position reached';
+		END_IF;
+	ELSIF bClosed AND bOpened
+	THEN
+		udnErrorNo := 5;                                    (* Set error number *)
+		sErrorMsg := 'Both position reached';
+	END_IF;
+END_IF;
+
+bError := udnErrorNo <> 0;
+
+(* Open reached  *)
+bEndOpened := bOpened
+			    AND NOT bClosed
+			    AND NOT bError;
+
+(* Close reached  *)
+bEndClosed := NOT bOpened
+			  AND bClosed
+			  AND NOT bError;
+
+(* End position not reached *)
+IF bTargetOpen
+THEN
+	bNoEndPos := NOT bOpened;
+    
+ELSIF bTargetClose
+THEN
+	bNoEndPos := NOT bClosed;
+
+ELSE
+    bNoEndPos := FALSE;
+END_IF;
+
+
+(* Valve off if error  *)
+IF bError
+    AND (bOpen OR bClose)
+    AND bValveErrOff
+THEN
+	bOpen := FALSE;
+	bClose := FALSE;
+END_IF;
+
+(* Control with input state *)
+IF bControlStateOn
+THEN
+	IF bAutoHand					(* Automatic *)
+	THEN
+		IF NOT bAutoOpen
+		THEN
+			bOpen := FALSE;
+			bTargetOpen := FALSE;
+		END_IF
+
+		IF NOT bAutoClose
+		THEN
+			bClose := FALSE;
+			bTargetClose := FALSE;
+		END_IF
+	
+	ELSE						(* Manual *)
+		IF NOT bHandOpen
+		THEN
+			bOpen := FALSE;
+			bTargetOpen := FALSE;
+		END_IF
+
+		IF NOT bHandClose
+		THEN
+			bClose := FALSE;
+			bTargetClose := FALSE;
+		END_IF
+	
+	END_IF;
+END_IF
+
+(* Check control off *)
+IF bControlOff
+   AND tControlOff > t#0ms
+THEN
+	tonControlOff(
+		IN := bOpen OR bClose
+			 OR bTargetOpen OR bTargetClose,
+		PT := tControlOff
+	);
+    
+	IF tonControlOff.Q
+	THEN
+		bOpen := FALSE;
+		bClose := FALSE;
+		bTargetOpen := FALSE;
+		bTargetClose := FALSE;
+	END_IF;
+    
+ELSE
+	tonControlOff(
+		IN := FALSE,
+		PT := tControlOff
+	);
+	
+	IF bControlOff
+	     AND (bOpen OR bClose
+		       OR bTargetOpen OR bTargetClose)
+	THEN
+		bOpen := FALSE;
+		bClose := FALSE;
+		bTargetOpen := FALSE;
+		bTargetClose := FALSE;
+	END_IF;
+END_IF;
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Vacuum_1">
+      <LineId Id="64" Count="43" />
+      <LineId Id="460" Count="0" />
+      <LineId Id="108" Count="1" />
+      <LineId Id="461" Count="0" />
+      <LineId Id="463" Count="1" />
+      <LineId Id="462" Count="0" />
+      <LineId Id="111" Count="284" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

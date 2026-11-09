@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_ConvArrBitsToWord_1" Id="{57f351d0-4170-4314-9b0a-4542dea5b017}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_ConvArrBitsToWord_1 : WORD
+VAR_INPUT
+	arrBits: ARRAY [0..15] OF BOOL;
+END_VAR
+VAR
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[F_ConvArrBitsToWord := 0;]]></ST>
+    </Implementation>
+    <LineIds Name="F_ConvArrBitsToWord_1">
+      <LineId Id="6" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

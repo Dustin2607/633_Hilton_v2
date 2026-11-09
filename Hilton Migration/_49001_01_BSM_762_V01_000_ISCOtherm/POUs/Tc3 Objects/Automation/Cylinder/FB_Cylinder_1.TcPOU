@@ -1,0 +1,473 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Cylinder_1" Id="{95a2de8e-0717-4b9f-a413-cdcf57d16f70}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Cylinder_1
+(*
+Base class of cylinder.
+Cylinder control two directions with handshake.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			06.03.2013
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+10.30.2013		.02				PPA					Error diagnose off
+10.02.2015		.03				PPA					Move in manual in spite of error
+13.05.2016		.04				PPA					Valve Off if came limit imput, Control outputs dependent on input state
+10.09.2019		.05				PPA					Safety
+10.06.2020		.05				PPA					In first cycle check inf move to base or move to work
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;			(* Signal FB enable *)
+	bAirPressure				:BOOL;			(* Signal air pressure *)
+	bSafetyOk					:BOOL;			(* Safety OK  *)
+	bReset						:BOOL;			(* Signal reset *)
+	bAutoHand					:BOOL;			(* Auto := TRUE, Hand := FALSE *)
+	bHandBase					:BOOL;			(* Move hand to base position *)
+	bHandWork					:BOOL;			(* Move hand to work position *)
+	bAutoBase					:BOOL;			(* Move auto to base position *)
+	bAutoWork					:BOOL;			(* Move auto to work position *)
+	bBasePos					:BOOL;			(* Base position *)
+	bWorkPos					:BOOL;			(* Work position *)
+	bAtBasePos					:BOOL;			(* At base position *)
+	bAtWorkPos					:BOOL;			(* At work position *)
+	bBaseRelease				:BOOL;			(* Base position release *)
+	bWorkRelease				:BOOL;			(* Work position release *)
+	bControlStateOn				:BOOL;			(* TRUE - control with input state *)
+	bControlOff					:BOOL;			(* TRUE - controle off *)
+	bValveOff					:BOOL;			(* TRUE -  valve off with limit input *)
+	bValveErrOff				:BOOL;			(* TRUE -  valve off if error *)
+	bErrorOff					:BOOL;			(* TRUE - error diagnose off *)
+	tTimeOut					:TIME := T#5s;	(* TimeOut *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bMoveToBase					:BOOL;			(* Move to base position *)
+  	bMoveToWork					:BOOL;			(* Move to work position *)
+	bEndBase					:BOOL;			(* Base position reached *)
+  	bEndWork					:BOOL;			(* Work position reached *)
+ 	bNoEndPos					:BOOL;			(* End position not reached *)
+	bSafetyLock					:BOOL;			(* Lock safety because of moving *)
+	bError						:BOOL;			(* Error *)
+	udnErrorNo					:UDINT;			(* Error number *)
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	bHomeCompleted				:BOOL;			(* Home completed *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	bFirstBase					:BOOL;
+	bFirstWork					:BOOL;
+	bTargetBase					:BOOL;
+	bTargetWork					:BOOL;
+
+	bFirstTime					:BOOL;
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtHandBase					:R_TRIG;
+	rtHandWork					:R_TRIG;
+	rtAutoBase					:R_TRIG;
+	rtAutoWork					:R_TRIG;
+
+	tonFirstTime				:TON;		
+ 	tonWatchDog					:TON;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	bMoveToBase := FALSE;			(* Move to base position *)
+  	bMoveToWork := FALSE;			(* Move to work position *)
+	bEndBase := FALSE;				(* Base position reached *)
+  	bEndWork := FALSE;				(* Work position reached *)
+	bError := FALSE;
+	udnErrorNo := 0;					(* Error number *)
+	sErrorMsg := ''; 					(* Error message *)
+	tonWatchDog(IN := FALSE);
+	bFirstTime := FALSE;
+	RETURN;
+END_IF
+
+
+IF NOT bFirstTime
+THEN
+	bMoveToBase := FALSE;			(* Move to base position *)
+  	bMoveToWork := FALSE;			(* Move to work position *)
+	bFirstBase := bBasePos AND NOT bWorkPos;
+	bFirstWork := NOT bBasePos AND bWorkPos;
+	bTargetBase := FALSE;
+	bTargetWork := FALSE;
+	bEndBase := FALSE;				(* Base position reached *)
+  	bEndWork := FALSE;				(* Work position reached *)
+	bFirstTime := TRUE;
+	RETURN;
+END_IF;
+
+(* Air pressure ok / Luftdruck ok *)
+IF NOT bAirPressure
+THEN
+	rtHandBase(CLK:= FALSE);
+	rtHandWork(CLK:= FALSE);
+	bSafetyLock := FALSE;
+	RETURN;
+END_IF;
+
+(* Safety lock *)
+bSafetyLock := bHandBase
+			  OR bHandWork;
+
+A_SetInputs();
+A_ChkOpMode();
+A_SetOutputs();
+A_Status();
+
+
+
+
+]]></ST>
+    </Implementation>
+    <Action Name="A_ChkOpMode" Id="{0475d00e-4991-41ec-b1ab-49615c146825}">
+      <Implementation>
+        <ST><![CDATA[
+(* Check operating mode *)
+IF bAutoHand					(* Automatic *)
+THEN
+	IF rtAutoBase.Q
+	     AND NOT bError
+	THEN
+		bTargetBase := TRUE;
+		bTargetWork := FALSE;
+	END_IF;
+
+	IF rtAutoWork.Q
+ 	     AND NOT bError
+	THEN
+		bTargetBase := FALSE;
+		bTargetWork := TRUE;
+	END_IF;
+
+ELSE						(* Manual *)
+	IF rtHandBase.Q
+	    AND bBaseRelease
+	    (* AND NOT bError *)
+	THEN
+		bTargetBase := TRUE;
+		bTargetWork := FALSE;
+	END_IF;
+
+	IF rtHandWork.Q
+	    AND bWorkRelease
+	    (* AND NOT bError *)
+	THEN
+		bTargetBase := FALSE;
+		bTargetWork := TRUE;
+	END_IF
+
+END_IF;
+
+tonFirstTime(
+	IN := bTargetBase AND bTargetWork,	  
+	PT := T#2S
+);
+
+IF tonFirstTime.Q
+THEN
+	IF bFirstBase
+	THEN
+		bTargetBase := FALSE;
+		bFirstBase := FALSE;
+	ELSIF bFirstWork
+	THEN
+		bTargetWork := FALSE;
+		bFirstWork := FALSE;
+	END_IF	
+END_IF]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_SetInputs" Id="{0afd901a-b196-493c-a04a-a1f736006fb3}">
+      <Implementation>
+        <ST><![CDATA[
+(* Check inputs  *)
+rtHandBase(CLK:= bHandBase AND bSafetyOk);
+rtHandWork(CLK:= bHandWork AND bSafetyOk);
+rtAutoBase(CLK:= bAutoBase AND bBaseRelease AND bSafetyOk);
+rtAutoWork(CLK:= bAutoWork AND bWorkRelease AND bSafetyOk);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_SetOutputs" Id="{5c911bc7-e32e-4c8c-92b9-94beb8742d65}">
+      <Implementation>
+        <ST><![CDATA[
+(* Set outputs move to base position  *)
+IF bBaseRelease
+     OR bAtBasePos
+THEN
+	IF  bTargetBase
+	     AND NOT bMoveToBase
+	THEN
+		bMoveToBase := TRUE;
+		bMoveToWork := FALSE;
+		tonWatchDog(IN := FALSE);
+	END_IF;
+
+ELSE
+	IF bTargetBase
+	     AND  bMoveToBase
+	THEN
+		bMoveToBase := FALSE;
+
+		IF NOT bAutoHand
+		THEN
+			bTargetBase := FALSE;
+		END_IF;
+
+	END_IF;
+END_IF;
+
+(* Set outputs move to work position  *)
+IF bWorkRelease
+    OR bAtWorkPos
+THEN
+	IF  bTargetWork
+	     AND NOT bMoveToWork
+	THEN
+		bMoveToBase := FALSE;
+		bMoveToWork := TRUE;
+		tonWatchDog(IN := FALSE);
+	END_IF;
+
+ELSE
+	IF bTargetWork
+	     AND  bMoveToWork
+	THEN
+		bMoveToWork := FALSE;
+
+		IF NOT bAutoHand
+		THEN
+			bTargetWork := FALSE;
+		END_IF;
+
+	END_IF;
+END_IF;
+
+IF NOT bAutoHand
+    AND (bMoveToBase
+         OR bMoveToWork)
+THEN
+	bHomeCompleted := FALSE;
+END_IF;]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Status" Id="{bce78e67-5d42-4293-97b9-c2ef44c4ade5}">
+      <Implementation>
+        <ST><![CDATA[
+(* Error reset *)
+IF bReset
+     AND bError
+THEN
+	udnErrorNo := 0;					(* Error number *)
+	sErrorMsg := ''; 					(* Error message *)
+	tonWatchDog(IN := FALSE);
+END_IF;
+
+(* Timer starts when cylinder is not  in base and work position *)
+tonWatchDog(IN := NOT bErrorOff
+				 AND (
+					(bMoveToWork AND NOT bAtWorkPos)
+				   	OR (bMoveToBase AND NOT bAtBasePos)
+				   	OR (NOT bAtBasePos AND NOT bAtWorkPos)
+				   	OR (bAtBasePos AND bAtWorkPos)),
+			PT := tTimeOut);
+
+(* Error if cylinder does not reach base or work position*)
+IF tonWatchDog.Q 
+   AND NOT bError
+THEN
+	IF bMoveToWork
+	THEN
+		IF NOT bAtWorkPos AND NOT bAtBasePos
+		THEN
+			udnErrorNo := 1; 								(* Set error number *)
+			sErrorMsg := 'Work position not reached';
+		ELSIF NOT bAtWorkPos AND bAtBasePos
+		THEN
+			udnErrorNo := 2; 								(* Set error number *)
+			sErrorMsg := 'Not move in work position';
+		ELSIF bAtWorkPos AND bAtBasePos
+		THEN
+			udnErrorNo := 5; 									(* Set error number *)
+			sErrorMsg := 'Both position reached';
+		END_IF
+	ELSIF bMoveToBase
+	THEN
+		IF NOT bAtWorkPos AND NOT bAtBasePos
+		THEN
+			udnErrorNo := 3; 								(* Set error number *)
+			sErrorMsg := 'Base position not reached';
+		ELSIF bAtWorkPos AND NOT bAtBasePos
+		THEN
+			udnErrorNo := 4; 								(* Set error number *)
+			sErrorMsg := 'Not move in base position';
+		ELSIF bAtWorkPos AND bAtBasePos
+		THEN
+			udnErrorNo := 5; 									(* Set error number *)
+			sErrorMsg := 'Both position reached';
+		END_IF
+	ELSIF bAtWorkPos AND bAtBasePos
+	THEN
+		udnErrorNo := 5; 									(* Set error number *)
+		sErrorMsg := 'Both position reached';
+	END_IF
+END_IF
+
+bError := udnErrorNo <> 0;
+
+
+(* End base position reached  *)
+bEndBase := bAtBasePos
+		        AND NOT bAtWorkPos
+		        AND NOT bError;
+
+(* End wrok position reached  *)
+bEndWork := NOT bAtBasePos
+		        AND bAtWorkPos
+		        AND NOT bError;
+
+(* End position not reached *)
+IF bTargetBase
+THEN
+	bNoEndPos := NOT bAtBasePos;
+
+ELSIF bTargetWork
+THEN
+	bNoEndPos :=  NOT bAtWorkPos;
+
+ELSE
+	bNoEndPos := FALSE;
+END_IF
+
+
+(* Valve off if error  *)
+IF bError
+     AND (bMoveToBase OR bMoveToWork)
+     AND bValveErrOff
+THEN
+	bMoveToBase := FALSE;
+	bMoveToWork := FALSE;
+	bTargetBase := FALSE;
+	bTargetWork := FALSE;
+END_IF;
+
+(* Control with input state *)
+IF bControlStateOn
+THEN
+	IF bAutoHand					(* Automatic *)
+	THEN
+		IF NOT bAutoBase
+		THEN
+			bMoveToBase := FALSE;
+			bTargetBase := FALSE;
+		END_IF
+
+		IF NOT bAutoWork
+		THEN
+			bMoveToWork := FALSE;
+			bTargetWork := FALSE;
+		END_IF
+	
+	ELSE						(* Manual *)
+		IF NOT bHandBase
+		THEN
+			bMoveToBase := FALSE;
+			bTargetBase := FALSE;
+		END_IF
+
+		IF NOT bHandWork
+		THEN
+			bMoveToWork := FALSE;
+			bTargetWork := FALSE;
+		END_IF
+	
+	END_IF;
+END_IF
+
+(* Check control off *)
+IF bControlOff
+    AND (
+		bMoveToBase OR bMoveToWork
+		OR bTargetBase OR bTargetWork
+	      )
+THEN
+	bMoveToBase := FALSE;
+	bMoveToWork := FALSE;
+	bTargetBase := FALSE;
+	bTargetWork := FALSE;
+END_IF
+
+(* Check valve off *)
+IF bValveOff
+THEN
+	IF bAtBasePos
+	    AND (bMoveToBase OR bTargetBase)
+	THEN
+		bMoveToBase := FALSE;
+		bTargetBase := FALSE;
+
+	ELSIF bAtWorkPos
+	    	   AND (bMoveToWork OR bTargetWork)
+	THEN
+		bMoveToWork := FALSE;
+		bTargetWork := FALSE;
+	END_IF
+END_IF]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_Cylinder_1">
+      <LineId Id="71" Count="18" />
+      <LineId Id="270" Count="1" />
+      <LineId Id="90" Count="12" />
+      <LineId Id="187" Count="0" />
+      <LineId Id="103" Count="1" />
+      <LineId Id="188" Count="0" />
+      <LineId Id="190" Count="1" />
+      <LineId Id="189" Count="0" />
+      <LineId Id="105" Count="9" />
+    </LineIds>
+    <LineIds Name="FB_Cylinder_1.A_ChkOpMode">
+      <LineId Id="0" Count="35" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="40" Count="1" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="51" Count="2" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="46" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Cylinder_1.A_SetInputs">
+      <LineId Id="0" Count="1" />
+      <LineId Id="7" Count="2" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Cylinder_1.A_SetOutputs">
+      <LineId Id="0" Count="58" />
+    </LineIds>
+    <LineIds Name="FB_Cylinder_1.A_Status">
+      <LineId Id="0" Count="159" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

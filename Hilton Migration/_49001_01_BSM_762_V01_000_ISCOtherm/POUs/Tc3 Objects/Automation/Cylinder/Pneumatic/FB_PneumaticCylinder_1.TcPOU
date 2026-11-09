@@ -1,0 +1,152 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_PneumaticCylinder_1" Id="{a4bd9522-9f92-4666-b22a-24e225457a08}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_PneumaticCylinder_1
+(*
+
+The function block used to control stopper cylinder.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			24.10.2016
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	etMachineMode				:ET_MachineMode;			(* Machine mode *)
+	etMachineState				:ET_MachineState;			(* Machine state *)
+	bAirPressureOK				:BOOL;						(* Air pressure OK *)
+	bSafetyOk					:BOOL;						(* Safety OK  *)
+	bInBase						:BOOL;						(* In base position *)
+	bInWork						:BOOL;						(* In work position *)
+	bMoveToBaseRelease			:BOOL;						(* Release move to base *)
+	bMoveToWorkRelease			:BOOL;						(* Release move to work *)
+	bHandMoveToBase				:BOOL;						(* Hand move to base *)
+	bHandMoveToWork				:BOOL;						(* Hand move to work *)
+	bAutoMoveToBase				:BOOL;						(* Auto move to base *)
+	bAutoMoveToWork				:BOOL;						(* Auto move to work *)
+	bExtCtrlEn					:BOOL;						(* Enable external control *)
+	bExtMoveToBase				:BOOL;						(* External move to base *)
+	bExtMoveToWork				:BOOL;						(* External move to work *)
+	bControlOff					:BOOL;						(* TRUE - controle off *)
+	bControlStateOn				:BOOL;						(* Control with input state *)
+	bValveOff					:BOOL;						(* Valve off *)
+	bConfirmAlarm				:BOOL;						(* Confirm alarm *)
+	tTimeOut					:TIME := T#6S;					(* TimeOut *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bMoveToBase					:BOOL;						(* Move to base *)
+	bMoveToWork					:BOOL;						(* Move to work *)
+	bErrorMoveToBase			:BOOL;						(* Error move to base *)
+	bErrorMoveToWork			:BOOL;						(* Error move to work *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	bHomeCompleted				:BOOL;						(* Home completed *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbCylinder					:FB_Cylinder;
+	fbCylinderAtBasePos			:FB_SignalHandlingDelay;
+	fbCylinderAtWorkPos			:FB_SignalHandlingDelay;
+	fbCylinderBaseRelease		:FB_SignalHandlingDelay;
+	fbCylinderWorkRelease		:FB_SignalHandlingDelay;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+(* Control clamp cylinder *)
+
+fbCylinderAtBasePos(
+	bEnable := TRUE,
+	bIn := bInBase,
+	tDelay := t#0ms
+);
+
+fbCylinderAtWorkPos(
+	bEnable := TRUE,
+	bIn := bInWork,
+	tDelay := t#0ms
+);
+
+fbCylinderBaseRelease(
+	bEnable := TRUE,
+	bIn := bMoveToBaseRelease,
+	tDelay :=t#0ms
+);
+
+fbCylinderWorkRelease(
+	bEnable := TRUE,
+	bIn := bMoveToWorkRelease,
+	tDelay := t#0ms
+);
+
+fbCylinder(
+	bEnable := TRUE,
+	bAirPressure := bAirPressureOK,
+	bSafetyOk := bSafetyOk,
+	bReset := bConfirmAlarm,
+	bAutoHand := etMachineMode = ET_MachineMode_eHome
+			         OR etMachineMode = ET_MachineMode_eStepping
+			         OR etMachineMode = ET_MachineMode_eAutomatic
+					 OR etMachineMode = ET_MachineMode_eMaintenance,
+	bHandBase := bHandMoveToBase OR bExtMoveToBase,
+	bHandWork := bHandMoveToWork OR bExtMoveToWork,
+	bAutoBase := SEL(bExtCtrlEn, bAutoMoveToBase, bExtMoveToBase),
+	bAutoWork := SEL(bExtCtrlEn, bAutoMoveToWork, bExtMoveToWork),
+	bAtBasePos := fbCylinderAtBasePos.bOut,
+	bAtWorkPos := fbCylinderAtWorkPos.bOut,
+	bBaseRelease := fbCylinderBaseRelease.bOut,
+	bWorkRelease := fbCylinderWorkRelease.bOut,
+	bControlStateOn := bControlStateOn,
+	bControlOff := bControlOff,
+	bValveOff := bValveOff,
+	bValveErrOff := FALSE,
+	bErrorOff := FALSE,
+	tTimeOut := tTimeOut,
+	bHomeCompleted := bHomeCompleted,
+	bMoveToBase => bMoveToBase,
+	bMoveToWork => bMoveToWork
+);
+
+A_Alarm();]]></ST>
+    </Implementation>
+    <Action Name="A_Alarm" Id="{414dd839-1d1f-48ed-8887-9fc51b6c757d}">
+      <Implementation>
+        <ST><![CDATA[
+bErrorMoveToWork := fbCylinder.bError
+					AND (fbCylinder.udnErrorNo = 1
+					     OR fbCylinder.udnErrorNo = 2
+					     OR fbCylinder.udnErrorNo = 5);
+
+bErrorMoveToBase := fbCylinder.bError
+					 AND (fbCylinder.udnErrorNo = 3
+					       OR fbCylinder.udnErrorNo = 4
+					       OR fbCylinder.udnErrorNo = 5);]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_PneumaticCylinder_1">
+      <LineId Id="64" Count="29" />
+      <LineId Id="245" Count="0" />
+      <LineId Id="94" Count="3" />
+      <LineId Id="181" Count="0" />
+      <LineId Id="98" Count="19" />
+    </LineIds>
+    <LineIds Name="FB_PneumaticCylinder_1.A_Alarm">
+      <LineId Id="0" Count="9" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

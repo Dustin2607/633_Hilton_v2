@@ -1,0 +1,172 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_ItpWriteRParams_1" Id="{c3b3cfb3-9a40-4f57-9f4d-efaea9f21745}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ItpWriteRParams_1
+(*
+
+The function block used to write the NC R-parameters. 
+Written parameters are R500 to R899. 
+Parameter 0-99 are free to use in the NC-programm.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			23.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;			(* Signal FB enable *)
+	bExecute					:BOOL; 			(* Execute the programm *)
+	ItpToPlc					:NCTOPLC_NCICHANNEL_REF;
+	arlrWriteRParams500_899		:ARRAY[500..899] OF LREAL;			(* Parameters to write *)
+	tTimeOut					:TIME := T#5S;	(* TimeOut *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bDone						:BOOL;			(* Command done *)
+	bBusy						:BOOL;			(* Command busy *)
+	bError						:BOOL;			(* Command error  *)
+	udnErrorNo					:UDINT;			(* Error number *)
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+	etItpWriteRParams			:ET_ItpWriteRParams;
+
+	(* Variables *)
+
+	bFirstTime					:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbItpWriteRParamsEx			:ItpWriteRParamsEx;					(* Read parameters *)
+
+END_VAR
+VAR CONSTANT
+	unSTART_IDX					:UINT := 500;						(* Start parameter to read *)
+	unAMOUNT_NO					:UINT := 400;						(* Amount of parameters to read *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+	bDone := FALSE;					(* Program done *)
+	bBusy := FALSE;                                  	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;					(* Error number *)
+	sErrorMsg := ''; 					(* Error message *)
+	
+	bFirstTime := FALSE;
+	RETURN;
+END_IF;
+
+IF NOT bFirstTime
+THEN
+	bDone := FALSE;                                 	(* Program done *)
+	bBusy := FALSE;                                  	(* Program not busy *)
+	bError := FALSE;                                 	(* Program not error *)
+	udnErrorNo := 0;					(* Error number *)
+	sErrorMsg := ''; 					(* Error message *)
+
+	fbItpWriteRParamsEx(
+		bExecute := FALSE,
+		sNciToPlc := ItpToPlc
+	);
+
+	etItpWriteRParams := ET_ItpWriteRParams_eWaitExecute;       				(* Next step *)
+	
+	bFirstTime := TRUE;
+END_IF;
+
+CASE etItpWriteRParams OF
+        
+	ET_ItpWriteRParams_eWaitExecute:
+		bBusy := FALSE;                                     		(* Program not busy *)
+		bError := FALSE;                                    		(* Program not error *)
+
+		IF bExecute
+		THEN
+			bDone := FALSE;                                 	(* Program done, in position *)
+			bBusy := TRUE;                                  	(* Program busy *)
+			udnErrorNo := 0;					(* Error number *)
+			sErrorMsg := ''; 					(* Error message *)
+	           
+			etItpWriteRParams := ET_ItpWriteRParams_eWriteRParams;         		(* Next step *)
+		END_IF;
+
+	ET_ItpWriteRParams_eWriteRParams:
+
+		fbItpWriteRParamsEx(				(* Read R-parameters *)
+			bExecute := TRUE,
+			pAddr := ADR(arlrWriteRParams500_899),
+			nIndex := unSTART_IDX,
+			nCount := unAMOUNT_NO,
+			tTimeOut := tTimeOut,
+			sNciToPlc := ItpToPlc
+		 );
+
+		IF NOT fbItpWriteRParamsEx.bBusy
+		     AND NOT fbItpWriteRParamsEx.bErr
+		THEN
+			fbItpWriteRParamsEx(
+				bExecute := FALSE,
+				sNciToPlc := ItpToPlc
+			);
+
+			etItpWriteRParams := ET_ItpWriteRParams_eDone;            			(* Next step *)
+
+		ELSIF fbItpWriteRParamsEx.bErr
+		THEN
+			udnErrorNo := fbItpWriteRParamsEx.nErrId;						(* Set error number *)
+
+			fbItpWriteRParamsEx(
+				bExecute := FALSE,
+				sNciToPlc := ItpToPlc
+			);
+
+			etItpWriteRParams := ET_ItpWriteRParams_eError;            			(* Next step *)
+
+		END_IF
+
+	ET_ItpWriteRParams_eDone:
+		bDone := TRUE;                                      		(* Program done, in position *)
+		bBusy := FALSE;                                     		(* Program not busy *)
+	
+		etItpWriteRParams := ET_ItpWriteRParams_eNoExecute;            		(* Next step *)
+	
+	ET_ItpWriteRParams_eError:
+		bDone := FALSE;                                    	 	(* Program done, in position *)
+		bError := TRUE;                                     		(* Program error *)
+		bBusy := FALSE;                                     		(* Program not busy *)
+
+		etItpWriteRParams := ET_ItpWriteRParams_eNoExecute;            		(* Next step *)
+	
+	ET_ItpWriteRParams_eNoExecute:
+		IF NOT bExecute
+		THEN
+			bDone := FALSE;                                 	(* Program done *)
+			bBusy := FALSE;                                 	(* Program not busy *)
+			bError := FALSE;                                		(* Program not error *)
+
+			etItpWriteRParams := ET_ItpWriteRParams_eWaitExecute;       		(* Next step *)
+	
+		END_IF;
+        
+END_CASE;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ItpWriteRParams_1">
+      <LineId Id="56" Count="105" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

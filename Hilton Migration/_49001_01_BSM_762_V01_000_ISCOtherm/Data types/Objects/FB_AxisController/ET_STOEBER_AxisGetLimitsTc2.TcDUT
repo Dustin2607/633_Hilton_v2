@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_STOEBER_AxisGetLimitsTc2" Id="{50231bcc-44b4-48b0-920b-1a8fa73d85a6}">
+    <Declaration><![CDATA[TYPE ET_STOEBER_AxisGetLimitsTc2 :
+(
+	ET_STOEBER_AxisGetLimits_eWaitExecute := 0,
+	ET_STOEBER_AxisGetLimits_eDecimalDigits,
+	ET_STOEBER_AxisGetLimits_eScalingDenom,
+	ET_STOEBER_AxisGetLimits_eScalingNum,
+	ET_STOEBER_AxisGetLimits_eDone := 197,
+	ET_STOEBER_AxisGetLimits_eError := 198,
+	ET_STOEBER_AxisGetLimits_eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

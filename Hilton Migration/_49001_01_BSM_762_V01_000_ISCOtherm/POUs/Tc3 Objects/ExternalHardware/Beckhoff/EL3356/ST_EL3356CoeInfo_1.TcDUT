@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_EL3356CoeInfo_1" Id="{dd35ed4e-545b-4bce-ac2a-2ed963ee72e7}">
+    <Declaration><![CDATA[TYPE ST_EL3356CoeInfo_1 :
+STRUCT
+	bEnableFilter							:BOOL:= TRUE;
+	bEnableUserScale					:BOOL:= TRUE;
+	dwFilterSettings						:DWORD:= 0;
+	rGain								:REAL:= 1.0;
+	rTara								:REAL:= 0.0;
+	rRatedOutput							:REAL:= 2.0;
+	rNominalLoad						:REAL:= 5.0;
+	rZeroBalance							:REAL:= 0.0;
+	rGravityOfEarth						:REAL:= 9.806650;
+	rScaleFactor							:REAL:= 1000.0;
+	rReferenceLoad						:REAL:= 5.0;
+	bEnableUserScaleIndex8010			:BOOL:= FALSE;
+	dnUserScaleOffsetIndex8010			:DINT:= 0;
+	dnUserScaleGainIndex8010				:DINT:= 65536;
+	dwFilterSettingsIndex8010				:DWORD:= 0;
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

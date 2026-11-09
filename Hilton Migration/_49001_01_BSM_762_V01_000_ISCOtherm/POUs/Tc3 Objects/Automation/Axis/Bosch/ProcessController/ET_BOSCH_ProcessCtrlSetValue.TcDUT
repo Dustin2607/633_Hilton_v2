@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_BOSCH_ProcessCtrlSetValue" Id="{e27ec0dc-f319-43fd-9d41-b3aa1696ece5}">
+    <Declaration><![CDATA[TYPE ET_BOSCH_ProcessCtrlSetValue :
+(
+	ET_BOSCH_ProcessCtrlSetValue_eWaitExecute := 0,
+	ET_BOSCH_ProcessCtrlSetValue_eGetPLCControlword,
+	ET_BOSCH_ProcessCtrlSetValue_ePLCControlword,
+	ET_BOSCH_ProcessCtrlSetValue_eGetPLCStatusword,
+	ET_BOSCH_ProcessCtrlSetValue_eGetProcessCtrlConfig,
+	ET_BOSCH_ProcessCtrlSetValue_eProcessCtrlConfig,
+	ET_BOSCH_ProcessCtrlSetValue_eAIScaling,
+	ET_BOSCH_ProcessCtrlSetValue_eDone := 197,
+	ET_BOSCH_ProcessCtrlSetValue_eError := 198,
+	ET_BOSCH_ProcessCtrlSetValue_eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_YaskawaStart_1" Id="{8c24bb5f-44b7-44ab-9a34-d04a09314624}">
+    <Declaration><![CDATA[TYPE ET_YaskawaStart_1 :
+(
+	ET_YaskawaStart_eWaitExecute := 0,
+	ET_YaskawaStart_eCallMasterJob,
+	ET_YaskawaStart_eExternalStart,
+	ET_YaskawaStart_eWfPrgDone,
+	ET_YaskawaStart_eDone := 197,
+	ET_YaskawaStart_eError := 198,
+	ET_YaskawaStart_eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,129 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_FrameFifo" Id="{5b2028ea-49e1-4a4c-879e-60d028f4eb55}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_FrameFifo
+(*
+
+The function block used to control Tx/Rx (string data) fifo.
+
+Constructor: 	
+Company:		Beckhoff
+Date:			18.02.2019
+Version:		1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bLog			:BOOL := FALSE;			(* TRUE => Enable log message output, FALSE => Disable *)
+	bCycles			:BOOL := FALSE;			(* TRUE => Enable send cycles , FALSE => Disable *)
+	sPrefix			:STRING := 'Unknown::';	(* Log message description string (allows the identification of log message source) *)
+	sPut			:T_MaxString 	:= ''; 	(* String message to add (write) to the fifo *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bOk				:BOOL; 	 				(* TRUE = New entry added or removed succesfully, FALSE = Fifo overflow or fifo empty *)
+	sGet			:T_MaxString := '';		(* String message removed (read) from fifo *)
+	nCount			:UDINT := 0;			(* Number of fifo entries *)
+	cbFree			:UDINT := 0;			(* Free buffer space *)
+END_VAR
+VAR
+	(* Variables *)
+	buffer			:ARRAY[-3..GVL_TCPIP.BUFFER_SIZE] OF BYTE;				(* Internal buffer memory *)
+	
+	(* Instances *)
+	fbBuffer 		:FB_StringRingBuffer := (bOverwrite := FALSE);			(* Basic (lower level) string buffer control function block *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[;]]></ST>
+    </Implementation>
+    <Action Name="AddTail" Id="{bf355131-c191-452a-a6c7-ee0d725366df}">
+      <Implementation>
+        <ST><![CDATA[(* Adds new fifo entry *)
+fbBuffer.A_AddTail(
+	pBuffer := ADR(buffer), 
+	cbBuffer := SIZEOF(buffer),
+	putValue := sPut, 
+	bOk => bOk, 
+	nCount => nCount 
+);
+IF bOk 
+THEN
+	cbFree := GVL_TCPIP.BUFFER_SIZE - fbBuffer.cbSize;(* Calculate the free buffer space *)
+	IF bLog			(* Log message *)
+	THEN
+		ADSLOGSTR( ADSLOG_MSGTYPE_HINT OR ADSLOG_MSGTYPE_LOG, CONCAT(sPrefix, '"%s"' ), sPut );
+	END_IF
+END_IF]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="Clear" Id="{ba651967-f101-4dbb-a83f-1e532e96068a}">
+      <Implementation>
+        <ST><![CDATA[(* Resets fifo = clears all data *)
+fbBuffer.A_Reset( 
+	pBuffer := ADR(buffer), 
+	cbBuffer := SIZEOF(buffer),
+	bOk => bOk, 
+	getValue => sGet, 
+	nCount => nCount 
+);
+
+cbFree := GVL_TCPIP.BUFFER_SIZE;(* Free buffer size *)]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="RemoveHead" Id="{543dff96-8070-428f-854f-30750196fbb5}">
+      <Implementation>
+        <ST><![CDATA[(* Removes oldest fifo entry *)
+fbBuffer.A_RemoveHead( 
+	pBuffer := ADR(buffer), 
+	cbBuffer := SIZEOF(buffer),
+	bOk => bOk, 
+	getValue => sGet, 
+	nCount => nCount 
+);
+
+IF bOk 
+THEN
+	cbFree := GVL_TCPIP.BUFFER_SIZE - fbBuffer.cbSize;(* Calculate the free buffer space *)
+END_IF]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_FrameFifo">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_FrameFifo.AddTail">
+      <LineId Id="2" Count="1" />
+      <LineId Id="10" Count="1" />
+      <LineId Id="4" Count="0" />
+      <LineId Id="12" Count="2" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="6" Count="1" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="8" Count="1" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_FrameFifo.Clear">
+      <LineId Id="2" Count="1" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="4" Count="0" />
+      <LineId Id="7" Count="1" />
+      <LineId Id="10" Count="1" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_FrameFifo.RemoveHead">
+      <LineId Id="2" Count="1" />
+      <LineId Id="7" Count="1" />
+      <LineId Id="4" Count="0" />
+      <LineId Id="9" Count="3" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="6" Count="0" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

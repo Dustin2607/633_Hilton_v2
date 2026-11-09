@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_BOSCH_ProcessCtrlLink" Id="{10ba4501-029b-40a9-8d9e-d8a6dc3e2ca5}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_BOSCH_ProcessCtrlLink
+VAR_INPUT
+	pDrive							:POINTER TO ST_BOSCHINDRADRIVECIA402_REF;			(* The DRIVE_REF data type  is an interface between the PLC and the DRIVE and contains axis information *)
+	pProcessCtrl					:POINTER TO ST_FWS_MLDPCx_PRE_01Vxx_MPxx;			(* The AXIS_REF data type  is an interface between the PLC and the NC and contains axis information *)
+END_VAR
+VAR_OUTPUT		
+
+END_VAR
+VAR_IN_OUT
+
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* Get terminal status *)
+pProcessCtrl^.sNetId := F_CreateAmsNetId(pDrive^.stTerminalState.stAdsAddr.netId);
+pProcessCtrl^.unSlaveAddr:= pDrive^.stTerminalState.stAdsAddr.port;
+pProcessCtrl^.usnDecimalDigits:= 4;
+
+(* Copy the actual values from the bosch indradirve to the process controller structure *)
+pProcessCtrl^.bEnabled := pDrive^.stBoschToPlc.wProcessCtrlStatusWordP01410.0;							(* Controller is ready for operation. *)
+pProcessCtrl^.bError := pDrive^.stBoschToPlc.wProcessCtrlStatusWordP01410.4;							(* An error in process control has occurred. *)
+pProcessCtrl^.bCtrlDiffTolWindow := pDrive^.stBoschToPlc.wProcessCtrlStatusWordP01410.1;				(* Control difference within tolerance window *)
+pProcessCtrl^.bUpperCtrlOutLimitActive := pDrive^.stBoschToPlc.wProcessCtrlStatusWordP01410.2;			(* Controller output is limited by P‑0‑1377 *)
+pProcessCtrl^.bLowerCtrlOutLimitActive := pDrive^.stBoschToPlc.wProcessCtrlStatusWordP01410.3;			(* Controller output is limited by P‑0‑1378 *)
+pProcessCtrl^.bUpperPosLimitExceeded := pDrive^.stBoschToPlc.wProcessCtrlStatusWordP01410.5;			(* Upper position limit P‑0‑1381 exceeded *)
+pProcessCtrl^.bLowerPosLimitExceeded := pDrive^.stBoschToPlc.wProcessCtrlStatusWordP01410.6;			(* Lower position limit P‑0‑1382 exceeded *)
+pProcessCtrl^.bLimitCmdValueChangeNotActive := pDrive^.stBoschToPlc.wProcessCtrlStatusWordP01410.7;		(* Displays whether P‑0‑1371 = P‑0‑1271 If bit 7 = 0, the command value change is limited by the ramp and/or the filter *)
+pProcessCtrl^.bDriveNoAF := pDrive^.stBoschToPlc.wProcessCtrlStatusWordP01410.10;						(* The drive is not in drive enable when process control is activated *)
+pProcessCtrl^.bActiveCtrlSetting := pDrive^.stBoschToPlc.wProcessCtrlStatusWordP01410.12;				(* Displays which controller settings are currently active, depending on the effective process feedback
+												   														value (P‑0‑1273) or on the effective velocity command value (P‑0‑0048) and on the switch points (P‑0‑1322, P‑0‑1323) that have been set *)														
+pProcessCtrl^.rActProcessValue := DINT_TO_REAL(pDrive^.stBoschToPlc.dnAnalogProcessFeedbackValueP01372) / EXPT(10, pProcessCtrl^.usnDecimalDigits);			(* Current process value *)	
+			
+(* Copy the setpoint values from the process controller structure to the bosch indradirve *)
+pDrive^.stPlcToBosch.wProcessCtrlControlWordP01390.0 := pProcessCtrl^.bEnable;							(* Enable controller *)
+(* Drive.stPlcToBosch.wProcessCtrlControlWordP01390.0 := ProcessCtrl.bFaultReset;					(* Acknowledgment for faults of the controller. *) *)
+pDrive^.stPlcToBosch.wProcessCtrlControlWordP01390.1 := pProcessCtrl^.bFreezeCtrlOut;					(* Freeze controller output *)
+pDrive^.stPlcToBosch.wProcessCtrlControlWordP01390.2 := pProcessCtrl^.bControlValve;					(* Control valve *)
+pDrive^.stPlcToBosch.dnProcessCmdValueP01371 := LREAL_TO_DINT(pProcessCtrl^.rSetProcessValue * EXPT(10, pProcessCtrl^.usnDecimalDigits));			(* Command process value *)
+pDrive^.stPlcToBosch.udnPGainOfCtrlP01373 := LREAL_TO_UDINT(pProcessCtrl^.rProportionalGain * EXPT(10, pProcessCtrl^.usnDecimalDigits));				(* Tuning parameter, proportional gain *)
+pDrive^.stPlcToBosch.udnIComponentOfCtrlP01374 := LREAL_TO_UDINT(pProcessCtrl^.rIntegralTime);			(* Tuning parameter, time of integral *)
+pDrive^.stPlcToBosch.dnAnalogInputOffsetP00215 := LREAL_TO_DINT(pProcessCtrl^.rActProcessValueoOffset * EXPT(10, pProcessCtrl^.usnDecimalDigits));		
+	
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_BOSCH_ProcessCtrlLink">
+      <LineId Id="89" Count="1" />
+      <LineId Id="88" Count="0" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="18" Count="1" />
+      <LineId Id="44" Count="1" />
+      <LineId Id="48" Count="2" />
+      <LineId Id="52" Count="1" />
+      <LineId Id="57" Count="1" />
+      <LineId Id="63" Count="1" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="123" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="71" Count="2" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="80" Count="2" />
+      <LineId Id="106" Count="0" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

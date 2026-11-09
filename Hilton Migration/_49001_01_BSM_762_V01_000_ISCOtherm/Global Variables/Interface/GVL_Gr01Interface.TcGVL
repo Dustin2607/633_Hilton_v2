@@ -3,6 +3,7 @@
   <GVL Name="GVL_Gr01Interface" Id="{8b08971a-d9fd-4ba6-9c15-38972dbbbc29}">
     <Declaration><![CDATA[{attribute 'Tc2GvlVarNames'}
 VAR_GLOBAL
+	(* Old from Tc2)
 	(* Axis interface *)
 	igGr01AxisSawBow			:ST_AXIS_REF;							(* Interface of axis saw bow *)
 	igGr01AxisAngle				:ST_AXIS_REF;							(* Interface of axis angle *)
@@ -11,10 +12,22 @@ VAR_GLOBAL
 
 	(* Drive interface *)
 	igGr01DriveSawBow			:ST_DRIVE_REF;							(* Interface of drive saw bow *)
-	igGr01DriveAngle				:ST_DRIVE_REF;							(* Interface of drive angle *)
+	igGr01DriveAngle			:ST_DRIVE_REF;							(* Interface of drive angle *)
 
 	igGr01DriveSawband			:ST_DRIVE_REF;							(* Interface of drive sawband *)
+*)
 
+	(* Axis Interface) 			*)
+	igGr01AxisSawBow			:AXIS_REF;								(* Interface plc -> nc *)
+	igGr01AxisSawAngle			:AXIS_REF;								(* Interface plc -> nc *)
+	igGr01AxisSawBand			:AXIS_REF;								(* Interface plc -> nc *)	
+	
+	
+	(* Drive Interface)			*)
+	igGr01DriveSawBow			:ST_STOEBERSI6SC6CIA402_REF;			(* Interface nc -> plc *)
+	igGr01DriveSawAngle			:ST_STOEBERSI6SC6CIA402_REF;			(* Interface nc -> plc *)
+	igGr01DriveSawBand			:ST_STOEBERSI6SC6CIA402_REF;			(* Interface nc -> plc *)
+	
 END_VAR
 ]]></Declaration>
   </GVL>

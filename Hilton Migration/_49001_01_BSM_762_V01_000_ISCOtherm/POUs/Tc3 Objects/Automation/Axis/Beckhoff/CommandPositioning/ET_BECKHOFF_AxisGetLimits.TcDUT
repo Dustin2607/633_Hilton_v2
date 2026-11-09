@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_BECKHOFF_AxisGetLimits" Id="{b7bfaed4-09d5-4532-8c3c-4e538f18a63a}">
+    <Declaration><![CDATA[TYPE ET_BECKHOFF_AxisGetLimits :
+(
+	eWaitExecute := 0,
+	eReadVeloMax,
+	eWfReadVeloMax,
+	eReadAccMax,
+	eWfReadAccMax,
+	eReadDecMax,
+	eWfReadDecMax,
+	eReadJerkMax,
+	eWfReadJerkMax,
+	eReadSoftLimitMax,
+	eWfReadSoftLimitMax,
+	eReadSoftLimitMin,
+	eWfReadSoftLimitMin,
+	eDone := 197,
+	eError := 198,
+	eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

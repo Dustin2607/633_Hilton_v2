@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_RampGenerator_1" Id="{ef915ad0-c3d3-4e81-b3cc-12ec40fbf6f4}">
+    <Declaration><![CDATA[TYPE ET_RampGenerator_1 :
+(
+	ET_RampGenerator_eWaitExecute := 0,
+	ET_RampGenerator_eRunning := 5,
+	ET_RampGenerator_eWaiting := 10,
+	ET_RampGenerator_eDone := 197,
+	ET_RampGenerator_eError := 198,
+	ET_RampGenerator_eNotExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

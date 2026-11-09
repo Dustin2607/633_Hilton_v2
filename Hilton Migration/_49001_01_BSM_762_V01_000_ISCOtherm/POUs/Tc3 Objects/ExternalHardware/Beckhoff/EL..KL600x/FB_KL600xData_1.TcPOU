@@ -1,0 +1,710 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_KL600xData_1" Id="{b89e091e-777f-48a5-a879-e86ce97be43f}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_KL600xData_1
+(*
+
+This function block is used to send and recive data's via KL600x.
+
+Following speeds are possible:
+unBaudrate =	1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200
+
+Following configuraions are possible:
+			7-N-2	7-E-1	7-E-2	7-O-1	7-O-2
+	8-N-1	8-N-2	8-E-1	8-E-2	8-O-1	8-O-2
+
+	unDataBits-sParity-unStopBits
+	:	
+	unDataBits:	7 Databits
+				8 Databits
+
+	sParity:		N	No Parity	
+				E	Even Parity
+				O	Odd Parity
+
+	unStopBits:	1	One Stopbit
+				2	Two Stopbits
+
+Default configuration is 	9600 8-N-1
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			14.09.2016
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;					(* Enable FB *)
+	sDeviceNetId					:STRING;				(* Fieldbus master NetId *)
+	unSlaveAddr 					:UINT;					(* Fixed address of the slave *)
+	sDateTime					:STRING;				(* Current date and time *)
+	bEnableRTSCTS				:BOOL := TRUE;			(* Enable RTS/CTS *)
+	udnBaudrate					:UDINT := 9600; 			(* Transferrate in baud per second: 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200 *)
+	unDataBits					:UINT := 8 ; 				(* Sum of Data Bits: 7 Bit, 8 Bit *)
+	sParity						:STRING	:= 'N';			(* Parity Information: N = No Parity, E = Even Parity, O = odd Parity *)
+	unStopBits					:WORD := 1;				(* Sum of Stoppbits: 1,2 *)
+	sStringPrefix					:STRING := '$02';			(* $02 = STX If a string is supplied to the input variable prefix, the first characters must be the same as this prefix.*)
+	sStringSuffix					:STRING := '$03';			(* $03 = ETX Suffix If a string is supplied to the input variable suffix, the input data is read until the end of the received string agrees with the suffix.*)
+	bReset						:BOOL;					(* Reset *)
+	bSendExe					:BOOL;					(* Send execute *)
+	tSendPeriod					:TIME := t#0s;				(* Send data every period. If tSendPeriod is 0 then th function is not active *)
+	sSendString					:STRING;
+	byEnRTSCTSSubIndex		:BYTE := 16#00;			(* Subindex of object *)
+	wEnRTSCTSIndex			:WORD := 16#4073;                  (* Index of object *)
+	byBaudrateSubIndex			:BYTE := 16#00;			(* Subindex of object *)
+	wBaudrateIndex				:WORD := 16#4073;                  (* Index of object *)
+	byDataFrameSubIndex			:BYTE := 16#00;			(* Subindex of object *)
+	wDataFrameIndex				:WORD := 16#4074;                  (* Index of object *)
+	tTimeOut 					:TIME := t#2s;				(* Timout  *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bKL600xReady				:BOOL;								(* KL600x ready to use *)
+	bStringReceived				:BOOL;								(* String received *)
+	arbBusy						:ARRAY[0..2] OF BOOL;				(* Program busy: 0 - Init, 1 - Send, 2 - Recieve *)
+	arbDone						:ARRAY[0..2] OF BOOL;				(* Program done: 0 - Init, 1 - Send, 2 - Recieve *)
+	arbError						:ARRAY[0..2] OF BOOL;				(* Program error: 0 - Init, 1 - Send, 2 - Recieve *)
+	arudnErrorNo					:ARRAY[0..2] OF UDINT;				(* Error number: 0 - Init, 1 - Send, 2 - Recieve *)
+	arsMsgError					:ARRAY[0..2] OF STRING;				(* Error msg: 0 - Init, 1 - Send, 2 - Recieve *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	sReceivedString				 :STRING;
+	stRXbuffer 					:ComBuffer;
+	stTXbuffer					:ComBuffer;
+END_VAR
+VAR
+	(* Enummerations *)
+	etKL600xInit					:ET_KL600xInit;
+	etKL600xSend				:ET_KL600xSend;
+
+	(* Variables *)
+	bLockSDO					:BOOL;
+
+	byEnRTSCTS				:BYTE;
+	byBaudrate					:BYTE;
+	byDataFrame					:BYTE;
+
+	byPrefix						:BYTE;
+	bySuffix						:BYTE;
+
+	udnSendCounter				:UDINT;
+	arstLastSentString				:ARRAY[1..usnLastStringMax] OF ST_KL600xData;
+	arbySendDataMax			:ARRAY[0..MAX_STRING_LENGTH] OF BYTE;
+	arbySendData				:ARRAY[1..usnSendDataMax] OF BYTE;
+
+	udnReceiveCounter			:UDINT;
+	arstLastReceivedString		:ARRAY[1..usnLastStringMax] OF ST_KL600xData;
+	arbyRecivedDataMax			:ARRAY[0..MAX_STRING_LENGTH] OF BYTE;
+	arbyRecivedData				:ARRAY[1..usnRecivedDataMax] OF BYTE;
+
+	nIdx							:INT;
+	arnWatchdog					:ARRAY[0..2] OF INT;		(* Watchdog: 0 - Init, 1 - Send, 2 - Recieve *)
+	bFirstTime					:BOOL;					(* First PLC cycle *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbWriteSDO					:FB_EcCoESdoWrite;
+	fbReceive					:ReceiveData;
+	fbSend						:SendData;
+	rtSendExe					:R_TRIG;
+	tonSendPeriod				:TON;
+	rtReset						:R_TRIG;
+	fbClearComBuffer				:ClearComBuffer;
+END_VAR
+VAR CONSTANT
+	usnLastStringMax				:USINT := 10;
+	usnSendDataMax				:USINT := 3;
+	usnRecivedDataMax			:USINT := 3;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable							(* Enable FB *)
+THEN
+	bKL600xReady := FALSE;				(* KL600x ready to use *)
+	bFirstTime := FALSE;					(* First PLC cycle *)
+
+	MEMSET(ADR(arbBusy), 0, SIZEOF(arbBusy));			(* Program busy *)
+	MEMSET(ADR(arbDone), 0, SIZEOF(arbDone));			(* Program done *)
+	MEMSET(ADR(arbError), 0, SIZEOF(arbError));				(* Program error *)
+	MEMSET(ADR(arudnErrorNo), 0, SIZEOF(arudnErrorNo));	(* Error number *)
+	MEMSET(ADR(arsMsgError), 0, SIZEOF(arsMsgError));
+
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+	bKL600xReady := FALSE;				(* KL600x ready to use *)
+	bLockSDO := FALSE;
+
+	MEMSET(ADR(arbBusy), 0, SIZEOF(arbBusy));			(* Program busy *)
+	MEMSET(ADR(arbDone), 0, SIZEOF(arbDone));			(* Program done *)
+	MEMSET(ADR(arbError), 0, SIZEOF(arbError));				(* Program error *)
+	MEMSET(ADR(arudnErrorNo), 0, SIZEOF(arudnErrorNo));	(* Error number *)
+	MEMSET(ADR(arsMsgError), 0, SIZEOF(arsMsgError));
+
+	MEMSET(ADR(arstLastSentString), 0, SIZEOF(arstLastSentString));
+	MEMSET(ADR(arbySendDataMax), 0, SIZEOF(arbySendDataMax));
+	MEMSET(ADR(arbySendData), 0, SIZEOF(arbySendData));
+
+	MEMSET(ADR(arstLastReceivedString), 0, SIZEOF(arstLastReceivedString));
+	MEMSET(ADR(arbyRecivedDataMax), 0, SIZEOF(arbyRecivedDataMax));
+	MEMSET(ADR(arbyRecivedData), 0, SIZEOF(arbyRecivedData));
+
+	etKL600xInit := ET_KL600xInit_eInit;                      						(* Next step *)
+	etKL600xSend := ET_KL600xSend_eInit;                      					(* Next step *)
+
+	bFirstTime := TRUE;
+END_IF
+
+
+IF NOT bKL600xReady
+THEN
+	A_Init();
+
+	RETURN;
+END_IF
+
+rtReset(CLK:= bReset);
+
+A_Reset();
+A_Send();
+A_Receive();
+
+
+]]></ST>
+    </Implementation>
+    <Action Name="A_Init" Id="{49035a71-e716-4fbd-8125-cd0d759876e8}">
+      <Implementation>
+        <ST><![CDATA[
+(*rtExecute(CLK := bExecute);
+
+IF rtExecute.Q
+THEN
+	etKL600xInit := ET_KL600xInit_eInit;                      						(* Next step *)
+
+END_IF*)
+
+CASE etKL600xInit OF
+
+	ET_KL600xInit_eInit:
+		arbBusy[0] := FALSE;                                     	(* Program not busy *)
+		arbError[0] := FALSE;                         		(* Program not error *)
+		arudnErrorNo[0] := 0;                         		(* Error number *)
+
+		IF (*rtExecute.Q
+		     AND*) NOT bLockSDO
+		THEN
+			arnWatchdog[0] := 0;
+			arbDone[0]:= FALSE;                               	(* Target not in gear *)
+			arbBusy[0] := TRUE;                                  (* Program busy *)
+
+			bLockSDO := TRUE;
+
+			(* Write SDO *)
+			fbWriteSDO(
+				sNetId := sDeviceNetId,
+				nSlaveAddr := unSlaveAddr,
+				bExecute := FALSE,
+				tTimeout := tTimeOut
+			);
+
+			fbClearComBuffer(Buffer:= stRXbuffer);
+			fbClearComBuffer(Buffer:= stTXbuffer);
+
+			etKL600xInit := ET_KL600xInit_eChkSettings;         (* Next step *)
+
+		END_IF;
+
+	ET_KL600xInit_eChkSettings:
+		(* Enable RTS/CTS *)
+		IF bEnableRTSCTS
+		THEN
+			byEnRTSCTS := 16#01;
+		ELSE
+			byEnRTSCTS := 16#00;
+		END_IF
+
+		(* Baudrate *)
+		CASE udnBaudrate
+		OF
+			1200:	byBaudrate := 16#00000003;
+			2400:	byBaudrate := 16#00000004;
+			4800:	byBaudrate := 16#00000005;
+			9600:	byBaudrate := 16#00000006;
+			19200:	byBaudrate := 16#00000007;
+			38400:	byBaudrate := 16#00000008;
+			57600:	byBaudrate := 16#00000009;
+			115200:	byBaudrate := 16#0000000A;
+		ELSE
+			arudnErrorNo[0] := 1;                     (* Error number *)
+			arsMsgError[0] := 'Baudrate is not correct';	(* Init Error *)
+		END_CASE
+
+		(* Transferrate in baud per second, Parity and Stoppbits *)
+		CASE unDataBits OF
+			7:	(* Parity *)
+				IF  	sParity = 'N'
+				THEN
+					(* Stoppbits *)
+					CASE unStopBits OF
+						2:	byDataFrame := 16#00000008;	(* 7 Databits, no Parity, 2 Stoppbit *)
+					ELSE
+						(* Error *)
+						arudnErrorNo[0] := 111;                     				(* Error number *)
+						arsMsgError[0] := 'StopBits must be 2';			(* Init Error *)
+					END_CASE
+
+				ELSIF sParity = 'E'
+				THEN
+					(* Stoppbits *)
+					CASE unStopBits OF
+						1:	byDataFrame := 16#00000001;	(* 7 Databits, even Parity, 1 Stoppbit *)
+						2:	byDataFrame := 16#00000009;	(* 7 Databits, even Parity, 2 Stoppbit *)
+					ELSE
+						(* Error *)
+						arudnErrorNo[0] := 112;                     				(* Error number *)
+						arsMsgError[0] := 'StopBits must be 1 or 2';			(* Init Error *)
+					END_CASE
+
+				ELSIF sParity = 'O'
+				THEN
+					(* Stoppbits *)
+					CASE unStopBits OF
+						1:	byDataFrame := 16#00000002;	(* 7 Databits, odd Parity, 1 Stoppbit *)
+						2:	byDataFrame := 16#0000000A;	(* 7 Databits, odd Parity, 2 Stoppbit *)
+					ELSE
+						(* Error *)
+						arudnErrorNo[0] := 113;                     				(* Error number *)
+						arsMsgError[0] := 'StopBits must be 1 or 2';			(* Init Error *)
+					END_CASE
+
+				ELSE
+					(* Error *)
+					arudnErrorNo[0] := 11;                     				(* Error number *)
+					arsMsgError[0] := 'With 7 Databits is an Paritbit (odd or even) nessesary or Party Configuration > 2';		(* Init Error *)
+				END_IF;
+
+			8:	(* Parity *)
+				IF sParity = 'N'
+				THEN
+					(* Stoppbits *)
+					CASE unStopBits OF
+						1:	byDataFrame := 16#00000003;	(* 8 Databits, no Parity, 1 Stoppbit *)
+						2:	byDataFrame := 16#0000000B;	(* 8 Databits, no Parity, 2 Stoppbit *)
+					ELSE
+						(* Error *)
+						arudnErrorNo[0] := 114;                     				(* Error number *)
+						arsMsgError[0] := 'StopBits must be 1 or 2';			(* Init Error *)
+					END_CASE
+
+				ELSIF sParity = 'E'
+				THEN
+					(* Stoppbits *)
+					CASE unStopBits OF
+						1:	byDataFrame := 16#00000004;	(* 8 Databits, even Parity, 1 Stoppbit *)
+						2:	byDataFrame := 16#0000000C;	(* 8 Databits, even Parity, 2 Stoppbit *)
+					ELSE
+						(* Error *)
+						arudnErrorNo[0] := 115;                     				(* Error number *)
+						arsMsgError[0] := 'StopBits must be 1 or 2';			(* Init Error *)
+					END_CASE
+
+				ELSIF sParity = 'O'
+				THEN
+					(* Stoppbits *)
+					CASE unStopBits OF
+						1:	byDataFrame := 16#00000005;	(* 8 Databits, odd Parity, 1 Stoppbit *)
+						2:	byDataFrame := 16#0000000D;	(* 8 Databits, odd Parity, 2 Stoppbit *)
+					ELSE
+						(* Error *)
+						arudnErrorNo[0] := 116;                     				(* Error number *)
+						arsMsgError[0] := 'StopBits must be 1 or 2';			(* Init Error *)
+					END_CASE
+
+				ELSE
+					(* Error *)
+					arudnErrorNo[0] := 12;                     				(* Error number *)
+					arsMsgError[0] := 'Party Configuration > 2';			(* Init Error *)
+				END_IF;
+		ELSE
+			(* Error *)
+			arudnErrorNo[0] := 2;                     				(* Error number *)
+			arsMsgError[0] := 'unDataBits must be 7 or 8';			(* Init Error *)
+		END_CASE
+
+		IF arudnErrorNo[0] > 0
+		THEN
+			etKL600xInit := ET_KL600xInit_eError;             (* Next step *)
+		ELSE
+			etKL600xInit := ET_KL600xInit_eWriteEnableRTSCTS;             (* Next step *)
+		END_IF
+
+	ET_KL600xInit_eWriteEnableRTSCTS:
+		arnWatchdog[0] := arnWatchdog[0] + 1;
+
+		(* Write Baudrate *)
+		fbWriteSDO(
+			sNetId := sDeviceNetId,
+			nSlaveAddr := unSlaveAddr,
+			nSubIndex := byEnRTSCTSSubIndex,					(* Subindex of object *)
+			nIndex := wEnRTSCTSIndex,                                             		(* Index of object *)
+			pSrcBuf := ADR(byEnRTSCTS),
+			cbBufLen := SIZEOF(byEnRTSCTS),
+			bExecute := TRUE,
+			tTimeout := tTimeOut
+		);
+
+		IF (NOT fbWriteSDO.bBusy
+		      AND fbWriteSDO.bError)
+		      OR arnWatchdog[0] > 1000
+		THEN
+			fbWriteSDO(bExecute := FALSE);
+
+			arudnErrorNo[0] := 3;                     (* Error number *)
+
+			etKL600xInit := ET_KL600xInit_eError;              (* Next step *)
+		
+		ELSIF NOT fbWriteSDO.bBusy
+			   AND NOT fbWriteSDO.bError
+		THEN
+			arnWatchdog[0] := 0;
+
+			fbWriteSDO(bExecute := FALSE);
+
+			etKL600xInit := ET_KL600xInit_eWriteBaudRate;              (* Next step *)
+		
+		END_IF;
+
+	ET_KL600xInit_eWriteBaudRate:
+		arnWatchdog[0] := arnWatchdog[0] + 1;
+
+		(* Write Baudrate *)
+		fbWriteSDO(
+			sNetId := sDeviceNetId,
+			nSlaveAddr := unSlaveAddr,
+			nSubIndex := byBaudrateSubIndex,					(* Subindex of object *)
+			nIndex := wBaudrateIndex,                                             		(* Index of object *)
+			pSrcBuf := ADR(byBaudrate),
+			cbBufLen := SIZEOF(byBaudrate),
+			bExecute := TRUE,
+			tTimeout := tTimeOut
+		);
+
+		IF (NOT fbWriteSDO.bBusy
+		      AND fbWriteSDO.bError)
+		      OR arnWatchdog[0] > 1000
+		THEN
+			fbWriteSDO(bExecute := FALSE);
+
+			arudnErrorNo[0] := 4;                     (* Error number *)
+
+			etKL600xInit := ET_KL600xInit_eError;              (* Next step *)
+		
+		ELSIF NOT fbWriteSDO.bBusy
+			   AND NOT fbWriteSDO.bError
+		THEN
+			arnWatchdog[0] := 0;
+
+			fbWriteSDO(bExecute := FALSE);
+
+			etKL600xInit := ET_KL600xInit_eWriteDataFrame;              (* Next step *)
+		
+		END_IF;
+
+	ET_KL600xInit_eWriteDataFrame:
+		arnWatchdog[0] := arnWatchdog[0] + 1;
+
+		(* Write DataFrame *)
+		fbWriteSDO(
+			sNetId := sDeviceNetId,
+			nSlaveAddr := unSlaveAddr,
+			nSubIndex := byDataFrameSubIndex,				(* Subindex of object *)
+			nIndex := wDataFrameIndex,                                             	(* Index of object *)
+			pSrcBuf := ADR(byDataFrame),
+			cbBufLen := SIZEOF(byDataFrame),
+			bExecute := TRUE,
+			tTimeout := tTimeOut
+		);
+		
+		IF (NOT fbWriteSDO.bBusy
+		     AND fbWriteSDO.bError)
+		     OR arnWatchdog[0] > 1000
+		THEN
+			arnWatchdog[0] := 0;
+
+			fbWriteSDO(bExecute := FALSE);
+
+			arudnErrorNo[0] := 5;                     (* Error number *)
+		
+			etKL600xInit := ET_KL600xInit_eError;              (* Next step *)
+		
+		ELSIF NOT fbWriteSDO.bBusy
+			   AND NOT fbWriteSDO.bError
+		THEN
+			fbWriteSDO(bExecute := FALSE);
+
+			etKL600xInit := ET_KL600xInit_eDone;              (* Next step *)
+
+		END_IF;
+
+	ET_KL600xInit_eDone:
+		arbDone[0] := TRUE;					(* Program done *)
+		arbBusy[0] := FALSE;                                      	(* Program not busy *)
+
+		etKL600xInit := ET_KL600xInit_eNoExecute;            (* Next step *)
+
+	ET_KL600xInit_eError:
+	         arbDone[0] := FALSE;				(* Program done *)
+	         arbError[0] := TRUE;					(* Program error  *)
+	         arbBusy[0] := FALSE;				(* Program not busy *)
+
+		etKL600xInit := ET_KL600xInit_eNoExecute;            (* Next step *)
+
+	ET_KL600xInit_eNoExecute:
+		(*IF NOT bExecute
+		THEN*)
+			IF arbDone[0]
+			THEN
+				bKL600xReady := TRUE;
+			END_IF
+
+			bLockSDO := FALSE;
+
+	         		arbDone[0] := FALSE;				(* Program done *)
+	       		arbError[0] := FALSE;				(* Program error  *)
+	         		arbBusy[0] := FALSE;				(* Program not busy *)
+
+		(*	etKL600xInit := ET_KL600xInit_eInit;              (* Next step *)
+		
+		END_IF;*)
+END_CASE;]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Receive" Id="{cfb67f38-0e82-4ead-9a3d-b4e0b26fb2ad}">
+      <Implementation>
+        <ST><![CDATA[
+(*
+Receive string data
+The block receives any data strings beginning with a sStringPrefix character and 
+ending with an sStringSuffix character.
+*)
+IF LEN(sStringPrefix) > 0
+THEN
+	byPrefix := ASC(sStringPrefix);
+	fbReceive.LenPrefix := SIZEOF(byPrefix);
+ELSE
+	byPrefix := ASC(sStringPrefix);
+	fbReceive.LenPrefix := 0;
+END_IF
+
+IF LEN(sStringSuffix) > 0
+THEN
+	bySuffix := ASC(sStringSuffix);
+	fbReceive.LenSuffix := SIZEOF(bySuffix);
+ELSE
+	bySuffix := ASC(sStringSuffix);
+	fbReceive.LenSuffix := 0;
+END_IF
+
+fbReceive(
+	pPrefix := ADR(byPrefix),
+	pSuffix := ADR(bySuffix),
+	pReceiveData := ADR(arbyRecivedData),
+	SizeReceiveData := SIZEOF(arbyRecivedData),
+	Timeout := tTimeOut,
+	Reset := rtReset.Q
+		        AND fbReceive.Error <> 0,
+	RXbuffer := stRXbuffer,
+	DataReceived => bStringReceived
+);
+
+IF bStringReceived
+THEN
+	MEMCPY(ADR(arbyRecivedDataMax),ADR(arbyRecivedData),SIZEOF(arbyRecivedData));
+	sReceivedString := BYTEARR_TO_MAXSTRING(arbyRecivedDataMax);
+
+	udnReceiveCounter := udnReceiveCounter + 1;
+
+	FOR nIdx := usnLastStringMax TO 2 BY -1
+	DO
+		arstLastReceivedString[nIdx] := arstLastReceivedString[nIdx - 1];
+
+	END_FOR
+
+	arstLastReceivedString[1].sDateTime := sDateTime;
+	arstLastReceivedString[1].sData := sReceivedString;
+
+	IF fbReceive.LenPrefix > 0
+	     AND LEN(sReceivedString) > fbReceive.LenPrefix
+	THEN
+		IF FIND(sReceivedString, sStringPrefix) = 1
+		THEN
+			sReceivedString := DELETE(sReceivedString, fbReceive.LenPrefix, FIND(sReceivedString, sStringPrefix));
+		END_IF
+	END_IF
+
+	IF fbReceive.LenSuffix > 0
+	     AND LEN(sReceivedString) > fbReceive.LenSuffix
+	THEN
+		IF FIND(sReceivedString, sStringSuffix) = (LEN(sReceivedString) - fbReceive.LenSuffix + 1)
+		THEN
+			sReceivedString := DELETE(sReceivedString, fbReceive.LenSuffix, FIND(sReceivedString, sStringSuffix));
+		END_IF
+	END_IF
+
+END_IF
+
+arbBusy[2] := fbReceive.Busy;
+arbError[2] := fbReceive.Error <> 0
+			OR fbReceive.RxTimeout;
+arbDone[2] := fbReceive.DataReceived;]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Reset" Id="{85942b09-f5d9-4265-9ee2-e4c59daa242b}">
+      <Implementation>
+        <ST><![CDATA[
+
+IF rtReset.Q
+    AND (fbSend.Error <> 0
+	      OR fbReceive.Error <> 0)
+THEN
+	fbClearComBuffer(Buffer:= stRXbuffer);
+	fbClearComBuffer(Buffer:= stTXbuffer);
+	tonSendPeriod(IN := FALSE);
+END_IF]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Send" Id="{615aa1be-91d0-4891-86e0-2d2dec994b72}">
+      <Implementation>
+        <ST><![CDATA[
+(* Call the send block. *)
+tonSendPeriod(
+	IN := tSendPeriod > t#0s,
+	PT:= tSendPeriod
+);
+
+rtSendExe(
+	CLK := (bSendExe
+		     OR tonSendPeriod.Q)
+		     AND NOT fbSend.Busy
+);
+
+IF rtSendExe.Q
+THEN
+	etKL600xInit := ET_KL600xInit_eInit;                      						(* Next step *)
+
+END_IF
+
+CASE etKL600xSend OF
+
+	ET_KL600xSend_eInit:
+		arbBusy[1] := FALSE;                                     	(* Program not busy *)
+		arbError[1] := FALSE;                         		(* Program not error *)
+		arudnErrorNo[1] := 0;                         		(* Error number *)
+
+		IF rtSendExe.Q
+		     AND NOT fbSend.Busy
+		THEN
+			arnWatchdog[1] := 0;
+			arbDone[1]:= FALSE;                               	(* Target not in gear *)
+			arbBusy[1] := TRUE;                                 	 (* Program busy *)
+
+			etKL600xSend := ET_KL600xSend_eSend;         (* Next step *)
+
+		END_IF;
+
+	ET_KL600xSend_eSend:
+		arnWatchdog[1] := arnWatchdog[1] + 1;
+
+		arbySendDataMax := MAXSTRING_TO_BYTEARR(CONCAT(sStringPrefix, CONCAT(sSendString, sStringSuffix)));
+		MEMCPY(ADR(arbySendData),ADR(arbySendDataMax),SIZEOF(arbySendData));
+
+		(* Send data *)
+		fbSend(
+			pSendData := ADR(arbySendData),
+			Length := SIZEOF(arbySendData),
+			TXbuffer := stTXbuffer
+		 );
+
+		IF (NOT fbSend.Busy
+		     AND fbSend.Error <> 0)
+		     OR arnWatchdog[1] > 1000
+		THEN
+			arudnErrorNo[1] := fbSend.Error;                     (* Error number *)
+
+			etKL600xSend := ET_KL600xSend_eError;              (* Next step *)
+		
+		ELSIF NOT fbSend.Busy
+			   AND fbSend.Error = 0
+		THEN
+			arnWatchdog[1] := 0;
+
+			etKL600xSend := ET_KL600xSend_eDone;              (* Next step *)
+
+		END_IF;
+
+	ET_KL600xSend_eDone:
+		arbDone[1] := TRUE;					(* Program done *)
+		arbBusy[1] := FALSE;                                      	(* Program not busy *)
+
+		udnSendCounter := udnSendCounter + 1;
+
+		FOR nIdx := usnLastStringMax TO 2 BY -1
+		DO
+			arstLastSentString[nIdx] := arstLastSentString[nIdx - 1];
+
+		END_FOR
+
+		arstLastSentString[1].sDateTime := sDateTime;
+		arstLastSentString[1].sData := CONCAT(sStringPrefix, CONCAT(sSendString, sStringSuffix));
+
+		etKL600xSend := ET_KL600xSend_eNoExecute;            (* Next step *)
+
+	ET_KL600xSend_eError:
+	         arbDone[1] := FALSE;				(* Program done *)
+	         arbError[1] := TRUE;					(* Program error  *)
+	         arbBusy[1] := FALSE;				(* Program not busy *)
+
+		etKL600xSend := ET_KL600xSend_eNoExecute;            (* Next step *)
+
+	ET_KL600xSend_eNoExecute:
+		IF SEL(tSendPeriod > t#0s, NOT bSendExe, tonSendPeriod.Q)
+		THEN
+			tonSendPeriod(IN := FALSE);		(* Reset timer *)
+
+	         		arbDone[1] := FALSE;				(* Program done *)
+	       		arbError[1] := FALSE;				(* Program error  *)
+	         		arbBusy[1] := FALSE;				(* Program not busy *)
+
+			etKL600xSend:= ET_KL600xSend_eInit;              (* Next step *)
+		
+		END_IF;
+END_CASE;]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_KL600xData_1">
+      <LineId Id="123" Count="55" />
+    </LineIds>
+    <LineIds Name="FB_KL600xData_1.A_Init">
+      <LineId Id="0" Count="302" />
+    </LineIds>
+    <LineIds Name="FB_KL600xData_1.A_Receive">
+      <LineId Id="0" Count="75" />
+    </LineIds>
+    <LineIds Name="FB_KL600xData_1.A_Reset">
+      <LineId Id="0" Count="9" />
+    </LineIds>
+    <LineIds Name="FB_KL600xData_1.A_Send">
+      <LineId Id="0" Count="103" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

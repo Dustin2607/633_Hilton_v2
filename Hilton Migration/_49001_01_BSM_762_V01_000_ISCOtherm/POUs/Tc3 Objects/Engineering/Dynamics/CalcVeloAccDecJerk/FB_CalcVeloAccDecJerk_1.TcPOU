@@ -1,0 +1,210 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_CalcVeloAccDecJerk_1" Id="{c75a5a3b-7f16-4738-bee0-f84f6e354061}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_CalcVeloAccDecJerk_1
+(*
+The Function Block used to calculate velocity, acceleration, deceleration and jerk from position.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			20.01.2014
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+
+VAR_INPUT
+	(* Enummerations *)
+
+	(* Variables *)
+	bEnable								:BOOL;							(* Enable FB *)
+	bReset								:BOOL;							(* Reset FB *)
+
+	lrActPos								:LREAL;							(* Current position *)
+	lrSectorTime							:LREAL := 0.005; 					(* Time of sector [µs] *)
+	
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+END_VAR
+VAR_OUTPUT
+	(* Enummerations *)
+	etDirection 							:ET_MC_Direction := ET_MC_Direction_ePositive;
+	
+	(* Variables *)
+	lrCalcVelo							:LREAL;						(* Calculated velocity from current position *)
+
+	bAccelerating 						:BOOL;
+	bDecelerating 						:BOOL;
+	lrCalcAcc							:LREAL;						(* Calculated acceleration from current position *)
+	lrCalcDec							:LREAL;						(* Calculated deceleration from current position *)
+	lrCalcJerk							:LREAL;						(* Calculated jerk from current position *)
+
+	(* References *)
+
+	(* Interfaces *)
+	
+	(* Instances *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	bFirstTime							:BOOL;						(* First cycle *)
+
+	lrSampleN							:LREAL;						(* Current signal N *)
+	lrSampleN_1							:LREAL;						(* Current signal N - 1 *)
+	lrSampleN_2							:LREAL;						(* Current signal N - 2 *)
+	lrSampleN_3							:LREAL;						(* Current signal N - 3 *)
+
+	(* References *)
+
+	(* Interfaces *)
+	
+	(* Instances *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+	bFirstTime := FALSE;
+
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+	A_Init();
+
+	bFirstTime := TRUE;
+END_IF
+
+IF bReset
+THEN
+	A_Reset();
+END_IF
+
+lrSampleN := lrActPos;
+
+A_CalcVelo();
+A_CalcAccDec();
+A_CalcJerk();
+
+lrSampleN_3 := lrSampleN_2;
+lrSampleN_2 := lrSampleN_1;								 														 
+lrSampleN_1 := lrSampleN;]]></ST>
+    </Implementation>
+    <Action Name="A_CalcAccDec" Id="{051b6ade-4bd9-45f6-9e99-1ff0bb937a4c}">
+      <Implementation>
+        <ST><![CDATA[
+(*
+	Method gives acceleration and deceleration depending on moving direction.
+	
+	a =  dv / dt [m/s] => v = (Vn - Vn-1) / dt^2
+
+	d - delta 
+
+*)
+
+lrCalcAcc := (lrSampleN - 2*lrSampleN_1 + lrSampleN_2)
+			 / EXPT(lrSectorTime, 2);
+
+IF lrCalcAcc * etDirection > 0
+THEN
+	lrCalcAcc := ABS(lrCalcAcc);
+	lrCalcDec := 0.0;
+	bAccelerating := TRUE;
+	bDecelerating := FALSE;
+	
+ELSIF lrCalcAcc * etDirection < 0
+THEN
+	lrCalcDec := ABS(lrCalcAcc);
+	lrCalcAcc := 0.0;
+	bAccelerating := FALSE;
+	bDecelerating := TRUE;
+
+ELSE
+	lrCalcAcc := ABS(lrCalcAcc);
+	lrCalcDec := 0.0;
+	bAccelerating := FALSE;
+	bDecelerating := FALSE;	
+END_IF]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_CalcJerk" Id="{205f5a25-a949-4ce5-8d81-2943dd8cb236}">
+      <Implementation>
+        <ST><![CDATA[
+(*
+	Method gives jerk of object moving.
+	
+	a =  da / dt [m/s] => v = (An - An-1) / dt^3 
+
+	d - delta
+*)
+
+lrCalcJerk := (lrSampleN - 3*lrSampleN_1 + 3*lrSampleN_2 - lrSampleN_3)
+			  / EXPT(lrSectorTime, 3);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_CalcVelo" Id="{47f89498-f0d7-4fcd-aa58-bf01b0c2f412}">
+      <Implementation>
+        <ST><![CDATA[
+(*
+	Method gives both how fast and in what direction the object is moving.
+	
+	v =  ds / dt [m/s] => v = (Dn - Dn-1) / dt
+	
+	d - delta 
+
+*)
+
+lrCalcVelo := (lrSampleN - lrSampleN_1)
+			  / lrSectorTime;
+
+IF lrCalcVelo < 0 
+THEN
+	etDirection := ET_MC_Direction_eNegative;
+ELSE
+	etDirection := ET_MC_Direction_ePositive;
+END_IF]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Init" Id="{eb4754bf-c2eb-45d2-aaba-ceccb9a48ac4}">
+      <Implementation>
+        <ST><![CDATA[
+lrSampleN := lrActPos;
+lrSampleN_1 := lrActPos;
+lrSampleN_2 := lrActPos;
+lrSampleN_3 := lrActPos;]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_Reset" Id="{b2a4bda5-dfb0-4ba0-bf48-93c8d1eb70cc}">
+      <Implementation>
+        <ST><![CDATA[
+A_Init();]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_CalcVeloAccDecJerk_1">
+      <LineId Id="66" Count="28" />
+    </LineIds>
+    <LineIds Name="FB_CalcVeloAccDecJerk_1.A_CalcAccDec">
+      <LineId Id="0" Count="32" />
+    </LineIds>
+    <LineIds Name="FB_CalcVeloAccDecJerk_1.A_CalcJerk">
+      <LineId Id="0" Count="10" />
+    </LineIds>
+    <LineIds Name="FB_CalcVeloAccDecJerk_1.A_CalcVelo">
+      <LineId Id="0" Count="18" />
+    </LineIds>
+    <LineIds Name="FB_CalcVeloAccDecJerk_1.A_Init">
+      <LineId Id="0" Count="4" />
+    </LineIds>
+    <LineIds Name="FB_CalcVeloAccDecJerk_1.A_Reset">
+      <LineId Id="0" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,111 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_CoolingDevice_1" Id="{f0629e53-c4f3-4efa-89df-3575008befeb}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_CoolingDevice_1
+(*
+
+The function block used to control power supply.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			23.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable					:BOOL;						(* Enable FB signal *)
+	bIn						:BOOL;						(* Input signal *)
+	tCoolingDeviceOn			:TIME := t#2s;					(* Timeout power supply on *)
+	tCoolingDeviceOff			:TIME := t#1s;					(* Timeout power supply off *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bOut					:BOOL;						(* Air pressure ok *)
+	bError					:BOOL;						(* Error by no air pressure *)
+	udnErrorNo				:UDINT;
+	udnMessageNo			:UDINT;
+	sMsg					:STRING;
+END_VAR
+VAR_IN_OUT
+
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	bFirstTime				:BOOL;						(* First cycle *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	tonCoolingDeviceOn		:TON;						(* Timer to delay *)
+	tofCoolingDeviceOff		:TOF;						(* Timer to delay *)
+	tCoolingDevice			:BOOL;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	bOut := TRUE;
+	bError := FALSE;
+	udnErrorNo := 0;
+	udnMessageNo := 0;
+	sMsg := '';
+	tonCoolingDeviceOn(IN := FALSE,
+				            PT := tCoolingDeviceOn);
+	tofCoolingDeviceOff(IN := FALSE,
+	            			 PT := tCoolingDeviceOff);
+	bFirstTime := FALSE;
+    RETURN;
+END_IF;
+
+IF NOT bFirstTime
+THEN
+	bError := FALSE;
+	udnErrorNo := 0;
+	udnMessageNo := 0;
+	sMsg := '';
+	tonCoolingDeviceOn(IN := FALSE,
+	          			  PT := tCoolingDeviceOn);
+	tofCoolingDeviceOff(IN := FALSE,
+	             			 PT := tCoolingDeviceOff);
+	bFirstTime := TRUE;
+END_IF;
+
+(* Timer starts when came rising edge of signal *)
+tonCoolingDeviceOn(
+	IN := bIn,
+         PT := tCoolingDeviceOn
+);
+
+tofCoolingDeviceOff(
+	IN := bIn,
+         PT := tCoolingDeviceOff
+);
+
+bOut := tonCoolingDeviceOn.Q;
+bError := NOT tofCoolingDeviceOff.Q;
+
+IF bError
+THEN
+	udnErrorNo := 1;
+	udnMessageNo := 0;
+	sMsg := 'No power supply';
+ELSE
+	udnErrorNo := 0;
+	udnMessageNo := 0;
+	sMsg := '';
+END_IF;
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_CoolingDevice_1">
+      <LineId Id="47" Count="53" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

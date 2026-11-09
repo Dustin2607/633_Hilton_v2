@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_PERIPHERY_REF_1" Id="{dbffa441-33d1-4615-9356-5a5b76714dbd}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_PERIPHERY_REF_1
+VAR_INPUT
+
+END_VAR
+VAR_OUTPUT
+
+END_VAR
+VAR_IN_OUT
+
+END_VAR
+VAR
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_PERIPHERY_REF_1">
+      <LineId Id="17" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

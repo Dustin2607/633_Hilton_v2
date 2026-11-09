@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_SignalWatchdogLimit" Id="{0cf9787d-db90-48d4-91f8-369de7522ff6}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_SignalWatchdogLimit
+VAR_INPUT
+	bEnable					:BOOL;			(* Enable FB signal *)
+	bIn						:BOOL;			(* Input *)
+	tTimeOutHigh				:TIME := t#5s;		(* Input high timeout *)
+	tTimeOutLow				:TIME := t#5s;		(* Input low timeout *)
+END_VAR
+VAR_OUTPUT
+	bOut					:BOOL;			(* Output *)
+	bError					:BOOL;			(* Error *)
+	udnErrorNo				:UDINT;
+	udnMessageNo			:UDINT;
+	sMsg					:STRING;
+END_VAR
+VAR
+	bFirstTime				:BOOL;			(* First cycle *)
+	tonDelay					:TON;			(* Delay *)
+	tofWatchDog				:TOF;			(* Timer to off *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bFirstTime
+THEN
+	bError := FALSE;
+	udnErrorNo := 0;
+	udnMessageNo := 0;
+	sMsg := '';
+	tonDelay(
+		IN := FALSE,
+	          PT := tTimeOutHigh
+	);
+	tofWatchDog(
+		IN := FALSE,
+	         PT := tTimeOutLow
+	);
+	bFirstTime := TRUE;
+END_IF;
+
+(* Timer starts when came rising edge of signal *)
+tonDelay(
+	IN := bIn,
+         PT := tTimeOutHigh
+);
+
+tofWatchDog(
+	IN := bIn,
+         PT := tTimeOutLow
+);
+
+IF tonDelay.Q
+THEN
+	bOut := TRUE;
+    
+ELSIF NOT tofWatchDog.Q
+THEN
+	bOut := FALSE;
+    
+END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_SignalWatchdogLimit">
+      <LineId Id="20" Count="37" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

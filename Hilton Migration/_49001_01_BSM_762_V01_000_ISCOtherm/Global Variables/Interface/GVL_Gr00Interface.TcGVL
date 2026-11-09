@@ -5,6 +5,7 @@
 VAR_GLOBAL
 	(* Periphery *)
 	Periphery					:ST_PERIPHERY_REF;
+	iAxisDummy					:AXIS_REF;
 END_VAR
 ]]></Declaration>
   </GVL>

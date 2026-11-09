@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_Time_1" Id="{59963c66-8c8c-4fd3-9183-968ea02c89e2}">
+    <Declaration><![CDATA[TYPE ST_Time_1 :
+STRUCT
+	dwSec				:DWORD; 						(* Time in 1 [s] *)
+	dwDeciSec			:DWORD; 						(* Time in deci 0.1 [s] *)
+	dwCentiSec			:DWORD; 						(* Time in centi 0.01 [s] *)
+	dwMiliSec			:DWORD; 						(* Time in mili 0.001 [s] *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

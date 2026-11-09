@@ -1,0 +1,1429 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_BOSCH_Home" Id="{1399e193-93c1-466a-a38f-0914d476bf79}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_BOSCH_Home
+(*
+
+The function block used to start homing of axis. 
+
+Constructor:		Patryk Panylo
+Company:			E. Riexinger GmbH
+Date:				08.02.2019
+Version:			1.00
+
+Date:				Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bExecute					:BOOL;			(* Execut the function block *)
+	rOriginPosition				:REAL;			(* Origin position when the reference signal is detected *)
+	pDrive						:POINTER TO ST_BOSCHINDRADRIVECIA402_REF;			(* The DRIVE_REF data type  is an interface between the PLC and the DRIVE and contains axis information *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bDone						:BOOL;			(* Program done *)
+	bInterrupted				:BOOL;			(* Program interrupted *)
+	bCmdAborted					:BOOL;			(* Command aborted *)
+	bBusy						:BOOL;			(* Program busy *)
+	bError						:BOOL;			(* Error *)
+	udnErrorNo					:UDINT;			(* Error number:
+													1: Drive is not enabled error
+													2: MLD not running error
+   													3: Process controller error
+													99: Watchdog error *)				
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	Axis						:AXIS_REF;		(* The AXIS_REF data type  is an interface between the PLC and the NC and contains axis information *)
+END_VAR
+VAR
+	(* Enummerations *)
+	etBoschHome					:ET_BOSCH_Home := ET_BOSCH_Home.eInit;
+
+	(* Variables *)
+	bCacheEnablePosLagMonitoring:BOOL;
+	bCacheEnableLimitPos		:BOOL;
+	bCacheEnableLimitNeg		:BOOL;
+	
+	wPLCControlword				:WORD;				(* P-0-1350, PLC Controlword *)
+	wCancelReference			:WORD;				(* S-0-0191, C1500 Cancel reference point procedure command *) 
+	wPosFeedbackValueStatus		:WORD;				(* S-0-0403, Position feedback value status *) 
+	wDiagnostics				:WORD;				(* S-0-0013, Class 3 diagnostics *)
+	dnActPositionPara			:DINT;				(* S-0-0051, Position feedback 1 value *)
+	dwReferenceDist				:DWORD;				(* S-0-0052, Reference distance 1 *)
+	
+	
+	unWatchdog					:UINT;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbMCSetPosition				:MC_SetPosition;			(* Reset the motion control *)
+	fbMCHome					:MC_Home;					(* Set an reference flag in the motion control *)
+	fbMcReadParameter 			:MC_ReadParameter;			(* The function block is used to read an axis parameter. *)
+	fbMcReadBoolParameter 		:MC_ReadBoolParameter;		(* The function block is used to reas bool value an axis parameter. *)
+	fbMcWriteParameter 			:MC_WriteParameter;			(* The function block is used to write an axis parameter. *)
+	fbMcWriteBoolParameter 		:MC_WriteBoolParameter;		(* The function block is used to write bool value an axis parameter. *)
+	fbEcSoERead					:FB_EcSoERead;
+	fbEcSoEWrite				:FB_EcSoEWrite;
+	
+	rtExecute					:R_TRIG;
+	rtAborted					:R_TRIG;
+	
+	tonDelay					:TON;
+END_VAR
+VAR CONSTANT
+	wIdxPPara					:WORD := 16#8000;			(* Index offset for P Parameters *)
+	wCancelReferencePara		:WORD := 191;				(* S-0-0191, C1500 Cancel reference point procedure command *)
+	wDriveControlledHomingPara	:WORD := 148;				(* S-0-0148, C600 Drive controlled homing procedure command *)
+	wPosFeedbackValueStatusPara	:WORD := 403;				(* S-0-0403, Position feedback value status *)
+	wDiagnosticsPara			:WORD := 13;				(* S-0-0013, Class 3 diagnostics *)
+	wActPositionPara			:WORD := 51;				(* S-0-0051, Position feedback 1 value *)
+	wReferenceDistPara			:WORD := 52;				(* S-0-0052, Reference distance 1 *)
+	
+	
+	wStartHomingCmd				:WORD := 2#11;				(* 2#11 = Start command *)
+	wStopHomingCmd				:WORD := 2#00;				(* 2#00 = Stop command *)	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+rtExecute(CLK := bExecute);
+
+rtAborted(CLK := NOT pDrive^.bDriveAF);
+IF rtAborted.Q                                              (* Aborted *)
+THEN	
+	bInterrupted := TRUE;		(* Program interrupted *)
+	bCmdAborted := TRUE;		(* Command aborted *)
+	
+	fbEcSoERead(
+		bExecute := FALSE
+	);
+	
+	fbEcSoEWrite(
+		bExecute := FALSE
+	);
+	
+	etBoschHome := ET_BOSCH_Home.eReadDriveStopped;     (* Next step *)
+
+ELSIF rtExecute.Q
+	  AND NOT bCmdAborted
+THEN
+	etBoschHome := ET_BOSCH_Home.eInit;                     (* Next step *)
+
+END_IF;
+
+CASE etBoschHome OF
+
+	ET_BOSCH_Home.eInit:
+		bCmdAborted := FALSE;			(* Command not aborted *)
+		bBusy := FALSE;                 (* Program not busy *)
+		bError := FALSE;                (* Program not error *)
+
+		IF rtExecute.Q
+		   AND NOT Axis.NcToPlc.StateDWord.8	(* Axis has job *)
+		   (* AND NOT Axis.NcToPlc.StateDWord.29	(*  29 0/1 MotionCommandsLocked MotionCommandsLocked Achse ist gesperrt für Bewegungskommandos (TcMc2)  *) *)
+		THEN
+			unWatchdog := 0;
+			bInterrupted := FALSE;		(* Program interrupted *)
+			bDone := FALSE;				(* Program done, in position *)
+			bBusy := TRUE;				(* Program busy *)
+			udnErrorNo := 0;            (* Error number *)
+
+			fbMCSetPosition(
+				Execute := FALSE,
+				Axis := Axis,
+			);	
+			
+			fbMCHome(
+				Execute := FALSE,
+				Axis := Axis,
+			);			
+			
+			fbMcReadParameter(
+				Enable:= FALSE,
+				Axis := Axis
+			); 
+			
+			fbMcReadBoolParameter(
+				Enable := FALSE,
+				Axis := Axis
+			);
+			
+			fbMcWriteParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			fbMcWriteBoolParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+ 
+			fbEcSoERead(
+				sNetId := Axis.DriveAddress.NetID, 
+				nSlaveAddr := Axis.DriveAddress.SlaveAddress, 
+				nElement := 16#40, 
+				nDriveNo := 0, 
+				bCommand := FALSE,
+				bExecute := FALSE, 
+				tTimeout := DEFAULT_ADS_TIMEOUT 
+			);
+			
+			fbEcSoEWrite(
+				sNetId := Axis.DriveAddress.NetID, 
+				nSlaveAddr := Axis.DriveAddress.SlaveAddress,
+				nElement := 0, 
+				nDriveNo := 0, 
+				bCommand := FALSE,
+				bExecute := FALSE, 
+				tTimeout := DEFAULT_ADS_TIMEOUT 
+			); 			 
+			
+			tonDelay(IN := FALSE, PT := T#0S);
+			
+			etBoschHome := ET_BOSCH_Home.eResetCalibrationFlag;                              (* Next step *)
+
+		END_IF;
+	
+	ET_BOSCH_Home.eResetCalibrationFlag:
+		fbMCHome.Execute := TRUE;
+		fbMCHome.HomingMode := MC_ResetCalibration;
+
+		IF fbMCHome.Busy
+		THEN
+			etBoschHome := ET_BOSCH_Home.eWfResetCalibrationFlag;         		(* Next step *)
+
+		ELSIF fbMCHome.Error
+		THEN
+			fbMCHome.Execute := FALSE;
+
+			udnErrorNo := 1;            (* Error number *)	
+			
+			etBoschHome := ET_BOSCH_Home.eError;         		(* Next step *)
+
+		END_IF
+	
+	ET_BOSCH_Home.eWfResetCalibrationFlag:	
+		IF fbMCHome.Done
+		THEN
+			fbMCHome.Execute := FALSE;
+
+			etBoschHome := ET_BOSCH_Home.eReadEnablePosLagMonitoring;		(* Next step *)
+
+		ELSIF fbMCHome.Error
+		THEN
+			fbMCHome.Execute := FALSE;
+
+			udnErrorNo := 2;            (* Error number *)
+			
+			etBoschHome := ET_BOSCH_Home.eError;         					(* Next step *)
+
+		END_IF
+
+	
+	ET_BOSCH_Home.eReadEnablePosLagMonitoring:
+		fbMcReadBoolParameter.Enable := TRUE;
+		fbMcReadBoolParameter.ParameterNumber:= EnablePosLagMonitoring;
+
+		IF fbMcReadBoolParameter.Busy
+		THEN
+			etBoschHome := ET_BOSCH_Home.eWfReadEnablePosLagMonitoring;         		(* Next step *)
+
+		ELSIF fbMcReadBoolParameter.Error
+		THEN
+			fbMcReadBoolParameter(
+				Enable:= FALSE,
+				Axis := Axis
+			);
+
+			udnErrorNo := 3;            (* Error number *)
+			
+			etBoschHome := ET_BOSCH_Home.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_Home.eWfReadEnablePosLagMonitoring:
+		IF NOT fbMcReadBoolParameter.Busy
+		   AND NOT fbMcReadBoolParameter.Error
+		THEN
+			fbMcReadBoolParameter(
+				Enable:= FALSE,
+				Axis := Axis
+			);
+
+			bCacheEnablePosLagMonitoring := fbMcReadBoolParameter.Value;
+
+			etBoschHome := ET_BOSCH_Home.eReadEnableLimitPos;         		(* Next step *)
+
+		ELSIF fbMcReadBoolParameter.Error
+		THEN
+			fbMcReadBoolParameter(
+				Enable:= FALSE,
+				Axis := Axis
+			);
+			
+			udnErrorNo := 4;            (* Error number *)
+			
+			etBoschHome := ET_BOSCH_Home.eError;         		(* Next step *)
+
+		END_IF
+			
+	ET_BOSCH_Home.eReadEnableLimitPos:
+		fbMcReadBoolParameter.Enable := TRUE;
+		fbMcReadBoolParameter.ParameterNumber:= EnableLimitPos;
+
+		IF fbMcReadBoolParameter.Busy
+		THEN
+			etBoschHome := ET_BOSCH_Home.eWfReadEnableLimitPos;         		(* Next step *)
+
+		ELSIF fbMcReadBoolParameter.Error
+		THEN
+			fbMcReadBoolParameter(
+				Enable:= FALSE,
+				Axis := Axis
+			);
+
+			udnErrorNo := 5;            (* Error number *)
+			
+			etBoschHome := ET_BOSCH_Home.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_Home.eWfReadEnableLimitPos:
+		IF NOT fbMcReadBoolParameter.Busy
+		   AND NOT fbMcReadBoolParameter.Error
+		THEN
+			fbMcReadBoolParameter(
+				Enable:= FALSE,
+				Axis := Axis
+			);
+
+			bCacheEnableLimitPos := fbMcReadBoolParameter.Value;
+
+			etBoschHome := ET_BOSCH_Home.eReadEnableLimitNeg;         		(* Next step *)
+
+		ELSIF fbMcReadBoolParameter.Error
+		THEN
+			fbMcReadBoolParameter(
+				Enable:= FALSE,
+				Axis := Axis
+			);
+
+			udnErrorNo := 6;            (* Error number *)
+			
+			etBoschHome := ET_BOSCH_Home.eError;         		(* Next step *)
+
+		END_IF
+				
+	ET_BOSCH_Home.eReadEnableLimitNeg:
+		fbMcReadBoolParameter.Enable := TRUE;
+		fbMcReadBoolParameter.ParameterNumber:= EnableLimitNeg;
+
+		IF fbMcReadBoolParameter.Busy
+		THEN
+			etBoschHome := ET_BOSCH_Home.eWfReadEnableLimitNeg;         		(* Next step *)
+
+		ELSIF fbMcReadBoolParameter.Error
+		THEN
+			fbMcReadBoolParameter(
+				Enable:= FALSE,
+				Axis := Axis
+			);
+
+			udnErrorNo := 5;            (* Error number *)
+			
+			etBoschHome := ET_BOSCH_Home.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_Home.eWfReadEnableLimitNeg:
+		IF NOT fbMcReadBoolParameter.Busy
+		   AND NOT fbMcReadBoolParameter.Error
+		THEN
+			fbMcReadBoolParameter(
+				Enable:= FALSE,
+				Axis := Axis
+			);
+
+			bCacheEnableLimitNeg := fbMcReadBoolParameter.Value;
+
+			etBoschHome := ET_BOSCH_Home.eEraseEnablePosLagMonitoring;         		(* Next step *)
+
+		ELSIF fbMcReadBoolParameter.Error
+		THEN
+			fbMcReadBoolParameter(
+				Enable:= FALSE,
+				Axis := Axis
+			);
+
+			udnErrorNo := 6;            (* Error number *)
+			
+			etBoschHome := ET_BOSCH_Home.eError;         		(* Next step *)
+
+		END_IF
+			
+	ET_BOSCH_Home.eEraseEnablePosLagMonitoring:
+		fbMcWriteBoolParameter.Execute := TRUE;
+		fbMcWriteBoolParameter.ParameterNumber := EnablePosLagMonitoring;
+		fbMcWriteBoolParameter.Value := FALSE;
+
+		IF fbMcWriteBoolParameter.Busy
+		THEN
+			etBoschHome := ET_BOSCH_Home.eWfEraseEnablePosLagMonitoring;         		(* Next step *)
+
+		ELSIF fbMcWriteBoolParameter.Error
+		THEN
+			fbMcWriteBoolParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			udnErrorNo := 7;            (* Error number *)
+			
+			etBoschHome := ET_BOSCH_Home.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_Home.eWfEraseEnablePosLagMonitoring:
+		IF NOT fbMcWriteBoolParameter.Busy
+		     AND NOT fbMcWriteBoolParameter.Error
+		THEN
+			fbMcWriteBoolParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			etBoschHome := ET_BOSCH_Home.eEraseEnableLimitPos;         		(* Next step *)
+
+		ELSIF fbMcWriteBoolParameter.Error
+		THEN
+			fbMcWriteBoolParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			udnErrorNo := 8;            (* Error number *)
+			
+			etBoschHome := ET_BOSCH_Home.eError;         		(* Next step *)
+
+		END_IF
+			
+	ET_BOSCH_Home.eEraseEnableLimitPos:
+		fbMcWriteBoolParameter.Execute := TRUE;
+		fbMcWriteBoolParameter.ParameterNumber := EnableLimitPos;
+		fbMcWriteBoolParameter.Value := FALSE;
+
+		IF fbMcWriteBoolParameter.Busy
+		THEN
+			etBoschHome := ET_BOSCH_Home.eWfEraseEnableLimitPos;         		(* Next step *)
+
+		ELSIF fbMcWriteBoolParameter.Error
+		THEN
+			fbMcWriteBoolParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			udnErrorNo := 9;            (* Error number *)
+			
+			etBoschHome := ET_BOSCH_Home.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_Home.eWfEraseEnableLimitPos:
+		IF NOT fbMcWriteBoolParameter.Busy
+		     AND NOT fbMcWriteBoolParameter.Error
+		THEN
+			fbMcWriteBoolParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			etBoschHome := ET_BOSCH_Home.eEraseEnableLimitNeg;         		(* Next step *)
+
+		ELSIF fbMcWriteBoolParameter.Error
+		THEN
+			fbMcWriteBoolParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			udnErrorNo := 10;            (* Error number *)
+			
+			etBoschHome := ET_BOSCH_Home.eError;         		(* Next step *)
+
+		END_IF
+			
+	ET_BOSCH_Home.eEraseEnableLimitNeg:
+		fbMcWriteBoolParameter.Execute := TRUE;
+		fbMcWriteBoolParameter.ParameterNumber := EnableLimitNeg;
+		fbMcWriteBoolParameter.Value := FALSE;
+
+		IF fbMcWriteBoolParameter.Busy
+		THEN
+			etBoschHome := ET_BOSCH_Home.eWfEraseEnableLimitNeg;         		(* Next step *)
+
+		ELSIF fbMcWriteBoolParameter.Error
+		THEN
+			fbMcWriteBoolParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			udnErrorNo := 12;            (* Error number *)
+			
+			etBoschHome := ET_BOSCH_Home.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_Home.eWfEraseEnableLimitNeg:
+		IF NOT fbMcWriteBoolParameter.Busy
+		     AND NOT fbMcWriteBoolParameter.Error
+		THEN
+			fbMcWriteBoolParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			etBoschHome := ET_BOSCH_Home.eStartCancelCalibration;         		(* Next step *)
+			
+		ELSIF fbMcWriteBoolParameter.Error
+		THEN
+			fbMcWriteBoolParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			udnErrorNo := 13;            (* Error number *)
+			
+			etBoschHome := ET_BOSCH_Home.eError;         		(* Next step *)
+
+		END_IF
+		
+	ET_BOSCH_Home.eStartCancelCalibration:	
+		(* S-0-0191, C1500 Cancel reference point procedure command *)
+		fbEcSoEWrite(
+			bExecute := TRUE,
+			nIdn := wCancelReferencePara,			
+			pSrcBuf := ADR(wStartHomingCmd), 
+			cbBufLen := SIZEOF(wStartHomingCmd) 
+		);	
+	
+		IF NOT fbEcSoEWrite.bBusy
+		   AND NOT fbEcSoEWrite.bError
+		THEN
+			fbEcSoEWrite(
+				bExecute := FALSE
+			);
+
+			etBoschHome := ET_BOSCH_Home.eReadDriveNoCalibrated;         		(* Next step *)
+
+		ELSIF fbEcSoEWrite.bError
+		THEN
+			fbEcSoEWrite(
+				bExecute := FALSE
+			);
+
+			udnErrorNo := 14;            (* Error number *)
+			
+			etBoschHome := ET_BOSCH_Home.eError;         		(* Next step *)
+
+		END_IF
+	
+	ET_BOSCH_Home.eReadDriveNoCalibrated:	
+		(* S-0-0403, Position feedback value status *)	
+		tonDelay(IN := TRUE);
+		
+		fbEcSoERead(
+			bExecute := tonDelay.Q,
+			nIdn := wPosFeedbackValueStatusPara,			
+			pDstBuf := ADR(wPosFeedbackValueStatus),
+			cbBufLen := SIZEOF(wPosFeedbackValueStatus)
+		);
+	
+		IF NOT fbEcSoERead.bBusy
+		   AND NOT fbEcSoERead.bError
+		   AND tonDelay.Q
+		THEN				
+			fbEcSoERead(
+				bExecute := FALSE
+			);
+	
+			IF NOT wPosFeedbackValueStatus.0	(* Calibrated *)
+			THEN
+				tonDelay(IN := FALSE, PT := T#0S);
+			
+				etBoschHome := ET_BOSCH_Home.eStopCancelCalibration;         		(* Next step *)
+			ELSE
+				tonDelay(IN := FALSE, PT := T#500MS);	
+			
+				etBoschHome := ET_BOSCH_Home.eReadDriveNoCalibrated;         		(* Next step *)
+			END_IF
+		ELSIF fbEcSoERead.bError
+		THEN
+			tonDelay(IN := FALSE, PT := T#0S);
+		
+			fbEcSoERead(
+				bExecute := FALSE
+			);
+
+			udnErrorNo := 15;            (* Error number *)
+			
+			etBoschHome := ET_BOSCH_Home.eError;         		(* Next step *)
+
+		END_IF
+			
+		(* Interrupt sequence *)
+		IF NOT bExecute
+		THEN
+			tonDelay(IN := FALSE, PT := T#0S);
+		
+			fbEcSoERead(
+				bExecute := FALSE
+			);
+			
+			bInterrupted := TRUE;		(* Program interrupted *)
+			
+			etBoschHome := ET_BOSCH_Home.eReadDriveStopped;     (* Next step *)
+		END_IF
+
+	ET_BOSCH_Home.eStopCancelCalibration:	
+		(* S-0-0191, C1500 Cancel reference point procedure command *)	
+		fbEcSoEWrite(
+			bExecute := TRUE,
+			nIdn := wCancelReferencePara,			
+			pSrcBuf := ADR(wStopHomingCmd), 
+			cbBufLen := SIZEOF(wStopHomingCmd)
+		);
+		
+		IF NOT fbEcSoEWrite.bBusy
+		   AND NOT fbEcSoEWrite.bError
+		THEN
+			fbEcSoEWrite(
+				bExecute := FALSE
+			);
+
+			etBoschHome := ET_BOSCH_Home.eWriteCalibrationOffset;         		(* Next step *)
+			
+		ELSIF fbEcSoEWrite.bError
+		THEN
+			fbEcSoEWrite(
+				bExecute := FALSE
+			);
+
+			udnErrorNo := 16;            (* Error number *)
+			
+			etBoschHome := ET_BOSCH_Home.eError;         		(* Next step *)
+
+		END_IF
+	
+	ET_BOSCH_Home.eWriteCalibrationOffset:	
+		(* S-0-0052, Reference distance 1 *)
+		dwReferenceDist := REAL_TO_DWORD(rOriginPosition / LREAL_TO_REAL(pDrive^.lrScalingFactor));
+		
+		fbEcSoEWrite(
+			bExecute := TRUE,
+			nIdn := wReferenceDistPara,			
+			pSrcBuf := ADR(dwReferenceDist), 
+			cbBufLen := SIZEOF(dwReferenceDist) 
+		);
+			
+		IF NOT fbEcSoEWrite.bBusy
+		   AND NOT fbEcSoEWrite.bError
+		THEN
+			fbEcSoEWrite(
+				bExecute := FALSE
+			);
+
+			etBoschHome := ET_BOSCH_Home.eStartCalibration;         		(* Next step *)
+
+		ELSIF fbEcSoEWrite.bError
+		THEN
+			fbEcSoEWrite(
+				bExecute := FALSE
+			);
+
+			udnErrorNo := 17;            (* Error number *)
+			
+			etBoschHome := ET_BOSCH_Home.eError;         		(* Next step *)
+
+		END_IF
+		
+	ET_BOSCH_Home.eStartCalibration:	
+		(* S-0-0148, C600 Drive controlled homing procedure command *)
+		fbEcSoEWrite(
+			bExecute := TRUE,
+			nIdn := wDriveControlledHomingPara,			
+			pSrcBuf := ADR(wStartHomingCmd),
+			cbBufLen := SIZEOF(wStartHomingCmd) 
+		);	
+	
+		IF NOT fbEcSoEWrite.bBusy
+		   AND NOT fbEcSoEWrite.bError
+		THEN
+			fbEcSoEWrite(
+				bExecute := FALSE
+			);
+
+			etBoschHome := ET_BOSCH_Home.eReadDriveCalibrated;         		(* Next step *)
+			
+		ELSIF fbEcSoEWrite.bError
+		THEN
+			fbEcSoEWrite(
+				bExecute := FALSE
+			);
+
+			udnErrorNo := 18;            (* Error number *)
+			
+			etBoschHome := ET_BOSCH_Home.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_Home.eReadDriveCalibrated:	
+		(* S-0-0403, Position feedback value status *)	
+		tonDelay(IN := TRUE);
+		
+		fbEcSoERead(
+			bExecute := tonDelay.Q,
+			nIdn := wPosFeedbackValueStatusPara,			
+			pDstBuf := ADR(wPosFeedbackValueStatus), 
+			cbBufLen := SIZEOF(wPosFeedbackValueStatus) 
+		);
+		
+		IF NOT fbEcSoERead.bBusy
+		   AND NOT fbEcSoERead.bError
+		   AND tonDelay.Q
+		THEN
+			fbEcSoERead(
+				bExecute := FALSE
+			);
+	
+			IF wPosFeedbackValueStatus.0	(* Calibrated *)
+			THEN
+				tonDelay(IN := FALSE, PT := T#0S);
+			
+				etBoschHome := ET_BOSCH_Home.eReadDriveStopped;         		(* Next step *)
+			ELSE
+				tonDelay(IN := FALSE, PT := T#500MS);	
+			
+				etBoschHome := ET_BOSCH_Home.eReadDriveCalibrated;         		(* Next step *)
+			END_IF
+		ELSIF fbEcSoERead.bError
+		THEN
+			tonDelay(IN := FALSE, PT := T#0S);
+		
+			fbEcSoERead(
+				bExecute := FALSE
+			);
+
+			udnErrorNo := 19;            (* Error number *)
+			
+			etBoschHome := ET_BOSCH_Home.eError;         		(* Next step *)
+
+		END_IF
+			
+		(* Interrupt sequence *)
+		IF NOT bExecute
+		THEN
+			tonDelay(IN := FALSE, PT := T#0S);
+		
+			fbEcSoERead(
+				bExecute := FALSE
+			);
+			
+			bInterrupted := TRUE;		(* Program interrupted *)
+			
+			etBoschHome := ET_BOSCH_Home.eReadDriveStopped;     (* Next step *)
+		END_IF
+						
+	ET_BOSCH_Home.eReadDriveStopped:	
+		(* S-0-0013, Class 3 diagnostics *)		
+		tonDelay(IN := TRUE);
+		
+		fbEcSoERead(
+			bExecute := tonDelay.Q,
+			nIdn := wDiagnosticsPara,		
+			pDstBuf := ADR(wDiagnostics), 
+			cbBufLen := SIZEOF(wDiagnostics) 
+		);
+				
+		IF NOT fbEcSoERead.bBusy
+		   AND NOT fbEcSoERead.bError
+		   AND tonDelay.Q
+		THEN
+			fbEcSoERead(
+				bExecute := FALSE
+			);
+	
+			IF wDiagnostics.1	(* Stopped *)
+			THEN
+				tonDelay(IN := FALSE, PT := T#0S);
+	
+				etBoschHome := ET_BOSCH_Home.eWriteEnablePosLagMonitoring;         		(* Next step *)
+			ELSE
+				tonDelay(IN := FALSE, PT := T#500MS);	
+			
+				etBoschHome := ET_BOSCH_Home.eReadDriveStopped;         		(* Next step *)
+			END_IF
+			
+		ELSIF fbEcSoERead.bError
+		THEN
+			tonDelay(IN := FALSE, PT := T#0S);
+		
+			fbEcSoERead(
+				bExecute := FALSE
+			);
+
+			udnErrorNo := 20;            (* Error number *)
+			
+			etBoschHome := ET_BOSCH_Home.eError;         		(* Next step *)
+
+		END_IF
+	
+	ET_BOSCH_Home.eWriteEnablePosLagMonitoring:
+		fbMcWriteBoolParameter.Execute := TRUE;
+		fbMcWriteBoolParameter.ParameterNumber:= EnablePosLagMonitoring;
+		fbMcWriteBoolParameter.Value := bCacheEnablePosLagMonitoring;
+
+		IF fbMcWriteBoolParameter.Busy
+		THEN
+			etBoschHome := ET_BOSCH_Home.eWfWriteEnablePosLagMonitoring;         		(* Next step *)
+
+		ELSIF fbMcWriteBoolParameter.Error
+		THEN
+			fbMcWriteBoolParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			udnErrorNo := 21;            (* Error number *)
+			
+			etBoschHome := ET_BOSCH_Home.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_Home.eWfWriteEnablePosLagMonitoring:
+		IF NOT fbMcWriteBoolParameter.Busy
+		   AND NOT fbMcWriteBoolParameter.Error
+		THEN
+			fbMcWriteBoolParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			etBoschHome := ET_BOSCH_Home.eWriteEnableLimitPos;         		(* Next step *)
+
+		ELSIF fbMcWriteBoolParameter.Error
+		THEN
+			fbMcWriteBoolParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			udnErrorNo := 22;            (* Error number *)
+			
+			etBoschHome := ET_BOSCH_Home.eError;         		(* Next step *)
+
+		END_IF
+			
+	ET_BOSCH_Home.eWriteEnableLimitPos:
+		fbMcWriteBoolParameter.Execute := TRUE;
+		fbMcWriteBoolParameter.ParameterNumber:= EnableLimitPos;
+		fbMcWriteBoolParameter.Value := bCacheEnableLimitPos;
+		
+		IF fbMcWriteBoolParameter.Busy
+		THEN
+			etBoschHome := ET_BOSCH_Home.eWfWriteEnableLimitPos;         		(* Next step *)
+
+		ELSIF fbMcWriteBoolParameter.Error
+		THEN
+			fbMcWriteBoolParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			udnErrorNo := 23;            (* Error number *)
+			
+			etBoschHome := ET_BOSCH_Home.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_Home.eWfWriteEnableLimitPos:
+		IF NOT fbMcWriteBoolParameter.Busy
+		   AND NOT fbMcWriteBoolParameter.Error
+		THEN
+			fbMcWriteBoolParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			etBoschHome := ET_BOSCH_Home.eWriteEnableLimitNeg;         		(* Next step *)
+
+		ELSIF fbMcWriteBoolParameter.Error
+		THEN
+			fbMcWriteBoolParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			udnErrorNo := 24;            (* Error number *)
+			
+			etBoschHome := ET_BOSCH_Home.eError;         		(* Next step *)
+
+		END_IF
+				
+	ET_BOSCH_Home.eWriteEnableLimitNeg:
+		fbMcWriteBoolParameter.Execute := TRUE;
+		fbMcWriteBoolParameter.ParameterNumber:= EnableLimitNeg;
+		fbMcWriteBoolParameter.Value := bCacheEnableLimitNeg;
+		
+		IF fbMcWriteBoolParameter.Busy
+		THEN
+			etBoschHome := ET_BOSCH_Home.eWfWriteEnableLimitNeg;         		(* Next step *)
+
+		ELSIF fbMcWriteBoolParameter.Error
+		THEN
+			fbMcWriteBoolParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			udnErrorNo := 25;            (* Error number *)
+			
+			etBoschHome := ET_BOSCH_Home.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_Home.eWfWriteEnableLimitNeg:
+		IF NOT fbMcWriteBoolParameter.Busy
+		   AND NOT fbMcWriteBoolParameter.Error
+		THEN
+			fbMcWriteBoolParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			etBoschHome := ET_BOSCH_Home.eWriteCancelCalibration;         		(* Next step *)
+					
+		ELSIF fbMcWriteBoolParameter.Error
+		THEN
+			fbMcWriteBoolParameter(
+				Execute := FALSE,
+				Axis := Axis
+			);
+
+			udnErrorNo := 26;            (* Error number *)
+			
+			etBoschHome := ET_BOSCH_Home.eError;         		(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_Home.eWriteCancelCalibration:	
+		(* S-0-0191, C1500 Cancel reference point procedure command *)	
+		fbEcSoEWrite(
+			bExecute := TRUE,
+			nIdn := wCancelReferencePara,			
+			pSrcBuf := ADR(wStopHomingCmd), 
+			cbBufLen := SIZEOF(wStopHomingCmd)
+		);
+		
+		IF NOT fbEcSoEWrite.bBusy
+		   AND NOT fbEcSoEWrite.bError
+		THEN
+			fbEcSoEWrite(
+				bExecute := FALSE
+			);
+
+			etBoschHome := ET_BOSCH_Home.eWriteStopCalibration;         		(* Next step *)
+			
+		ELSIF fbEcSoEWrite.bError
+		THEN
+			fbEcSoEWrite(
+				bExecute := FALSE
+			);
+
+			udnErrorNo := 27;            (* Error number *)
+			
+			etBoschHome := ET_BOSCH_Home.eError;         		(* Next step *)
+
+		END_IF
+					
+	ET_BOSCH_Home.eWriteStopCalibration:	
+		(* S-0-0148, C600 Drive controlled homing procedure command *)		
+		fbEcSoEWrite(
+			bExecute := TRUE,
+			nIdn := wDriveControlledHomingPara,			
+			pSrcBuf := ADR(wStopHomingCmd),
+			cbBufLen := SIZEOF(wStopHomingCmd) 
+		);
+		
+		IF NOT fbEcSoEWrite.bBusy
+		   AND NOT fbEcSoEWrite.bError
+		THEN
+			fbEcSoEWrite(
+				bExecute := FALSE
+			);
+
+			IF NOT bInterrupted						(* Program interrupted *)
+			THEN
+				etBoschHome := ET_BOSCH_Home.eSetCalibrationFlag;         		(* Next step *)
+			ELSE
+				IF bCmdAborted
+				THEN	
+					etBoschHome := ET_BOSCH_Home.eAbort;         		(* Next step *)
+				ELSE
+					etBoschHome := ET_BOSCH_Home.eDone;         		(* Next step *)
+				END_IF		
+			END_IF
+			
+		ELSIF fbEcSoEWrite.bError
+		THEN
+			fbEcSoEWrite(
+				bExecute := FALSE
+			);
+
+			udnErrorNo := 28;            (* Error number *)
+			
+			etBoschHome := ET_BOSCH_Home.eError;         		(* Next step *)
+
+		END_IF
+				
+	ET_BOSCH_Home.eSetCalibrationFlag:
+		fbMCHome.Execute := TRUE;
+		fbMCHome.HomingMode := MC_ForceCalibration;
+
+		IF fbMCHome.Busy
+		THEN
+			etBoschHome := ET_BOSCH_Home.eWfSetCalibrationFlag;         		(* Next step *)
+
+		ELSIF fbMCHome.Error
+		THEN
+			fbMCHome.Execute := FALSE;
+
+			udnErrorNo := 29;            (* Error number *)
+			
+			etBoschHome := ET_BOSCH_Home.eError;         		(* Next step *)
+
+		END_IF
+	
+	ET_BOSCH_Home.eWfSetCalibrationFlag:
+		IF fbMCHome.Done
+		THEN
+			fbMCHome.Execute := FALSE;
+
+			etBoschHome := ET_BOSCH_Home.eWfAxisEnabled;		(* Next step *)
+
+		ELSIF fbMCHome.Error
+		THEN
+			fbMCHome.Execute := FALSE;
+
+			udnErrorNo := 30;            (* Error number *)
+			
+			etBoschHome := ET_BOSCH_Home.eError;         					(* Next step *)
+
+		END_IF
+
+	ET_BOSCH_Home.eWfAxisEnabled:
+			tonDelay(
+				IN := Axis.Status.Operational
+		   			  AND Axis.Status.NotMoving
+					  AND pDrive^.bDriveAF, 
+			PT := T#100MS);
+	
+		IF tonDelay.Q
+		THEN
+			tonDelay(IN := FALSE, PT := T#0S);
+		
+			etBoschHome := ET_BOSCH_Home.eDone;		(* Next step *)
+			
+		ELSIF  Axis.Status.Error
+		THEN
+			tonDelay(IN := FALSE, PT := T#0S);	
+		
+			udnErrorNo := 31;            (* Error number *)
+		
+			etBoschHome := ET_BOSCH_Home.eError;         					(* Next step *)
+
+		END_IF			
+
+	ET_BOSCH_Home.eAbort:	
+		bCmdAborted := TRUE;		(* Command aborted *)
+		bDone := FALSE;				(* Program done, in position *)		
+
+		etBoschHome := ET_BOSCH_Home.eNotExecute;			(*Next step *)
+		
+	ET_BOSCH_Home.eDone:
+		bDone := TRUE;			(* Program done, in position *)
+		bBusy := FALSE;			(* Program not busy *)
+
+		etBoschHome := ET_BOSCH_Home.eNotExecute;            (* Next step *)
+
+	ET_BOSCH_Home.eError:
+		bDone := FALSE;			(* Program done, in position *)
+		bError := TRUE;			(* Program error *)
+		bBusy := FALSE;			(* Program not busy *)
+		
+        etBoschHome := ET_BOSCH_Home.eNotExecute;			(*Next step *)
+
+	ET_BOSCH_Home.eNotExecute:
+		IF NOT bExecute
+		THEN			
+			bDone := FALSE;					(* Program done, in position *)
+			bInterrupted := FALSE;			(* Program interrupted *)
+			bCmdAborted := FALSE;			(* Command not aborted *)
+			bBusy := FALSE;                 (* Program not busy *)
+			bError := FALSE;                (* Program not error *)
+
+			etBoschHome := ET_BOSCH_Home.eInit;			(* Next step *)
+
+		END_IF;
+END_CASE;
+
+fbMCSetPosition(
+	Mode := FALSE,
+	Axis := Axis,
+);
+
+fbMCHome(
+	Axis := Axis,
+);
+
+fbMcReadParameter(
+	ReadMode := READMODE_ONCE,
+	Axis := Axis
+);
+
+fbMcReadBoolParameter(
+	ReadMode := READMODE_ONCE,
+	Axis := Axis
+);
+
+fbMcWriteParameter(
+	Axis := Axis
+);
+
+fbMcWriteBoolParameter(
+	Axis := Axis
+);]]></ST>
+    </Implementation>
+    <LineIds Name="FB_BOSCH_Home">
+      <LineId Id="62" Count="5" />
+      <LineId Id="1752" Count="0" />
+      <LineId Id="1766" Count="0" />
+      <LineId Id="1755" Count="9" />
+      <LineId Id="70" Count="3" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="89" Count="10" />
+      <LineId Id="1439" Count="0" />
+      <LineId Id="100" Count="1" />
+      <LineId Id="1565" Count="0" />
+      <LineId Id="102" Count="2" />
+      <LineId Id="2030" Count="0" />
+      <LineId Id="2032" Count="2" />
+      <LineId Id="258" Count="0" />
+      <LineId Id="2031" Count="0" />
+      <LineId Id="260" Count="2" />
+      <LineId Id="105" Count="0" />
+      <LineId Id="1862" Count="0" />
+      <LineId Id="1424" Count="2" />
+      <LineId Id="1422" Count="1" />
+      <LineId Id="1446" Count="2" />
+      <LineId Id="1444" Count="1" />
+      <LineId Id="1429" Count="7" />
+      <LineId Id="1428" Count="0" />
+      <LineId Id="1427" Count="0" />
+      <LineId Id="2726" Count="5" />
+      <LineId Id="2743" Count="0" />
+      <LineId Id="2732" Count="8" />
+      <LineId Id="2742" Count="0" />
+      <LineId Id="2741" Count="0" />
+      <LineId Id="1414" Count="0" />
+      <LineId Id="107" Count="0" />
+      <LineId Id="2509" Count="1" />
+      <LineId Id="110" Count="0" />
+      <LineId Id="117" Count="1" />
+      <LineId Id="241" Count="0" />
+      <LineId Id="431" Count="1" />
+      <LineId Id="310" Count="8" />
+      <LineId Id="2600" Count="0" />
+      <LineId Id="2599" Count="0" />
+      <LineId Id="319" Count="2" />
+      <LineId Id="304" Count="1" />
+      <LineId Id="325" Count="9" />
+      <LineId Id="2601" Count="0" />
+      <LineId Id="335" Count="0" />
+      <LineId Id="2602" Count="0" />
+      <LineId Id="336" Count="1" />
+      <LineId Id="323" Count="0" />
+      <LineId Id="338" Count="0" />
+      <LineId Id="324" Count="0" />
+      <LineId Id="490" Count="13" />
+      <LineId Id="2603" Count="0" />
+      <LineId Id="504" Count="0" />
+      <LineId Id="2604" Count="0" />
+      <LineId Id="505" Count="22" />
+      <LineId Id="2606" Count="0" />
+      <LineId Id="528" Count="0" />
+      <LineId Id="2605" Count="0" />
+      <LineId Id="529" Count="1" />
+      <LineId Id="489" Count="0" />
+      <LineId Id="488" Count="0" />
+      <LineId Id="537" Count="13" />
+      <LineId Id="2608" Count="0" />
+      <LineId Id="2607" Count="0" />
+      <LineId Id="551" Count="23" />
+      <LineId Id="2609" Count="0" />
+      <LineId Id="575" Count="0" />
+      <LineId Id="2610" Count="0" />
+      <LineId Id="576" Count="1" />
+      <LineId Id="536" Count="0" />
+      <LineId Id="600" Count="0" />
+      <LineId Id="606" Count="13" />
+      <LineId Id="2611" Count="0" />
+      <LineId Id="620" Count="0" />
+      <LineId Id="2612" Count="0" />
+      <LineId Id="621" Count="22" />
+      <LineId Id="2613" Count="0" />
+      <LineId Id="644" Count="0" />
+      <LineId Id="2614" Count="0" />
+      <LineId Id="645" Count="2" />
+      <LineId Id="605" Count="0" />
+      <LineId Id="652" Count="14" />
+      <LineId Id="2615" Count="0" />
+      <LineId Id="667" Count="0" />
+      <LineId Id="2616" Count="0" />
+      <LineId Id="668" Count="20" />
+      <LineId Id="2617" Count="0" />
+      <LineId Id="689" Count="0" />
+      <LineId Id="2618" Count="0" />
+      <LineId Id="690" Count="1" />
+      <LineId Id="650" Count="0" />
+      <LineId Id="699" Count="0" />
+      <LineId Id="704" Count="14" />
+      <LineId Id="2619" Count="0" />
+      <LineId Id="719" Count="0" />
+      <LineId Id="2620" Count="0" />
+      <LineId Id="720" Count="20" />
+      <LineId Id="2621" Count="0" />
+      <LineId Id="741" Count="0" />
+      <LineId Id="2622" Count="0" />
+      <LineId Id="742" Count="1" />
+      <LineId Id="703" Count="0" />
+      <LineId Id="744" Count="0" />
+      <LineId Id="747" Count="14" />
+      <LineId Id="2623" Count="0" />
+      <LineId Id="762" Count="0" />
+      <LineId Id="2624" Count="0" />
+      <LineId Id="763" Count="20" />
+      <LineId Id="2625" Count="0" />
+      <LineId Id="784" Count="0" />
+      <LineId Id="2626" Count="0" />
+      <LineId Id="785" Count="1" />
+      <LineId Id="746" Count="0" />
+      <LineId Id="2234" Count="0" />
+      <LineId Id="2244" Count="1" />
+      <LineId Id="2764" Count="0" />
+      <LineId Id="2766" Count="2" />
+      <LineId Id="2765" Count="0" />
+      <LineId Id="2763" Count="0" />
+      <LineId Id="2252" Count="0" />
+      <LineId Id="2744" Count="18" />
+      <LineId Id="2265" Count="1" />
+      <LineId Id="2305" Count="1" />
+      <LineId Id="2990" Count="1" />
+      <LineId Id="2720" Count="0" />
+      <LineId Id="2722" Count="2" />
+      <LineId Id="2721" Count="0" />
+      <LineId Id="2719" Count="0" />
+      <LineId Id="2313" Count="0" />
+      <LineId Id="2684" Count="1" />
+      <LineId Id="3307" Count="0" />
+      <LineId Id="2686" Count="6" />
+      <LineId Id="3200" Count="1" />
+      <LineId Id="2693" Count="1" />
+      <LineId Id="3202" Count="1" />
+      <LineId Id="2695" Count="3" />
+      <LineId Id="2994" Count="1" />
+      <LineId Id="2699" Count="12" />
+      <LineId Id="3216" Count="1" />
+      <LineId Id="2712" Count="6" />
+      <LineId Id="2328" Count="0" />
+      <LineId Id="3011" Count="0" />
+      <LineId Id="3029" Count="27" />
+      <LineId Id="3012" Count="0" />
+      <LineId Id="2365" Count="0" />
+      <LineId Id="2191" Count="2" />
+      <LineId Id="2791" Count="0" />
+      <LineId Id="2789" Count="0" />
+      <LineId Id="2792" Count="2" />
+      <LineId Id="2790" Count="0" />
+      <LineId Id="2194" Count="0" />
+      <LineId Id="2788" Count="0" />
+      <LineId Id="2769" Count="18" />
+      <LineId Id="2212" Count="0" />
+      <LineId Id="2188" Count="0" />
+      <LineId Id="787" Count="1" />
+      <LineId Id="2815" Count="0" />
+      <LineId Id="2817" Count="2" />
+      <LineId Id="2816" Count="0" />
+      <LineId Id="2814" Count="0" />
+      <LineId Id="794" Count="0" />
+      <LineId Id="2795" Count="2" />
+      <LineId Id="2859" Count="2" />
+      <LineId Id="2801" Count="12" />
+      <LineId Id="807" Count="0" />
+      <LineId Id="835" Count="0" />
+      <LineId Id="837" Count="1" />
+      <LineId Id="3199" Count="0" />
+      <LineId Id="3198" Count="0" />
+      <LineId Id="2857" Count="0" />
+      <LineId Id="2862" Count="2" />
+      <LineId Id="2858" Count="0" />
+      <LineId Id="2855" Count="1" />
+      <LineId Id="2820" Count="1" />
+      <LineId Id="3306" Count="0" />
+      <LineId Id="2822" Count="6" />
+      <LineId Id="3204" Count="1" />
+      <LineId Id="2829" Count="1" />
+      <LineId Id="3206" Count="1" />
+      <LineId Id="2831" Count="3" />
+      <LineId Id="3208" Count="1" />
+      <LineId Id="2835" Count="12" />
+      <LineId Id="3210" Count="1" />
+      <LineId Id="2848" Count="6" />
+      <LineId Id="856" Count="0" />
+      <LineId Id="3061" Count="0" />
+      <LineId Id="930" Count="1" />
+      <LineId Id="2056" Count="1" />
+      <LineId Id="2895" Count="0" />
+      <LineId Id="2897" Count="2" />
+      <LineId Id="2896" Count="0" />
+      <LineId Id="2893" Count="1" />
+      <LineId Id="2867" Count="1" />
+      <LineId Id="3308" Count="0" />
+      <LineId Id="2869" Count="6" />
+      <LineId Id="3213" Count="0" />
+      <LineId Id="3212" Count="0" />
+      <LineId Id="2876" Count="1" />
+      <LineId Id="3214" Count="1" />
+      <LineId Id="2878" Count="4" />
+      <LineId Id="2900" Count="1" />
+      <LineId Id="2883" Count="7" />
+      <LineId Id="2866" Count="0" />
+      <LineId Id="959" Count="0" />
+      <LineId Id="1176" Count="2" />
+      <LineId Id="1442" Count="0" />
+      <LineId Id="1179" Count="10" />
+      <LineId Id="2660" Count="0" />
+      <LineId Id="1190" Count="0" />
+      <LineId Id="2661" Count="0" />
+      <LineId Id="1191" Count="11" />
+      <LineId Id="1205" Count="8" />
+      <LineId Id="2662" Count="0" />
+      <LineId Id="1214" Count="0" />
+      <LineId Id="2663" Count="0" />
+      <LineId Id="1215" Count="6" />
+      <LineId Id="1456" Count="0" />
+      <LineId Id="1222" Count="10" />
+      <LineId Id="2664" Count="0" />
+      <LineId Id="1233" Count="0" />
+      <LineId Id="2665" Count="0" />
+      <LineId Id="1234" Count="11" />
+      <LineId Id="1248" Count="8" />
+      <LineId Id="2666" Count="0" />
+      <LineId Id="1257" Count="0" />
+      <LineId Id="2667" Count="0" />
+      <LineId Id="1258" Count="6" />
+      <LineId Id="1457" Count="0" />
+      <LineId Id="1265" Count="10" />
+      <LineId Id="2668" Count="0" />
+      <LineId Id="1276" Count="0" />
+      <LineId Id="2669" Count="0" />
+      <LineId Id="1277" Count="11" />
+      <LineId Id="1567" Count="0" />
+      <LineId Id="1569" Count="0" />
+      <LineId Id="1291" Count="0" />
+      <LineId Id="1294" Count="5" />
+      <LineId Id="2670" Count="0" />
+      <LineId Id="1300" Count="0" />
+      <LineId Id="2671" Count="0" />
+      <LineId Id="1301" Count="1" />
+      <LineId Id="1153" Count="0" />
+      <LineId Id="2467" Count="0" />
+      <LineId Id="2470" Count="1" />
+      <LineId Id="2949" Count="0" />
+      <LineId Id="2951" Count="2" />
+      <LineId Id="2950" Count="0" />
+      <LineId Id="2947" Count="1" />
+      <LineId Id="2928" Count="18" />
+      <LineId Id="2489" Count="1" />
+      <LineId Id="1667" Count="1" />
+      <LineId Id="2985" Count="0" />
+      <LineId Id="2987" Count="2" />
+      <LineId Id="2986" Count="0" />
+      <LineId Id="2983" Count="1" />
+      <LineId Id="2954" Count="28" />
+      <LineId Id="1686" Count="1" />
+      <LineId Id="1124" Count="10" />
+      <LineId Id="2680" Count="0" />
+      <LineId Id="1135" Count="0" />
+      <LineId Id="2681" Count="0" />
+      <LineId Id="1136" Count="13" />
+      <LineId Id="2682" Count="0" />
+      <LineId Id="1150" Count="0" />
+      <LineId Id="2683" Count="0" />
+      <LineId Id="1151" Count="1" />
+      <LineId Id="693" Count="0" />
+      <LineId Id="3398" Count="1" />
+      <LineId Id="3415" Count="0" />
+      <LineId Id="3419" Count="0" />
+      <LineId Id="3418" Count="0" />
+      <LineId Id="3426" Count="0" />
+      <LineId Id="3420" Count="0" />
+      <LineId Id="3416" Count="1" />
+      <LineId Id="3401" Count="0" />
+      <LineId Id="3421" Count="1" />
+      <LineId Id="3404" Count="0" />
+      <LineId Id="3423" Count="0" />
+      <LineId Id="3406" Count="1" />
+      <LineId Id="3424" Count="1" />
+      <LineId Id="3410" Count="3" />
+      <LineId Id="3397" Count="0" />
+      <LineId Id="157" Count="1" />
+      <LineId Id="1724" Count="1" />
+      <LineId Id="1741" Count="0" />
+      <LineId Id="165" Count="0" />
+      <LineId Id="1742" Count="0" />
+      <LineId Id="166" Count="0" />
+      <LineId Id="168" Count="5" />
+      <LineId Id="175" Count="2" />
+      <LineId Id="180" Count="5" />
+      <LineId Id="189" Count="0" />
+      <LineId Id="1574" Count="0" />
+      <LineId Id="190" Count="7" />
+      <LineId Id="2035" Count="0" />
+      <LineId Id="2037" Count="0" />
+      <LineId Id="2044" Count="0" />
+      <LineId Id="2038" Count="0" />
+      <LineId Id="2036" Count="0" />
+      <LineId Id="297" Count="0" />
+      <LineId Id="299" Count="0" />
+      <LineId Id="302" Count="0" />
+      <LineId Id="298" Count="0" />
+      <LineId Id="1380" Count="0" />
+      <LineId Id="1382" Count="2" />
+      <LineId Id="198" Count="0" />
+      <LineId Id="1450" Count="3" />
+      <LineId Id="1449" Count="0" />
+      <LineId Id="1385" Count="0" />
+      <LineId Id="1387" Count="5" />
+      <LineId Id="1386" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

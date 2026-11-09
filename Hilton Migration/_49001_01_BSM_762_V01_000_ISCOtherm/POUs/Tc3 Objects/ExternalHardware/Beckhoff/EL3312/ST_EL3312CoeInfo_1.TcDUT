@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_EL3312CoeInfo_1" Id="{005ee707-d58c-47f3-b4c4-cc1ebac79422}">
+    <Declaration><![CDATA[TYPE ST_EL3312CoeInfo_1 :
+STRUCT
+	bEnableUserScale 			:BOOL := FALSE;
+	bEnableFilter 					:BOOL := FALSE;
+	bEnableLimit1 				:BOOL := FALSE;
+	bEnableLimit2 				:BOOL := FALSE;
+	bEnableUserCalibration 		:BOOL := FALSE;
+	bEnableVendorCalibration 		:BOOL := TRUE;
+	dwColdjunctionCompensation 	:DWORD := 0;
+	nUserScaleOffset 				:INT := 0;
+	dnUserScaleGain 				:DINT := 65536;
+	nLimit1 						:INT := 0;
+	nLimit2 						:INT := 0;
+	dwFilterSettings 				:DWORD := 0;
+	nUserCalibrationOffset 			:INT := 0;
+	unUserCalibrationGain 			:UINT := 65535;
+	dwTCElement 				:DWORD := 0;
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

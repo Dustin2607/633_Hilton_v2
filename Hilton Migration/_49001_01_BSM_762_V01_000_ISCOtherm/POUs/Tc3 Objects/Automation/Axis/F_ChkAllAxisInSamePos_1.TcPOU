@@ -1,0 +1,88 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_ChkAllAxisInSamePos_1" Id="{c75cc102-defe-4224-9406-e6120f95cd03}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_ChkAllAxisInSamePos_1 : BOOL
+(*
+
+The function used to detect if all axis have the same position.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			09.07.2016
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;					(* Signal FB enable *)
+	lrAxis1Pos					:LREAL;					(* Axis position [mm] *)
+	lrAxis2Pos					:LREAL;					(* Axis position [mm] *)
+	lrAxis3Pos					:LREAL;					(* Axis position [mm] *)
+	lrAxis4Pos					:LREAL;					(* Axis position [mm] *)
+	lrAxis5Pos					:LREAL;					(* Axis position [mm] *)
+	lrAxis6Pos					:LREAL;					(* Axis position [mm] *)
+	lrAxis7Pos					:LREAL;					(* Axis position [mm] *)
+	lrAxis8Pos					:LREAL;					(* Axis position [mm] *)
+	lrAxis9Pos					:LREAL;					(* Axis position [mm] *)
+	lrAxis10Pos					:LREAL;					(* Axis position [mm] *)
+	lrTolerance					:LREAL := 2;					(* Tolerance [mm] *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	nIdx1						:INT;
+	nIdx2						:INT;
+	arlrAxisPos					:ARRAY[1..10] OF LREAL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable							(* Signal FB enable *)
+THEN
+	F_ChkAllAxisInSamePos := TRUE;
+
+	RETURN;
+END_IF
+
+arlrAxisPos[1] := lrAxis1Pos;
+arlrAxisPos[2] := lrAxis2Pos;
+arlrAxisPos[3] := lrAxis3Pos;
+arlrAxisPos[4] := lrAxis4Pos;
+arlrAxisPos[5] := lrAxis5Pos;
+arlrAxisPos[6] := lrAxis6Pos;
+arlrAxisPos[7] := lrAxis7Pos;
+arlrAxisPos[8] := lrAxis8Pos;
+arlrAxisPos[9] := lrAxis9Pos;
+arlrAxisPos[10] := lrAxis10Pos;
+
+F_ChkAllAxisInSamePos := TRUE;
+
+FOR nIdx1 := 1 TO 10 DO
+	FOR nIdx2 := 1 TO 10 DO
+		IF ABS(arlrAxisPos[nIdx1] - arlrAxisPos[nIdx2]) > lrTolerance
+		THEN
+			F_ChkAllAxisInSamePos := FALSE;
+			EXIT;
+		END_IF
+	END_FOR
+END_FOR;
+
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="F_ChkAllAxisInSamePos_1">
+      <LineId Id="44" Count="33" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

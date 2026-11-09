@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_YASKAWA_REF_1" Id="{4a12f299-84b1-4822-9e53-090b93e32eac}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_YASKAWA_REF_1
+VAR_INPUT
+	stYaskawaToPlc				:ST_YASKAWATOPLC;
+	stPlcToYaskawa				:ST_PLCTOYASKAWA;
+
+	stRobotToPlc					AT %I*:ST_ROBOTTOPLC;
+	stPlcToRobot					AT %Q*:ST_PLCTOROBOT;
+END_VAR
+VAR_OUTPUT
+
+END_VAR
+VAR_IN_OUT
+
+END_VAR
+VAR
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_YASKAWA_REF_1">
+      <LineId Id="17" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,479 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Scanner" Id="{f6174d1d-f828-4768-898e-00d63fd3a33e}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Scanner
+(*
+
+The function block used to start Bosch process controller. 
+
+Constructor:		Patryk Panylo
+Company:			E. Riexinger GmbH
+Date:				05.02.2019
+Version:			1.00
+
+Date:				Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	sSrvNetID				:T_AmsNetID	:= '';						(* TwinCAT TCP/IP server network address *)
+	sRemoteHost				:T_IPv4Addr := '192.168.10.1';			(* Server network address *)
+	nRemotePort				:UDINT := 23;							(* Server port number *)
+	bReset					:BOOL := FALSE;							(* Confirm alarm *)
+	bHandExe 				:BOOL := FALSE;							(* Send execute command *)
+	bAutoExe 				:BOOL := FALSE;							(* Send execute command *)
+	unRepeatTrigger			:UINT := 0;								(* Repeat trigger *)		
+	bLoggerEn				:BOOL := FALSE;							(* TRUE => Enable log message output, FALSE => Disable *)
+	sPrefix					:STRING := '||>';						(* Send command prefix *)
+	sSuffix					:STRING := '$R$N';						(* Send/Receive command suffix *)	
+	sDelimiter				:STRING := '';							(* Delimiter (null) *)
+	sNoCodeDesc				:T_MaxString := 'NoCode';					(* No code description *)
+	arbCodePresent			:ARRAY[1..GVL_Gr05Config.nWorkpieceCarrierMax] OF BOOL; (* Code present and ready to check *)
+	tRepeatTrigger			:TIME := T#250MS;						(* Repeat trigger *)
+	tReceiveTimeout			:TIME := T#100MS;						(* Recive time the which the answer is expected to come *)	
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	sRcvMsg					:T_MaxString := '';						(* Receive an ASCII typable string data. *)										
+	arsRcvMsg				:ARRAY[1..GVL_TCPIP.RECEIVE_MESSAGE_MAX] OF T_MaxString;			(* Get message of received an ASCII typable string data. *)
+	bDone					:BOOL;			(* Program done *)
+	bCmdAborted				:BOOL;			(* Command aborted *)
+	bBusy					:BOOL;			(* Program busy *)
+	bErrorInit				:BOOL;			(* Error initialization *)	
+	bErrorTerminal			:BOOL;			(* Error terminal *)
+	bError					:BOOL;			(* Error *)
+	udnErrorNo				:UDINT;			(* Error number *)				
+	sErrorMsg				:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+	etScannerCtrl				:ET_COGNEX_ScannerCtrl := ET_COGNEX_ScannerCtrl_eWaitExecute;
+
+	(* Variables *)
+	nIdx						:INT;
+	nPosOfChar					:INT;
+	unRepeatCount				:UINT;
+	
+	unWatchdog					:UINT;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbDatamanScanner			:FB_DatamanScanner;
+	rtHandExe					:R_TRIG;
+	rtAutoExe					:R_TRIG;
+	rtAborted					:R_TRIG;
+	tonRepeatTrigger			:TON;								(* Repeat trigger *)
+	
+END_VAR
+VAR CONSTANT
+	sCodeIdentChar				:STRING := '_';							(* Code identification charcter *)
+	unWatchdogMax				:UINT := 1000;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+A_ScannerController();
+A_ScannerTrigger();
+A_ScannerAlarm();
+
+
+
+]]></ST>
+    </Implementation>
+    <Action Name="A_ScannerAlarm" Id="{d12ec2cd-26c3-4bd7-927c-9b76e1e485da}">
+      <Implementation>
+        <ST><![CDATA[
+bErrorInit := fbDatamanScanner.bErrorInit;
+bErrorTerminal := fbDatamanScanner.bError; ]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_ScannerController" Id="{2ac051c5-d1d6-498e-86bb-c4f2b46bfc19}">
+      <Implementation>
+        <ST><![CDATA[
+fbDatamanScanner(
+	sSrvNetID := sSrvNetID, 
+	sRemoteHost := sRemoteHost, 
+	nRemotePort := nRemotePort, 
+	bReset := bReset, 
+	bLoggerEn:= bLoggerEn,
+	tReceiveTimeout := tReceiveTimeout,
+	sPrefix := sPrefix, 
+	sSuffix := sSuffix, 
+	sDelimiter := sDelimiter,
+	sRcvMsg => sRcvMsg
+);
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_ScannerTrigger" Id="{4cf9dd02-3000-4560-a95d-4f916002ed21}">
+      <Implementation>
+        <ST><![CDATA[
+rtHandExe(CLK := bHandExe);
+rtAutoExe(CLK := bAutoExe);
+
+rtAborted(CLK := fbDatamanScanner.bDisconnected);
+IF rtAborted.Q                                              (* Aborted *)
+THEN	
+	etScannerCtrl := ET_COGNEX_ScannerCtrl_eAbort;                     (* Next step *)
+	
+ELSIF (rtAutoExe.Q
+	   OR rtHandExe.Q) 
+	   AND NOT bCmdAborted
+THEN
+	etScannerCtrl := ET_COGNEX_ScannerCtrl_eWaitExecute;                                   (* Next step *)	
+	
+END_IF;
+
+CASE etScannerCtrl OF
+
+	ET_COGNEX_ScannerCtrl_eWaitExecute:
+		bCmdAborted := FALSE;			(* Command not aborted *)
+		bBusy := FALSE;                 (* Program not busy *)
+		bError := FALSE;                (* Program not error *)
+
+		IF rtAutoExe.Q
+		   OR rtHandExe.Q
+		THEN
+			unWatchdog := 0;
+			bDone := FALSE;				(* Program done, in position *)
+			bBusy := TRUE;				(* Program busy *)
+			udnErrorNo := 0;            (* Error number *)
+		
+			unRepeatCount := 0;
+			tonRepeatTrigger(IN := FALSE, PT := T#0S);
+			
+			fbDatamanScanner.bExecute := FALSE;					(* Execute trigger *)
+			
+			IF fbDatamanScanner.bConnected   			(* Scanner enabled *)
+			THEN
+				etScannerCtrl := ET_COGNEX_ScannerCtrl_eTrigger;                              (* Next step *)
+
+			ELSE
+				fbDatamanScanner.bEnable := TRUE;		(* Enable scanner *)	
+			
+				etScannerCtrl := ET_COGNEX_ScannerCtrl_eConnect;			(* Next step *)
+
+			END_IF;
+		END_IF;
+
+	ET_COGNEX_ScannerCtrl_eConnect:
+		unWatchdog := unWatchdog + 1;
+	
+		fbDatamanScanner.bEnable := TRUE;			(* Enable scanner *)
+			
+		IF fbDatamanScanner.bConnected
+		THEN
+			unWatchdog := 0;
+		
+			etScannerCtrl := ET_COGNEX_ScannerCtrl_eTrigger;			(* Next step *)
+			
+		ELSIF fbDatamanScanner.bError
+		THEN
+			fbDatamanScanner.bEnable := FALSE;			(* Enable scanner *)
+		
+			udnErrorNo := 1;                                    (* Error number *)
+			
+			etScannerCtrl := ET_COGNEX_ScannerCtrl_eError;                              (* Next step *)
+		
+		ELSIF unWatchdog > unWatchdogMax
+		THEN
+			fbDatamanScanner.bEnable := FALSE;			(* Enable scanner *)
+
+			udnErrorNo := 99;                                    (* Error number *)
+
+			etScannerCtrl := ET_COGNEX_ScannerCtrl_eError;                              (* Next step *)
+		END_IF;
+	
+	ET_COGNEX_ScannerCtrl_eTrigger:
+		//unWatchdog := unWatchdog + 1;
+	
+		tonRepeatTrigger(IN := TRUE);
+		
+		fbDatamanScanner.bExecute := tonRepeatTrigger.Q;					(* Execute trigger *)
+		fbDatamanScanner.sSndMsg := 'TRIGGER ON';			(* Send message *)
+				
+		IF fbDatamanScanner.fbConnection.bSndBusy              	(* Data sended. *) 
+		   AND fbDatamanScanner.fbConnection.bSndSocketBusy
+		THEN
+			fbDatamanScanner.bExecute := FALSE;				(* Execute trigger *)
+
+			tonRepeatTrigger(IN := FALSE, PT := tRepeatTrigger);
+			
+			unRepeatCount := unRepeatCount + 1;
+			unWatchdog := 0;
+
+			etScannerCtrl := ET_COGNEX_ScannerCtrl_eGetData;                              (* Next step *)
+
+		ELSIF fbDatamanScanner.fbConnection.bError					(* Error by sending. *)
+		THEN
+			fbDatamanScanner.bExecute := FALSE;				(* Execute trigger *)
+
+			tonRepeatTrigger(IN := FALSE, PT := tRepeatTrigger);
+			
+			udnErrorNo := 2;                                    (* Error number *)
+
+			etScannerCtrl := ET_COGNEX_ScannerCtrl_eError;                              (* Next step *)
+						
+		ELSIF unWatchdog > unWatchdogMax
+		THEN
+			fbDatamanScanner.bExecute := FALSE;				(* Execute trigger *)
+
+			tonRepeatTrigger(IN := FALSE, PT := tRepeatTrigger);
+			
+			udnErrorNo := 99;                                    (* Error number *)
+
+			etScannerCtrl := ET_COGNEX_ScannerCtrl_eError;                              (* Next step *)
+		END_IF
+					
+	ET_COGNEX_ScannerCtrl_eGetData:
+		//unWatchdog := unWatchdog + 1;
+				
+		IF fbDatamanScanner.fbConnection.bRcvBusy            		(* Data receiveing. *)
+		   AND NOT fbDatamanScanner.fbConnection.bSndSocketBusy           (* Data sended. *)
+		   AND NOT fbDatamanScanner.fbConnection.bError				(* No error by sending. *)
+		THEN
+			unWatchdog := 0;
+
+			etScannerCtrl := ET_COGNEX_ScannerCtrl_eChkData;                              (* Next step *)
+
+		ELSIF fbDatamanScanner.fbConnection.bError					(* Error by sending. *)
+		THEN
+			fbDatamanScanner.bExecute := FALSE;				(* Execute trigger *)
+
+			udnErrorNo := 2;                                    (* Error number *)
+
+			etScannerCtrl := ET_COGNEX_ScannerCtrl_eError;                              (* Next step *)
+						
+		ELSIF unWatchdog > unWatchdogMax
+		THEN
+			fbDatamanScanner.bExecute := FALSE;				(* Execute trigger *)
+
+			udnErrorNo := 99;                                    (* Error number *)
+
+			etScannerCtrl := ET_COGNEX_ScannerCtrl_eError;                              (* Next step *)
+		END_IF;
+
+		
+	ET_COGNEX_ScannerCtrl_eChkData:
+		//unWatchdog := unWatchdog + 1;
+		
+		fbDatamanScanner.bExecute := FALSE;				(* Execute trigger *)
+		
+		IF fbDatamanScanner.fbConnection.bRcvDataValid             	(* Data receive. *)
+		   AND NOT fbDatamanScanner.fbConnection.bRcvBusy
+		THEN	
+			FOR nIdx := 1 TO GVL_TCPIP.RECEIVE_MESSAGE_MAX
+			DO 
+				nPosOfChar := FIND(fbDatamanScanner.arsRcvMsg[nIdx], CONCAT(INT_TO_STRING(nIdx),sCodeIdentChar));
+				IF  nPosOfChar > 0
+				THEN
+					arsRcvMsg[nIdx] := DELETE(fbDatamanScanner.arsRcvMsg[nIdx], nPosOfChar + 1, 1);
+				ELSE
+					arsRcvMsg[nIdx] := CONCAT(sNoCodeDesc,'No valid data received');
+				END_IF
+			END_FOR
+							
+			IF (arbCodePresent[1] AND arsRcvMsg[1] = sNoCodeDesc)
+			    OR (arbCodePresent[2] AND arsRcvMsg[2] = sNoCodeDesc)
+			THEN
+				IF unRepeatCount < unRepeatTrigger
+				THEN
+					unWatchdog := 0;
+					
+					etScannerCtrl := ET_COGNEX_ScannerCtrl_eTrigger;                              (* Next step *)
+				ELSE
+					unWatchdog := 0;	
+					
+					etScannerCtrl := ET_COGNEX_ScannerCtrl_eDone;                              (* Next step *)
+				END_IF				
+			ELSE
+				unWatchdog := 0;	
+			
+				etScannerCtrl := ET_COGNEX_ScannerCtrl_eDone;                              (* Next step *)
+			END_IF
+
+		ELSIF fbDatamanScanner.fbConnection.bNoDataRcv            	(* No data receive. *)
+			  AND NOT fbDatamanScanner.fbConnection.bRcvBusy
+		THEN
+			FOR nIdx := 1 TO GVL_TCPIP.RECEIVE_MESSAGE_MAX
+			DO 
+				arsRcvMsg[nIdx] := CONCAT(sNoCodeDesc,'No data received');
+			END_FOR
+				
+			IF unRepeatCount < unRepeatTrigger
+			THEN
+				unWatchdog := 0;
+					
+				etScannerCtrl := ET_COGNEX_ScannerCtrl_eTrigger;                              (* Next step *)
+			ELSE
+				unWatchdog := 0;	
+			
+				etScannerCtrl := ET_COGNEX_ScannerCtrl_eDone;                              (* Next step *)
+			END_IF			
+		
+		ELSIF fbDatamanScanner.fbConnection.bError					(* Error by receiving. *)
+		THEN
+			fbDatamanScanner.bExecute := FALSE;				(* Execute trigger *)
+
+			udnErrorNo := 3;                                    (* Error number *)
+
+			etScannerCtrl := ET_COGNEX_ScannerCtrl_eError;                              (* Next step *)
+						
+		ELSIF unWatchdog > unWatchdogMax
+		THEN
+			fbDatamanScanner.bExecute := FALSE;				(* Execute trigger *)
+
+			udnErrorNo := 99;                                    (* Error number *)
+
+			etScannerCtrl := ET_COGNEX_ScannerCtrl_eError;                              (* Next step *)
+		END_IF;
+			
+	ET_COGNEX_ScannerCtrl_eAbort:
+		bCmdAborted := TRUE;			(* Command aborted *)
+		bDone := FALSE;					(* Program done, in position *)
+		
+		etScannerCtrl := ET_COGNEX_ScannerCtrl_eNotExecute;			(* Next step *)
+
+	ET_COGNEX_ScannerCtrl_eDone:
+		unWatchdog := 0;
+		bDone := TRUE;			(* Program done, in position *)
+		bBusy := FALSE;			(* Program not busy *)
+
+		etScannerCtrl := ET_COGNEX_ScannerCtrl_eNotExecute;            (* Next step *)
+
+	ET_COGNEX_ScannerCtrl_eError:
+		unWatchdog := 0;
+		bDone := FALSE;			(* Program done, in position *)
+		bError := TRUE;			(* Program error *)
+		bBusy := FALSE;			(* Program not busy *)
+		
+        etScannerCtrl := ET_COGNEX_ScannerCtrl_eNotExecute;			(*Next step *)
+
+	ET_COGNEX_ScannerCtrl_eNotExecute:
+		IF NOT bHandExe
+		   AND NOT bAutoExe
+		THEN
+			unWatchdog := 0;
+
+			bDone := FALSE;					(* Program done, in position *)
+			bCmdAborted := FALSE;			(* Command not aborted *)
+			bBusy := FALSE;                 (* Program not busy *)
+			bError := FALSE;                (* Program not error *)
+
+			etScannerCtrl := ET_COGNEX_ScannerCtrl_eWaitExecute;			(* Next step *)
+
+		END_IF;
+END_CASE;]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_Scanner">
+      <LineId Id="68" Count="0" />
+      <LineId Id="251" Count="0" />
+      <LineId Id="630" Count="0" />
+      <LineId Id="676" Count="0" />
+      <LineId Id="606" Count="0" />
+      <LineId Id="425" Count="1" />
+      <LineId Id="423" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Scanner.A_ScannerAlarm">
+      <LineId Id="4" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Scanner.A_ScannerController">
+      <LineId Id="2" Count="6" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="9" Count="3" />
+      <LineId Id="1" Count="0" />
+      <LineId Id="13" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Scanner.A_ScannerTrigger">
+      <LineId Id="339" Count="0" />
+      <LineId Id="2" Count="8" />
+      <LineId Id="340" Count="0" />
+      <LineId Id="11" Count="11" />
+      <LineId Id="357" Count="1" />
+      <LineId Id="341" Count="0" />
+      <LineId Id="25" Count="4" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="231" Count="1" />
+      <LineId Id="348" Count="0" />
+      <LineId Id="229" Count="1" />
+      <LineId Id="32" Count="40" />
+      <LineId Id="216" Count="1" />
+      <LineId Id="349" Count="1" />
+      <LineId Id="269" Count="0" />
+      <LineId Id="74" Count="2" />
+      <LineId Id="260" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="277" Count="0" />
+      <LineId Id="351" Count="0" />
+      <LineId Id="278" Count="0" />
+      <LineId Id="352" Count="0" />
+      <LineId Id="275" Count="0" />
+      <LineId Id="78" Count="6" />
+      <LineId Id="353" Count="0" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="354" Count="0" />
+      <LineId Id="86" Count="6" />
+      <LineId Id="355" Count="0" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="356" Count="0" />
+      <LineId Id="94" Count="8" />
+      <LineId Id="218" Count="0" />
+      <LineId Id="103" Count="26" />
+      <LineId Id="274" Count="0" />
+      <LineId Id="273" Count="0" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="261" Count="0" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="311" Count="8" />
+      <LineId Id="310" Count="0" />
+      <LineId Id="309" Count="0" />
+      <LineId Id="279" Count="0" />
+      <LineId Id="301" Count="0" />
+      <LineId Id="298" Count="0" />
+      <LineId Id="304" Count="1" />
+      <LineId Id="327" Count="0" />
+      <LineId Id="326" Count="0" />
+      <LineId Id="306" Count="1" />
+      <LineId Id="328" Count="1" />
+      <LineId Id="308" Count="0" />
+      <LineId Id="300" Count="0" />
+      <LineId Id="302" Count="0" />
+      <LineId Id="331" Count="1" />
+      <LineId Id="303" Count="0" />
+      <LineId Id="299" Count="0" />
+      <LineId Id="280" Count="0" />
+      <LineId Id="222" Count="0" />
+      <LineId Id="262" Count="0" />
+      <LineId Id="223" Count="0" />
+      <LineId Id="361" Count="1" />
+      <LineId Id="366" Count="0" />
+      <LineId Id="360" Count="0" />
+      <LineId Id="359" Count="0" />
+      <LineId Id="225" Count="0" />
+      <LineId Id="235" Count="0" />
+      <LineId Id="335" Count="0" />
+      <LineId Id="334" Count="0" />
+      <LineId Id="238" Count="0" />
+      <LineId Id="240" Count="0" />
+      <LineId Id="336" Count="1" />
+      <LineId Id="239" Count="0" />
+      <LineId Id="236" Count="0" />
+      <LineId Id="254" Count="0" />
+      <LineId Id="136" Count="16" />
+      <LineId Id="182" Count="22" />
+      <LineId Id="342" Count="0" />
+      <LineId Id="205" Count="10" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_SpindlePDSXLA170ClutchStatus_1" Id="{d42fe704-b742-41f1-9549-bb078ead4d02}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_SpindlePDSXLA170ClutchStatus_1 : ET_SpindleClutchStatus
+(*
+
+The function used to get clutch status.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			18.05.2018
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	stClutchStatus					:ST_SpindlePDSXLA170ClutchStatus; (* Clutch status  *)
+END_VAR
+VAR
+	(* Variables *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF stClutchStatus.bRotatingS1 AND (stClutchStatus.bToolNotClampedS2 OR NOT stClutchStatus.bToolPresentS3 OR NOT stClutchStatus.bClutchInBaseS4)			(* Clutch rotating and not closed *)
+THEN
+	F_SpindlePDSXLA170ClutchStatus := ET_SpindleClutchStatus_RotatingNoClosed;
+
+ELSIF NOT stClutchStatus.bToolNotClampedS2 AND NOT stClutchStatus.bToolPresentS3 AND stClutchStatus.bClutchInBaseS4			(* Clutch is closed without tool *)
+THEN
+	F_SpindlePDSXLA170ClutchStatus := ET_SpindleClutchStatus_ClosedWithoutTool;
+
+ELSIF NOT stClutchStatus.bToolNotClampedS2 AND stClutchStatus.bToolPresentS3 AND stClutchStatus.bClutchInBaseS4				(* Clutch is closed with tool *)
+THEN
+	F_SpindlePDSXLA170ClutchStatus := ET_SpindleClutchStatus_ClosedWithTool;
+
+ELSIF stClutchStatus.bToolNotClampedS2 AND NOT stClutchStatus.bToolPresentS3 AND NOT stClutchStatus.bClutchInBaseS4		(* Clutch is opened *)
+THEN
+	F_SpindlePDSXLA170ClutchStatus := ET_SpindleClutchStatus_Opened;
+
+ELSE
+	F_SpindlePDSXLA170ClutchStatus := ET_SpindleClutchStatus_NoDefined;
+END_IF
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="F_SpindlePDSXLA170ClutchStatus_1">
+      <LineId Id="22" Count="22" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

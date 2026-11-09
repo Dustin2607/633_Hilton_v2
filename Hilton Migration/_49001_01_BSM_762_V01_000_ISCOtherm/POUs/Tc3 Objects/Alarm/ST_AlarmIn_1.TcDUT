@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_AlarmIn_1" Id="{563a15ec-8ccd-48fa-a7e3-94ba98881856}">
+    <Declaration><![CDATA[TYPE ST_AlarmIn_1 :
+STRUCT
+	arbFatalError		:ARRAY[0..nALARM_MAX_NO] OF ST_AlarmProperties;
+	arbError			:ARRAY[0..nALARM_MAX_NO] OF ST_AlarmProperties;
+	arbWarning			:ARRAY[0..nALARM_MAX_NO] OF ST_AlarmProperties;
+	arbMessage			:ARRAY[0..nALARM_MAX_NO] OF ST_AlarmProperties;
+	arbHint				:ARRAY[0..nALARM_MAX_NO] OF ST_AlarmProperties;
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

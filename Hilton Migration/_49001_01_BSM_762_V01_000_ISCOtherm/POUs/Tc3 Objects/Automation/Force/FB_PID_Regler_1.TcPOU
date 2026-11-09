@@ -1,0 +1,208 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_PID_Regler_1" Id="{ca4c016d-e311-4961-b861-ab3a2793171f}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_PID_Regler_1
+VAR_INPUT
+	fSoll: REAL;
+	fIst: REAL;
+	fMax: REAL := 1.0;
+	fMin: REAL := 0.0;
+	fD_Max: REAL := 1.0;
+	fD_Min: REAL := 0.0;
+	fKr: REAL;
+	fTn: REAL;
+	fTv: REAL;
+	fTau: REAL;
+	fOff: REAL;
+	fTab: REAL;
+	fState: REAL;
+	fIntegral: REAL;
+END_VAR
+VAR_OUTPUT
+	bRegOK: BOOL := FALSE;
+	fAus: REAL;
+END_VAR
+VAR
+	fU: REAL;
+	fU_Max: REAL;
+	fU_Min: REAL;
+	fU_Pd: ARRAY[1..2] OF REAL;
+	fU_I: ARRAY[1..2] OF REAL;
+	fE: ARRAY[1..4] OF REAL;
+	fP: ARRAY[1..2] OF REAL;
+	fQ: ARRAY[1..6] OF REAL;
+	cMax: REAL;
+	cMin: REAL;
+	cD_Max: REAL := 1.0;
+	cD_Min: REAL := 0.0;
+	cKr: REAL;
+	cTn: REAL;
+	cTv: REAL;
+	cTau: REAL;
+	cOff: REAL;
+	cTab: REAL;
+	cState: REAL;
+	cIntegral: REAL;
+	nReg_Typ: INT;
+	RegMaxAbweichung: REAL := 20.0;
+END_VAR
+VAR CONSTANT
+	D_REG_I :INT:= 0;
+	D_REG_M :INT := 1;
+	D_REG_V :INT := 2;
+	D_REG :INT := 4;
+	I_REG :INT:= 8;
+	P_REG :INT := 16;
+	PD_I_REG :INT := 20;
+	PD_M_REG :INT := 21;
+	PD_V_REG :INT := 22;
+	PI_REG :INT := 24;
+	PID_I_REG :INT := 28;
+	PID_M_REG :INT := 29;
+	PID_V_REG :INT := 30;
+	SET_MIN_MAX :INT := 101;
+	ReglerResetState :INT := 102;
+	ReglerInit :INT := 103;
+	ReglerSet :INT := 104;
+	ReglerCalculate :INT := 105;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF (cMax  <>  fMax) 	THEN cMax := fMax; 	END_IF		 (*  Maximum                            *)
+IF (cMin  <>  fMin) 	THEN cMin := fMin; 	END_IF	 	 (*  Minimum                            *)
+IF (cD_Max  <>  fD_Max) 	THEN cD_Max := fD_Max; 	END_IF	 	 (*  Maximum der Änderung               *)
+IF (cD_Min  <>  fD_Min) 		THEN cD_Min := fD_Min; 	END_IF	 	  (*  Minimum der Änderung               *)
+
+IF ( (cState <>  fState) OR (cIntegral <>  fIntegral)) 		THEN
+	cState := fState;
+	cIntegral := fIntegral;
+	fU := cState;
+	fU_I[1] := fU_I[2] := cIntegral;
+	fU_Pd[2] := fU_Pd[1] := 0.0;
+	fE[4]		:=	fE[3]	:=	fE[2]		:=	fE[1]		:= 	0.0;
+END_IF	 	  (*   Änderung Integral      *)
+
+IF (  (cKr  <>  fKr) OR (cTn <> fTn) OR (cTv <> fTv) OR (cTau <> fTau)  OR (cOff <> fOff) OR (cTab <> fTab) ) THEN
+
+     		cKr  := fKr;      (*  Verstärkung                       *)
+		cTn  := fTn;      (*  Nachstellzeit                     *)
+    		cTv  := fTv;      (*  Vorstellzeit                      *)
+    		cTau := fTau;    (*  Tau                               *)
+    		cOff := fOff;     (*  Offset                            *)
+
+    		cTab := fTab;
+
+(*    ReglerResetState(0.0, 0.0, p_r);           (*** Rücksetzen der Reglergrößen ***) *)
+                  IF ( cTn = 0.0 ) THEN 	fU := fU_I[1] := fU_I[2] := 	fU_Pd[2] := fU_Pd[1] := 	fE[4]		:=	fE[3]	:=	fE[2]		:=	fE[1]		:= 	0.0;  END_IF
+
+    		fP[1] := fP[2] := 0;         (*** Rücksetzen der Parameter ***)
+    		fQ[1] := fQ[2] := fQ[3] := fQ[4] := fQ[5] := fQ[6] := 0;
+
+    		nReg_Typ := 0;
+    		IF ( cKr > 0 ) THEN nReg_Typ := nReg_Typ + P_REG;   END_IF  (*** Ermittlung der Reglertyps***)
+    		IF ( cTn > 0 ) THEN nReg_Typ := nReg_Typ +  I_REG; END_IF
+    		IF ( cTv > 0 ) THEN
+      			 nReg_Typ := nReg_Typ + D_REG;
+       			IF (cTau = 0) THEN nReg_Typ := nReg_Typ + D_REG_I;  END_IF(*** Ideale Differenz ***)
+       			IF (cTau <  0) THEN nReg_Typ := nReg_Typ + D_REG_M;  END_IF(*** Gemittelte Differenz ***)
+       			IF (cTau >  0) THEN nReg_Typ := nReg_Typ + D_REG_V;  END_IF(*** Verzögerte Differenz ***)
+    		END_IF
+
+		CASE nReg_Typ OF                  (*** Berechnung der Parameter ***)
+		    P_REG :        (*** P-Regler ***********************************)
+		       fQ[1] := cKr;
+		    PI_REG :       (*** PI-Regler **********************************)
+		       fQ[1] := cKr;
+
+		       fQ[6] := cKr*cTab/cTn;
+		    PD_I_REG :     (*** PD-Regler,      ideale Differenz  **********)
+		       fQ[1] :=  cKr*cTv/cTab + cKr;
+		       fQ[2] := -cKr*cTv/cTab;
+		    PD_M_REG :     (*** PD-Regler,  gemittelte Differenz  **********)
+		       fQ[1] :=  cKr*(1.0+cTv/6.0/cTab);
+		       fQ[2] :=  cKr*cTv/2.0/cTab;
+		       fQ[3] := -fQ[2];
+		       fQ[4] :=  fQ[3]/3;
+		    PD_V_REG :     (*** PD-Regler,  verzögerte Differenz  **********)
+		       fP[1] := EXP(-cTab/cTau);
+
+		       fQ[1] :=   cKr + cKr*cTv/cTau;
+		       fQ[2] :=  -cKr - cKr*cTv/cTau + cKr*(1.0 - fP[1]) ;
+		    PID_I_REG :    (*** PID-Regler,     ideale Differenz  **********)
+		       fQ[1] :=  cKr*cTv/cTab + cKr;
+		       fQ[2] := -cKr*cTv/cTab;
+
+		       fQ[6] :=  cKr*cTab/cTn;
+		    PID_M_REG :    (*** PID-Regler, gemittelte Differenz  **********)
+		       fQ[1] :=  cKr*cTv/6/cTab + cKr;
+		       fQ[2] :=  cKr*cTv/2/cTab;
+		       fQ[3] := -fQ[2];
+		       fQ[4] :=  fQ[3]/3;
+
+		       fQ[6] :=  cKr*cTab/cTn;
+		    PID_V_REG :    (*** PID-Regler, verzögerte Differenz  **********)
+		       fP[1] :=  EXP(-cTab/cTau);
+
+		       fQ[1] :=   cKr + cKr*cTv/cTau;
+		       fQ[2] :=  -cKr - cKr*cTv/cTau + cKr*(1.0 - fP[1]) ;
+
+		       fQ[6] :=  cKr*cTab/cTn;
+		    I_REG :        (*** I-Regler ***********************************)
+		       fQ[6] :=  cTab/cTn;
+
+		END_CASE
+END_IF
+
+
+	fE[1] := fSoll - fIst;       	   (*** Regelabweichung ***)
+	IF ( ABS(fE[1]) < RegMaxAbweichung ) THEN bRegOK := TRUE; ELSE bRegOK := FALSE; END_IF
+
+	fU_Max := fU + cD_Max;   (*** dynamische Stellbegrenzung ***)
+	IF (fU_Max > cMax) THEN fU_Max := cMax; END_IF
+
+    	fU_Min := fU + cD_Min;
+	IF (fU_Min < cMIN) THEN fU_Min := cMIN; END_IF
+			                                          (*** Reglergleichung füR P- und D-Anteil***)
+    	fU := fU_Pd[1] := fP[1]*fU_Pd[2] +   fQ[1]*fE[1] + fQ[2]*fE[2] +  fQ[3]*fE[3] + fQ[4]*fE[4];
+
+                                          (*** Reglergleichung mit altem I-Anteil***)
+    	fU := fU + fU_I[2];
+                                      (*** Begrenzung der Stellgröße ***)
+    	IF ( fU  > (fU_Max - cOff) ) THEN
+             fU := fU_Max - cOff;
+	ELSE
+         		IF ( fU < (fU_Min - cOff) ) THEN
+                		fU := fU_Min - cOff;
+	         ELSE
+                                          (*** Reglergleichung für I-Anteil***)
+			fU_I[1] := fU_I[2] + fQ[6]*fE[1];
+                                          (*** Gesamt-Reglergleichung ***)
+			fU := (fU_Pd[1] + fU_I[1]);
+
+                                      (*** Begrenzung der Stellgröße ***)
+			IF ( fU > (fU_Max - cOff) ) THEN
+                   		fU := fU_Max - cOff;
+	                   	fU_I[1]  := fU - fU_Pd[1];
+			ELSE
+         		          	IF ( fU < (fU_Min - cOff) ) THEN
+                   			fU := fU_Min - cOff;
+		         		         fU_I[1]  := fU - fU_Pd[1];
+	         		      	END_IF
+         		   	END_IF
+         		END_IF
+    	END_IF                                          (*** Umspeichern der Regelgrößen ***)
+	fU_Pd[2] := fU_Pd[1];
+	fU_I[2]  := fU_i[1];
+
+	fE[4] := fE[3];
+	fE[3] := fE[2];
+	fE[2] := fE[1];
+
+                                        (*** Übergabe der Stellgröße ***)
+	fAus := fU + cOff;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_PID_Regler_1">
+      <LineId Id="65" Count="132" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

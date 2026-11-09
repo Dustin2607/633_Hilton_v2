@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_ModuloDistance_1" Id="{9c263579-22cd-46e7-9b99-41c59a30ba45}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_ModuloDistance_1 : DINT
+(*
+Function for calculate modulo distance.
+
+Constructor: 	Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			20.01.2014
+Version:		1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+
+VAR_INPUT
+	dwCurrentValue			:DWORD;
+	dwOldValue				:DWORD;
+	dwModuloValue			:DWORD;
+END_VAR
+VAR
+	dwPosDistance			:DWORD;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+F_ModuloDistance := DWORD_TO_DINT(dwCurrentValue - dwOldValue);
+
+IF dwModuloValue <> 0
+THEN
+	dwPosDistance := F_ModDW(dwCurrentValue - dwOldValue, dwModuloValue);
+	
+	F_ModuloDistance := DWORD_TO_DINT(dwPosDistance);
+	
+	IF dwPosDistance > (dwModuloValue / 2) 
+	THEN
+		F_ModuloDistance := -DWORD_TO_DINT(dwModuloValue - dwPosDistance);
+	END_IF
+	
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="F_ModuloDistance_1">
+      <LineId Id="23" Count="14" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

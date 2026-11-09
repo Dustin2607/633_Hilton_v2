@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_CfgAxisInExt3DGroup_1" Id="{8f7af668-11f4-460e-b37f-47a06e655205}">
+    <Declaration><![CDATA[TYPE ET_CfgAxisInExt3DGroup_1 :
+(
+	ET_CfgAxisInExt3DGrp_eWaitExecute := 0,
+	ET_CfgAxisInExt3DGrp_eReadExt3DAxisIds := 5,
+	ET_CfgAxisInExt3DGrp_eDone := 197,
+	ET_CfgAxisInExt3DGrp_eError := 198,
+	ET_CfgAxisInExt3DGrp_eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

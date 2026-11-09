@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_TRACE_State" Id="{7587ec48-0aba-4ff1-a859-179bae604209}">
+    <Declaration><![CDATA[TYPE ET_TRACE_State :
+(
+	ET_TRACE_State_eWaitExecute := 0,
+	ET_TRACE_State_eGetData,
+	ET_TRACE_State_eDataWrite,
+	ET_TRACE_State_eWfDataWrite,
+	ET_TRACE_State_eDone := 197,
+	ET_TRACE_State_eError := 198,
+	ET_TRACE_State_eNoExecute := 199
+);
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

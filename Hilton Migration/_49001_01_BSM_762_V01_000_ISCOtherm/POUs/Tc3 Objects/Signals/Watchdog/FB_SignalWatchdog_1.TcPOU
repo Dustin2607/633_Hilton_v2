@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_SignalWatchdog_1" Id="{6c7303a8-4ffa-428e-90a6-b0af372717c9}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_SignalWatchdog_1
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable					:BOOL;						(* Enable FB signal *)
+	bIn						:BOOL;						(* Input signal *)
+	tWatchdog				:TIME := t#0s;					(* Watchdog time *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bOut					:BOOL;						(* Output signal *)
+	bAlarm					:BOOL;						(* Alarm signal *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	tofWatchdog				:TOF;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	bOut := FALSE;
+	bAlarm := FALSE;                       (* Alarm active *)
+	
+	tofWatchdog(
+		IN := tofWatchdog.ET > t#0ms,
+	         PT := t#0ms
+	);
+	
+	tofWatchdog(IN := FALSE,
+	             PT := t#0ms);
+
+	RETURN;
+END_IF;
+
+tofWatchdog(					 (* Dealy input signal *)
+	IN := bIn,
+	PT := tWatchdog
+);
+
+bOut := tofWatchdog.Q;
+
+bAlarm := NOT tofWatchdog.Q;                       (* Set alarm *)]]></ST>
+    </Implementation>
+    <LineIds Name="FB_SignalWatchdog_1">
+      <LineId Id="26" Count="23" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

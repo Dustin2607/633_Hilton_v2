@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_YASKAWA_Power_1" Id="{206adf8d-75f1-400d-9fda-0288d0ce3c5b}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_YASKAWA_Power_1
+(*
+
+The function block used to enable drives for an yaskawa
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			20.06.2018
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;			(* Signal FB enable *)
+	bAutoHand					:BOOL;			(* Auto := TRUE, Hand := FALSE *)
+	bDrivesOn					:BOOL;			(* Enable the drives *)
+	bMoveOn					:BOOL;			(* Enable the move enable *)
+	lrOverride					:LREAL;			(* Velocity override in % for all motion commands. (0 <= Override <= 100.0) *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bStatus						:BOOL;			(* Status = TRUE indicates that the axis is ready for operation. *)
+	bError						:BOOL;			(* Error *)
+	udnErrorNo					:UDINT;			(* Error number *)
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	Yaskawa					:ST_YASKAWA_REF;				(* The YASKAWA_REF data type  is an interface between the PLC and the YASKAWA and contains axis information *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	tStatusDelay 					:TIME := t#300ms;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	tonStatusDelay				:TON;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+	Yaskawa.stPlcToYaskawa.bExternalServoOn := FALSE;                   		 (* Switch on *)
+	tonStatusDelay(IN := FALSE,
+				    PT := tStatusDelay);
+ELSE
+
+	IF NOT bDrivesOn
+	     OR Yaskawa.stYaskawaToPlc.bAlarmErrorOccured
+	THEN
+		Yaskawa.stPlcToYaskawa.bCallMasterJob := FALSE;
+		Yaskawa.stPlcToYaskawa.bExternalStart := FALSE;
+		Yaskawa.stPlcToYaskawa.bExternalHold := FALSE;
+		Yaskawa.stPlcToYaskawa.bExternalServoOn := FALSE;						 (* Switch on *)
+		Yaskawa.stPlcToYaskawa.bExternalServoOffEStop := TRUE;                   		 (* Switch off *)
+		Yaskawa.stPlcToYaskawa.bExternalServoOffHoldStop := FALSE;                   		 (* Switch off *)
+	ELSE
+		IF bAutoHand			(* Auto *)
+		THEN
+			IF bMoveOn
+			     AND Yaskawa.stYaskawaToPlc.bRemoteModeSelected
+			THEN
+				Yaskawa.stPlcToYaskawa.bExternalServoOn := TRUE;                   				 (* Switch on *)
+				Yaskawa.stPlcToYaskawa.bExternalServoOffEStop := FALSE;                   		 (* Switch off *)
+				Yaskawa.stPlcToYaskawa.bExternalServoOffHoldStop := FALSE;                   		 (* Switch off *)
+			ELSE
+				Yaskawa.stPlcToYaskawa.bExternalServoOn := FALSE;                   				(* Switch on *)
+				Yaskawa.stPlcToYaskawa.bExternalServoOffEStop := FALSE;                   		(* Switch off *)
+				Yaskawa.stPlcToYaskawa.bExternalServoOffHoldStop := TRUE;				(* Switch off *)
+			END_IF
+		ELSE				(* Manual *)
+			Yaskawa.stPlcToYaskawa.bCallMasterJob := FALSE;
+			Yaskawa.stPlcToYaskawa.bExternalStart := FALSE;
+			Yaskawa.stPlcToYaskawa.bExternalHold := FALSE;
+			Yaskawa.stPlcToYaskawa.bExternalServoOn := FALSE;						(* Switch on *)
+			Yaskawa.stPlcToYaskawa.bExternalServoOffEStop := FALSE;                   		(* Switch off *)
+			Yaskawa.stPlcToYaskawa.bExternalServoOffHoldStop := FALSE;				(* Switch off *)
+		END_IF
+	END_IF;
+END_IF;
+
+Yaskawa.stPlcToYaskawa.nOverride := LREAL_TO_INT(LIMIT(0,lrOverride,100));
+
+tonStatusDelay(IN := Yaskawa.stYaskawaToPlc.bServoIsOn,		(* Control enabled *)
+			   PT := tStatusDelay);
+bStatus := tonStatusDelay.Q;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_YASKAWA_Power_1">
+      <LineId Id="45" Count="46" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

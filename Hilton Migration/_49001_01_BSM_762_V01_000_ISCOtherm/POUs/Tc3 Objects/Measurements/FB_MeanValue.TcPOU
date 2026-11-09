@@ -1,0 +1,107 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_MeanValue" Id="{8e30639c-70f9-46ab-b3d1-d9017ceae5a2}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_MeanValue
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable					:BOOL;						(* Enable FB signal *)
+	bReset					:BOOL;						(* Reset measurement *)
+	bExecute				:BOOL;						(* Execute measurement *)
+	bAbort					:BOOL;						(* Abort measurement *)
+	lrSampleValue			:LREAL;						(* Sample measurement value *)
+	lrSampleValueMin		:LREAL;						(* Sample measurement value minimum *)
+	lrSampleValueMax		:LREAL;						(* Sample measurement value maximum *)
+	udnSampleTime			:UDINT := 100;				(* Sample time [ms] *)
+	udnSampleDeathStart		:UDINT;						(* Amount of death sample from start *)
+	tMaxTime				:TIME := T#1092M;			(* Maximum time *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	lrMeanValue				:LREAL;						(* Mean measurement value *)
+END_VAR
+VAR_IN_OUT
+
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	udnCounter				:UDINT;
+	lrTotalValue			:LREAL;						(* Total measurement value *)
+	bFirstTime				:BOOL;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbCycleTime					:FB_Timer;
+	
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	lrMeanValue := lrSampleValue;
+	bFirstTime := FALSE;
+	RETURN;
+END_IF;
+
+IF NOT bFirstTime
+THEN
+
+	bFirstTime := TRUE;
+END_IF;
+
+(* Measuring time of cycle *)
+fbCycleTime(
+	bEnable := TRUE,
+	bReset := bReset,
+	bStartStop := bExecute,
+	bStop := NOT bExecute OR bAbort,
+	tMaxTime := tMaxTime
+);
+
+IF fbCycleTime.bTimeStarted 
+THEN
+	IF fbCycleTime.stActTime.dwMiliSec >= udnSampleTime * udnCounter
+	THEN
+		IF (lrSampleValue > lrSampleValueMin
+			AND lrSampleValue < lrSampleValueMax)
+			OR lrSampleValueMin = lrSampleValueMax
+		THEN
+			udnCounter := udnCounter + 1;
+			
+			IF udnCounter > udnSampleDeathStart
+			THEN
+				lrTotalValue := lrTotalValue + lrSampleValue;		
+				lrMeanValue := lrTotalValue / UDINT_TO_LREAL(udnCounter - udnSampleDeathStart);
+			END_IF
+		END_IF		
+	END_IF
+ELSE
+	lrTotalValue := 0;
+	udnCounter := 0;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_MeanValue">
+      <LineId Id="39" Count="1" />
+      <LineId Id="47" Count="6" />
+      <LineId Id="56" Count="2" />
+      <LineId Id="176" Count="8" />
+      <LineId Id="187" Count="4" />
+      <LineId Id="302" Count="0" />
+      <LineId Id="308" Count="1" />
+      <LineId Id="303" Count="0" />
+      <LineId Id="321" Count="0" />
+      <LineId Id="325" Count="0" />
+      <LineId Id="313" Count="1" />
+      <LineId Id="316" Count="1" />
+      <LineId Id="315" Count="0" />
+      <LineId Id="304" Count="0" />
+      <LineId Id="201" Count="1" />
+      <LineId Id="264" Count="0" />
+      <LineId Id="203" Count="0" />
+      <LineId Id="174" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

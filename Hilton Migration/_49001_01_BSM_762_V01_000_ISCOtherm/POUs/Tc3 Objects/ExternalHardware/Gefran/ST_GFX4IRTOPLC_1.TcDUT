@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_GFX4IRTOPLC_1" Id="{7c4dc677-4cce-4ca8-aa52-90f74fee1174}">
+    <Declaration><![CDATA[(* Communikation structure from plc to gefran *)
+
+TYPE ST_GFX4IRTOPLC_1 :
+STRUCT
+	nProcessVariable			:INT;
+	wControllerStatus			:WORD;
+	nOutputPower				:INT;
+	wAmmeterInputOn				:WORD;
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

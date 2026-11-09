@@ -1,0 +1,187 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_ExtOval" Id="{23d530db-431d-4727-8509-5965e4c1fd85}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ExtOval
+(*
+
+The function block used to generate positions to mill oval shapes.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			01.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable							:BOOL;						(* Function block enable *)
+	bStart							:BOOL;						(* Execute start an external trajectory with rising edge *)
+	bStop							:BOOL;						(* Execute stop an external trajectory with rising edge *)
+	lrStartPosHorizontal				:LREAL;						(* Start position of horizontal axis [mm] *)
+	lrStartPosVertical					:LREAL;						(* Start position of vertical axis [mm] *)
+	lrOffsetPosHorizontal				:LREAL;						(* Offset position of horizontal axis [mm] *)
+	lrOffsetPosVertical					:LREAL;						(* Offset position of vertical axis [mm] *)
+	lrFactor							:LREAL;						(* Oval factor *)
+	unPosWindow					:UINT := 2;					(* Position window [mm] *)
+	bTakeHorMovePara				:BOOL;						(* Take move parameters from 1- horizontal axis, 0 - vertical axis *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	lrNewPos						:LREAL;						(* New position [mm] *)
+	lrNewVelo						:LREAL;						(* New velocity [mm/s] *)
+	lrNewAcc						:LREAL;						(* New acceleration [mm/s^2] *)
+	bEnabled  						:BOOL;						(* Calculate positon is enabled *)
+	bDone							:BOOL;						(* Command done *)
+	bBusy							:BOOL;						(* Command busy *)
+	bError							:BOOL;						(* Command error  *)
+	udnErrorNo						:UDINT;						(* Error number *)
+	sErrorMsg						:STRING; 					(* Error message *)
+END_VAR
+VAR_IN_OUT
+	AxisHorizontal					:AXIS_REF;					(* The AXIS_REF data type  is an interface between the PLC and the NC and contains axis information *)
+	AxisVertical						:AXIS_REF;					(* The AXIS_REF data type  is an interface between the PLC and the NC and contains axis information *)
+END_VAR
+VAR
+	(* Instances / Instanzen *)
+
+	(* Enumerator  *)
+	etCalcExtOvalState				:ET_CalcExtOvalState;								(* Current state *)
+
+	(* General flags / Allgemeine Variablen *)
+	lrExtStartPosHorizontal				:LREAL;
+	lrExtStartPosVertical				:LREAL;
+	lrExtFactor						:LREAL;						(* Oval factor *)
+	lrCacheNewPos					:LREAL;						(* Cache new position [mm] *)
+	bFirstTime						:BOOL;
+
+END_VAR
+VAR CONSTANT
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+
+	lrNewPos := SEL(bTakeHorMovePara, AxisVertical.NcToPlc.SetPos, AxisHorizontal.NcToPlc.SetPos);
+	lrNewVelo := SEL(bTakeHorMovePara, AxisVertical.NcToPlc.SetVelo, AxisHorizontal.NcToPlc.SetVelo);
+	lrNewAcc := SEL(bTakeHorMovePara, AxisVertical.NcToPlc.SetAcc, AxisHorizontal.NcToPlc.SetAcc);
+
+	bDone := FALSE;					(* Command done *)
+	bBusy := FALSE;					(* Command busy *)
+	bError := FALSE;					(* Command error  *)
+	udnErrorNo := 0;					(* Error number *)
+	sErrorMsg := ''; 					(* Error message *)
+
+	bEnabled := bStart;
+
+	bFirstTime := FALSE;
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+	bEnabled := FALSE;
+
+	etCalcExtOvalState := ET_CalcExtOvalState_eWaitExecute;
+
+	bFirstTime := TRUE;
+END_IF
+
+CASE etCalcExtOvalState
+OF
+	ET_CalcExtOvalState_eWaitExecute:
+		IF bStop
+		THEN
+			bEnabled := FALSE;
+
+			bDone := FALSE;						(* Command done *)
+			bBusy := TRUE;						(* Command busy *)
+			bError := FALSE;						(* Command error  *)
+			udnErrorNo := 0;						(* Error number *)
+			sErrorMsg := ''; 						(* Error message *)
+
+			etCalcExtOvalState := ET_CalcExtOvalState_eDone;
+
+		ELSIF bStart
+		THEN
+			bDone := FALSE;						(* Command done *)
+			bBusy := TRUE;						(* Command busy *)
+			bError := FALSE;						(* Command error  *)
+			udnErrorNo := 0;						(* Error number *)
+			sErrorMsg := ''; 						(* Error message *)
+
+			etCalcExtOvalState := ET_CalcExtOvalState_eCalcOvalPos;
+
+		END_IF
+
+	ET_CalcExtOvalState_eCalcOvalPos:
+		bEnabled := TRUE;
+
+		lrExtStartPosHorizontal := lrStartPosHorizontal;
+		lrExtStartPosVertical := lrStartPosVertical;
+		lrExtFactor := 1 - lrFactor;
+
+		etCalcExtOvalState := ET_CalcExtOvalState_eDone;
+
+	ET_CalcExtOvalState_eError:
+		bBusy := FALSE;						(* Command busy *)
+		bError := TRUE;						(* Command error  *)
+
+		etCalcExtOvalState := ET_CalcExtOvalState_eNoExecute;
+
+	ET_CalcExtOvalState_eDone:
+		bDone := TRUE;						(* Command done *)
+		bBusy := FALSE;						(* Command busy *)
+
+		etCalcExtOvalState := ET_CalcExtOvalState_eNoExecute;
+
+	ET_CalcExtOvalState_eNoExecute:
+		IF NOT bStart
+		     AND NOT bStop
+		THEN
+			(* Reset outputs *)
+			bDone := FALSE;						(* Command done *)
+			bBusy := FALSE;						(* Command busy *)
+			bError := FALSE;						(* Command error  *)
+
+			etCalcExtOvalState := ET_CalcExtOvalState_eWaitExecute;
+		END_IF
+END_CASE
+
+(* The function block used to generate positions to mill oval shapes. *)
+IF bEnabled
+THEN
+	lrNewPos := F_CalcOval(
+		lrStartPosHorizontal := lrExtStartPosHorizontal,
+		lrStartPosVertical := lrExtStartPosVertical,
+		lrCurrentPosHorizontal := AxisHorizontal.NcToPlc.SetPos,
+		lrCurrentPosVertical := AxisVertical.NcToPlc.SetPos,
+		lrFactor := lrExtFactor
+	);
+
+	lrCacheNewPos := lrNewPos;
+	lrNewVelo := AxisHorizontal.NcToPlc.SetVelo;
+	lrNewAcc := AxisHorizontal.NcToPlc.SetAcc;
+
+ELSE
+
+	lrNewPos := SEL(bTakeHorMovePara, AxisVertical.NcToPlc.SetPos, AxisHorizontal.NcToPlc.SetPos);
+	lrNewVelo := SEL(bTakeHorMovePara, AxisVertical.NcToPlc.SetVelo, AxisHorizontal.NcToPlc.SetVelo);
+	lrNewAcc := SEL(bTakeHorMovePara, AxisVertical.NcToPlc.SetAcc, AxisHorizontal.NcToPlc.SetAcc);
+	bError := FALSE;								(* Command error  *)
+	udnErrorNo :=  0;								(* Error number *)
+	sErrorMsg := ''; 								(* Error message *)
+END_IF
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ExtOval">
+      <LineId Id="60" Count="12" />
+      <LineId Id="238" Count="1" />
+      <LineId Id="75" Count="99" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

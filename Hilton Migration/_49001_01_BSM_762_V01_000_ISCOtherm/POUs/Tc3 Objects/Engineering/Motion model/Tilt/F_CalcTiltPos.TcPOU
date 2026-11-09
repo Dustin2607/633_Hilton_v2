@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_CalcTiltPos" Id="{e72154e0-e345-414e-8779-a1b45d189fca}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_CalcTiltPos : LREAL
+(*
+
+The function used to calculate a trajectory of half circle dependent on angle of inclination axis and radius circle
+Calculated position of axis is on output mapped.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			01.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	lrStartPosHorizontal				:LREAL;						(* Start position of horizontal axis *)
+	lrStartPosVertical					:LREAL;						(* Start position of vertical axis *)
+	lrCurrentPosHorizontal				:LREAL;						(* Current position of horizontal axis *)
+	lrCurrentPosVertical				:LREAL;						(* Current position of vertical axis *)
+	lrOffsetPosHorizontal				:LREAL;						(* Offset position of horizontal axis [mm] *)
+	lrOffsetPosVertical					:LREAL;						(* Offset position of vertical axis [mm] *)
+	lrAngle							:LREAL;						(* Angle in degrees *)
+END_VAR
+VAR
+	(* Variables *)
+	lrAlfa							:LREAL;						(* Angle of inclination *)
+	lrDelta							:LREAL;						(* Distance z = f(x)*)
+	lrCosAlfa							:LREAL;						(* Cosine of alfa *)
+	lrRadian							:LREAL;						(* radian of tilt angle *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+lrRadian := lrAngle*(pi/180.0);
+
+IF lrAngle <> 0.0
+THEN
+	lrDelta := ABS((lrCurrentPosHorizontal+lrOffsetPosHorizontal) - (lrStartPosHorizontal+lrOffsetPosHorizontal))  * TAN(lrRadian);
+
+	F_CalcTiltPos :=  lrCurrentPosVertical + lrOffsetPosVertical - lrDelta;
+ELSE
+	F_CalcTiltPos := lrCurrentPosVertical + lrOffsetPosVertical;
+END_IF
+]]></ST>
+    </Implementation>
+    <LineIds Name="F_CalcTiltPos">
+      <LineId Id="32" Count="11" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

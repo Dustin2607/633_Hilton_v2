@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_ToggleBit_1" Id="{8cb6c5f0-2ad0-4158-afdd-bbdc38960c9a}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ToggleBit_1
+VAR_INPUT
+(*+++++ TxPDO Toggle +++++*)
+	bToggle: BOOL;
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR
+(*+++++ Toggle Bit Bridge +++++*)
+	rtToggle: R_TRIG;
+	ftToggle: F_TRIG;
+	rCounter: REAL;
+	rLastCounter: REAL;
+(*+++++ Evaluation of Toggle Bits +++++*)
+	tonTimer: TON;
+	rToggleBitCounter: REAL;
+	rUpdateTime: REAL;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*This function block evaluates the Toggle Bit of the device.
+Within a period of 10 seconds, is is checked how often the Toggle Bit changes it's value. *)
+
+rtToggle(CLK:= bToggle);
+ftToggle(CLK:= bToggle);
+
+tonTimer.IN:= TRUE;
+tonTimer.PT:= t#10000ms;
+
+IF NOT tonTimer.Q THEN
+	IF rtToggle.Q THEN
+		rCounter:= rCounter+1;
+	END_IF
+	IF ftToggle.Q THEN
+		rCounter:= rCounter+1;
+	END_IF
+
+	rToggleBitCounter:= rCounter;
+ELSE
+	rLastCounter:= rCounter;
+	rUpdateTime:= SEL(rLastCounter = 0, 1 / (rLastCounter/10), 0); 		(*Update Time is calculated*)
+	rCounter:= 0;
+	tonTimer.IN:= FALSE;
+END_IF
+
+tonTimer();]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ToggleBit_1">
+      <LineId Id="18" Count="25" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

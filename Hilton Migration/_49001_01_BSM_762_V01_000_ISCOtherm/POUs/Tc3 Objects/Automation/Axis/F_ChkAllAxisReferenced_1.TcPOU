@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_ChkAllAxisReferenced_1" Id="{1a9fc7fe-2793-480e-8b23-ec978bba7759}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_ChkAllAxisReferenced_1 : BOOL
+(*
+
+The function used to detect if all axis referenced.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			23.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;						(* Signal FB enable *)
+	bReferencedAxis1				:BOOL;						(* Controller referenced *)
+	bReferencedAxis2				:BOOL;						(* Controller referenced *)
+	bReferencedAxis3				:BOOL;						(* Controller referenced *)
+	bReferencedAxis4				:BOOL;						(* Controller referenced *)
+	bReferencedAxis5				:BOOL;						(* Controller referenced *)
+	bReferencedAxis6				:BOOL;						(* Controller referenced *)
+	bReferencedAxis7				:BOOL;						(* Controller referenced *)
+	bReferencedAxis8				:BOOL;						(* Controller referenced *)
+	bReferencedAxis9				:BOOL;						(* Controller referenced *)
+	bReferencedAxis10			:BOOL;						(* Controller referenced *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable                          (* Signal FB enable *)
+THEN
+	F_ChkAllAxisReferenced := FALSE;
+
+	RETURN;
+END_IF;
+
+F_ChkAllAxisReferenced := bReferencedAxis1
+						AND bReferencedAxis2
+						AND bReferencedAxis3
+						AND bReferencedAxis4
+						AND bReferencedAxis5
+						AND bReferencedAxis6
+						AND bReferencedAxis7
+						AND bReferencedAxis8
+						AND bReferencedAxis9
+						AND bReferencedAxis10;]]></ST>
+    </Implementation>
+    <LineIds Name="F_ChkAllAxisReferenced_1">
+      <LineId Id="40" Count="17" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

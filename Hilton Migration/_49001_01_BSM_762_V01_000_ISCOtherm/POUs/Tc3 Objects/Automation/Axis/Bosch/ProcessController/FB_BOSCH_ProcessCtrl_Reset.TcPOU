@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_BOSCH_ProcessCtrl_Reset" Id="{0015d727-b5ca-441f-88eb-66c0b96b6322}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_BOSCH_ProcessCtrl_Reset
+(*
+
+The function block used to reset Bosch process controller. 
+
+Constructor:		Patryk Panylo
+Company:			E. Riexinger GmbH
+Date:				05.02.2019
+Version:			1.00
+
+Date:				Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bExecute					:BOOL;			(* Execut the function block *)
+	pProcessCtrl				:POINTER TO ST_FWS_MLDPCx_PRE_01Vxx_MPxx;	
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bDone						:BOOL;			(* Program done *)
+	bBusy						:BOOL;			(* Program busy *)
+	bError						:BOOL;			(* Error *)
+	udnErrorNo					:UDINT;			(* Error number *)
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtExecute					:R_TRIG;
+	
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+rtExecute(CLK := bExecute);       (* Error *)
+
+IF rtExecute.Q
+THEN
+	bBusy := TRUE;
+	pProcessCtrl^.bFaultReset := TRUE;
+
+ELSIF NOT pProcessCtrl^.bError       (* Error *)
+THEN
+	bBusy := FALSE;
+	pProcessCtrl^.bFaultReset := FALSE;
+END_IF;
+
+bDone := bExecute
+		 AND NOT bBusy
+		 AND NOT pProcessCtrl^.bError;        (* Error *)]]></ST>
+    </Implementation>
+    <LineIds Name="FB_BOSCH_ProcessCtrl_Reset">
+      <LineId Id="52" Count="15" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

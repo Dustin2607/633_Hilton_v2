@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_LRealRound_1" Id="{978a6536-f327-4782-8b38-40ea9c0d7547}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_LRealRound_1 : LREAL
+(*
+
+The function used to round lreal value.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			04.08.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	lrReal							:LREAL; 						(*  Input variable *)
+	usiPrecision						:USINT := 2; 					(* The number of digits after the decimal point depends on the requested precision *)
+END_VAR
+VAR
+	(* Variables *)
+	lrFraction							:LREAL;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* Round real value with precision *)
+lrFraction := FRAC(ABS(lrReal)) * EXPT(10, usiPrecision + 1); 							(* The fraction of the value *)
+
+IF LMOD(lrFraction, 10) < 5
+THEN
+	lrFraction := lrFraction - LMOD(lrFraction, 10) ;										(* Round down *)
+ELSE
+	lrFraction := lrFraction + (10 - LMOD(lrFraction, 10));									(* Round up and check the integral increment *)
+END_IF;
+
+IF lrReal  < 0																		(* Check the digit of the value *)
+THEN
+	F_LRealRound	 := LTRUNC(lrReal) - (lrFraction / EXPT(10, usiPrecision + 1));
+ELSE
+	F_LRealRound	 := LTRUNC(lrReal) + (lrFraction / EXPT(10, usiPrecision + 1));
+END_IF
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="F_LRealRound_1">
+      <LineId Id="23" Count="18" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_PLC02TOPLC01" Id="{b7f6681a-0629-4a22-a701-9324b5758ae6}">
+    <Declaration><![CDATA[TYPE ST_PLC02TOPLC01 :
+STRUCT
+	bSafetyCompleted					:BOOL;				(* Safety completed *)
+	bManualCompleted					:BOOL;				(* Manual completed *)
+	bHomeCompleted						:BOOL;				(* Home completed / Grundsrellung ausgeführt *)
+	bAutoCompleted						:BOOL;				(* Automatic completed / Automatik beendet *)
+	bMaintenanceCompleted				:BOOL;				(* Maintenance completed / Maintenance beendet*)
+	bFatalError							:BOOL;				(* Fatal error in group / Fataler Fehler in der Gruppe *)
+	bError								:BOOL;				(* Error in group / Fehler in der Gruppe *)
+	bWarning							:BOOL;				(* Warning in group / Warnung  in der Gruppe *)
+	bMessage							:BOOL;				(* Message in group / Meldung in der Gruppe *)
+	bHint								:BOOL;				(* Hint in group / Hint in der Gruppe *)
+	bAllDoorsClosed						:BOOL;				(* All doors closed / Alle Türen geschlossen *)
+	bAllDoorsClosedLocked				:BOOL;				(* All doors closed and locked / Alle Türen geschlossen und verrrigelt *)
+	
+	bHazard								:BOOL;				(* Hazard *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

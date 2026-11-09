@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="F_ConvertSetPosResiduals_1" Id="{0be419f6-cd04-4383-a08b-9522e8ee76cd}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_ConvertSetPosResiduals_1 : DINT
+(*
+Convert technical units to inc
+
+*)
+VAR_INPUT
+
+	(* Enummerations *)
+	
+	(* Variables *)
+	lrPos								:LREAL;
+
+	(* References *)
+
+	(* Interfaces *)
+	pAxis								:POINTER TO ST_AXIS_REF_V2;
+
+	(* Instances *)
+
+END_VAR
+VAR
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF pAxis^.stScaling.etScalingMethod = ET_ScalingMethod_eSMRotary
+THEN
+
+	F_ConvertSetPosResiduals := LREAL_TO_DINT(lrPos);
+
+ELSIF pAxis^.stScaling.etScalingMethod = ET_ScalingMethod_eSMLinear
+THEN
+
+	F_ConvertSetPosResiduals := LREAL_TO_DINT((lrPos + pAxis^.stPosition.lrOffsetPos) * pAxis^.stScaling.lrScaleFactor);
+
+END_IF
+
+IF pAxis^.stScaling.dwModuloValue > 0
+THEN
+	F_ConvertSetPosResiduals := DWORD_TO_DINT(DINT_TO_DWORD(F_ConvertSetPosResiduals) MOD pAxis^.stScaling.dwModuloValue);
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="F_ConvertSetPosResiduals_1">
+      <LineId Id="22" Count="16" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

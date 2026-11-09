@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Counter_1" Id="{eefb440a-7801-4691-b38c-d9306f4a88cb}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Counter_1
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable					:BOOL;						(* Enable FB signal *)
+	bExecute				:BOOL;						(* Execute signal *)
+	bReset					:BOOL;						(* Reset counter *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bOverflow				:BOOL;						(* Overflow *)
+	bAlarm					:BOOL;						(* Alarm signal *)
+END_VAR
+VAR_IN_OUT
+	udnCounter				:UDINT;						(* Counter *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtCount					:R_TRIG;
+	rtReset					:R_TRIG;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+
+    RETURN;
+END_IF;
+
+rtReset(CLK := bReset);                    (* Reset rising edge *)
+
+IF rtReset.Q                               		(* Count reset came *)
+THEN
+	udnCounter := 0;
+END_IF;
+
+
+rtCount(CLK := bExecute);                   		 (* Trigger rising edge *)
+
+IF rtCount.Q                              		  		 (* Count trigger came *)
+THEN
+	IF udnCounter = 16#FFFFFFFF		 (* Detect counter overflow *)
+	THEN
+	    	bOverflow := TRUE;                  	 (* Counter overflow *)
+	ELSE
+	   	 bOverflow := FALSE;              	   	 (* Not counter overflow *)
+	END_IF;
+	
+	udnCounter := udnCounter + 1;            	 (* Increment counter *)
+END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Counter_1">
+      <LineId Id="30" Count="26" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

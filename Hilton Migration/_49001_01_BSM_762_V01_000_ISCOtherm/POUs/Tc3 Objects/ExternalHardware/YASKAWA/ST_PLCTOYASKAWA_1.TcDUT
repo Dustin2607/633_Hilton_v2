@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_PLCTOYASKAWA_1" Id="{af4d0684-118e-45d1-bd37-5e175cf46c28}">
+    <Declaration><![CDATA[TYPE ST_PLCTOYASKAWA_1 :
+STRUCT
+	bExternalStart							:BOOL;					(* If the I/O interface is active, this input can be set to start or continue a program. Only the rising edge of the signal is valid *)
+	bExternalServoOn						:BOOL;					(* Switch on the robot drives. When these signals are on, the servo power supply is cut off and the manipulator stops. *)
+	bCallMasterJob						:BOOL;					(* These signals have the same function as the cycle select key on the playback panel. Use the signals when desiring to change cycle specifications from the outside. *)
+	bAlarmReset							:BOOL;					(* This signal clears alarms or errors when there is a minor failure,system alarm, user alarm, or user error. *)
+	bReducedSpeed						:BOOL;					(* Reduced speed *)
+	bExternalHold						:BOOL;					(* External hold *)
+
+	bExternalServoOffHoldStop				:BOOL;					(* External servo off hold stop. *)
+	bExternalServoOffEStop				:BOOL;					(* External servo off E-Stop *)
+
+	nOverride							:INT;					(* Override *)
+
+	bMachineError						:BOOL;					(* IN  - Machine has fault. *)
+	bMachineRunning						:BOOL;					(* IN  - Machine running. *)
+	bAxisClampingPosA					:BOOL;					(* IN  - Axis clamping in positon A. *)
+	bAxisClampingPosB					:BOOL;					(* IN  - Axis clamping in positon B. *)
+
+	bSpindlePresent						:BOOL;					(* IN  - Spindle present. *)
+	bFurrowingPresent					:BOOL;					(* IN  - Furrowing present. *)
+
+	bHeadSocketAirOpened				:BOOL;					(* IN  - Head socket air opened. *)
+	bHeadSocketAirClosed				:BOOL;					(* IN  - Head socket air closed. *)
+	bHeadUnDocked						:BOOL;					(* IN  - Head undocked. *)
+	bHeadDocked						:BOOL;					(* IN  - Head docked. *)
+	bGetHeadNestDone					:BOOL;					(* IN  - Get head nest done. *)
+
+	bToolStorageHoodOpened				:BOOL;					(* IN  - Tool storage hood opened. *)
+	bToolStorageHoodClosed				:BOOL;					(* IN  - Tool storage hood closed. *)
+	bGetToolNestDone					:BOOL;					(* IN  - Get tool nest done. *)
+
+	bSpindleBitClutchOpened				:BOOL;					(* IN  - Spindle bit clutch opened. *)
+	bSpindleBitClutchClosed				:BOOL;					(* IN  - Spindle bit clutch closed. *)
+	bSpindleBitClutchClosedWithTool		:BOOL;					(* IN  - Spindle bit clutch with tool closed. *)
+	bSpindleNotMoving					:BOOL;					(* IN  - Spindle not moving. *)
+	bSpindleReady						:BOOL;					(* IN  - Spindle ready. *)
+	bSpindlePurgeOpened					:BOOL;					(* IN -  Spindle purge opened. *)
+	bSpindlePurgeClosed					:BOOL;					(* IN -  Spindle purge closed. *)
+
+	bFurrowingHeadUnlocked				:BOOL;					(* IN  - Furrowing head unlocked. *)
+	bFurrowingHeadLocked				:BOOL;					(* IN  - Furrowing head locked. *)
+	bFurrowingHeadCutterOpened			:BOOL;					(* IN  - Furrowing head cutter opened. *)
+	bFurrowingHeadCutterClosed			:BOOL;					(* IN  - Furrowing head cutter closed. *)
+
+	bPipeMeasurementEn					:BOOL;					(* IN - Enable pipe measurement. *)
+	bTouchProbeStatus1					:BOOL;					(* IN  - Touch probe status 1. *)
+
+	unToolNestAct						:UINT;					(* IN  - Current tool nest number *)
+	unToolNestPrv						:UINT;					(* IN  - Previous tool nest number *)
+	unHeadNestAct						:UINT;					(* IN  - Current head nest number *)
+	unHeadNestPrv						:UINT;					(* IN  - Previous head nest number *)
+
+	nPrgNo								:INT;					(* IN  - Automatic program number  *)
+
+	unPipeDiameter						:UINT;					(* IN - Pipe diameter *)
+	unPipeLengthA						:UINT;					(* IN - Pipe length A *)
+	unPipeLengthB						:UINT;					(* IN - Pipe length B *)
+
+	unOverride							:UINT;					(* IN - Override *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

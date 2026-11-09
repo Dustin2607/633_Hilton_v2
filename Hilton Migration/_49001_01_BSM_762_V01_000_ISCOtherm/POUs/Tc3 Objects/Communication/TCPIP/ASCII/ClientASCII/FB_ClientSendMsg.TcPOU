@@ -1,0 +1,107 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_ClientSendMsg" Id="{09c10c50-b482-4c06-b5b0-de3cc0e5479b}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ClientSendMsg
+(*
+
+The function block used to send cyclic message strings.
+
+Basie on orginal Beckhoffs example.
+
+Constructor: 	Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			18.02.2019
+Version:		1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;					(* Enable FB *)
+	bExecute					:BOOL := FALSE;			(* Send string *)
+	sMsg						:T_MaxString := '';
+	sPrefix						:STRING := '';			(* Message prefix *)
+	sSuffix						:STRING := '';			(* Message suffix *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bErrorSndFifoOverflow 		:BOOL := FALSE;			(* Send fifo overflow error *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	fbTx 						:FB_FrameFifo;			(* Tx fifo *)
+	fbLoggger					:FB_LogFifo;			(* Logger message fifo *)
+	arsMsg						:ARRAY[1..GVL_TCPIP.RECEIVE_MESSAGE_MAX] OF T_MaxString;			(* Get message of received an ASCII typable string data. *)
+END_VAR
+VAR
+	(* Enummerations *)
+	
+	(* Variables *)
+	
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	rtExecute					:R_TRIG;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+	RETURN;
+END_IF
+
+rtExecute(CLK := bExecute);
+bErrorSndFifoOverflow := FALSE;
+IF rtExecute.Q
+THEN
+	(* Put string to the tx fifo *)
+	fbTx.AddTail(			
+		sPut := CONCAT(CONCAT(sPrefix, sMsg), sSuffix)
+	);
+	
+	MEMSET(ADR(arsMsg),0,SIZEOF(arsMsg));												(* Clear Rx frame *)
+	
+	IF NOT fbTx.bOk (* TX fifo overflow => log error *)
+	THEN
+		fbLoggger.Error(
+			sMessage := 'FB_FrameFifo(sender)', 
+			nErrID := GVL_TCPIP.ERROR_SENDFIFO_OVERFLOW 
+		);
+		
+		bErrorSndFifoOverflow := TRUE;
+	END_IF
+
+END_IF
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ClientSendMsg">
+      <LineId Id="932" Count="0" />
+      <LineId Id="929" Count="0" />
+      <LineId Id="933" Count="0" />
+      <LineId Id="935" Count="0" />
+      <LineId Id="934" Count="0" />
+      <LineId Id="838" Count="0" />
+      <LineId Id="831" Count="0" />
+      <LineId Id="885" Count="0" />
+      <LineId Id="819" Count="0" />
+      <LineId Id="836" Count="0" />
+      <LineId Id="825" Count="1" />
+      <LineId Id="842" Count="1" />
+      <LineId Id="845" Count="0" />
+      <LineId Id="982" Count="1" />
+      <LineId Id="827" Count="0" />
+      <LineId Id="847" Count="0" />
+      <LineId Id="828" Count="0" />
+      <LineId Id="849" Count="2" />
+      <LineId Id="858" Count="1" />
+      <LineId Id="829" Count="1" />
+      <LineId Id="256" Count="0" />
+      <LineId Id="254" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

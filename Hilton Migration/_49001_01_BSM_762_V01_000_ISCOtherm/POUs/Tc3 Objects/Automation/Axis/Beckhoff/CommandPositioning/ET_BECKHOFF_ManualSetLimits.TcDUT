@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_BECKHOFF_ManualSetLimits" Id="{5eeafc3b-820f-41bc-b67a-0e4c53e08105}">
+    <Declaration><![CDATA[TYPE ET_BECKHOFF_ManualSetLimits :
+(
+	eWaitExecute := 0,
+	eSetVelo := 5,
+	eWfSetVelo := 10,
+	eDone := 197,
+	eError := 198,
+	eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

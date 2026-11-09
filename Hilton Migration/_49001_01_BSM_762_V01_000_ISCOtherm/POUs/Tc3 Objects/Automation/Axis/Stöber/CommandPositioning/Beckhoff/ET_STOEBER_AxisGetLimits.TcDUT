@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_STOEBER_AxisGetLimits" Id="{009aa72b-f10b-4967-963d-2a4361583b28}">
+    <Declaration><![CDATA[TYPE ET_STOEBER_AxisGetLimits :
+(
+	eWaitExecute := 0,
+	eReadVeloMax,
+	eWfReadVeloMax,
+	eReadAccMax,
+	eWfReadAccMax,
+	eReadDecMax,
+	eWfReadDecMax,
+	eReadJerkMax,
+	eWfReadJerkMax,
+	eReadSoftLimitMax,
+	eWfReadSoftLimitMax,
+	eReadSoftLimitMin,
+	eWfReadSoftLimitMin,
+	eDone := 197,
+	eError := 198,
+	eNoExecute := 199
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

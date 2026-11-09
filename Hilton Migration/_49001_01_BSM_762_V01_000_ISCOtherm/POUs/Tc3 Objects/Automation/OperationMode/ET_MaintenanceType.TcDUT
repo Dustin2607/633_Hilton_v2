@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_MaintenanceType" Id="{10ebbdcb-1146-42d1-92dc-d78cebeb04cb}">
+    <Declaration><![CDATA[(* Machine operating mode *)
+TYPE ET_MaintenanceType :
+(
+	ET_MaintenanceType_eUndefined := 0,
+	ET_MaintenanceType_eCooling := 1,
+	ET_MaintenanceType_eCGK := 2
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

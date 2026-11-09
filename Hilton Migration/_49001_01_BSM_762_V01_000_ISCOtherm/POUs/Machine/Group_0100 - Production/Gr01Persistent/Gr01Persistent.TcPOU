@@ -104,9 +104,9 @@ bgGr01WritePersistent := rOverride <> stgGr01HMI.stHMITOPLC.rOverride
 					OR lrAxisAngleHomeVelo <> stgGr01HMI.stHMITOPLC.lrAxisAngleHomeVelo
 					OR lrAxisAngleAutoVelo <> stgGr01HMI.stHMITOPLC.lrAxisAngleAutoVelo
 
-					OR rSawbandManualSpeed <> stgGr01HMI.stHMITOPLC.rSawbandManualSpeed
-					OR rSawbandAutoSpeed <> stgGr01HMI.stHMITOPLC.rSawbandAutoSpeed
-					OR rSawingOverride <> stgGr01HMI.stHMITOPLC.rSawingOverride
+					OR rSawbandManualSpeed <> stgGr01HMI.stHMITOPLC.lrSawbandManualSpeed
+					OR rSawbandAutoSpeed <> stgGr01HMI.stHMITOPLC.lrSawbandAutoSpeed
+					OR rSawingOverride <> stgGr01HMI.stHMITOPLC.lrSawingOverride
 					OR rPipeDiameter <> stgGr01HMI.stHMITOPLC.rPipeDiameter
 					OR lrActSawingAngle <> stgGr01HMI.stHMITOPLC.lrActSawingAngle
 					OR lrSafetyDistance <> stgGr01HMI.stHMITOPLC.lrSafetyDistance
@@ -136,9 +136,9 @@ lrAxisAngleManualVelo := stgGr01HMI.stHMITOPLC.lrAxisAngleManualVelo;
 lrAxisAngleHomeVelo := stgGr01HMI.stHMITOPLC.lrAxisAngleHomeVelo;
 lrAxisAngleAutoVelo := stgGr01HMI.stHMITOPLC.lrAxisAngleAutoVelo;;
 
-rSawbandManualSpeed := stgGr01HMI.stHMITOPLC.rSawbandManualSpeed;
-rSawbandAutoSpeed := stgGr01HMI.stHMITOPLC.rSawbandAutoSpeed;
-rSawingOverride := stgGr01HMI.stHMITOPLC.rSawingOverride;
+rSawbandManualSpeed := stgGr01HMI.stHMITOPLC.lrSawbandManualSpeed;
+rSawbandAutoSpeed := stgGr01HMI.stHMITOPLC.lrSawbandAutoSpeed;
+rSawingOverride := stgGr01HMI.stHMITOPLC.lrSawingOverride;
 rPipeDiameter := stgGr01HMI.stHMITOPLC.rPipeDiameter;
 lrActSawingAngle := stgGr01HMI.stHMITOPLC.lrActSawingAngle;
 lrSafetyDistance := stgGr01HMI.stHMITOPLC.lrSafetyDistance;
@@ -175,9 +175,9 @@ stgGr01HMI.stHMITOPLC.lrAxisAngleManualVelo := lrAxisAngleManualVelo;
 stgGr01HMI.stHMITOPLC.lrAxisAngleHomeVelo := lrAxisAngleHomeVelo;
 stgGr01HMI.stHMITOPLC.lrAxisAngleAutoVelo := lrAxisAngleAutoVelo;
 
-stgGr01HMI.stHMITOPLC.rSawbandManualSpeed := rSawbandManualSpeed;
-stgGr01HMI.stHMITOPLC.rSawbandAutoSpeed := rSawbandAutoSpeed;
-stgGr01HMI.stHMITOPLC.rSawingOverride := rSawingOverride;
+stgGr01HMI.stHMITOPLC.lrSawbandManualSpeed := rSawbandManualSpeed;
+stgGr01HMI.stHMITOPLC.lrSawbandAutoSpeed := rSawbandAutoSpeed;
+stgGr01HMI.stHMITOPLC.lrSawingOverride := rSawingOverride;
 stgGr01HMI.stHMITOPLC.rPipeDiameter := rPipeDiameter;
 stgGr01HMI.stHMITOPLC.lrActSawingAngle := lrActSawingAngle;
 stgGr01HMI.stHMITOPLC.lrSafetyDistance := lrSafetyDistance;

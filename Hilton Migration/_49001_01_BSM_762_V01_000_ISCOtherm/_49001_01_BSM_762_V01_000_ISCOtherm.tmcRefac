@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Refactors>
+  <Renames>
+    <RenamedType>
+      <Type guid="711d95d2-6373-4eae-8588-7dc9c1194d97">FB_STOEBERSI6SC6CIA402_REF_1</Type>
+      <From>FB_STOEBERSI6SC6CIA402_REF_1</From>
+      <To>FB_STOEBERSI6SC6CIA402_REF</To>
+    </RenamedType>
+    <RenamedSymbol>
+      <Type guid="65ba3cf3-b9a3-4ff6-9767-55310a3753a9">ST_Gr01HMITOPLC</Type>
+      <From>rSawbandManualSpeed</From>
+      <To>lrSawbandManualSpeed</To>
+    </RenamedSymbol>
+    <RenamedSymbol>
+      <Type guid="65ba3cf3-b9a3-4ff6-9767-55310a3753a9">ST_Gr01HMITOPLC</Type>
+      <From>rSawbandAutoSpeed</From>
+      <To>lrSawbandAutoSpeed</To>
+    </RenamedSymbol>
+    <RenamedSymbol>
+      <Type guid="65ba3cf3-b9a3-4ff6-9767-55310a3753a9">ST_Gr01HMITOPLC</Type>
+      <From>rSawingOverride</From>
+      <To>lrSawingOverride</To>
+    </RenamedSymbol>
+    <RenamedType>
+      <Type guid="50231bcc-44b4-48b0-920b-1a8fa73d85a6">ET_STOEBER_AXISGETLIMITS</Type>
+      <From>ET_STOEBER_AxisGetLimits</From>
+      <To>ET_STOEBER_AxisGetLimitsTc2</To>
+    </RenamedType>
+    <RenamedType>
+      <Type guid="1c90c5a2-724f-4550-bd5c-b763c21af256">ET_STOEBER_AXISSETLIMITS</Type>
+      <From>ET_STOEBER_AxisSetLimits</From>
+      <To>ET_STOEBER_AxisSetLimitsTc2</To>
+    </RenamedType>
+    <RenamedType>
+      <Type guid="009aa72b-f10b-4967-963d-2a4361583b28">ET_STOEBER_AXISGETLIMITS_1</Type>
+      <From>ET_STOEBER_AxisGetLimits_1</From>
+      <To>ET_STOEBER_AxisGetLimits</To>
+    </RenamedType>
+    <RenamedType>
+      <Type guid="2e1e7aa7-10d8-46a4-9d17-dd70544d6181">ET_STOEBER_AXISSETLIMITS_1</Type>
+      <From>ET_STOEBER_AxisSetLimits_1</From>
+      <To>ET_STOEBER_AxisSetLimits</To>
+    </RenamedType>
+  </Renames>
+</Refactors>

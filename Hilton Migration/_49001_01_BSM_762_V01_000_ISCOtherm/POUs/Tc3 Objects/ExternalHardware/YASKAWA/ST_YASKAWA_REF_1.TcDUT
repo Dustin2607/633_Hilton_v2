@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_YASKAWA_REF_1" Id="{75dca1bd-78d0-491c-9dc4-a1ee03cc5249}">
+    <Declaration><![CDATA[TYPE ST_YASKAWA_REF_1 : FB_YASKAWA_REF;
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

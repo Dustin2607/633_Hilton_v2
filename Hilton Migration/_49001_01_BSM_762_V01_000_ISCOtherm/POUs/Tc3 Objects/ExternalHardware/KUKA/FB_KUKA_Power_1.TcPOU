@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_KUKA_Power_1" Id="{25878430-04e6-4ad8-aea3-61628474e6db}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_KUKA_Power_1
+(*
+
+The function block used to enable drives for an kuka
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			18.11.2016
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;			(* Signal FB enable *)
+	bNoEStop					:BOOL;			(* No ermergency Stop / Keine Notaus *)
+	bDrivesOn					:BOOL;			(* Enable the drives *)
+	lrOverride					:LREAL;			(* Velocity override in % for all motion commands. (0 <= Override <= 100.0) *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bStatus						:BOOL;			(* Status = TRUE indicates that the axis is ready for operation. *)
+	bError						:BOOL;			(* Error *)
+	udnErrorNo					:UDINT;			(* Error number *)
+	sErrorMsg					:STRING; 		(* Error message *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	Kuka						:ST_KUKA_REF;
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	tStatusDelay 					:TIME := t#300ms;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	tonStatusDelay				:TON;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable
+THEN
+	Kuka.PlcToKuka.bDrivesOn := FALSE;                   		 (* Switch on *)
+	Kuka.PlcToKuka.bDrivesOff := FALSE;                   		 (* Switch off *)
+	tonStatusDelay(IN := FALSE,
+				    PT := tStatusDelay);
+ELSE
+
+	IF NOT bNoEStop
+	     OR NOT bDrivesOn
+	THEN
+		Kuka.PlcToKuka.bDrivesOn := FALSE;                   		 (* Switch on *)
+		Kuka.PlcToKuka.bDrivesOff := FALSE;                   		 (* Switch off *)
+	ELSE
+		IF Kuka.KukaToPlc.bIOActConf
+		     AND NOT Kuka.KukaToPlc.bPeriRdy
+		THEN
+			Kuka.PlcToKuka.bDrivesOn := TRUE;                   	(* Switch on *)
+			Kuka.PlcToKuka.bDrivesOff := TRUE;                   		 (* Switch off *)
+		ELSE
+			Kuka.PlcToKuka.bDrivesOn := FALSE;                   	 (* Switch on *)
+			Kuka.PlcToKuka.bDrivesOff := TRUE;                   		 (* Switch off *)
+		END_IF
+	END_IF;
+
+END_IF;
+
+Kuka.PlcToKuka.nOverride := LREAL_TO_INT(LIMIT(0,lrOverride,100));
+
+tonStatusDelay(IN := Kuka.KukaToPlc.bPeriRdy,		(* Control enabled *)
+			   PT := tStatusDelay);
+bStatus := tonStatusDelay.Q;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_KUKA_Power_1">
+      <LineId Id="44" Count="32" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

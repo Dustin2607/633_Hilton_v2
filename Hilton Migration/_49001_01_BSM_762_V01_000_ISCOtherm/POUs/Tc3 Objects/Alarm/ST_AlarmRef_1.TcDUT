@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_AlarmRef_1" Id="{1e23baa9-8b90-45a9-a3fe-ef9bd12e25c4}">
+    <Declaration><![CDATA[TYPE ST_AlarmRef_1 :
+STRUCT
+	stControl				:ST_AlarmOut;
+	stManual				:ST_AlarmOut;
+	//stMaintenance			:ST_AlarmOut;
+	stHome					:ST_AlarmOut;
+	stAuto					:ST_AlarmOut;
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

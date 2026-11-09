@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <GVL Name="GVL_FB_Alarm_1" Id="{8a1e918b-6b31-4d84-8bda-70f158d33bb8}">
+    <Declaration><![CDATA[{attribute 'Tc2GvlVarNames'}
+VAR_GLOBAL CONSTANT
+	nALARM_MAX_NO			:INT := 63;			(* Maximal number of alarms *)
+END_VAR
+]]></Declaration>
+  </GVL>
+</TcPlcObject>

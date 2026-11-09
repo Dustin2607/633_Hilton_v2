@@ -1,0 +1,486 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_EL3351CoE_1" Id="{ef2fc9a4-8cd3-4f30-bbdf-83ae82c014c9}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_EL3351CoE_1
+VAR CONSTANT
+(*+++++ Upper Array Bounds +++++*)
+	CnMaxIdxRead: UDINT:= 7;
+	CnMaxIdxWrite: UDINT:= 7;
+END_VAR
+VAR_INPUT
+(*+++++ AMS Address for CoE Com +++++*)
+	stAdsAddr: ST_AmsAddr;
+END_VAR
+VAR_OUTPUT
+(*+++++ General Status for this Function Block +++++*)
+	bCoeAccessOK: BOOL;
+	sStatusCoeAccess:STRING(255);
+END_VAR
+VAR
+(*+++++ AMS Address for CoE Com +++++*)
+	sAdsAddr: STRING(30);
+(*+++++ CoE Index +++++*)
+	bCoeBusy: BOOL;
+(*+++++ Init +++++*)
+	bInitDoneRead: BOOL;
+	bFirstDoneRead: BOOL;
+	bInitDoneWrite: BOOL;
+	bFirstDoneWrite: BOOL;
+	bInitDoneBufLen: BOOL;
+	bInitDoneAmsNetId: BOOL;
+	rtInit:R_TRIG;
+(*+++++ CoE Read +++++*)
+	fbCoeReadNew: FB_EcCoESdoRead;
+	astCoeRead: ARRAY[1..CnMaxIdxRead] OF ST_EL3351CoeReadData;
+	nIdxRead: UINT;
+	nStepRead: UINT;
+	nDummyData: UDINT;
+	bCoeReadBusy: BOOL;
+	fbRTrig_CoeUpdate: R_TRIG;
+	bButtonWriteCoeParameters: BOOL;
+	bStartRead: BOOL :=TRUE;
+	fbRTrig_StartRead: R_TRIG;
+	bBusyRead: BOOL;
+	bErrorRead: BOOL;
+	nReadErrorId: UDINT;
+(*+++++ CoE Reset+++++ *)
+	fbCoeReset: FB_EcCoESdoWrite;
+	nDummyReset: DWORD:= 16#64616F6C;
+	fbRTrig_CoeDefault: R_TRIG;
+	bButtonSetCoeParametersToDefault: BOOL;
+	nStepReset: UDINT;
+	bBusyReset: BOOL;
+	bErrorReset: BOOL;
+	nResetErrorId: UDINT;
+(*+++++ CoE Write +++++*)
+	fbCoeWriteNew: FB_EcCoESdoWrite;
+	astCoeWrite: ARRAY[1..CnMaxIdxWrite] OF ST_EL3351CoeWriteData;
+	nIdxWrite: UINT;
+	nStepWrite: UINT;
+	dwDummyDataWrite: DWORD;
+	bCoeWriteBusy:BOOL;
+	fbRTrig_CoeWrite: R_TRIG;
+	bButtonReadCoeParameters: BOOL;
+	stCoe: ST_EL3351CoeInfo;
+	bStartWrite: BOOL;
+	rtStartWrite: R_TRIG;
+	bBusyWrite: BOOL;
+	bErrorWrite: BOOL;
+	nWriteErrorId: UDINT;
+(*+++++ Converted Variables +++++*)
+	dwEnableUserScaleConv: DWORD;
+	dwEnableUserScaleConvIndex8010: DWORD;
+	udiEnableUserScaleConv: UDINT;
+	udiEnableUserScaleConvIndex8010: UDINT;
+(*+++++ Variables to show some parameters in the visu +++++*)
+	sFilterSettings: STRING;
+	sStatus: STRING;
+	dwWriteColour: DWORD:= 16#00F0F0F0;
+(*+++++ Error +++++*)
+	bCoeError: BOOL;
+
+(*+++++ Miscellaneous +++++*)
+	sAdsErrorTextRead: STRING(255);
+	sAdsErrorTextWrite: STRING(255);
+	sAdsErrorTextReset: STRING(255);
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[a_Init_AmsNetId();
+a_Init_Read();
+a_Init_Write();
+
+(*Assigning String Values to the possbile inputs of the Subindex 'Filter settings' that can be made in the visu.
+Pleas note that the Parameter 'Filter Settings' of Index 8000:15 also applys to Index 8010:15. *)
+CASE astCoeRead[4].nData OF
+	0:	sFilterSettings := '50 Hz';
+	1:	sFilterSettings := '60 Hz';
+	2:	sFilterSettings := '100 Hz';
+	3:	sFilterSettings := '500 Hz';
+	4:	sFilterSettings := '1 kHz';
+	5:	sFilterSettings := '2 kHz';
+	6:	sFilterSettings := '3.75 kHz';
+	7:	sFilterSettings := '7.5 kHz';
+	8:	sFilterSettings := '15 kHz';
+	9:	sFilterSettings := '30 kHz';
+	10:	sFilterSettings := '5 Hz';
+	11:	sFilterSettings := '10 Hz';
+END_CASE
+
+(*++++++++++++++++++++++++++++++ CoE Default ++++++++++++++++++++++++++++++*)
+(*Button 'Default CoE'*)
+fbRTrig_CoeDefault(CLK:= bButtonSetCoeParametersToDefault , Q=>);
+(*Pushing Button 'Default CoE' resets all CoEs*)
+CASE nStepReset OF
+	0:	(*Idle*)
+		fbCoeReset.bExecute:= FALSE;
+		IF fbRTrig_CoeDefault.Q AND NOT bCoeBusy THEN
+			nStepReset:= 10;
+		END_IF
+	10:	IF NOT fbCoeReset.bBusy THEN
+			IF NOT fbCoeReset.bError THEN
+				fbCoeReset.bExecute:= TRUE;
+				stCoe.bEnableUserScale:= 0;
+				stCoe.diUserScaleOffset:= 0;
+				stCoe.diUserScaleGain:= 65536;
+				stCoe.dwFilterSettings:= 0;
+				stCoe.bEnableUserScaleIndex8010:= 0;
+				stCoe.dnUserScaleOffsetIndex8010:= 0;
+				stCoe.dnUserScaleGainIndex8010:= 65536;
+				nStepReset:= 0;
+				bStartRead:= TRUE;				(*After a Reset of the Parameters, they are automatically read so that they are shown correctly in the visu*)
+			END_IF
+		END_IF
+	ELSE
+		nStepReset:= 0;
+END_CASE
+
+fbRTrig_StartRead(CLK:=bStartRead , Q=> );
+
+(*++++++++++++++++++++++++++++++ CoE Read +++++++++++++++++++++++++++++*)
+(*Button 'Read CoE'*)
+fbRTrig_CoeUpdate(CLK:=bButtonReadCoeParameters AND bFirstDoneRead, Q=> );
+CASE nStepRead OF
+	0:	(*Idle*)
+		nDummyData:= 0;
+		fbCoeReadNew.bExecute:= FALSE;
+		bCoeReadBusy:= FALSE;
+		IF fbRTrig_CoeUpdate.Q OR fbRTrig_StartRead.Q  THEN
+			nIdxRead:= 0;
+			nStepRead:= 10;
+			bCoeReadBusy:= TRUE;
+		END_IF
+	10:	(*Start*)
+		bStartRead:= FALSE;
+		nDummyData:= 0;
+		nIdxRead:= nIdxRead + 1;
+		fbCoeReadNew.nIndex:= astCoeRead[nIdxRead].wIdx;
+		fbCoeReadNew.nSubIndex := astCoeRead[nIdxRead].bySubIdx;
+		fbCoeReadNew.bExecute:= TRUE;
+		nStepRead:= 20;
+	20:	(*Wait*)
+		IF fbCoeReadNew.bBusy THEN
+			fbCoeReadNew.bExecute:= FALSE;
+			nStepRead:= 30;
+		END_IF
+	30:	(*Read*)
+		IF NOT fbCoeReadNew.bBusy THEN
+			IF NOT fbCoeReadNew.bError THEN
+				astCoeRead[nIdxRead].nData:= nDummyData;
+				astCoeRead[nIdxRead].bReadOK:= TRUE;
+				astCoeRead[nIdxRead].nSize:= fbCoeReadNew.fbAdsReadEx.COUNT_R;
+			ELSE
+				astCoeRead[nIdxRead].bReadOK:= FALSE;
+				astCoeRead[nIdxRead].nData:= 0;
+				astCoeRead[nIdxRead].nSize:= 0;
+			END_IF
+			IF (nIdxRead= CnMaxIdxRead) THEN
+				bFirstDoneRead := TRUE;
+				nStepRead:= 0;
+			ELSE
+				nStepRead:= 10;
+			END_IF
+		END_IF
+	ELSE
+		nStepRead:= 0;
+END_CASE
+
+(*++++++++++++++++++++++++++ CoE Write ++++++++++++++++++++++++++++++*)
+(*Button Write CoE*)
+rtStartWrite(CLK:=bStartWrite, Q=> );
+fbRTrig_CoeWrite(CLK:= bButtonWriteCoeParameters AND bFirstDoneWrite, Q=> );
+CASE nStepWrite OF
+	0:	(*Idle*)
+		dwDummyDataWrite:= 0;
+		fbCoeWriteNew.bExecute:= FALSE;
+		bCoeWriteBusy := FALSE;
+		IF fbRTrig_CoeWrite.Q OR rtStartWrite.Q THEN
+			nStepWrite:= 10;
+			bCoeWriteBusy := TRUE;
+		END_IF
+	10: 	(*Start*)
+		a_Init_BufLen();
+		IF nIdxWrite= 7 THEN
+			nIdxWrite:= 0;
+		END_IF
+		nIdxWrite:= nIdxWrite + 1;
+		fbCoeWriteNew.nIndex:= astCoeWrite[nIdxWrite].wIdx;
+		fbCoeWriteNew.nSubIndex:= astCoeWrite[nIdxWrite].bySubIdx;
+		fbCoeWriteNew.bExecute:= TRUE;
+		nStepWrite:= 20;
+	20: 	(*Wait*)
+		IF fbCoeWriteNew.bBusy THEN
+			fbCoeWriteNew.bExecute:= FALSE;
+			nStepWrite:= 30;
+		END_IF
+	30: (*Write*)
+		IF NOT fbCoeWriteNew.bBusy THEN
+			IF NOT fbCoeWriteNew.bError THEN
+				astCoeWrite[nIdxWrite].bWriteOK:= TRUE;
+				(*The BOOL_TO_DWORD conversions are needed because some Buttons in the visu need to be linked to a variable of the type BOOL so that they can be toggled.
+				Those BOOL variables need to be converted to the type DWORD so that they can be written into the array astCoeWrite.nSize. nSize is a variable of the type DWORD. *)
+				CASE nIdxWrite OF
+				1:	dwEnableUserScaleConv:= BOOL_TO_DWORD(stCoe.bEnableUserScale);
+					astCoeWrite[nIdxWrite].nData:= dwEnableUserScaleConv;
+				2:	astCoeWrite[nIdxWrite].nData:= stCoe.diUserScaleOffset;
+				3:	astCoeWrite[nIdxWrite].nData:= stCoe.diUserScaleGain;
+				4:	astCoeWrite[nIdxWrite].nData:= stCoe.dwFilterSettings;
+				5:	dwEnableUserScaleConvIndex8010:= BOOL_TO_DWORD(stCoe.bEnableUserScaleIndex8010);
+					astCoeWrite[nIdxWrite].nData:= dwEnableUserScaleConvIndex8010;
+				6:	astCoeWrite[nIdxWrite].nData:= stCoe.dnUserScaleOffsetIndex8010;
+				7:	astCoeWrite[nIdxWrite].nData:= stCoe.dnUserScaleGainIndex8010;
+				END_CASE
+				dwDummyDataWrite:= astCoeWrite[nIdxWrite].nData;
+				fbCoeWriteNew.bExecute:= TRUE;
+			END_IF
+			IF (nIdxWrite= CnMaxIdxWrite) THEN
+				bFirstDoneWrite := TRUE;
+				bStartRead:= TRUE;
+				nStepWrite:= 0;
+			ELSE
+				nStepWrite:= 10;
+			END_IF
+		END_IF
+	ELSE
+		nStepWrite:= 0;
+END_CASE
+
+fbCoeReadNew( 	sNetId:= sAdsAddr ,
+				nSlaveAddr:= stAdsAddr.port ,
+				nSubIndex:=,
+				nIndex:= ,
+				pDstBuf:= ADR( nDummyData ),
+				cbBufLen:=SIZEOF(nDummyData ),
+				bExecute:= ,
+				tTimeout:=  t#2s,
+				bBusy=>bBusyReset ,
+				bError=>bErrorReset ,
+				nErrId=>nReadErrorId );
+
+(*This Function returns the ADS Error Text *)
+sAdsErrorTextRead:= F_AdsError_Text (nCode:= nReadErrorId);
+
+fbCoeWriteNew( 	sNetId:= sAdsAddr ,
+				nSlaveAddr:= stAdsAddr.port ,
+				nSubIndex:=,
+				nIndex:=,
+				pSrcBuf:= ADR( dwDummyDataWrite ),
+				cbBufLen:= astCoeWrite[nIdxWrite].nSize,
+				bExecute:= ,
+				tTimeout:=  t#2s,
+				bBusy=>bBusyWrite ,
+				bError=> bErrorWrite,
+				nErrId=>nWriteErrorId );
+
+(*This Function returns the ADS Error Text *)
+sAdsErrorTextWrite:= F_AdsError_Text (nCode:= nWriteErrorId);
+
+fbCoeReset( 		sNetId:= sAdsAddr ,
+				nSlaveAddr:= stAdsAddr.port ,
+				nSubIndex:= 16#01,
+				nIndex:= 16#1011,
+				pSrcBuf:= ADR( nDummyReset ),		(*Resetting all CoEs happens when CoE Index 16#1011, Subindex 16#01 is given the value 16#64616F6C*)
+				cbBufLen:=SIZEOF( nDummyReset ),
+				bExecute:= ,
+				tTimeout:=  t#2s,
+				bBusy=> bBusyRead ,
+				bError=> bErrorRead,
+				nErrId=> nResetErrorId);
+
+(*This Function returns the ADS Error Text *)
+sAdsErrorTextReset:= F_AdsError_Text (nCode:= nResetErrorId);
+
+(*++++++++++++++++++++++++++++++ Status Strings ++++++++++++++++++++++++++++++*)
+IF bCoeWriteBusy THEN
+	sStatus:= 'CoE Parameters are written';
+ELSIF bCoeReadBusy THEN
+	sStatus:= 'CoE Parameters are being read';
+ELSIF bBusyReset THEN
+	sStatus:= 'CoE Parameters are set to default';
+ELSE
+	sStatus:= 'Idling';
+END_IF
+
+(*Error/Busy*)
+IF bErrorRead OR bErrorWrite OR bErrorReset THEN
+	bCoeError:= TRUE;
+ELSE
+	bCoeError:= FALSE;
+END_IF
+
+IF bBusyRead OR bBusyWrite OR bBusyReset THEN
+	bCoeBusy:= TRUE;
+ELSE
+	bCoeBusy:= FALSE;
+END_IF
+
+(*General Status for this Function Block*)
+IF NOT bErrorRead AND NOT bErrorWrite AND NOT bErrorReset THEN
+	bCoeAccessOK:= TRUE;
+	sStatusCoeAccess:= 'Coe Access: No Error.';
+ELSE
+	bCoeAccessOK:= FALSE;
+	IF bErrorRead THEN
+		sStatusCoeAccess:= 'fbCoERead Error. ';
+	ELSE
+		sStatusCoeAccess:= '';
+	END_IF
+	IF bErrorWrite THEN
+		sStatusCoeAccess:= CONCAT(sStatusCoeAccess, 'fbCoEWrite Error. ');
+	ELSE
+		sStatusCoeAccess:= CONCAT(sStatusCoeAccess, '');
+	END_IF
+	IF bErrorReset THEN
+		sStatusCoeAccess:= CONCAT(sStatusCoeAccess, 'fbCoEReset Error. ');
+	ELSE
+		sStatusCoeAccess:= CONCAT(sStatusCoeAccess, '');
+	END_IF
+END_IF]]></ST>
+    </Implementation>
+    <Action Name="a_Init_AmsNetId" Id="{01fd7189-506d-44c3-89c3-a09dadccc45d}">
+      <Implementation>
+        <ST><![CDATA[(* Generate ADS Address string from ADS Address Datatype *)
+IF NOT bInitDoneAmsNetId THEN
+	bInitDoneAmsNetId:= TRUE;
+	sAdsAddr:= F_CreateAmsNetId(stAdsAddr.netId);
+END_IF
+
+
+;]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="a_Init_BufLen" Id="{97572f3d-1e45-42a1-b2bb-025556d0bef7}">
+      <Implementation>
+        <ST><![CDATA[IF NOT bInitDoneBufLen THEN
+	bInitDoneBufLen:= TRUE;
+
+	nIdxWrite:= 1;
+	astCoeWrite[nIdxWrite].nSize:= astCoeRead[1].nSize;
+
+	nIdxWrite:= nIdxWrite + 1;
+	astCoeWrite[nIdxWrite].nSize:= astCoeRead[2].nSize;
+
+	nIdxWrite:= nIdxWrite + 1;
+	astCoeWrite[nIdxWrite].nSize:= astCoeRead[3].nSize;
+
+	nIdxWrite:= nIdxWrite + 1;
+	astCoeWrite[nIdxWrite].nSize:= astCoeRead[4].nSize;
+
+	nIdxWrite:= nIdxWrite + 1;
+	astCoeWrite[nIdxWrite].nSize:= astCoeRead[5].nSize;
+
+	nIdxWrite:= nIdxWrite + 1;
+	astCoeWrite[nIdxWrite].nSize:= astCoeRead[6].nSize;
+
+	nIdxWrite:= nIdxWrite + 1;
+	astCoeWrite[nIdxWrite].nSize:= astCoeRead[7].nSize;
+
+	nIdxWrite:= 0;
+
+END_IF]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="a_Init_Read" Id="{5ed2f82f-5c32-4999-8ece-7f40515ac006}">
+      <Implementation>
+        <ST><![CDATA[IF NOT bInitDoneRead THEN
+	bInitDoneRead := TRUE;
+	bStartRead := TRUE;
+
+	nIdxRead:= 1;
+	astCoeRead[nIdxRead].wIdx:= 16#8000;
+	astCoeRead[nIdxRead].bySubIdx:= 16#01;
+
+	nIdxRead:= nIdxRead + 1;
+	astCoeRead[nIdxRead].wIdx:= 16#8000;
+	astCoeRead[nIdxRead].bySubIdx:= 16#11;
+
+	nIdxRead:= nIdxRead + 1;
+	astCoeRead[nIdxRead].wIdx:= 16#8000;
+	astCoeRead[nIdxRead].bySubIdx:= 16#12;
+
+	nIdxRead:= nIdxRead + 1;
+	astCoeRead[nIdxRead].wIdx:= 16#8000;
+	astCoeRead[nIdxRead].bySubIdx:= 16#15;
+
+(*+++++ Index 8010 +++++*)
+	nIdxRead:= nIdxRead +1;
+	astCoeRead[nIdxRead].wIdx:= 16#8010;
+	astCoeRead[nIdxRead].bySubIdx:= 16#01;
+
+	nIdxRead:= nIdxRead + 1;
+	astCoeRead[nIdxRead].wIdx:= 16#8010;
+	astCoeRead[nIdxRead].bySubIdx:= 16#11;
+
+	nIdxRead:= nIdxRead + 1;
+	astCoeRead[nIdxRead].wIdx:= 16#8010;
+	astCoeRead[nIdxRead].bySubIdx:= 16#12;
+
+END_IF]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="a_Init_Write" Id="{1dccbe1c-c0fc-4d50-97a3-c6c1be018fae}">
+      <Implementation>
+        <ST><![CDATA[IF NOT bInitDoneWrite THEN
+	bInitDoneWrite:= TRUE;
+
+	nIdxWrite:= 1;
+	astCoeWrite[nIdxWrite].wIdx:= 16#8000;
+	astCoeWrite[nIdxWrite].bySubIdx:= 16#01;
+
+	nIdxWrite:= nIdxWrite + 1;
+	astCoeWrite[nIdxWrite].wIdx:= 16#8000;
+	astCoeWrite[nIdxWrite].bySubIdx:= 16#11;
+
+	nIdxWrite:= nIdxWrite + 1;
+	astCoeWrite[nIdxWrite].wIdx:= 16#8000;
+	astCoeWrite[nIdxWrite].bySubIdx:= 16#12;
+
+	nIdxWrite:= nIdxWrite + 1;
+	astCoeWrite[nIdxWrite].wIdx:= 16#8000;
+	astCoeWrite[nIdxWrite].bySubIdx:= 16#15;
+
+(*+++++ Index 8010 +++++*)
+	nIdxWrite:= nIdxWrite +1;
+	astCoeWrite[nIdxWrite].wIdx:= 16#8010;
+	astCoeWrite[nIdxWrite].bySubIdx:= 16#01;
+
+	nIdxWrite:= nIdxWrite + 1;
+	astCoeWrite[nIdxWrite].wIdx:= 16#8010;
+	astCoeWrite[nIdxWrite].bySubIdx:= 16#11;
+
+	nIdxWrite:= nIdxWrite + 1;
+	astCoeWrite[nIdxWrite].wIdx:= 16#8010;
+	astCoeWrite[nIdxWrite].bySubIdx:= 16#12;
+
+END_IF
+
+rtInit(
+	CLK := bInitDoneAmsNetId
+		     AND bInitDoneBufLen
+		     AND bInitDoneRead
+		     AND bInitDoneWrite
+		     AND bFirstDoneRead
+);
+
+IF rtInit.Q
+THEN
+	bStartWrite := TRUE;
+END_IF]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_EL3351CoE_1">
+      <LineId Id="83" Count="249" />
+    </LineIds>
+    <LineIds Name="FB_EL3351CoE_1.a_Init_AmsNetId">
+      <LineId Id="0" Count="7" />
+    </LineIds>
+    <LineIds Name="FB_EL3351CoE_1.a_Init_BufLen">
+      <LineId Id="0" Count="26" />
+    </LineIds>
+    <LineIds Name="FB_EL3351CoE_1.a_Init_Read">
+      <LineId Id="0" Count="33" />
+    </LineIds>
+    <LineIds Name="FB_EL3351CoE_1.a_Init_Write">
+      <LineId Id="0" Count="45" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

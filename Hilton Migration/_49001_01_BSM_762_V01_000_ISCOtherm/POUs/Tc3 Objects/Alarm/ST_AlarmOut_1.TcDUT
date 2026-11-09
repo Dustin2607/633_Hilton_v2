@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_AlarmOut_1" Id="{1f30e9df-65f6-4c62-8e83-179707861de0}">
+    <Declaration><![CDATA[TYPE ST_AlarmOut_1 :
+STRUCT
+	arbFatalError		:ARRAY[0..nALARM_MAX_NO] OF ST_AlarmProperties;
+	arbError			:ARRAY[0..nALARM_MAX_NO] OF ST_AlarmProperties;
+	arbWarning			:ARRAY[0..nALARM_MAX_NO] OF ST_AlarmProperties;
+	arbMessage			:ARRAY[0..nALARM_MAX_NO] OF ST_AlarmProperties;
+	arbHint				:ARRAY[0..nALARM_MAX_NO] OF ST_AlarmProperties;
+	bFatalError			:BOOL;				(* Fatal error in group / Fataler Fehler in der Gruppe *)
+	bError				:BOOL;				(* Error in group / Fehler in der Gruppe *)
+	bWarning			:BOOL;				(* Warning in group / Warnung  in der Gruppe *)
+	bMessage			:BOOL;				(* Message in group / Meldung in der Gruppe *)
+	bHint				:BOOL;				(* Hint in group / Hint in der Gruppe *)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

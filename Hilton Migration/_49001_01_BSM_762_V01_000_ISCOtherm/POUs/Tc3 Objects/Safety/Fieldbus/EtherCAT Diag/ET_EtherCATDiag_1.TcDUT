@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ET_EtherCATDiag_1" Id="{cbfd4789-2996-47db-8e6a-16b5c41b0737}">
+    <Declaration><![CDATA[TYPE ET_EtherCATDiag_1 :
+(
+	ET_EtherCATDiag_eIdle := 0,
+	ET_EtherCATDiag_eGetSlaveAdresses,
+	ET_EtherCATDiag_eGetSlaveStates,
+	ET_EtherCATDiag_eGetTopologyDataLen,
+	ET_EtherCATDiag_eGetTopologyData,
+	ET_EtherCATDiag_eScanSlaves,
+	ET_EtherCATDiag_eGetSlaveIdentity,
+	ET_EtherCATDiag_eGetSlaveName,
+	ET_EtherCATDiag_eGetScannedSlaveName,
+	ET_EtherCATDiag_eDone := 197
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

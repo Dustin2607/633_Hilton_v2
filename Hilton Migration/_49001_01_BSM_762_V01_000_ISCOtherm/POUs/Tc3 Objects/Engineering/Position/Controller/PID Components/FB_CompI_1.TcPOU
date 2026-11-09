@@ -1,0 +1,144 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_CompI_1" Id="{9983d397-e8cf-4faa-8cd0-3c775f0c248c}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_CompI_1
+(*
+Function block used to calculate integral typ.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			03.06.2014
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+
+VAR_INPUT
+	(* Enummerations *)
+
+	(* Variables *)
+	bEnable								:BOOL := TRUE;					(* Enable FB *)
+	lrInSignal								:LREAL;							(* Input signal *)
+	lrIntegralValue						:LREAL := 1.0;						(* Integration value in 1/sec *)
+	lrTaskCycle							:LREAL := 1.0; 					(* Cycle time *)
+	bSetToZero 							:BOOL;							(* Integral set to zero *)
+	lrLimitMin								:LREAL := -1E40;					(* Limit minimum *)
+	lrLimitMax							:LREAL := 1E40;					(* Limit maximum *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+
+END_VAR
+VAR_OUTPUT
+	(* Enummerations *)
+
+	(* Variables *)
+	lrOutSignal							:LREAL;							(* Output signal *)
+	bLimitMin							:BOOL;							(* Limit minimum reached *)
+	bLimitMax							:BOOL;							(* Limit maximum reached *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	bFirstTime							:BOOL;							(* First cycle *)
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbIntegral								:FB_Integral;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+
+	bLimitMin := FALSE;
+	bLimitMax := FALSE;
+
+	fbIntegral(
+		bEnable := FALSE,
+		lrInSignal := lrInSignal,
+		lrIntegralValue := lrIntegralValue,
+		lrTaskCycle := lrTaskCycle,
+		lrOutSignal := lrOutSignal
+	);
+
+	bFirstTime := FALSE;
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+	bFirstTime := TRUE;
+END_IF
+
+IF bSetToZero
+THEN
+	lrOutSignal := 0.0;
+ELSE
+
+	A_CalcIntegral();
+
+END_IF
+
+A_CheckLimits();
+
+
+]]></ST>
+    </Implementation>
+    <Action Name="A_CalcIntegral" Id="{19531b26-feaa-4395-bbee-ba03cd824dfb}">
+      <Implementation>
+        <ST><![CDATA[
+fbIntegral(
+	bEnable := TRUE,
+	lrInSignal := lrInSignal,
+	lrIntegralValue := lrIntegralValue,
+	lrTaskCycle := lrTaskCycle,
+	lrOutSignal := lrOutSignal
+);]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_CheckLimits" Id="{0491ea36-33cd-4613-ae66-39e0264d966e}">
+      <Implementation>
+        <ST><![CDATA[
+(* Check limit the outputs *)
+bLimitMin := FALSE;							(* Limit minimum reached *)
+bLimitMax := FALSE;							(* Limit maximum reached *)
+IF lrOutSignal <= lrLimitMin
+THEN
+	lrOutSignal := lrLimitMin;
+	bLimitMin := TRUE;						(* Limit minimum reached *)
+
+ELSIF  lrOutSignal >= lrLimitMax
+THEN
+	lrOutSignal := lrLimitMax;
+	bLimitMax := TRUE;						(* Limit minimum reached *)
+
+END_IF]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_CompI_1">
+      <LineId Id="61" Count="35" />
+    </LineIds>
+    <LineIds Name="FB_CompI_1.A_CalcIntegral">
+      <LineId Id="0" Count="7" />
+    </LineIds>
+    <LineIds Name="FB_CompI_1.A_CheckLimits">
+      <LineId Id="0" Count="14" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

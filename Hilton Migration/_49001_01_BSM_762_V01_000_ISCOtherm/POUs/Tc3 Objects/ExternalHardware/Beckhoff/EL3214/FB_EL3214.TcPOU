@@ -1,0 +1,132 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_EL3214" Id="{8e10db8c-f76d-4fce-8504-27e5fa6981f4}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_EL3214
+(*
+
+The function block used to operating of EL3214
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			25.03.2020
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+	bEnable						:BOOL;
+	nTerminalNr					:UINT;
+	nChannelNr					:UINT;
+	stTerminalState				:ST_TerminalState;
+	stChannelState				:ST_EL3214ChannelState;
+	bSetCoeParaToDefault		:BOOL;
+	bReadCoePara				:BOOL;
+	bWriteCoePara				:BOOL;
+	nValue						:INT;						(* Current value *)
+	stCoeWrite					:ST_EL3214CoeInfo;
+	rOffset						:REAL;
+	usiPrecision				:USINT := 2;
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+	bDeviceOk					:BOOL;
+	sDeviceStatus				:STRING(255);
+	stCoeRead					:ST_EL3214CoeInfo;
+	lrTemperatureRV				:LREAL;			(* Raw Value *)
+	lrTemperaturePV				:LREAL;			(* Judgment Value *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	bTerminalOK					:BOOL;
+	sTerminalStatus				:STRING;
+	bCoeAccessOK				:BOOL;
+	bChannelOK					:BOOL;
+
+	sAmsNetAdr					:T_AmsNetId;
+
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbTerminalDiagnosis			:FB_TerminalDiagnosis;
+	fbChannelDiagnosis			:FB_EL3214ChannelDiagnosis;
+	fbCoe						:FB_EL3214CoE;
+	fbToggleBit					:FB_ToggleBit;
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	bDeviceOk := TRUE;
+	lrTemperatureRV := 0.0;				(* Raw Value *)
+	lrTemperaturePV := 0.0;				(* Judgment Value *)
+	RETURN;
+END_IF
+
+(*Terminal Diagnosis*)
+fbTerminalDiagnosis(
+	stTerminalState := stTerminalState,
+	bTerminalOK => bTerminalOK,
+	sTerminalStatus => sTerminalStatus
+);
+
+(*Channel Diagnosis*)
+fbChannelDiagnosis(
+	stChannelState := stChannelState,
+	bChannelOK => bChannelOK
+);
+
+(*CoE Settings *)
+fbCoE(
+	stAdsAddr:= stTerminalState.stAdsAddr,
+	nTerminalNr := nTerminalNr,
+	nChannelNr := nChannelNr,
+	stCoeWrite := stCoeWrite,
+	bSetCoeParametersToDefault := bSetCoeParaToDefault,
+	bReadCoeParameters := bReadCoePara,
+	bWriteCoeParameters := bWriteCoePara,
+	bCoeAccessOK => bCoeAccessOK,
+	stCoeRead => stCoeRead
+);
+
+(* ToggleBit *)
+fbToggleBit(
+	bToggle:= stChannelState.bToggle ,
+);
+
+IF bCoeAccessOK
+     AND bTerminalOK
+     AND bChannelOK
+THEN
+	bDeviceOk := TRUE;
+	sDeviceStatus:= '';
+ELSE
+	bDeviceOK:= FALSE;
+	sDeviceStatus:= UINT_TO_STRING(nTerminalNr);
+	sDeviceStatus:= CONCAT (sDeviceStatus, '. ');
+END_IF
+
+lrTemperatureRV := INT_TO_LREAL(nValue);
+lrTemperaturePV := F_LRealRound(lrTemperatureRV + rOffset, usiPrecision);
+
+(*Coe parameter administration*)
+sAmsNetAdr := F_CreateAmsNetId(nIds:= stTerminalState.stAdsAddr.netId );
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_EL3214">
+      <LineId Id="65" Count="17" />
+      <LineId Id="85" Count="39" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="ST_PLC01TOPLC02" Id="{b104063e-d055-4013-8953-aca660815821}">
+    <Declaration><![CDATA[TYPE ST_PLC01TOPLC02 :
+STRUCT
+	etMachineMode						:ET_MachineMode;			(* Machine mode *)
+	etMachineState						:ET_MachineState;			(* Machine state *)
+	etMaintenanceType					:ET_MaintenanceType;		(* Maintenance type *)
+	bModeAutomatic						:BOOL;						(* Machine mode automatic *)
+	bModeHome							:BOOL;						(* Machine mode home *)
+	bModeMaintenance					:BOOL;						(* Machine mode maintenance *)
+	bModeManual							:BOOL;						(* Machine mode manual *)
+	bMachineRunning						:BOOL;						(* Machine running / Maschine lauft *)
+	bMachineStandstill					:BOOL;						(* Machine standstill / Maschin steht *)
+	bMachinePurge						:BOOL;						(* Machine purge *)
+	bConfirmAlarm						:BOOL;						(* Confirm alarm *)
+	rOverride							:REAL;						(* Override *)
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

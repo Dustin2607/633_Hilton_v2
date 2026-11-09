@@ -1,0 +1,248 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_DistanceCounter_1" Id="{88a9da23-2295-4546-9add-6e477ae663ac}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_DistanceCounter_1
+(*
+
+Function block to read and write elapsed distance in/from file.
+If sFileName or sFilePath  or sFileSuffix is empty then save function is diabled and generate error.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			24.03.2014
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+
+VAR_INPUT
+	(* Variables *)
+	bEnable							:BOOL;							(* Enable FB *)
+	sAmsNetId 						:STRING := ''; 						(* Ams Net ID of file to read/write *)
+	lrDistance						:LREAL; 							(* All over counter distance *)
+	bCount							:BOOL; 							(* If true then count distance else save current distance *)
+	bSave							:BOOL;							(* Save current distance counter *)
+	bReset							:BOOL; 							(* Reset counter *)
+	bDeleteAll						:BOOL; 							(* Delete all counters since beginning *)
+	sFilePath						:STRING := 'C:\TwinCAT\Plc\';		(* File path *)
+	sFileName						:STRING := 'default';				(* File name *)
+	tSaveIntervall						:TIME := t#3m;						(* Intervall to save counter hours. If equal 0 then intervall is off *)
+	tTimeout							:TIME := t#3s;						(* ADS timeout *)
+END_VAR
+VAR_OUTPUT
+	(* Variables *)
+	lrAllOverDistance					:LREAL; 							(* All over counter distance *)
+	lrAfterResetDistance				:LREAL; 							(* Counter distance since last reset *)
+	lrNoRetainDistance				:LREAL; 							(* No retain counter distance *)
+	bError							:BOOL;							(* Program error *)
+	udnErrNo						:UDINT;							(* Error number *)
+END_VAR
+VAR
+	(* Enummerations *)
+	etRWStep						:(eReadDistance, eChkRead, eWFWrite, eWriteDistance, eChkWrite, eError );
+
+	(* Variables *)
+	bFirstTime						:BOOL;
+	stRetainDistance					:ST_DistanceCounter;
+	stCacheRetainDistance			:ST_DistanceCounter;
+
+	(* Instances *)
+	ftCount							:F_TRIG;
+	rtSave							:R_TRIG;
+	rtReset							:R_TRIG;
+	rtDeleteAll						:R_TRIG;
+
+	fbFileHandler						:FB_FileHandlerBinary;				(* File handler *)
+	tonWriteIntervall					:TON;							(* Timer for Save intervall control *)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable				(* Enable FB *)
+THEN
+	fbFileHandler(
+		bEnable := FALSE,
+		bExecute := FALSE,
+		bFileRead := FALSE,
+		bFileWrite := FALSE
+	);
+
+	bFirstTime := FALSE;
+	bError := FALSE;			(* Program error *)
+	udnErrNo := 0;				(* Error number *)
+
+	RETURN;
+END_IF
+
+
+IF NOT bFirstTime
+THEN
+	(* Produce the file directory name *)
+	fbFileHandler.sFilePath := sFilePath;
+	fbFileHandler.sFileName := sFileName;
+	fbFileHandler.sFileSuffix := 'dc';
+
+	tonWriteIntervall(
+		IN := FALSE,
+		PT:= tSaveIntervall
+	);
+
+	etRWStep := eReadDistance;
+
+	bFirstTime := TRUE;
+	RETURN;
+END_IF
+
+
+(* Read / Write all over distance *)
+CASE etRWStep OF
+
+	eReadDistance:
+		fbFileHandler.bExecute := TRUE;
+		fbFileHandler.bFileRead := TRUE;
+		fbFileHandler.bFileWrite := FALSE;
+
+		IF fbFileHandler.bBusy
+		THEN
+			etRWStep := eChkRead;
+
+		END_IF
+
+	eChkRead:
+		IF NOT fbFileHandler.bBusy
+		THEN
+			IF  fbFileHandler.bError
+			THEN
+				fbFileHandler.bExecute := FALSE;
+				fbFileHandler.bFileRead := FALSE;
+				fbFileHandler.bFileWrite := FALSE;
+
+				stCacheRetainDistance.lrAllOverDistance := 0;
+				stCacheRetainDistance.lrAfterResetDistance := 0;
+
+				etRWStep := eWFWrite;				(* Next step *)
+
+			ELSE
+				fbFileHandler.bExecute := FALSE;
+				fbFileHandler.bFileRead := FALSE;
+				fbFileHandler.bFileWrite := FALSE;
+
+				stCacheRetainDistance.lrAllOverDistance := stRetainDistance.lrAllOverDistance;
+				stCacheRetainDistance.lrAfterResetDistance := stRetainDistance.lrAfterResetDistance;
+
+				etRWStep := eWFWrite;				(* Next step *)
+
+			END_IF
+		END_IF
+
+	eWFWrite:
+		ftCount(
+			CLK :=  bCount AND NOT bReset AND NOT bDeleteAll
+		);
+
+		rtSave(
+			CLK := bSave AND NOT bReset AND NOT bDeleteAll
+		);
+
+
+		tonWriteIntervall(IN := tSaveIntervall > t#0s);
+
+		IF ftCount.Q
+		     OR rtSave.Q
+		     OR tonWriteIntervall.Q
+		THEN
+			tonWriteIntervall(IN := FALSE);
+
+			etRWStep := eWriteDistance;								(* Next step *)
+
+		END_IF
+
+	eWriteDistance:
+		fbFileHandler.bExecute := TRUE;
+		fbFileHandler.bFileRead := FALSE;
+		fbFileHandler.bFileWrite := TRUE;
+
+		IF fbFileHandler.bBusy
+		THEN
+			etRWStep := eChkWrite;								(* Next step *)
+
+		END_IF
+
+	eChkWrite:
+		IF NOT fbFileHandler.bBusy
+		THEN
+			IF  fbFileHandler.bError
+			THEN
+				etRWStep := eError;								(* Next step *)
+
+			ELSE
+				fbFileHandler.bExecute := FALSE;
+				fbFileHandler.bFileRead := FALSE;
+				fbFileHandler.bFileWrite := FALSE;
+
+				etRWStep := eWFWrite;							(* Next step *)
+
+			END_IF
+		END_IF
+
+	eError:
+		fbFileHandler.bExecute := FALSE;
+		fbFileHandler.bFileRead := FALSE;
+		fbFileHandler.bFileWrite := FALSE;
+
+END_CASE
+
+
+(* Counting distance *)
+IF bCount
+    AND NOT fbFileHandler.bFileRead
+THEN
+	lrNoRetainDistance := lrNoRetainDistance + lrDistance;
+	stRetainDistance.lrAllOverDistance := stCacheRetainDistance.lrAllOverDistance + lrNoRetainDistance;
+	stRetainDistance.lrAfterResetDistance := stCacheRetainDistance.lrAfterResetDistance + lrNoRetainDistance;
+END_IF
+
+
+(* Write / read  file *)
+fbFileHandler(
+	bEnable := TRUE,
+	dwDataBuffer := ADR(stRetainDistance),
+	udnDataBufLen := SIZEOF(stRetainDistance),
+	tTimeout := tTimeout,
+	bError => bError,
+	udnErrNo => udnErrNo
+);
+
+rtReset(
+	CLK := NOT bSave AND bReset
+);
+IF rtReset.Q
+THEN
+	stRetainDistance.lrAfterResetDistance := 0;
+	lrNoRetainDistance := 0;
+END_IF
+
+rtDeleteAll(
+	CLK := NOT bSave AND bDeleteAll
+);
+IF rtDeleteAll.Q
+THEN
+	stRetainDistance.lrAllOverDistance := 0;
+	stRetainDistance.lrAfterResetDistance := 0;
+	stCacheRetainDistance.lrAllOverDistance := 0;
+	stCacheRetainDistance.lrAfterResetDistance := 0;
+	lrNoRetainDistance := 0;
+END_IF
+
+(* Counter distance mapping *)
+lrAllOverDistance := stRetainDistance.lrAllOverDistance;
+lrAfterResetDistance := stRetainDistance.lrAfterResetDistance;
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_DistanceCounter_1">
+      <LineId Id="57" Count="180" />
+    </LineIds>
+  </POU>
+</TcPlcObject>
