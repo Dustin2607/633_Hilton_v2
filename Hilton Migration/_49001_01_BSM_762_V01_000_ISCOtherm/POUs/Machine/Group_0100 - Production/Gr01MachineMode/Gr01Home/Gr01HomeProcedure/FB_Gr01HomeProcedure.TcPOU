@@ -227,11 +227,11 @@ CASE etGr01Home OF
 		Gr01Control.fbAxisSawBow.lrTargetPosition := stgGr01HMI.stHMITOPLC.lrAxisSawBowHomePos;
 		Gr01Control.fbAxisSawBow.lrAutoVelocity := stgGr01HMI.stHMITOPLC.lrAxisSawBowHomeVelo;
 
-		IF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMoveAbs.bBusy
+		IF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMCMoveAbs.Busy
 		THEN
 			etGr01Home := ET_Gr01Home_eWfAxisSawBowInHomePos;              (* Next step *)
 
-		ELSIF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMoveAbs.bError
+		ELSIF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMCMoveAbs.Error
 		THEN
 			Gr01Control.fbAxisSawBow.bExeMoveAbs := FALSE;
 
@@ -247,7 +247,7 @@ CASE etGr01Home OF
 
 			etGr01Home := ET_Gr01Home_eDone;              (* Next step *)
 
-		ELSIF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMoveAbs.bError
+		ELSIF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMCMoveAbs.Error
 		THEN
 			Gr01Control.fbAxisSawBow.bExeMoveAbs := FALSE;
 

@@ -10,6 +10,7 @@ TYPE ET_MachineState :
 	ET_MachineState_eAutoSteppingNoExe := 3,
 	ET_MachineState_eHomeExe := 4,
 	ET_MachineState_eHomeRefExe := 5,
+	ET_MachineState_eMaintenanceExe := 6,
 	ET_MachineState_eIdle := 10
 ) ;
 END_TYPE]]></Declaration>

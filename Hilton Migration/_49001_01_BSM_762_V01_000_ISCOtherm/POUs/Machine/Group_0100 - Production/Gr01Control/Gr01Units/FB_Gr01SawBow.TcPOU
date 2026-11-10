@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
-  <POU Name="FB_Gr01AxisSawBow" Id="{19b6ff95-4841-47fe-a1b0-4c16c0a5d0d7}" SpecialFunc="None">
-    <Declaration><![CDATA[FUNCTION_BLOCK FB_Gr01AxisSawBow
+  <POU Name="FB_Gr01SawBow" Id="{19b6ff95-4841-47fe-a1b0-4c16c0a5d0d7}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Gr01SawBow
 (*
 
 The function block used to control axis welding.
@@ -17,30 +17,39 @@ dd.mm.yyyy		x.xx			Initials			comment
 *)
 VAR_INPUT
 	(* Input variables / Eingang Variablen *)
+
+	(* --- Axis / Achse --- *)
 	bEnable						:BOOL;						(* Axis present *)
+	bOccupied					:BOOL;						(* Axis occupied *)
+
+	(* --- Machine state / Maschinenzustand --- *)
 	etMachineMode				:ET_MachineMode;			(* Machine mode *)
 	etMachineState				:ET_MachineState;			(* Machine state *)
+	bMachineStandstill			:BOOL;						(* Machine standstill *)
+
+	(* --- Safety & releases / Sicherheit & Freigaben --- *)
 	bNoEStop					:BOOL;						(* No ermergency Stop / Keine Notaus *)
 	bPowerSupplyOn				:BOOL;						(* Power supply on / Leitung eingeschaltet *)
 	bSafetyOK					:BOOL;						(* Safety ok / Sicherheit i.o *)
-	bSafetyDriveEnabled			:BOOL;						(* Safety drive enable *)	
-	bMachineStandstill			:BOOL;						(* Machine standstill *)
+	bSafetyDriveEnabled			:BOOL;						(* Safety drive enable *)
 	bCtrlInterrupt				:BOOL;						(* Control interrupt *)
 	bMoveRelease				:BOOL;						(* Move release *)
+	bPlusRelease				:BOOL;						(* Plus move release *)
+	bMinusRelease				:BOOL;						(* Minus move release *)
+
+	(* --- Limits & signals / Endlagen & Signale --- *)
 	bSignalReference			:BOOL;						(* Reference signal *)
 	bSignalHWLimitMax			:BOOL;						(* Position Hard limit switch maximum *)
 	bSignalHWLimitMin			:BOOL;						(* Position Hard limit switch minimum *)
-	lrSoftLimitMax				:LREAL; 					(* Position limit switch maximum *)
-	lrSoftLimitMin				:LREAL; 					(* Position limit switch minimum *)
-	bTipPlus					:BOOL;						(* Manual tip in plus direction *)
-	bTipMinus					:BOOL;						(* Manual tip in minus direction *)
-	lrTipDistance				:LREAL;						(* Relative distance for movements *)
-	bPlusRelease				:BOOL;						(* Plus move release *)
-	bMinusRelease				:BOOL;						(* Minus move release *)
+	lrSoftLimitMax				:LREAL;						(* Position limit switch maximum *)
+	lrSoftLimitMin				:LREAL;						(* Position limit switch minimum *)
+
+	(* --- Commands / Befehle --- *)
+	bExeReset					:BOOL;						(* Execute auto reset *)
 	bExeCtrlEnable				:BOOL;						(* Controller enable *)
 	bExeSetPos					:BOOL;						(* Execute set position *)
 	bExeHome					:BOOL;						(* Execute home *)
-	etHomingMode 				:MC_HomingMode;			(* HomingMode determines in which way the calibration is carried out. *)
+	etHomingMode				:MC_HomingMode;				(* HomingMode determines in which way the calibration is carried out. *)
 	bExeMoveAbs					:BOOL;						(* Execute move absolut *)
 	bExeMoveRel					:BOOL;						(* Execute move relative *)
 	bExeMoveAdd					:BOOL;						(* Execute move additive *)
@@ -49,60 +58,85 @@ VAR_INPUT
 	bExeGearIn					:BOOL;						(* Execute gear in *)
 	bExeGearOut					:BOOL;						(* Execute gear out *)
 	bExeStop					:BOOL;						(* Execute move stop *)
-	bExeReset					:BOOL;						(* Execute auto reset *)
-	bExtOverrideEn				:BOOL;						(* External override enable *)
-	lrExtOverride				:LREAL;						(* External override *)
+	bConfirmAlarm				:BOOL;						(* Confirm alarm *)
+
+	(* --- Manual mode / Handbetrieb --- *)
+	bTipPlus					:BOOL;						(* Manual tip in plus direction *)
+	bTipMinus					:BOOL;						(* Manual tip in minus direction *)
+	lrTipDistance				:LREAL;						(* Relative distance for movements *)
+	lrManualVelocity			:LREAL;						(* Value of velocity in manual motion [mm/s] *)
+
+	(* --- Motion parameters / Bewegungsparameter --- *)
 	lrTargetPosition			:LREAL;						(* Absolute target position *)
 	lrTargetPositionOffset		:LREAL;						(* Absolute target position offset *)
-	lrManualVelocity			:LREAL;						(* Value of velocity in manual motion [mm/s] *)
+	lrAutoVelocity				:LREAL;						(* Value of velocity in auto motion [mm/s] *)
 	lrNoRefVelocity				:LREAL;						(* Velocity if has no reference [mm/s] *)
 	bVelocityLimitEn			:BOOL;						(* Enable velocity limit *)
-	lrAutoVelocity				:LREAL;						(* Value of velocity in auto motion [mm/s] *)
 	lrVelocityMin				:LREAL;						(* Velocity minimum [%] *)
 	lrVelocityMax				:LREAL;						(* Velocity maximum [%] *)
 	lrAcceleration				:LREAL;						(* Value of the acceleration (always positive) *)
 	lrDeceleration				:LREAL;						(* Value of deceleration (always positive) *)
 	lrJerk						:LREAL;						(* Value of jerk (always positive) *)
-	bEngineTorqueLimitEn		:BOOL;						(* Enable engine torque limit *)
-	lrEngineTorque				:LREAL;						(* Engine torque [%] *)
-	bWithAbsoluteEncoder		:BOOL; 						(* Encoder is an absolute one / Absolutwertgeber *)
-	bPosLagMonitoringEn			:BOOL;						(* Enable position lag monitoring *)
-	lrOriginShiftPos			:LREAL;						(* Origin shift position *)
+
+	(* --- Override --- *)
+	lrOverride					:LREAL;						(* Override *)
+	bExtOverrideEn				:BOOL;						(* External override enable *)
+	lrExtOverride				:LREAL;						(* External override *)
+
+	(* --- Gearing / Getriebe --- *)
 	dnRatioNumerator			:DINT;						(* Gear ratio numerator. Alternatively, the gear ratio can be specified in the numerator as a floating comma value, if the denominator is 1. *)
 	udnRatioDenominator			:UDINT;						(* Gear ratio denominator *)
+
+	(* --- Drive / Antrieb --- *)
+	snModesOfOperation			:SINT;						(* Modes of drive operation *)
+	bEngineTorqueLimitEn		:BOOL;						(* Enable engine torque limit *)
+	lrEngineTorque				:LREAL;						(* Engine torque [%] *)
+	bPosLagMonitoringEn			:BOOL;						(* Enable position lag monitoring *)
+	tControllerOff				:TIME := T#60S;				(* Time to switch controller off *)
+
+	(* --- Encoder / Geber --- *)
+	bWithAbsoluteEncoder		:BOOL;						(* Encoder is an absolute one / Absolutwertgeber *)
+	lrOriginShiftPos			:LREAL;						(* Origin shift position *)
+
+	(* --- Force control / Kraftregelung --- *)
+	unForceMeasureType			:UINT;						(* Type of force measure system. 1: Simple mA,  2: EL3351 3: EL3356 *)
 	bVeloForceCtrlEn			:BOOL;						(* Enable velocity  force controller *)
 	lrVeloForceCtrlKp			:LREAL;						(* Velocity - force controller proportional band Kp *)
 	lrVeloForceCtrlTi			:LREAL;						(* Velocity - force controller integral Ti *)
 	lrVeloForceCtrlMin			:LREAL;						(* Velocity - force controller minimum  *)
 	lrVeloForceCtrlMax			:LREAL;						(* Velocity - force controller maxmimum  *)
+	lrVeloForcePreCtrlVelo		:LREAL;						(* Feedforward velocity precontrol wieghting =  0..1 *)
 	lrTargetForce				:LREAL;						(* Absolute target force [N] *)
 	lrForceCurrent				:LREAL;						(* Current force [mA] *)
 	rForceOffset				:REAL;						(* Force offset [N] *)
-	lrMaintenanceOverflowForce 	:LREAL; 					(* Maintenance overflow force [N] *)
+	lrMaintenanceOverflowForce	:LREAL;						(* Maintenance overflow force [N] *)
 	lrManualOverflowForce		:LREAL;						(* Maximal force in manual mode [N] *)
 	lrAutoOverflowForce			:LREAL;						(* Maximal force in automatic mode [N] *)
 	lrForceMinmA				:LREAL;						(* Force min [mA] 16#0000 = 4 [mA] *)
-	lrForceMaxmA 				:LREAL;						(* Force max [mA] 16#7FFF = 20 [mA] *)
+	lrForceMaxmA				:LREAL;						(* Force max [mA] 16#7FFF = 20 [mA] *)
 	lrForceMinN					:LREAL;						(* Force min [N] *)
 	lrForceMaxN					:LREAL;						(* Force max [N] *)
-	lrOverride					:LREAL;						(* Override *)
+
+	(* --- Temperature & cooling / Temperatur & Kühlung --- *)
 	lrActTemp					:LREAL;						(* Current temperatur *)
 	lrTempLimitMax				:LREAL;						(* Temperatur limit maximum*)
 	lrTempLimitMin				:LREAL;						(* Temperatur limit minimum*)
 	bCoolingActive				:BOOL;						(* Cooling on *)
-	snModesOfOperation			:SINT;						(* Modes of drive operation *)
-	bConfirmAlarm				:BOOL;						(* Confirm alarm *)
-	bOccupied					:BOOL;						(* Axis occupied *)
-	tControllerOff				:TIME := T#60S;				(* Time to switch controller off *)
-	tAdsTimeOut 				:TIME := T#2S;				(* Timout for ads commands *)
-	unForceMeasureType			:UINT;						(* Type of force measure system. 1: Simple mA,  2: EL3351 3: EL3356 *)
+
+	(* --- System --- *)
+	tAdsTimeOut					:TIME := T#2S;				(* Timout for ads commands *)
 END_VAR
 VAR_OUTPUT
 	(* Output variables / Ausgang Variablen *)
+
+	(* --- Status --- *)
 	bCtrlEnabled				:BOOL;						(* Controller enabled *)
 	bNotMoving					:BOOL;						(* Axis not moving *)
+	bStandStill					:BOOL;						(* Added by Dustin for 633_Hilton) Axis stands stil*)
 	bReferenced					:BOOL;						(* Axis referenced *)
 	bCoupled					:BOOL;						(* Axis coupled *)
+
+	(* --- Actual values / Istwerte --- *)
 	lrActPosition				:LREAL;						(* Actual position [mm] *)
 	lrActAbsPosition			:LREAL;						(* Actual absolut position [mm] *)
 	lrActVelocity				:LREAL;						(* Actual velocity [mm/s] *)
@@ -111,19 +145,26 @@ VAR_OUTPUT
 	lrAccMax					:LREAL;						(* Acceleration limit maximum *)
 	lrDecMax					:LREAL;						(* Deceleration limit maximum *)
 	lrJerkMax					:LREAL;						(* Jerk limit maximum *)
+
+	(* --- Limits / Endlagen --- *)
 	bHardLimitMaxExceeded		:BOOL;						(* Position limit switch maximum is exceeded *)
 	bHardLimitMinExceeded		:BOOL;						(* Position limit switch minimum is exceeded *)
 	bSoftLimitMaxExceeded		:BOOL;						(* Position limit switch maximum is exceeded *)
 	bSoftLimitMinExceeded		:BOOL;						(* Position limit switch minimum is exceeded *)
+
+	(* --- Peripherals / Peripherie --- *)
 	bCoolingOn					:BOOL;						(* Cooling *)
-	bSafetyDriveEnable			:BOOL;						(* Safety drive enable *)	
+
+	(* --- Safety / Sicherheit --- *)
+	bSafetyLock					:BOOL;						(* Safety lock*)
+	bSafetyDriveEnable			:BOOL;						(* Safety drive enable *)
+
+	(* --- Errors / Fehler --- *)
 	bErrorTerminal				:BOOL;						(* Error Axis terminal *)
 	bErrorDrive					:BOOL;						(* Error drive *)
 	bErrorCtrlEnabled			:BOOL;						(* Error Axis controller enabled *)
 	bErrorForceOverflow			:BOOL;						(* Error force overflow *)
 	bErrPosLimitOverflow		:BOOL;						(* Error position limit overflow *)
-	bSafetyLock					:BOOL;						(* Safety lock*)
-	
 END_VAR
 VAR_IN_OUT
 	(* Input Output variables / Ausgang Variablen *)
@@ -171,8 +212,14 @@ VAR
 	fbForceCtrl					:FB_ForceController;
 	fbCoolingOff				:FB_SignalHandlingDelay;
 	
-	fbSawingOverride				:FB_Override;
-	rtWriteForcePara				:R_TRIG;
+	fbSawingOverride			:FB_Override;
+	rtWriteForcePara			:R_TRIG;
+	
+	fbForceSimple				:FB_ScalingOffset;
+	fbForceEL3351				:FB_EL3351;
+	fbForceEL3356				:FB_EL3356;
+
+	
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[
@@ -261,6 +308,7 @@ fbController(
 	lrActAbsPos => lrActAbsPosition,
 	lrActVelo => lrActVelocity,
 	bNotMoving => bNotMoving,
+	bStandStill => bStandStill,
 	bReferenced => bReferenced,
 	bCoupled => bCoupled,
 	lrVeloLimitMax => lrVeloMax,
@@ -270,7 +318,8 @@ fbController(
 	bHardLimitMaxExceeded => bHardLimitMaxExceeded,
 	bHardLimitMinExceeded => bHardLimitMinExceeded,
 	bSoftLimitMaxExceeded => bSoftLimitMaxExceeded,
-	bSoftLimitMinExceeded => bSoftLimitMinExceeded
+	bSoftLimitMinExceeded => bSoftLimitMinExceeded,
+
 );
 
 bSafetyDriveEnable := fbMoveManual.bSafetyCtrlEnable 
@@ -377,12 +426,12 @@ THEN
 	fbForceSimple(
 		bEnable := TRUE,
 		lrInput := lrForceCurrent,
-		lrXLowLimit := lrForceMin, (* 16#0000 = 4 [mA] *)
-		lrXUpperLimit := lrForceMax, (* 16#7FFF = 20 [mA] *)
+		lrXLowLimit := lrForceMinmA, (* 16#0000 = 4 [mA] *)
+		lrXUpperLimit := lrForceMaxmA, (* 16#7FFF = 20 [mA] *)
 		lrYLowLimit := lrForceMinN,  (*[N]*)
 		lrYUpperLimit := lrForceMaxN,  (*[N]*)
 		usiPrecision := 2,
-		lrOffset := LREAL_TO_REAL(lrForceOffset),
+		lrOffset := rForceOffset,
 		lrOutputPV => lrActForce
 	);
 
@@ -399,7 +448,7 @@ THEN
 		stSupplyState := ,
 		dnRefvoltage := ,
 		dnDiffvoltage := ,
-		rOffset := LREAL_TO_REAL(lrForceOffset),
+		rOffset := rForceOffset,
 		usiPrecision := 2,
 		bDeviceOk => ,
 		sDeviceStatus => ,
@@ -552,7 +601,7 @@ THEN
 		lrGrossWeightPV =>
 	);
 
-	lrActForce := F_LRealRound(fbForceEL3356.lrGrossWeightPV - lrForceOffset, 2);
+	lrActForce := F_LRealRound(fbForceEL3356.lrGrossWeightPV - rForceOffset, 2);
 
 	lrCacheWeightTara := (*stgGr01HMI.stHMITOPLC.lrOriginShiftForce*)0.0;
 
@@ -574,8 +623,8 @@ fbForceCtrl(
 	lrCtrlVeloFilter := lrVeloForcePreCtrlVelo,
 	lrPVForce := lrActForce, (* [N] *)
 	lrSPForce := lrTargetForce, (* [N] *)
-	lrVeloMax := lrVeloForceCtrlLimit,
-	lrVeloMin := -lrVeloForceCtrlLimit,
+	lrVeloMax := lrVeloForceCtrlMax,
+	lrVeloMin := lrVeloForceCtrlMin,
 	lrTaskCycle := lrgActCycleTime
 );
 ]]></ST>
@@ -585,11 +634,7 @@ fbForceCtrl(
       <Implementation>
         <ST><![CDATA[
 (* Get axis status *)
-Axis.fbReadStatusSDS(
-	stStoeberToPlc := Drive.stStoeberToPlc,
-	stPlcToStoeber := Drive.stPlcToStoeber,
-	stAxisStatus := Axis.stAxisStatus
-);]]></ST>
+Axis.ReadStatus();]]></ST>
       </Implementation>
     </Action>
     <Action Name="A_AxisLink" Id="{8800498b-5969-4e31-ae7c-8a6f0c6603c8}">
@@ -640,7 +685,7 @@ fbMoveAuto(
 	lrAcceleration := lrAcceleration,
 	lrDeceleration := lrDeceleration,
 	lrJerk := lrJerk,
-	lrOriginPosition := lrOriginShift,
+	lrOriginShiftPos := lrOriginShiftPos,
 	bSignalReference := bSignalReference,
 	tControllerOff := tControllerOff,
 	bHomeCompleted := bHomeCompleted,
@@ -732,16 +777,22 @@ fbTerminalDiagnosis(
 bErrorTerminal := NOT fbTerminalDiagnosis.bTerminalOK;]]></ST>
       </Implementation>
     </Action>
-    <LineIds Name="FB_Gr01AxisSawBow">
+    <LineIds Name="FB_Gr01SawBow">
       <LineId Id="321" Count="15" />
       <LineId Id="338" Count="1" />
       <LineId Id="169" Count="0" />
     </LineIds>
-    <LineIds Name="FB_Gr01AxisSawBow.A_AxisAlarm">
+    <LineIds Name="FB_Gr01SawBow.A_AxisAlarm">
       <LineId Id="0" Count="13" />
     </LineIds>
-    <LineIds Name="FB_Gr01AxisSawBow.A_AxisController">
-      <LineId Id="102" Count="58" />
+    <LineIds Name="FB_Gr01SawBow.A_AxisController">
+      <LineId Id="102" Count="42" />
+      <LineId Id="164" Count="0" />
+      <LineId Id="146" Count="1" />
+      <LineId Id="166" Count="0" />
+      <LineId Id="148" Count="9" />
+      <LineId Id="165" Count="0" />
+      <LineId Id="158" Count="2" />
       <LineId Id="86" Count="1" />
       <LineId Id="161" Count="0" />
       <LineId Id="101" Count="0" />
@@ -750,24 +801,25 @@ bErrorTerminal := NOT fbTerminalDiagnosis.bTerminalOK;]]></ST>
       <LineId Id="162" Count="0" />
       <LineId Id="83" Count="1" />
     </LineIds>
-    <LineIds Name="FB_Gr01AxisSawBow.A_AxisForceCtrl">
+    <LineIds Name="FB_Gr01SawBow.A_AxisForceCtrl">
       <LineId Id="0" Count="209" />
     </LineIds>
-    <LineIds Name="FB_Gr01AxisSawBow.A_AxisGetStatus">
-      <LineId Id="0" Count="6" />
+    <LineIds Name="FB_Gr01SawBow.A_AxisGetStatus">
+      <LineId Id="8" Count="1" />
+      <LineId Id="6" Count="0" />
     </LineIds>
-    <LineIds Name="FB_Gr01AxisSawBow.A_AxisLink">
+    <LineIds Name="FB_Gr01SawBow.A_AxisLink">
       <LineId Id="7" Count="11" />
       <LineId Id="5" Count="0" />
     </LineIds>
-    <LineIds Name="FB_Gr01AxisSawBow.A_AxisMoveAuto">
+    <LineIds Name="FB_Gr01SawBow.A_AxisMoveAuto">
       <LineId Id="0" Count="3" />
       <LineId Id="36" Count="0" />
       <LineId Id="5" Count="28" />
       <LineId Id="37" Count="0" />
       <LineId Id="34" Count="0" />
     </LineIds>
-    <LineIds Name="FB_Gr01AxisSawBow.A_AxisMoveManual">
+    <LineIds Name="FB_Gr01SawBow.A_AxisMoveManual">
       <LineId Id="94" Count="0" />
       <LineId Id="96" Count="30" />
       <LineId Id="95" Count="0" />
@@ -775,7 +827,7 @@ bErrorTerminal := NOT fbTerminalDiagnosis.bTerminalOK;]]></ST>
       <LineId Id="0" Count="30" />
       <LineId Id="128" Count="1" />
     </LineIds>
-    <LineIds Name="FB_Gr01AxisSawBow.A_AxisTerminalDiag">
+    <LineIds Name="FB_Gr01SawBow.A_AxisTerminalDiag">
       <LineId Id="0" Count="7" />
     </LineIds>
   </POU>

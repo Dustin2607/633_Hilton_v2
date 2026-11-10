@@ -35637,7 +35637,7 @@ END_IF
     <Action Name="Gr05Auto_eSawbandStart_Entry" Id="{020eb7db-6d27-4c83-9b2b-f5583953e4b6}">
       <Implementation>
         <ST><![CDATA[Gr01Control.fbSawband.bExeMoveVelo:= TRUE;
-Gr01Control.fbSawband.lrAutoSpeed := stgGr01HMI.stHMITOPLC.lrSawbandAutoSpeed;
+Gr01Control.fbSawband.lrAutoVelocity := stgGr01HMI.stHMITOPLC.lrSawbandAutoSpeed;
 
 ]]></ST>
       </Implementation>
@@ -35870,7 +35870,7 @@ AND bReleaseNextStep]]></ST>
     </Transition>
     <Transition Name="Trans_11" Id="{9acd7d56-70f4-41e3-8fac-4f2fa8f8fd83}">
       <Implementation>
-        <ST><![CDATA[Gr01Control.fbSawband.fbMoveAuto.fbMoveVelo.bBusy]]></ST>
+        <ST><![CDATA[Gr01Control.fbSawband.fbMoveAuto.fbMCMoveVelo.Busy]]></ST>
       </Implementation>
     </Transition>
     <Transition Name="Trans_12" Id="{b29ccfdc-a253-4455-b478-8a89802d1ed4}">
@@ -35885,12 +35885,12 @@ AND bReleaseNextStep]]></ST>
     </Transition>
     <Transition Name="Trans_14" Id="{6b3b904d-609e-4f74-887e-c4a332baa76c}">
       <Implementation>
-        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMoveAbs.bBusy]]></ST>
+        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCMoveAbs.Busy]]></ST>
       </Implementation>
     </Transition>
     <Transition Name="Trans_15" Id="{aa107144-0995-48c2-b1be-5f0931f705ba}">
       <Implementation>
-        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMoveAbs.bError]]></ST>
+        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCMoveAbs.Error]]></ST>
       </Implementation>
     </Transition>
     <Transition Name="Trans_16" Id="{8a47e3a0-2dcc-4eaf-96ec-06ec88024399}">
@@ -35901,7 +35901,7 @@ AND bReleaseNextStep]]></ST>
     </Transition>
     <Transition Name="Trans_17" Id="{23d1c92a-a5fb-41d3-a543-090ffeaf9f25}">
       <Implementation>
-        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMoveAbs.bError]]></ST>
+        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCMoveAbs.Error]]></ST>
       </Implementation>
     </Transition>
     <Transition Name="Trans_18" Id="{d2263dee-a359-4264-a422-9a229513cfbb}">
@@ -36017,12 +36017,12 @@ AND bReleaseNextStep
     </Transition>
     <Transition Name="Trans_35" Id="{15510543-586d-461b-88e1-866a042414c6}">
       <Implementation>
-        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMoveAbs.bBusy]]></ST>
+        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCMoveAbs.Busy]]></ST>
       </Implementation>
     </Transition>
     <Transition Name="Trans_36" Id="{78b535a0-759b-43d3-b1b9-94b532d28884}">
       <Implementation>
-        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMoveAbs.bError]]></ST>
+        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCMoveAbs.Error]]></ST>
       </Implementation>
     </Transition>
     <Transition Name="Trans_37" Id="{8cc0a4fa-9ee1-45c5-8585-0612d52508a5}">
@@ -36033,7 +36033,7 @@ AND bReleaseNextStep]]></ST>
     </Transition>
     <Transition Name="Trans_38" Id="{b53eee66-2713-4295-ae54-c97af9237b0a}">
       <Implementation>
-        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMoveAbs.bError]]></ST>
+        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCMoveAbs.Error]]></ST>
       </Implementation>
     </Transition>
     <Transition Name="Trans_39" Id="{e9c255fb-5086-4480-bdac-63238da542d3}">
@@ -36065,12 +36065,12 @@ AND bReleaseNextStep]]></ST>
     </Transition>
     <Transition Name="Trans_43" Id="{37644647-fb0b-4d46-a4c2-5d95b541800d}">
       <Implementation>
-        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMoveAbs.bBusy]]></ST>
+        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCMoveAbs.Busy]]></ST>
       </Implementation>
     </Transition>
     <Transition Name="Trans_44" Id="{bf6b613f-7154-4b3f-bf51-324b4f1f262c}">
       <Implementation>
-        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMoveAbs.bError]]></ST>
+        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCMoveAbs.Error]]></ST>
       </Implementation>
     </Transition>
     <Transition Name="Trans_45" Id="{0ab1eddb-7c04-4f68-a470-72fcef43ae7c}">
@@ -36081,7 +36081,7 @@ AND bReleaseNextStep]]></ST>
     </Transition>
     <Transition Name="Trans_46" Id="{e1e3b099-39ab-48eb-ae4b-1ad5759431d9}">
       <Implementation>
-        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMoveAbs.bError]]></ST>
+        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCMoveAbs.Error]]></ST>
       </Implementation>
     </Transition>
     <Transition Name="Trans_47" Id="{9476b89a-8f35-4799-83d4-03e82138e902}">
@@ -36167,7 +36167,7 @@ AND bReleaseNextStep]]></ST>
     </Transition>
     <Transition Name="Trans_6" Id="{8e5b9af4-6320-4af4-967d-8615b8e6dabc}">
       <Implementation>
-        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMoveVelo.bBusy]]></ST>
+        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCMoveVelo.Busy]]></ST>
       </Implementation>
     </Transition>
     <Transition Name="Trans_60" Id="{971986f1-afa8-4631-a150-12b43643526c}">
@@ -36178,22 +36178,22 @@ AND bReleaseNextStep]]></ST>
     <Transition Name="Trans_61" Id="{049c2c78-8b06-48b1-86b1-659bce566ca4}">
       <Implementation>
         <ST><![CDATA[NOT binGr05PipeEndEdge
-OR Gr05Control.fbAxisClamp1.fbMoveAuto.fbMoveAbs.bBusy]]></ST>
+OR Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCMoveAbs.Busy]]></ST>
       </Implementation>
     </Transition>
     <Transition Name="Trans_62" Id="{ab1c7d03-d8ce-4c4f-bc2a-2f89b17fe068}">
       <Implementation>
-        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMoveAbs.bError]]></ST>
+        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCMoveAbs.Error]]></ST>
       </Implementation>
     </Transition>
     <Transition Name="Trans_63" Id="{e4cef4bf-9afd-4fe2-a6b4-5e76e2d98e3b}">
       <Implementation>
-        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbStop.bBusy]]></ST>
+        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCStop.Busy]]></ST>
       </Implementation>
     </Transition>
     <Transition Name="Trans_64" Id="{2cc9c9e4-4837-49d4-b31d-2f987d2761b6}">
       <Implementation>
-        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbStop.bError]]></ST>
+        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCStop.Error]]></ST>
       </Implementation>
     </Transition>
     <Transition Name="Trans_65" Id="{1fd3af44-cc34-4fe9-a3fe-0651e24799b9}">
@@ -36205,7 +36205,7 @@ AND bReleaseNextStep]]></ST>
     </Transition>
     <Transition Name="Trans_66" Id="{dd2ddf4b-0db4-4fb6-88ac-aa712741aa0d}">
       <Implementation>
-        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbStop.bError]]></ST>
+        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCStop.Error]]></ST>
       </Implementation>
     </Transition>
     <Transition Name="Trans_67" Id="{0b733374-9c56-4a18-9450-8350918fb205}">
@@ -36217,17 +36217,17 @@ AND bReleaseNextStep]]></ST>
     </Transition>
     <Transition Name="Trans_68" Id="{c95cf03b-e98e-4821-828f-a4723c836fda}">
       <Implementation>
-        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMoveVelo.bBusy]]></ST>
+        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCMoveVelo.Busy]]></ST>
       </Implementation>
     </Transition>
     <Transition Name="Trans_69" Id="{02611326-3bf6-4659-a5f1-06d69a7f86ca}">
       <Implementation>
-        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMoveVelo.bError]]></ST>
+        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCMoveVelo.Error]]></ST>
       </Implementation>
     </Transition>
     <Transition Name="Trans_7" Id="{d2cc99d2-2baa-4c66-8c61-1574092b01d9}">
       <Implementation>
-        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMoveVelo.bError]]></ST>
+        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCMoveVelo.Error]]></ST>
       </Implementation>
     </Transition>
     <Transition Name="Trans_70" Id="{147e7842-75d8-4982-99be-4acd026e049c}">
@@ -36238,7 +36238,7 @@ AND bReleaseNextStep]]></ST>
     </Transition>
     <Transition Name="Trans_71" Id="{b5494e10-3c0d-4c65-8350-5ad04d31aa3c}">
       <Implementation>
-        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMoveVelo.bError]]></ST>
+        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCMoveVelo.Error]]></ST>
       </Implementation>
     </Transition>
     <Transition Name="Trans_72" Id="{b01024d1-36ef-4dfc-a55e-ff07b835c43c}">
@@ -36248,12 +36248,12 @@ AND bReleaseNextStep]]></ST>
     </Transition>
     <Transition Name="Trans_73" Id="{24f62e30-d7db-4e81-9a6a-702321be4f16}">
       <Implementation>
-        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbStop.bBusy]]></ST>
+        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCStop.Busy]]></ST>
       </Implementation>
     </Transition>
     <Transition Name="Trans_74" Id="{007a540b-c73f-4993-9237-b79ca7773d1e}">
       <Implementation>
-        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbStop.bError]]></ST>
+        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCStop.Error]]></ST>
       </Implementation>
     </Transition>
     <Transition Name="Trans_75" Id="{87cd0eb4-ee69-4d2f-b286-111fa5b31793}">
@@ -36265,7 +36265,7 @@ AND bReleaseNextStep]]></ST>
     </Transition>
     <Transition Name="Trans_76" Id="{00915d48-24a0-46d3-ab6a-a85c3ee66421}">
       <Implementation>
-        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbStop.bError]]></ST>
+        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCStop.Error]]></ST>
       </Implementation>
     </Transition>
     <Transition Name="Trans_77" Id="{966a3c91-99ab-4190-b151-9b0d5b19940d}">
@@ -36360,7 +36360,7 @@ AND bReleaseNextStep
     </Transition>
     <Transition Name="Trans_9" Id="{19aed697-83cf-49ad-8f74-33fcabc9994e}">
       <Implementation>
-        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMoveVelo.bError]]></ST>
+        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCMoveVelo.Error]]></ST>
       </Implementation>
     </Transition>
     <Transition Name="Trans_90" Id="{549ff61b-e991-48a7-a0dd-7ab7863fb678}">
@@ -36376,12 +36376,12 @@ AND bReleaseNextStep]]></ST>
     </Transition>
     <Transition Name="Trans_92" Id="{2a6521bf-6649-4010-912a-b9ef18a77915}">
       <Implementation>
-        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMoveAbs.bBusy]]></ST>
+        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCMoveAbs.Busy]]></ST>
       </Implementation>
     </Transition>
     <Transition Name="Trans_93" Id="{3272d9dc-327c-4690-b0f1-e4c705aa3e6c}">
       <Implementation>
-        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMoveAbs.bError]]></ST>
+        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCMoveAbs.Error]]></ST>
       </Implementation>
     </Transition>
     <Transition Name="Trans_94" Id="{e0aac3cc-7470-4f83-a063-26d79d5b1755}">
@@ -36392,12 +36392,12 @@ AND bReleaseNextStep]]></ST>
     </Transition>
     <Transition Name="Trans_95" Id="{bd63753f-86cd-4c09-b2e0-cd6fc7ffdc90}">
       <Implementation>
-        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMoveAbs.bError]]></ST>
+        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCMoveAbs.Error]]></ST>
       </Implementation>
     </Transition>
     <Transition Name="Trans_96" Id="{a7529c8d-217d-4d53-9229-2f2b5658353b}">
       <Implementation>
-        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMoveAbs.bError]]></ST>
+        <ST><![CDATA[Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCMoveAbs.Error]]></ST>
       </Implementation>
     </Transition>
     <Transition Name="Trans_97" Id="{46072854-4d14-4957-9545-eac42c7c290d}">

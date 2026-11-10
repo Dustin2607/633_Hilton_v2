@@ -200,11 +200,11 @@ OF
 		Gr01Control.fbAxisAngle.lrTargetPosition := stgGr01HMI.stHMITOPLC.lrActSawingAngle;
 		Gr01Control.fbAxisAngle.lrAutoVelocity := stgGr01HMI.stHMITOPLC.lrAxisAngleAutoVelo;
 
-		IF Gr01Control.fbAxisAngle.fbMoveAuto.fbMoveAbs.bBusy
+		IF Gr01Control.fbAxisAngle.fbMoveAuto.fbMCMoveAbs.Busy
 		THEN
 			etGr01Auto := ET_Gr01Auto_eWfAxisAngleInWorkPos;              (* Next step *)
 
-		ELSIF Gr01Control.fbAxisAngle.fbMoveAuto.fbMoveAbs.bError
+		ELSIF Gr01Control.fbAxisAngle.fbMoveAuto.fbMCMoveAbs.Error
 		THEN
 			Gr01Control.fbAxisAngle.bExeMoveAbs := FALSE;
 
@@ -220,7 +220,7 @@ OF
 
 			etGr01Auto := ET_Gr01Auto_eWfReq;              (* Next step *)
 
-		ELSIF Gr01Control.fbAxisAngle.fbMoveAuto.fbMoveAbs.bError
+		ELSIF Gr01Control.fbAxisAngle.fbMoveAuto.fbMCMoveAbs.Error
 		THEN
 			Gr01Control.fbAxisAngle.bExeMoveAbs := FALSE;
 
@@ -274,11 +274,11 @@ OF
 	ET_Gr01Auto_eSawbandStart:
 		Gr01Control.fbSawband.bExeMoveVelo := TRUE;
 
-		IF Gr01Control.fbSawband.fbMoveAuto.fbMoveVelo.bBusy
+		IF Gr01Control.fbSawband.fbMoveAuto.fbMCMoveVelo.Busy
 		THEN
 			etGr01Auto := ET_Gr01Auto_eWfSawbandStart;              (* Next step *)
 
-		ELSIF Gr01Control.fbSawband.fbMoveAuto.fbMoveVelo.bError
+		ELSIF Gr01Control.fbSawband.fbMoveAuto.fbMCMoveVelo.Error
 		THEN
 			Gr01Control.fbSawband.bExeMoveVelo := FALSE;
 
@@ -288,7 +288,7 @@ OF
 
 	ET_Gr01Auto_eWfSawbandStart:
 		IF Gr01Control.fbSawband.bReady
-		     AND Gr01Control.fbSawband.fbMoveAuto.fbMoveVelo.bInVelocity
+		     AND Gr01Control.fbSawband.fbMoveAuto.fbMCMoveVelo.InVelocity
 		     AND bReleaseNextStep
 		THEN
 			Gr01Control.fbSawband.bExeMoveVelo := FALSE;
@@ -296,7 +296,7 @@ OF
 
 			etGr01Auto := ET_Gr01Auto_eSawingStart;              (* Next step *)
 
-		ELSIF Gr01Control.fbSawband.fbMoveAuto.fbMoveVelo.bError
+		ELSIF Gr01Control.fbSawband.fbMoveAuto.fbMCMoveVelo.Error
 		THEN
 			Gr01Control.fbSawband.bExeMoveVelo := FALSE;
 
@@ -310,11 +310,11 @@ OF
 		Gr01Control.fbAxisSawBow.lrTargetPosition := lrgGr01SawingEndPosition;
 		Gr01Control.fbAxisSawBow.lrAutoVelocity := stgGr01HMI.stHMITOPLC.lrAxisSawBowAutoVelo * lrgGr01SawingSpeed / 100; (* velo=100 ^= 50mm/s *)
 
-		IF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMoveAbs.bBusy
+		IF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMCMoveAbs.Busy
 		THEN
 			etGr01Auto := ET_Gr01Auto_eWfSawingDone;              (* Next step *)
 
-		ELSIF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMoveAbs.bError
+		ELSIF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMCMoveAbs.Error
 		THEN
 			Gr01Control.fbAxisSawBow.bExtOverrideEn := FALSE;
 			Gr01Control.fbAxisSawBow.bExeMoveAbs := FALSE;
@@ -339,7 +339,7 @@ OF
 
 			etGr01Auto := ET_Gr01Auto_eAxisSawBowToSafePos;              (* Next step *)
 
-		ELSIF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMoveAbs.bError
+		ELSIF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMCMoveAbs.Error
 		THEN
 			tonSawingDoneDelay(IN := FALSE);
 
@@ -357,11 +357,11 @@ OF
 												        Gr01Control.fbAxisSawBow.lrSoftLimitMax);
 		Gr01Control.fbAxisSawBow.lrAutoVelocity := stgGr01HMI.stHMITOPLC.lrAxisSawBowAutoVelo;
 
-		IF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMoveAbs.bBusy
+		IF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMCMoveAbs.Busy
 		THEN
 			etGr01Auto := ET_Gr01Auto_eWfAxisSawBowInSafePos;              (* Next step *)
 
-		ELSIF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMoveAbs.bError
+		ELSIF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMCMoveAbs.Error
 		THEN
 			Gr01Control.fbAxisSawBow.bExeMoveAbs := FALSE;
 
@@ -377,7 +377,7 @@ OF
 
 			etGr01Auto := ET_Gr01Auto_eTransportReq;              (* Next step *)
 
-		ELSIF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMoveAbs.bError
+		ELSIF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMCMoveAbs.Error
 		THEN
 			Gr01Control.fbAxisSawBow.bExeMoveAbs := FALSE;
 
@@ -410,11 +410,11 @@ OF
 												        Gr01Control.fbAxisSawBow.lrSoftLimitMax);
 		Gr01Control.fbAxisSawBow.lrAutoVelocity := stgGr01HMI.stHMITOPLC.lrAxisSawBowAutoVelo;
 
-		IF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMoveAbs.bBusy
+		IF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMCMoveAbs.Busy
 		THEN
 			etGr01Auto := ET_Gr01Auto_eWfAxisSawBowInSafePos2;              (* Next step *)
 
-		ELSIF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMoveAbs.bError
+		ELSIF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMCMoveAbs.Error
 		THEN
 			Gr01Control.fbAxisSawBow.bExeMoveAbs := FALSE;
 
@@ -430,7 +430,7 @@ OF
 
 			etGr01Auto := ET_Gr01Auto_eAxisAngleToBasePos;              (* Next step *)
 
-		ELSIF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMoveAbs.bError
+		ELSIF Gr01Control.fbAxisSawBow.fbMoveAuto.fbMCMoveAbs.Error
 		THEN
 			Gr01Control.fbAxisSawBow.bExeMoveAbs := FALSE;
 
@@ -443,11 +443,11 @@ OF
 		Gr01Control.fbAxisAngle.lrTargetPosition := 0.0;
 		Gr01Control.fbAxisAngle.lrAutoVelocity := stgGr01HMI.stHMITOPLC.lrAxisAngleAutoVelo;
 
-		IF Gr01Control.fbAxisAngle.fbMoveAuto.fbMoveAbs.bBusy
+		IF Gr01Control.fbAxisAngle.fbMoveAuto.fbMCMoveAbs.Busy
 		THEN
 			etGr01Auto := ET_Gr01Auto_eWfAxisAngleInBasePos;              (* Next step *)
 
-		ELSIF Gr01Control.fbAxisAngle.fbMoveAuto.fbMoveAbs.bError
+		ELSIF Gr01Control.fbAxisAngle.fbMoveAuto.fbMCMoveAbs.Error
 		THEN
 			Gr01Control.fbAxisAngle.bExeMoveAbs := FALSE;
 
@@ -463,7 +463,7 @@ OF
 
 			etGr01Auto := ET_Gr01Auto_eDone;              (* Next step *)
 
-		ELSIF Gr01Control.fbAxisAngle.fbMoveAuto.fbMoveAbs.bError
+		ELSIF Gr01Control.fbAxisAngle.fbMoveAuto.fbMCMoveAbs.Error
 		THEN
 			Gr01Control.fbAxisAngle.bExeMoveAbs := FALSE;
 
@@ -510,7 +510,8 @@ END_IF
 ]]></ST>
     </Implementation>
     <LineIds Name="FB_Gr01AutoProcedure">
-      <LineId Id="57" Count="448" />
+      <LineId Id="1010" Count="447" />
+      <LineId Id="505" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>

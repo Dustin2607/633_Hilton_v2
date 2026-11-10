@@ -249,7 +249,7 @@ bAllAxisCtrlEnabled := F_ChkAllAxisEnabled(
 (* Detect all axis stand still *)
 bAllAxisStandStill := F_ChkAllAxisStandStill(
 	bEnable := TRUE,
-	bAxis1StandStill := igGr05AxisClamp1.stAxisStatus.bStandStill,
+	bAxis1StandStill := igGr05AxisClamp1.Status.StandStill,
 	bAxis2StandStill := TRUE,
 	bAxis3StandStill := TRUE,
 	bAxis4StandStill := TRUE,
@@ -264,8 +264,7 @@ bAllAxisStandStill := F_ChkAllAxisStandStill(
 (* Detect all axis not moving *)
 bAllAxisNotMoving := F_ChkAllAxisNotMoving(
 	bEnable := TRUE,
-	bAxis1NotMoving := igGr05AxisClamp1.stNcToPlc.stBaseDevice.stCommandPositioning.bNotMoving
-					   AND igGr05AxisClamp1.stNcToPlc.stBaseDevice.stCommandPositioning.dnActVelocity = 0,
+	bAxis1NotMoving := Gr05Control.fbAxisClamp1.bNotMoving, 
 	bAxis2NotMoving := TRUE,
 	bAxis3NotMoving := TRUE,
 	bAxis4NotMoving := TRUE,
@@ -313,52 +312,54 @@ lrgGr05SafetyDistance := SEL(Gr01Persistent.rPipeDiameter > 400 , 0.0 ,200.0);
 stgGr05HMI.stHMITOPLC.arlrAxisClampNoRefVelo[1] := 10;
 
 fbAxisClamp1(
-	bEnable := TRUE,
-	etMachineMode := etgGr00MachineMode,
-	etMachineState := etgGr00MachineState,
-	bNoEStop := bgGr00NoEmergencyStop,
-	bPowerSupplyOn := bgGr00PowerSupplyOk,
-	bSafetyOK := bgGr05LightCurtainOK
-			        AND bgGr00AllDoorsClosedLocked,
-	bMachineStandstill := bgGr00MachineStandstill,
-	bCtrlInterrupt := FALSE,
-	bMoveRelease := TRUE,
-	bMoveInterrupt := FALSE,
-	bSignalReference := NOT binGr05AxisClamp1LimitMax,
-	bHWSignalLimitMax := NOT binGr05AxisClamp1LimitMax,
-	bHWSignalLimitMin := NOT binGr05AxisClamp1LimitMin,
-	lrSoftLimitMax := SEL(bgGr00ModeAutomatic, stgGr05HMI.stHMITOPLC.arlrAxisClampSoftLimitMax[1], stgGr05HMI.stHMITOPLC.arlrAxisClampSoftLimitMax[1] + 0.5),
-	lrSoftLimitMin := SEL(bgGr00ModeAutomatic, stgGr05HMI.stHMITOPLC.arlrAxisClampSoftLimitMin[1], stgGr05HMI.stHMITOPLC.arlrAxisClampSoftLimitMin[1] - 0.5),
-	bTipPlus := stgGr05HMI.stHMITOPLC.arbBtnAxisClampPlus[1],
-	bTipMinus := stgGr05HMI.stHMITOPLC.arbBtnAxisClampMinus[1],
-	lrTipDistance:= 0,
-	bPlusRelease := TRUE,
-	bMinusRelease := TRUE, (*stgGr00HMI.stHMITOPLC.bSafetyInterlockOff*)
-	lrManualVelocity := stgGr05HMI.stHMITOPLC.arlrAxisClampManualVelo[1],
-	lrVelocityNoRef := stgGr05HMI.stHMITOPLC.arlrAxisClampNoRefVelo[1],
-	bVelocityLimitEn := FALSE,
-	lrAcceleration := 100.0,
-	lrDeceleration := 100.0,
-	lrJerk := 100.0,
-	bEngineTorqueLimitEn := FALSE,
-	lrEngineTorque := 200.0,
-	bWithAbsoluteEncoder := FALSE,
-	lrOriginShift := stgGr05HMI.stHMITOPLC.arlrAxisClampOriginShiftPos[1],
-	dnRatioNumerator := 1,
-	udnRatioDenominator := 1,
-	bVeloForceCtrlEn := FALSE,
-	lrOverride := fbUtility.rActOverride,
-	lrExtOverride := 100.0,
-	bConfirmAlarm := bgGr00ConfirmAlarm,
-	tControllerOff := tgGr05ControllerOff,
-	tAdsTimeOut := DEFAULT_ADS_TIMEOUT,
-	bHomeCompleted := bgGr05HomeCompleted,
-	Drive := igGr05DriveClamp1,
-	Axis := igGr05AxisClamp1,
-	lrActPosition => stgGr05HMI.stPLCTOHMI.arlrAxisClampActPos[1],
-	lrActVelocity => stgGr05HMI.stPLCTOHMI.arlrAxisClampActVelo[1],
-	lrActForce => stgGr05HMI.stPLCTOHMI.arlrAxisClampActForce[1]
+	bEnable						:= TRUE,
+	etMachineMode				:= etgGr00MachineMode,
+	etMachineState				:= etgGr00MachineState,
+	bMachineStandstill			:= bgGr00MachineStandstill,
+	bNoEStop					:= bgGr00NoEmergencyStop,
+	bPowerSupplyOn				:= bgGr00PowerSupplyOk,
+	bSafetyOK					:= bgGr05LightCurtainOK
+								   AND bgGr00AllDoorsClosedLocked,
+	bCtrlInterrupt				:= FALSE,
+	bMoveRelease				:= TRUE,
+	bMoveInterrupt				:= FALSE,
+	bPlusRelease				:= TRUE,
+	bMinusRelease				:= TRUE,	(*stgGr00HMI.stHMITOPLC.bSafetyInterlockOff*)
+	bSignalReference			:= NOT binGr05AxisClamp1LimitMax,
+	bHWSignalLimitMax			:= NOT binGr05AxisClamp1LimitMax,
+	bHWSignalLimitMin			:= NOT binGr05AxisClamp1LimitMin,
+	lrSoftLimitMax				:= SEL(bgGr00ModeAutomatic, stgGr05HMI.stHMITOPLC.arlrAxisClampSoftLimitMax[1], stgGr05HMI.stHMITOPLC.arlrAxisClampSoftLimitMax[1] + 0.5),
+	lrSoftLimitMin				:= SEL(bgGr00ModeAutomatic, stgGr05HMI.stHMITOPLC.arlrAxisClampSoftLimitMin[1], stgGr05HMI.stHMITOPLC.arlrAxisClampSoftLimitMin[1] - 0.5),
+	bConfirmAlarm				:= bgGr00ConfirmAlarm,
+	bTipPlus					:= stgGr05HMI.stHMITOPLC.arbBtnAxisClampPlus[1],
+	bTipMinus					:= stgGr05HMI.stHMITOPLC.arbBtnAxisClampMinus[1],
+	lrTipDistance				:= 0,
+	lrManualVelocity			:= stgGr05HMI.stHMITOPLC.arlrAxisClampManualVelo[1],
+	lrVelocityNoRef				:= stgGr05HMI.stHMITOPLC.arlrAxisClampNoRefVelo[1],
+	bVelocityLimitEn			:= FALSE,
+	lrAcceleration				:= 100.0,
+	lrDeceleration				:= 100.0,
+	lrJerk						:= 100.0,
+	lrOverride					:= fbUtility.rActOverride,
+	lrExtOverride				:= 100.0,
+	dnRatioNumerator			:= 1,
+	udnRatioDenominator			:= 1,
+	bEngineTorqueLimitEn		:= FALSE,
+	lrEngineTorque				:= 200.0,
+	tControllerOff				:= tgGr05ControllerOff,
+	bWithAbsoluteEncoder		:= FALSE,
+	lrOriginShift				:= stgGr05HMI.stHMITOPLC.arlrAxisClampOriginShiftPos[1],
+	bVeloForceCtrlEn			:= FALSE,
+	tAdsTimeOut					:= DEFAULT_ADS_TIMEOUT,
+	bHomeCompleted				:= bgGr05HomeCompleted,
+	Drive						:= igGr05DriveClamp1,
+	Axis						:= igGr05AxisClamp1,
+	MasterAxis					:= GVL_Gr00Interface.iAxisDummy,
+	lrActPosition				=> stgGr05HMI.stPLCTOHMI.arlrAxisClampActPos[1],
+	lrActVelocity				=> stgGr05HMI.stPLCTOHMI.arlrAxisClampActVelo[1],
+	lrActForce					=> stgGr05HMI.stPLCTOHMI.arlrAxisClampActForce[1]
 );
+
 
 (* Control open/close clamp cylinder *)
 FOR unClampIdx :=1 TO ungGr05ClampMaxNo
@@ -560,10 +561,14 @@ fbUtility(
       <LineId Id="0" Count="15" />
     </LineIds>
     <LineIds Name="Gr05Control.A_Signals">
-      <LineId Id="0" Count="71" />
+      <LineId Id="0" Count="45" />
+      <LineId Id="47" Count="24" />
     </LineIds>
     <LineIds Name="Gr05Control.A_Transport">
-      <LineId Id="0" Count="206" />
+      <LineId Id="0" Count="16" />
+      <LineId Id="306" Count="46" />
+      <LineId Id="304" Count="1" />
+      <LineId Id="64" Count="142" />
     </LineIds>
     <LineIds Name="Gr05Control.A_Utility">
       <LineId Id="0" Count="41" />

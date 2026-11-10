@@ -105,13 +105,13 @@ CASE etHomeSawband OF
 
 	ET_Gr01HomeSawband_eStop:
 		 pfbAxis^.bExeStop := TRUE;
-		 pfbAxis^.lrAutoSpeed := 0.0;
+		 pfbAxis^.lrAutoVelocity := 0.0;
 
-		IF pfbAxis^.fbMoveAuto.fbStop.bBusy
+		IF pfbAxis^.fbMoveAuto.fbMCStop.Busy
 		THEN
 			etHomeSawband := ET_Gr01HomeSawband_eWFStop;              (* Next step *)
 
-		ELSIF pfbAxis^.fbMoveAuto.fbStop.bError
+		ELSIF pfbAxis^.fbMoveAuto.fbMCStop.Error
 		THEN
 			pfbAxis^.bExeStop := FALSE;
 
@@ -128,7 +128,7 @@ CASE etHomeSawband OF
 
 			etHomeSawband :=ET_Gr01HomeSawband_eReset;              (* Next step *)
 
-		ELSIF pfbAxis^.fbMoveAuto.fbStop.bError
+		ELSIF pfbAxis^.fbMoveAuto.fbMCStop.Error
 		THEN
 			pfbAxis^.bExeStop := FALSE;
 
@@ -138,13 +138,13 @@ CASE etHomeSawband OF
 
 	ET_Gr01HomeSawband_eReset:
 		pfbAxis^.bExeReset := TRUE;
-		pfbAxis^.lrAutoSpeed := 0.0;
+		pfbAxis^.lrAutoVelocity := 0.0;
 
-		IF pfbAxis^.fbController.fbReset.bBusy
+		IF pfbAxis^.fbController.fbMCReset.Busy
 		THEN
 			etHomeSawband := ET_Gr01HomeSawband_eWfReset;              (* Next step *)
 
-		ELSIF pfbAxis^.fbController.fbReset.bError
+		ELSIF pfbAxis^.fbController.fbMCReset.Error
 		THEN
 			pfbAxis^.bExeReset := FALSE;
 
@@ -160,7 +160,7 @@ CASE etHomeSawband OF
 
 			etHomeSawband := ET_Gr01HomeSawband_eDone;         		(* Next step *)
 
-		ELSIF pfbAxis^.fbController.fbReset.bError
+		ELSIF pfbAxis^.fbController.fbMCReset.Error
 		THEN
 			pfbAxis^.bExeReset := FALSE;
 

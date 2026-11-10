@@ -358,22 +358,46 @@
     <Folder Include="POUs\Tc3 Objects\Engineering\Position\Encoder" />
     <Folder Include="POUs\Tc3 Objects\Engineering\Position\Residuals" />
     <Folder Include="POUs\Tc3 Objects\ExternalHardware">
-      <ExcludeFromBuild>true</ExcludeFromBuild>
+      <ExcludeFromBuild>false</ExcludeFromBuild>
     </Folder>
     <Folder Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff" />
-    <Folder Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL..KL600x" />
-    <Folder Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3214" />
-    <Folder Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3312" />
-    <Folder Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3351" />
-    <Folder Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3356" />
-    <Folder Include="POUs\Tc3 Objects\ExternalHardware\Cognex" />
+    <Folder Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL..KL600x">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Folder>
+    <Folder Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3214">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Folder>
+    <Folder Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3312">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Folder>
+    <Folder Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3351">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Folder>
+    <Folder Include="POUs\Tc3 Objects\ExternalHardware\Beckhoff\EL3356">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Folder>
+    <Folder Include="POUs\Tc3 Objects\ExternalHardware\Cognex">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Folder>
     <Folder Include="POUs\Tc3 Objects\ExternalHardware\Cognex\Scanner" />
-    <Folder Include="POUs\Tc3 Objects\ExternalHardware\Gefran" />
-    <Folder Include="POUs\Tc3 Objects\ExternalHardware\KUKA" />
-    <Folder Include="POUs\Tc3 Objects\ExternalHardware\Munsch" />
-    <Folder Include="POUs\Tc3 Objects\ExternalHardware\Periphery" />
-    <Folder Include="POUs\Tc3 Objects\ExternalHardware\Robot" />
-    <Folder Include="POUs\Tc3 Objects\ExternalHardware\YASKAWA" />
+    <Folder Include="POUs\Tc3 Objects\ExternalHardware\Gefran">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Folder>
+    <Folder Include="POUs\Tc3 Objects\ExternalHardware\KUKA">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Folder>
+    <Folder Include="POUs\Tc3 Objects\ExternalHardware\Munsch">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Folder>
+    <Folder Include="POUs\Tc3 Objects\ExternalHardware\Periphery">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Folder>
+    <Folder Include="POUs\Tc3 Objects\ExternalHardware\Robot">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Folder>
+    <Folder Include="POUs\Tc3 Objects\ExternalHardware\YASKAWA">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Folder>
     <Folder Include="POUs\Tc3 Objects\File">
       <ExcludeFromBuild>true</ExcludeFromBuild>
     </Folder>
@@ -688,8 +712,8 @@
     <Compile Include="POUs\Machine\Group_0100 - Production\Gr01Control\Gr01Control.TcPOU" />
     <Compile Include="POUs\Machine\Group_0100 - Production\Gr01Control\Gr01Safety\FB_Gr01Safety.TcPOU" />
     <Compile Include="POUs\Machine\Group_0100 - Production\Gr01Control\Gr01Signals\FB_Gr01Signals.TcPOU" />
-    <Compile Include="POUs\Machine\Group_0100 - Production\Gr01Control\Gr01Units\FB_Gr01AxisAngle.TcPOU" />
-    <Compile Include="POUs\Machine\Group_0100 - Production\Gr01Control\Gr01Units\FB_Gr01AxisSawBow.TcPOU" />
+    <Compile Include="POUs\Machine\Group_0100 - Production\Gr01Control\Gr01Units\FB_Gr01Angle.TcPOU" />
+    <Compile Include="POUs\Machine\Group_0100 - Production\Gr01Control\Gr01Units\FB_Gr01SawBow.TcPOU" />
     <Compile Include="POUs\Machine\Group_0100 - Production\Gr01Control\Gr01Units\FB_Gr01Sawband.TcPOU" />
     <Compile Include="POUs\Machine\Group_0100 - Production\Gr01Control\Gr01Utility\FB_Gr01Utility.TcPOU" />
     <Compile Include="POUs\Machine\Group_0100 - Production\Gr01Coordinator.TcPOU" />
@@ -2013,8 +2037,8 @@
   <ProjectExtensions>
     <PlcProjectOptions>
       <XmlArchive>
-  <Data>
-    <o xml:space="preserve" t="OptionKey">
+        <Data>
+          <o xml:space="preserve" t="OptionKey">
       <v n="Name">"&lt;ProjectRoot&gt;"</v>
       <d n="SubKeys" t="Hashtable" ckt="String" cvt="OptionKey">
         <v>{A3BBA713-63D7-4de6-BEC2-E3BAAD8789F8}</v>
@@ -2098,22 +2122,22 @@
       </d>
       <d n="Values" t="Hashtable" />
     </o>
-  </Data>
-  <TypeList>
-    <Type n="ArrayList">System.Collections.ArrayList</Type>
-    <Type n="Boolean">System.Boolean</Type>
-    <Type n="Group">{daecd4be-1e2b-4335-a125-4a1ac83ea49f}</Type>
-    <Type n="GroupList">{bf4dffda-f055-446d-9d7a-5f126720896b}</Type>
-    <Type n="Guid">System.Guid</Type>
-    <Type n="Hashtable">System.Collections.Hashtable</Type>
-    <Type n="Int32">System.Int32</Type>
-    <Type n="OptionKey">{54dd0eac-a6d8-46f2-8c27-2f43c7e49861}</Type>
-    <Type n="String">System.String</Type>
-    <Type n="User">{cd83029e-13b0-491e-9e4b-921adda0d86b}</Type>
-    <Type n="UserAuthentication">{3635a671-97f5-41bb-9e29-0ebb9795975c}</Type>
-    <Type n="UserList">{9fe6b547-6bc8-4f11-b589-b517860c5891}</Type>
-  </TypeList>
-</XmlArchive>
+        </Data>
+        <TypeList>
+          <Type n="ArrayList">System.Collections.ArrayList</Type>
+          <Type n="Boolean">System.Boolean</Type>
+          <Type n="Group">{daecd4be-1e2b-4335-a125-4a1ac83ea49f}</Type>
+          <Type n="GroupList">{bf4dffda-f055-446d-9d7a-5f126720896b}</Type>
+          <Type n="Guid">System.Guid</Type>
+          <Type n="Hashtable">System.Collections.Hashtable</Type>
+          <Type n="Int32">System.Int32</Type>
+          <Type n="OptionKey">{54dd0eac-a6d8-46f2-8c27-2f43c7e49861}</Type>
+          <Type n="String">System.String</Type>
+          <Type n="User">{cd83029e-13b0-491e-9e4b-921adda0d86b}</Type>
+          <Type n="UserAuthentication">{3635a671-97f5-41bb-9e29-0ebb9795975c}</Type>
+          <Type n="UserList">{9fe6b547-6bc8-4f11-b589-b517860c5891}</Type>
+        </TypeList>
+      </XmlArchive>
     </PlcProjectOptions>
   </ProjectExtensions>
 </Project>

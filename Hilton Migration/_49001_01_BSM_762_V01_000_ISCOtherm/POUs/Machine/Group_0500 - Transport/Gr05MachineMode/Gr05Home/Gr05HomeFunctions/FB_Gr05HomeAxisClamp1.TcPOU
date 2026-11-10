@@ -108,7 +108,7 @@ CASE etHomeAxis OF
 		Gr05Control.fbAxisClamp1.bExeStop := TRUE;
 		Gr05Control.fbAxisClamp1.lrAutoVelocity := 0.0;
 
-		IF Gr05Control.fbAxisClamp1.fbMoveAuto.fbStop.bBusy
+		IF Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCStop.Busy
 		THEN
 			etHomeAxis := ET_Gr05HomeAxisClamp1_eWFMoveStop;              (* Next step *)
 		END_IF;
@@ -126,7 +126,7 @@ CASE etHomeAxis OF
 		Gr05Control.fbAxisClamp1.bExeReset := TRUE;
 		Gr05Control.fbAxisClamp1.lrAutoVelocity := 0.0;
 
-		IF Gr05Control.fbAxisClamp1.fbController.fbReset.bBusy
+		IF Gr05Control.fbAxisClamp1.fbController.fbMCReset.Busy
 		THEN
 			etHomeAxis := ET_Gr05HomeAxisClamp1_eWfAxisReset;              (* Next step *)
 		END_IF;
@@ -149,11 +149,11 @@ CASE etHomeAxis OF
 		THEN
 			Gr05Control.fbAxisClamp1.bExeHome := TRUE;
 
-			IF Gr05Control.fbAxisClamp1.fbMoveAuto.fbHome.bBusy
+			IF Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCHome.Busy
 			THEN
 				etHomeAxis := ET_Gr05HomeAxisClamp1_eWfAxisRef;              (* Next step *)
 
-			ELSIF Gr05Control.fbAxisClamp1.fbMoveAuto.fbHome.bError
+			ELSIF Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCHome.Error
 			THEN
 				Gr05Control.fbAxisClamp1.bExeHome := FALSE;
 	
@@ -195,7 +195,7 @@ CASE etHomeAxis OF
 
 			etHomeAxis := ET_Gr05HomeAxisClamp1_eWfErrorByPipeCollision;		(* Next step *)
 
-		ELSIF Gr05Control.fbAxisClamp1.fbMoveAuto.fbHome.bError
+		ELSIF Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCHome.Error
 		THEN
 			tonWatchdog(IN := FALSE);
 			Gr05Control.fbAxisClamp1.bExeHome := FALSE;
@@ -225,11 +225,11 @@ CASE etHomeAxis OF
 		Gr05Control.fbAxisClamp1.lrTargetPosition := lrHomePosition;
 		Gr05Control.fbAxisClamp1.lrAutoVelocity := stgGr05HMI.stHMITOPLC.arlrAxisClampHomeVelo[1];
 
-		IF Gr05Control.fbAxisClamp1.fbMoveAuto.fbMoveAbs.bBusy
+		IF Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCMoveAbs.Busy
 		THEN
 			etHomeAxis := ET_Gr05HomeAxisClamp1_eAxisInHomePos;              (* Next step *)
 
-		ELSIF Gr05Control.fbAxisClamp1.fbMoveAuto.fbMoveAbs.bError
+		ELSIF Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCMoveAbs.Error
 		THEN
 			Gr05Control.fbAxisClamp1.bExeMoveAbs := FALSE;
 
@@ -266,7 +266,7 @@ CASE etHomeAxis OF
 
 			etHomeAxis := ET_Gr05HomeAxisClamp1_eWfErrorByPipeCollision;		(* Next step *)
 
-		ELSIF Gr05Control.fbAxisClamp1.fbMoveAuto.fbMoveAbs.bError
+		ELSIF Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCMoveAbs.Error
 		THEN
 			Gr05Control.fbAxisClamp1.bExeMoveAbs := FALSE;
 
@@ -278,7 +278,7 @@ CASE etHomeAxis OF
 		Gr05Control.fbAxisClamp1.bExeStop := TRUE;
 		Gr05Control.fbAxisClamp1.lrAutoVelocity := 0.0;
 
-		IF Gr05Control.fbAxisClamp1.fbMoveAuto.fbStop.bBusy
+		IF Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCStop.Busy
 		THEN
 			etHomeAxis := ET_Gr05HomeAxisClamp1_eWFMoveStop2;              (* Next step *)
 		END_IF;
@@ -296,11 +296,11 @@ CASE etHomeAxis OF
 		Gr05Control.fbAxisClamp1.bExeMoveVelo := TRUE;
 		Gr05Control.fbAxisClamp1.lrAutoVelocity := -stgGr05HMI.stHMITOPLC.arlrAxisClampAutoVelo[1] / 10;
 
-		IF Gr05Control.fbAxisClamp1.fbMoveAuto.fbMoveVelo.bBusy
+		IF Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCMoveVelo.Busy
 		THEN
 			etHomeAxis := ET_Gr05HomeAxisClamp1_eWfAxisInPipeEndVelo;              (* Next step *)
 
-		ELSIF Gr05Control.fbAxisClamp1.fbMoveAuto.fbMoveVelo.bError
+		ELSIF Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCMoveVelo.Error
 		THEN
 			Gr05Control.fbAxisClamp1.bExeMoveVelo := FALSE;
 
@@ -316,7 +316,7 @@ CASE etHomeAxis OF
 
 			etHomeAxis := ET_Gr05HomeAxisClamp1_eMoveStop3;              (* Next step *)
 
-		ELSIF Gr05Control.fbAxisClamp1.fbMoveAuto.fbMoveVelo.bError
+		ELSIF Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCMoveVelo.Error
 		THEN
 			Gr05Control.fbAxisClamp1.bExeMoveVelo := FALSE;
 
@@ -331,7 +331,7 @@ CASE etHomeAxis OF
 			Gr05Control.fbAxisClamp1.lrAutoVelocity := 0.0;
 		END_IF
 
-		IF Gr05Control.fbAxisClamp1.fbMoveAuto.fbStop.bBusy
+		IF Gr05Control.fbAxisClamp1.fbMoveAuto.fbMCStop.Busy
 		THEN
 			etHomeAxis := ET_Gr05HomeAxisClamp1_eWFMoveStop3;              (* Next step *)
 

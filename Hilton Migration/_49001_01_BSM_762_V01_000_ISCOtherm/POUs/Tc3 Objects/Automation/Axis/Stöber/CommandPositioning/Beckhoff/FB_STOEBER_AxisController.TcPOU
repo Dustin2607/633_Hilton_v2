@@ -70,6 +70,9 @@ VAR_OUTPUT
 	bHardLimitMinExceeded		:BOOL;						(* Position limit switch minimum is exceeded *)
 	bSoftLimitMaxExceeded		:BOOL;						(* Position limit switch maximum is exceeded *)
 	bSoftLimitMinExceeded		:BOOL;						(* Position limit switch minimum is exceeded *)
+	
+	// Added by Dustin for 633 Hilton
+	bStandStill					:BOOL;						(* Axis stands still, appearently not the same as not moving *)
 END_VAR
 VAR_IN_OUT
 	Axis						:AXIS_REF;					(* The AXIS_REF data type  is an interface between the PLC and the NC and contains axis information *)
@@ -220,6 +223,9 @@ bReferenced := Axis.NcToPlc.StateDWord.1;                               (* In Re
 
 (* Status not moving *)
 bNotMoving := Axis.NcToPlc.StateDWord.2;
+
+(* Added by Dustin for 633_Hilton) Status Axis Standstill *)
+bStandStill := Axis.Status.StandStill;
 
 (* Status coupling *)
 tonCoupled(
@@ -1242,7 +1248,11 @@ END_IF;]]></ST>
       <LineId Id="483" Count="0" />
       <LineId Id="485" Count="1" />
       <LineId Id="484" Count="0" />
-      <LineId Id="178" Count="15" />
+      <LineId Id="178" Count="13" />
+      <LineId Id="780" Count="0" />
+      <LineId Id="779" Count="0" />
+      <LineId Id="781" Count="0" />
+      <LineId Id="192" Count="1" />
       <LineId Id="625" Count="4" />
       <LineId Id="195" Count="1" />
     </LineIds>

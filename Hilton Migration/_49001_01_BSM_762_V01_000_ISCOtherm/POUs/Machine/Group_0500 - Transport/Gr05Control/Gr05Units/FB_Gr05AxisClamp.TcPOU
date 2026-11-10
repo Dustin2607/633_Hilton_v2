@@ -17,105 +17,146 @@ dd.mm.yyyy		x.xx			Initials			comment
 *)
 VAR_INPUT
 	(* Input variables / Eingang Variablen *)
+
+	(* --- Axis / Achse --- *)
 	bEnable						:BOOL;						(* Axis present *)
+
+	(* --- Machine state / Maschinenzustand --- *)
 	etMachineMode				:ET_MachineMode;			(* Machine mode *)
 	etMachineState				:ET_MachineState;			(* Machine state *)
+	bMachineStandstill			:BOOL;						(* Machine standstill *)
+
+	(* --- Safety & releases / Sicherheit & Freigaben --- *)
 	bNoEStop					:BOOL;						(* No ermergency Stop / Keine Notaus *)
 	bPowerSupplyOn				:BOOL;						(* Power supply on / Leitung eingeschaltet *)
 	bSafetyOK					:BOOL;						(* Safety ok / Sicherheit i.o *)
-	bMachineStandstill			:BOOL;						(* Machine standstill *)
-	bCtrlInterrupt					:BOOL;						(* Control interrupt *)
+	bCtrlInterrupt				:BOOL;						(* Control interrupt *)
 	bMoveRelease				:BOOL;						(* Move release *)
 	bMoveInterrupt				:BOOL;						(* Move Interrupt *)
-	bSignalReference				:BOOL;						(* Reference signal *)
-	bHWSignalLimitMax			:BOOL;						(* Signal position limit switch maximum *)
-	bHWSignalLimitMin			:BOOL;						(* Signal position limit switch minimum *)
-	lrSoftLimitMax					:LREAL; 						(* Position limit switch maximum *)
-	lrSoftLimitMin					:LREAL; 						(* Position limit switch minimum *)
-	bTipPlus						:BOOL;						(* Manual tip in plus direction *)
-	bTipMinus					:BOOL;						(* Manual tip in minus direction *)
-	lrTipDistance					:LREAL;						(* Relative distance for movements *)
 	bPlusRelease				:BOOL;						(* Plus move release *)
 	bMinusRelease				:BOOL;						(* Minus move release *)
+
+	(* --- Limits & signals / Endlagen & Signale --- *)
+	bSignalReference			:BOOL;						(* Reference signal *)
+	bHWSignalLimitMax			:BOOL;						(* Signal position limit switch maximum *)
+	bHWSignalLimitMin			:BOOL;						(* Signal position limit switch minimum *)
+	lrSoftLimitMax				:LREAL;						(* Position limit switch maximum *)
+	lrSoftLimitMin				:LREAL;						(* Position limit switch minimum *)
+
+	(* --- Commands / Befehle --- *)
+	bExeReset					:BOOL;						(* Execute auto reset *)
 	bExeSetPos					:BOOL;						(* Execute set position *)
 	bExeHome					:BOOL;						(* Execute home *)
-	bExeMoveAbs				:BOOL;						(* Execute move absolut *)
-	bExeMoveRel				:BOOL;						(* Execute move relative *)
-	bExeMoveAdd				:BOOL;						(* Execute move additive *)
+	bExeMoveAbs					:BOOL;						(* Execute move absolut *)
+	bExeMoveRel					:BOOL;						(* Execute move relative *)
+	bExeMoveAdd					:BOOL;						(* Execute move additive *)
 	bExeMoveSuper				:BOOL;						(* Execute move superimposed *)
 	bExeMoveVelo				:BOOL;						(* Execute move velo *)
 	bExeGearIn					:BOOL;						(* Execute gear in *)
 	bExeGearOut					:BOOL;						(* Execute gear out *)
 	bExeStop					:BOOL;						(* Execute move stop *)
-	bExeReset					:BOOL;						(* Execute auto reset *)
-	bExtOverrideEn				:BOOL;						(* External override enable *)
-	lrExtOverride					:LREAL;						(* External override *)
-	lrTargetPosition				:LREAL;						(* Absolute target position *)
-	lrManualVelocity				:LREAL;						(* Value of velocity in manual motion [mm/s] *)
+	bConfirmAlarm				:BOOL;						(* Confirm alarm *)
+
+	(* --- Manual mode / Handbetrieb --- *)
+	bTipPlus					:BOOL;						(* Manual tip in plus direction *)
+	bTipMinus					:BOOL;						(* Manual tip in minus direction *)
+	lrTipDistance				:LREAL;						(* Relative distance for movements *)
+	lrManualVelocity			:LREAL;						(* Value of velocity in manual motion [mm/s] *)
+
+	(* --- Motion parameters / Bewegungsparameter --- *)
+	lrTargetPosition			:LREAL;						(* Absolute target position *)
+	lrAutoVelocity				:LREAL;						(* Value of velocity in auto motion [mm/s] *)
 	lrVelocityNoRef				:LREAL;						(* Velocity if has no reference [mm/s] *)
-	bVelocityLimitEn				:BOOL;						(* Enable velocity limit *)
-	lrAutoVelocity					:LREAL;						(* Value of velocity in auto motion [mm/s] *)
-	lrVelocityMin					:LREAL;						(* Velocity minimum [%] *)
-	lrVelocityMax					:LREAL;						(* Velocity maximum [%] *)
-	lrAcceleration					:LREAL;						(* Value of the acceleration (always positive) *)
+	bVelocityLimitEn			:BOOL;						(* Enable velocity limit *)
+	lrVelocityMin				:LREAL;						(* Velocity minimum [%] *)
+	lrVelocityMax				:LREAL;						(* Velocity maximum [%] *)
+	lrAcceleration				:LREAL;						(* Value of the acceleration (always positive) *)
 	lrDeceleration				:LREAL;						(* Value of deceleration (always positive) *)
 	lrJerk						:LREAL;						(* Value of jerk (always positive) *)
-	bEngineTorqueLimitEn			:BOOL;						(* Enable engine torque limit *)
-	lrEngineTorque				:LREAL;						(* Engine torque [%] *)
-	bWithAbsoluteEncoder			:BOOL; 						(* Encoder is an absolute one / Absolutwertgeber *)
-	lrOriginShift					:LREAL;						(* Origin shift position *)
-	dnRatioNumerator				:DINT;						(* Gear ratio numerator. Alternatively, the gear ratio can be specified in the numerator as a floating comma value, if the denominator is 1. *)
+
+	(* --- Override --- *)
+	lrOverride					:LREAL;						(* Override *)
+	bExtOverrideEn				:BOOL;						(* External override enable *)
+	lrExtOverride				:LREAL;						(* External override *)
+
+	(* --- Gearing / Getriebe --- *)
+	dnRatioNumerator			:DINT;						(* Gear ratio numerator. Alternatively, the gear ratio can be specified in the numerator as a floating comma value, if the denominator is 1. *)
 	udnRatioDenominator			:UDINT;						(* Gear ratio denominator *)
+
+	(* --- Drive / Antrieb --- *)
+	snModesOfOperation			:SINT;						(* Modes of drive operation *)
+	bEngineTorqueLimitEn		:BOOL;						(* Enable engine torque limit *)
+	lrEngineTorque				:LREAL;						(* Engine torque [%] *)
+	tControllerOff				:TIME := T#60S;				(* Time to switch controller off *)
+
+	(* --- Encoder / Geber --- *)
+	bWithAbsoluteEncoder		:BOOL;						(* Encoder is an absolute one / Absolutwertgeber *)
+	lrOriginShift				:LREAL;						(* Origin shift position *)
+
+	(* --- Force control / Kraftregelung --- *)
 	unForceMeasureType			:UINT;						(* Type of force measure system. 1: Simple mA,  2: EL3351 3: EL3356 *)
-	bVeloForceCtrlEn				:BOOL;						(* Enable velocity - force controller *)
-	lrVeloForceCtrlKp				:LREAL;						(* Velocity - force controller proportional band Kp *)
-	lrVeloForceCtrlTi				:LREAL;						(* Velocity - force controller integral Ti *)
-	lrVeloForcePreCtrlVelo			:LREAL;						(* Feedforward velocity precontrol wieghting =  0..1 *)
-	lrVeloForceCtrlLimit			:LREAL;						(* Velocity - force controller limit  *)
-	lrTargetForce					:LREAL;						(* Absolute target force [N] *)
+	bVeloForceCtrlEn			:BOOL;						(* Enable velocity - force controller *)
+	lrVeloForceCtrlKp			:LREAL;						(* Velocity - force controller proportional band Kp *)
+	lrVeloForceCtrlTi			:LREAL;						(* Velocity - force controller integral Ti *)
+	lrVeloForcePreCtrlVelo		:LREAL;						(* Feedforward velocity precontrol wieghting =  0..1 *)
+	lrVeloForceCtrlLimit		:LREAL;						(* Velocity - force controller limit  *)
+	lrTargetForce				:LREAL;						(* Absolute target force [N] *)
 	lrForceCurrent				:LREAL;						(* Current force [mA] *)
-	lrForceOffset					:LREAL;						(* Force offset [N] *)
+	lrForceOffset				:LREAL;						(* Force offset [N] *)
 	lrForceMin					:LREAL;						(* Force min 16#0000 *)
 	lrForceMax					:LREAL;						(* Force max 16#7FFF *)
 	lrForceMinN					:LREAL;						(* Force min [N] *)
 	lrForceMaxN					:LREAL;						(* Force max [N] *)
-	lrOverride					:LREAL;						(* Override *)
-	bConfirmAlarm				:BOOL;						(* Confirm alarm *)
-	tControllerOff					:TIME := t#60s;				(* Time to switch controller off *)
-	tAdsTimeOut 					:TIME := t#2s;					(* Timout for ads commands *)
+
+	(* --- System --- *)
+	tAdsTimeOut					:TIME := T#2S;				(* Timout for ads commands *)
 END_VAR
 VAR_OUTPUT
 	(* Output variables / Ausgang Variablen *)
-	bCtrlEnabled					:BOOL;						(* Controller enabled *)
+
+	(* --- Status --- *)
+	bCtrlEnabled				:BOOL;						(* Controller enabled *)
 	bNotMoving					:BOOL;						(* Axis not moving *)
 	bReferenced					:BOOL;						(* Axis referenced *)
 	bCoupled					:BOOL;						(* Axis coupled *)
-	lrActPosition					:LREAL;						(* Actual position [mm] *)
-	lrActVelocity					:LREAL;						(* Actual velocity [mm/s] *)
+
+	(* --- Actual values / Istwerte --- *)
+	lrActPosition				:LREAL;						(* Actual position [mm] *)
+	lrActVelocity				:LREAL;						(* Actual velocity [mm/s] *)
 	lrActForce					:LREAL;						(* Actual force [N] *)
+
+	(* --- Limits / Endlagen --- *)
 	bHardLimitMaxExceeded		:BOOL;						(* Position limit switch maximum is exceeded *)
 	bHardLimitMinExceeded		:BOOL;						(* Position limit switch minimum is exceeded *)
 	bSoftLimitMaxExceeded		:BOOL;						(* Position limit switch maximum is exceeded *)
 	bSoftLimitMinExceeded		:BOOL;						(* Position limit switch minimum is exceeded *)
+
+	(* --- Safety / Sicherheit --- *)
 	bSafetyLock					:BOOL;						(* Safety lock*)
+
+	(* --- Errors / Fehler --- *)
 	bErrorTerminal				:BOOL;						(* Error Axis terminal *)
-	bErrorCtrlEnabled				:BOOL;						(* Error Axis controller enabled *)
+	bErrorCtrlEnabled			:BOOL;						(* Error Axis controller enabled *)
 END_VAR
 VAR_IN_OUT
 	(* Input Output variables / Ausgang Variablen *)
 	bHomeCompleted				:BOOL;						(* Home completed *)
-	Drive						:ST_DRIVE_REF;	(* The DRIVE_REF data type  is an interface between the PLC and the DRIVE and contains axis information *)
-	Axis							:ST_AXIS_REF;
+	Drive						:ST_STOEBERSI6SC6CIA402_REF; (* Interface NC -> PLC *)
+	Axis						:AXIS_REF;					(* Interface PLC -> NC *)
+	MasterAxis					:AXIS_REF;					(* Interface with Master Axis -> is no so dummy *)
 END_VAR
 VAR
 	(* Enummerations *)
 
 	(* Variables *)
+	sAdsAddr					:STRING(23);				(* AmsNetId of the EtherCAT master device.*)
+	unSlaveAddr					:UINT;						(* Address of the slave device.*)
+	
 	nTorqueLimitMax				:INT := 100;
-	nVelocityLimitMax				:INT := 100;
+	nVelocityLimitMax			:INT := 100;
 
 	lrVeloLimitMax				:LREAL;
-	lrVeloLimitMin					:LREAL;
+	lrVeloLimitMin				:LREAL;
 
 	sTerminalStatus				:STRING;
 
@@ -136,17 +177,17 @@ VAR
 	rtMachineStandstill			:R_TRIG;
 	tonAxisEnabled				:TON;
 
-	fbController					:FB_STOEBERSDS_MC_AxisController;
-	fbMoveManual				:FB_STOEBERSDS_MC_AxisMoveManual;
-	fbMoveAuto					:FB_STOEBERSDS_MC_AxisMoveAuto;
-	fbLink						:FB_STOEBERSDS_AxisLink;
+	fbController				:FB_STOEBER_AxisController;
+	fbMoveManual				:FB_STOEBER_AxisMoveManual;
+	fbMoveAuto					:FB_STOEBER_AxisMoveAuto;
+	// fbLink						:FB_STOEBER_DriveLink;	// Was active, aber gibts doch gar nicht mehr 
 	fbForceSimple				:FB_ScalingOffset;
 	fbForceEL3351				:FB_EL3351;
 	fbForceEL3356				:FB_EL3356;
 	fbForceCtrl					:FB_ForceController;
-	fbSawingOverride				:FB_Override;
+	fbSawingOverride			:FB_Override;
 
-	rtWriteForcePara				:R_TRIG;
+	rtWriteForcePara			:R_TRIG;
 
 END_VAR]]></Declaration>
     <Implementation>
@@ -192,53 +233,50 @@ bErrorMoveAuto := fbMoveAuto.bError;*)]]></ST>
         <ST><![CDATA[
 (* Axis controller *)
 fbController(
-    	bEnable := TRUE,
-	etMachineMode := etMachineMode,
-	etMachineState := etMachineState,
-	bRegulatorOn := bNoEStop
-				      AND bPowerSupplyOn
-				      AND bSafetyOK
-                   		      AND NOT bCtrlInterrupt
-				      AND NOT fbMoveManual.bControllerOff
-				      AND NOT fbMoveAuto.bControllerOff,
-	bReset := bConfirmAlarm,
-	bCMDInterrupt := bMoveInterrupt,
-	bTerminalOK := fbTerminalDiagnosis.bTerminalOK,
-	bExeReset := bExeReset,
-  	bExeGearIn := bExeGearIn,
-    	bExeGearOut := bExeGearOut,
-   	dnRatioNumerator := dnRatioNumerator,
-    	udnRatioDenominator := udnRatioDenominator,
-	lrOverride := SEL(bExtOverrideEn,
-					SEL(
-						bVeloForceCtrlEn,
-						lrOverride,
-						fbForceCtrl.lrCVVelo),
-					lrExtOverride),
-	lrEngineTorque := SEL(
-						bEngineTorqueLimitEn,
-						nTorqueLimitMax,
-						(lrEngineTorque) / 1),
-	bWithAbsoluteEncoder := bWithAbsoluteEncoder,
-	bHWSignalLimitMax := bHWSignalLimitMax,
-	bHWSignalLimitMin := bHWSignalLimitMin,
-	lrSoftLimitMax := lrSoftLimitMax,
-	lrSoftLimitMin := lrSoftLimitMin,
-	lrAcceleration := lrAcceleration,
-	lrDeceleration := lrDeceleration,
-	lrJerk := lrJerk,
-	tTimeOut := tAdsTimeOut,
-	Axis := Axis,
-	bStatusDelay => bCtrlEnabled,
-	lrActPos => lrActPosition,
-	lrActVelo => lrActVelocity,
-	bNotMoving => bNotMoving,
-	bReferenced => bReferenced,
-	bCoupled => bCoupled,
-	bHardLimitMaxExceeded => bHardLimitMaxExceeded,
-	bHardLimitMinExceeded => bHardLimitMinExceeded,
-	bSoftLimitMaxExceeded => bSoftLimitMaxExceeded,
-	bSoftLimitMinExceeded => bSoftLimitMinExceeded
+    bEnable 				:= TRUE,
+	etMachineMode 			:= etMachineMode,
+	etMachineState 			:= etMachineState,
+	bRegulatorOn 			:= 	bNoEStop
+				      			AND bPowerSupplyOn
+				      			AND bSafetyOK
+                   		      	AND NOT bCtrlInterrupt
+				     	 		AND NOT fbMoveManual.bControllerOff
+				      			AND NOT fbMoveAuto.bControllerOff,
+	bReset 					:= bConfirmAlarm,
+	bCMDInterrupt 			:= bMoveInterrupt,
+	bTerminalOK 			:= fbTerminalDiagnosis.bTerminalOK,
+	bExeReset 				:= bExeReset,
+  	bExeGearIn 				:= bExeGearIn,
+    bExeGearOut 			:= bExeGearOut,
+   	dnRatioNumerator 		:= dnRatioNumerator,
+   	udnRatioDenominator 	:= udnRatioDenominator,
+	lrOverride 				:= SEL(bExtOverrideEn,
+									SEL(bVeloForceCtrlEn,
+										lrOverride,
+										fbForceCtrl.lrCVVelo),
+									lrExtOverride),
+	bWithAbsoluteEncoder 	:= bWithAbsoluteEncoder,
+	bSignalHWLimitMax 		:= bHWSignalLimitMax,
+	bSignalHWLimitMin 		:= bHWSignalLimitMin,
+	lrSoftLimitMax 			:= lrSoftLimitMax,
+	lrSoftLimitMin 			:= lrSoftLimitMin,
+	lrAcceleration 			:= lrAcceleration,
+	lrDeceleration 			:= lrDeceleration,
+	lrJerk 					:= lrJerk,
+	tAdsTimeOut 			:= tAdsTimeOut,
+	Axis 					:= Axis,
+	MasterAxis				:= MasterAxis,
+	
+	bStatusDelay 			=> bCtrlEnabled,
+	lrActPos 				=> lrActPosition,
+	lrActVelo 				=> lrActVelocity,
+	bNotMoving 				=> bNotMoving,
+	bReferenced 			=> bReferenced,
+	bCoupled 				=> bCoupled,
+	bHardLimitMaxExceeded 	=> bHardLimitMaxExceeded,
+	bHardLimitMinExceeded 	=> bHardLimitMinExceeded,
+	bSoftLimitMaxExceeded 	=> bSoftLimitMaxExceeded,
+	bSoftLimitMinExceeded 	=> bSoftLimitMinExceeded
 );
 
 ]]></ST>
@@ -462,21 +500,44 @@ fbForceCtrl(
       <Implementation>
         <ST><![CDATA[
 (* Get axis status *)
-Axis.fbReadStatusSDS(
-	stStoeberToPlc := Drive.stStoeberToPlc,
-	stPlcToStoeber := Drive.stPlcToStoeber,
-	stAxisStatus := Axis.stAxisStatus
-);]]></ST>
+Axis.ReadStatus();]]></ST>
       </Implementation>
     </Action>
     <Action Name="A_AxisLink" Id="{f56055de-fee2-4114-bfb1-b1a077d04de1}">
       <Implementation>
         <ST><![CDATA[
+(* Get terminal status *)
+sAdsAddr := F_CreateAmsNetId(Drive.stTerminalState.stAdsAddr.netId);
+unSlaveAddr := Drive.stTerminalState.stAdsAddr.port;
+Axis.DriveAddress.NetID := F_CreateAmsNetId(Drive.stTerminalState.stAdsAddr.netId);
+Axis.DriveAddress.SlaveAddress := Drive.stTerminalState.stAdsAddr.port;
+
+(* Set drive parameter *)
+Drive.stPlcToStoeber.snA541ModesOfOperation := snModesOfOperation;
+
+(*Drive.PlcToStoeber.nA558TargetTorque := SEL(bEngineTorqueLimitEn,
+				    nTorqueLimitMax,
+				    LREAL_TO_INT(lrEngineTorque / 1.0))*)
+
+
+
+
+
+
+
+
+(*
+
+
+
 (* Axis linking *)
 fbLink(
 	Drive := Drive,
 	Axis := Axis
-);]]></ST>
+);
+
+
+*)]]></ST>
       </Implementation>
     </Action>
     <Action Name="A_AxisMoveAuto" Id="{786904b3-c11a-449b-aa9f-49df50e9e660}">
@@ -489,32 +550,33 @@ lrVeloLimitMin := SEL(bVelocityLimitEn, INT_TO_LREAL( -1 * nVelocityLimitMax), l
 lrVeloLimitMax := SEL(bVelocityLimitEn, INT_TO_LREAL(nVelocityLimitMax), lrVelocityMax);
 
 fbMoveAuto(
-	bEnable := bNoEStop
-               		    AND bPowerSupplyOn
-               		    AND bSafetyOK,
-    	bCtrlEnabled := bCtrlEnabled
+	bEnable 			:= bNoEStop
+               		    	AND bPowerSupplyOn
+               		    	AND bSafetyOK,
+    bCtrlEnabled 		:= bCtrlEnabled
                     		   AND bMoveRelease,
-	etMachineMode := etMachineMode,
-	etMachineState := etMachineState,
-	bReset := bConfirmAlarm,
-	bExeHome := bExeHome,
-	bExeMoveAbs := bExeMoveAbs,
-	bExeMoveRel := bExeMoveRel,
-	bExeMoveAdd := bExeMoveAdd,
-	bExeMoveSuper := bExeMoveSuper,
-	bExeMoveVelo := bExeMoveVelo,
-	bExeStop := bExeStop
-			      OR rtMachineStandstill.Q,
-	lrPosition := lrTargetPosition,
-	lrVelocity := LIMIT(lrVeloLimitMin, lrAutoVelocity, lrVeloLimitMax),
-	lrAcceleration := lrAcceleration,
-	lrDeceleration := lrDeceleration,
-	lrJerk := lrJerk,
-	lrOriginPosition := lrOriginShift,
-	bSignalReference := bSignalReference,
-	tControllerOff := tControllerOff,
-	bHomeCompleted := bHomeCompleted,
-	Axis := Axis
+	etMachineMode 		:= etMachineMode,
+	etMachineState 		:= etMachineState,
+	bReset 				:= bConfirmAlarm,
+	bExeHome 			:= bExeHome,
+	bExeMoveAbs 		:= bExeMoveAbs,
+	bExeMoveRel 		:= bExeMoveRel,
+	bExeMoveAdd 		:= bExeMoveAdd,
+	bExeMoveSuper 		:= bExeMoveSuper,
+	bExeMoveVelo 		:= bExeMoveVelo,
+	bExeStop 			:= bExeStop
+			      			OR rtMachineStandstill.Q,
+	lrPosition 			:= lrTargetPosition,
+	lrVelocity 			:= LIMIT(lrVeloLimitMin, lrAutoVelocity, lrVeloLimitMax),
+	lrAcceleration 		:= lrAcceleration,
+	lrDeceleration 		:= lrDeceleration,
+	lrJerk 				:= lrJerk,
+	lrOriginShiftPos 	:= lrOriginShift,
+	bSignalReference 	:= bSignalReference,
+	tControllerOff 		:= tControllerOff,
+	bHomeCompleted 		:= bHomeCompleted,
+	Axis 				:= Axis,
+	MasterAxis 			:= MasterAxis
  );]]></ST>
       </Implementation>
     </Action>
@@ -523,30 +585,31 @@ fbMoveAuto(
         <ST><![CDATA[
 (* Move axis manual *)
 fbMoveManual(
-	bEnable := bNoEStop
+	bEnable 		:= bNoEStop
                		    AND bPowerSupplyOn
                		    AND bSafetyOK,
-	bCtrlEnabled := bCtrlEnabled
-                			    AND bMoveRelease,
-	etMachineMode := etMachineMode,
-	etMachineState := etMachineState,
-	bReset := bConfirmAlarm,
-	bMovePlus := bTipPlus,
-	bMoveMinus := bTipMinus,
-	lrTipDistance := lrTipDistance,
-	bLimitMax := bHardLimitMaxExceeded
-			       OR bSoftLimitMaxExceeded ,
-	bLimitMin := bHardLimitMinExceeded
-			      OR bSoftLimitMinExceeded,
-	bPlusRelease := bPlusRelease,
-	bMinusRelease := bMinusRelease,
-	lrVelocity := SEL(NOT bReferenced, lrManualVelocity, lrVelocityNoRef),
-	lrAcceleration := lrAcceleration,
-	lrDeceleration := lrDeceleration,
-	lrJerk := lrJerk,
-	tControllerOff := tControllerOff,
-	bHomeCompleted := bHomeCompleted,
-	Axis := Axis
+	bCtrlEnabled 	:= bCtrlEnabled
+                		AND bMoveRelease,
+	etMachineMode 	:= etMachineMode,
+	etMachineState 	:= etMachineState,
+	bReset 			:= bConfirmAlarm,
+	bMovePlus 		:= bTipPlus,
+	bMoveMinus 		:= bTipMinus,
+	lrTipDistance 	:= lrTipDistance,
+	bLimitMax 		:= bHardLimitMaxExceeded
+			      	 	OR bSoftLimitMaxExceeded ,
+	bLimitMin 		:= bHardLimitMinExceeded
+			      		OR bSoftLimitMinExceeded,
+	bPlusRelease 	:= bPlusRelease,
+	bMinusRelease 	:= bMinusRelease,
+	lrVelocity 		:= SEL(NOT bReferenced, lrManualVelocity, lrVelocityNoRef),
+	lrAcceleration 	:= lrAcceleration,
+	lrDeceleration 	:= lrDeceleration,
+	lrJerk 			:= lrJerk,
+	tControllerOff 	:= tControllerOff,
+	bHomeCompleted 	:= bHomeCompleted,
+	Axis 			:= Axis,
+	MasterAxis		:= MasterAxis
 );
 
 bSafetyLock := fbMoveManual.bMovePlus
@@ -572,22 +635,38 @@ bErrorTerminal := NOT fbTerminalDiagnosis.bTerminalOK;]]></ST>
       <LineId Id="0" Count="13" />
     </LineIds>
     <LineIds Name="FB_Gr05AxisClamp.A_AxisController">
-      <LineId Id="0" Count="52" />
+      <LineId Id="0" Count="21" />
+      <LineId Id="23" Count="2" />
+      <LineId Id="30" Count="9" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="41" Count="11" />
     </LineIds>
     <LineIds Name="FB_Gr05AxisClamp.A_AxisForceCtrl">
       <LineId Id="0" Count="209" />
     </LineIds>
     <LineIds Name="FB_Gr05AxisClamp.A_AxisGetStatus">
-      <LineId Id="0" Count="6" />
+      <LineId Id="8" Count="1" />
+      <LineId Id="6" Count="0" />
     </LineIds>
     <LineIds Name="FB_Gr05AxisClamp.A_AxisLink">
-      <LineId Id="0" Count="5" />
+      <LineId Id="0" Count="0" />
+      <LineId Id="20" Count="10" />
+      <LineId Id="7" Count="12" />
+      <LineId Id="1" Count="4" />
+      <LineId Id="32" Count="1" />
+      <LineId Id="31" Count="0" />
     </LineIds>
     <LineIds Name="FB_Gr05AxisClamp.A_AxisMoveAuto">
-      <LineId Id="0" Count="34" />
+      <LineId Id="0" Count="33" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="34" Count="0" />
     </LineIds>
     <LineIds Name="FB_Gr05AxisClamp.A_AxisMoveManual">
-      <LineId Id="0" Count="30" />
+      <LineId Id="0" Count="26" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="27" Count="3" />
     </LineIds>
     <LineIds Name="FB_Gr05AxisClamp.A_AxisTerminalDiag">
       <LineId Id="0" Count="7" />

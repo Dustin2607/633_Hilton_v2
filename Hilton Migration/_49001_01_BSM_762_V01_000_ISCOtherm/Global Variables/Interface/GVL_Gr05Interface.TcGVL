@@ -4,10 +4,10 @@
     <Declaration><![CDATA[{attribute 'Tc2GvlVarNames'}
 VAR_GLOBAL
 	(* Axis interface *)
-	igGr05AxisClamp1			:ST_AXIS_REF;							(* Interface of axis clamp *)
+	igGr05AxisClamp1			:AXIS_REF;							(* Interface plc -> nc *)
 
 	(* Drive interface *)
-	igGr05DriveClamp1		:ST_DRIVE_REF;							(* Interface of drive clamp *)
+	igGr05DriveClamp1			:ST_STOEBERSI6SC6CIA402_REF;		(* Interface nc -> plc *)
 
 END_VAR
 ]]></Declaration>

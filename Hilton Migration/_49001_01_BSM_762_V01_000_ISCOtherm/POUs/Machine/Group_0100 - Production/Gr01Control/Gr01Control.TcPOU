@@ -7,8 +7,8 @@ VAR_INPUT
 	bEnable						:BOOL;						(* Enable Gr01Control *)
 
 	(* Instances *)
-	fbAxisSawBow				:FB_Gr01AxisSawBow;
-	fbAxisAngle					:FB_Gr01AxisAngle;
+	fbAxisSawBow				:FB_Gr01SawBow;
+	fbAxisAngle					:FB_Gr01Angle;
 
 	fbSawband			 		:FB_Gr01Sawband;
 
@@ -174,107 +174,105 @@ fbAlarm(
 stgGr01HMI.stHMITOPLC.lrAxisSawBowNoRefVelo := 10;
 
 fbAxisSawBow(
-	bEnable := TRUE,
-	etMachineMode := etgGr00MachineMode,
-	etMachineState := etgGr00MachineState,
-	bNoEStop := bgGr00NoEmergencyStop,
-	bPowerSupplyOn := bgGr00PowerSupplyOk,
-	bSafetyOK := bgGr01LightCurtainOK
-			        AND bgGr00AllDoorsClosedLocked,
-	bMachineStandstill := bgGr00MachineStandstill,
-	bCtrlInterrupt := FALSE,
-	bMoveRelease := TRUE,
-	bMoveInterrupt := FALSE,
-	bSignalReference := NOT binGr01AxisSawBowLimitMax,
-	bHWSignalLimitMax := NOT binGr01AxisSawBowLimitMax,
-	bHWSignalLimitMin := NOT binGr01AxisSawBowLimitMin,
-	lrSoftLimitMax := stgGr01HMI.stHMITOPLC.lrAxisSawBowSoftLimitMax,
-	lrSoftLimitMin := stgGr01HMI.stHMITOPLC.lrAxisSawBowSoftLimitMin,
-	bTipPlus := stgGr01HMI.stHMITOPLC.bBtnAxisSawBowPlus,
-	bTipMinus := stgGr01HMI.stHMITOPLC.bBtnAxisSawBowMinus,
-	lrTipDistance:= ,
-	bPlusRelease := TRUE,
-	bMinusRelease := TRUE, (*stgGr00HMI.stHMITOPLC.bSafetyInterlockOff*)
-	lrManualVelocity := stgGr01HMI.stHMITOPLC.lrAxisSawBowManualVelo,
-	lrVelocityNoRef := stgGr01HMI.stHMITOPLC.lrAxisSawBowNoRefVelo,
-	bVelocityLimitEn := FALSE,
-	lrAcceleration := 100.0,
-	lrDeceleration := 100.0,
-	lrJerk := 100.0,
-	bEngineTorqueLimitEn := FALSE,
-	lrEngineTorque := 200.0,
-	bWithAbsoluteEncoder := FALSE,
-	lrOriginShift := stgGr01HMI.stHMITOPLC.lrAxisSawBowOriginShiftPos,
-	dnRatioNumerator := 1,
-	udnRatioDenominator := 1,
-	bVeloForceCtrlEn := FALSE,
-	lrOverride := fbUtility.rActOverride,
-	lrExtOverride := 0.0,
-	nSetSawingOverride := ninGr01SawingOverride,
-	rSetSawingOverride := stgGr01HMI.stHMITOPLC.rSawingOverride,
-	bConfirmAlarm := bgGr00ConfirmAlarm,
-	tControllerOff := tgGr01ControllerOff,
-	tAdsTimeOut := DEFAULT_ADS_TIMEOUT,
-	bHomeCompleted := bgGr01HomeCompleted,
-	Drive := GVL_Gr01Interface.igGr01DriveSawBow,
-	Axis := GVL_Gr01Interface.igGr01AxisSawBow,
+	bEnable						:= TRUE,
+	etMachineMode				:= etgGr00MachineMode,
+	etMachineState				:= etgGr00MachineState,
+	bMachineStandstill			:= bgGr00MachineStandstill,
+	bNoEStop					:= bgGr00NoEmergencyStop,
+	bPowerSupplyOn				:= bgGr00PowerSupplyOk,
+	bSafetyOK					:= bgGr01LightCurtainOK
+								   AND bgGr00AllDoorsClosedLocked,
+	bCtrlInterrupt				:= FALSE,
+	bMoveRelease				:= TRUE,
+	bPlusRelease				:= TRUE,
+	bMinusRelease				:= TRUE,
+	bSignalReference			:= NOT binGr01AxisSawBowLimitMax,
+	bSignalHWLimitMax			:= NOT binGr01AxisSawBowLimitMax,
+	bSignalHWLimitMin			:= NOT binGr01AxisSawBowLimitMin,
+	lrSoftLimitMax				:= stgGr01HMI.stHMITOPLC.lrAxisSawBowSoftLimitMax,
+	lrSoftLimitMin				:= stgGr01HMI.stHMITOPLC.lrAxisSawBowSoftLimitMin,
+	bConfirmAlarm				:= bgGr00ConfirmAlarm,
+	bTipPlus					:= stgGr01HMI.stHMITOPLC.bBtnAxisSawBowPlus,
+	bTipMinus					:= stgGr01HMI.stHMITOPLC.bBtnAxisSawBowMinus,
+	lrManualVelocity			:= stgGr01HMI.stHMITOPLC.lrAxisSawBowManualVelo,
+	lrNoRefVelocity				:= stgGr01HMI.stHMITOPLC.lrAxisSawBowNoRefVelo,
+	bVelocityLimitEn			:= FALSE,
+	lrAcceleration				:= 100.0,
+	lrDeceleration				:= 100.0,
+	lrJerk						:= 100.0,
+	lrOverride					:= fbUtility.rActOverride,
+	lrExtOverride				:= 0.0,
+	dnRatioNumerator			:= 1,
+	udnRatioDenominator			:= 1,
+	bEngineTorqueLimitEn		:= FALSE,
+	lrEngineTorque				:= 200.0,
+	tControllerOff				:= tgGr01ControllerOff,
+	bWithAbsoluteEncoder		:= FALSE,
+	lrOriginShiftPos			:= stgGr01HMI.stHMITOPLC.lrAxisSawBowOriginShiftPos,
+	bVeloForceCtrlEn			:= FALSE,
+	tAdsTimeOut					:= DEFAULT_ADS_TIMEOUT,
+	bHomeCompleted				:= bgGr01HomeCompleted,
+	Drive						:= GVL_Gr01Interface.igGr01DriveSawBow,
+	Axis						:= GVL_Gr01Interface.igGr01AxisSawBow,
+	MasterAxis					:= GVL_Gr00Interface.iAxisDummy,
 	
-	MasterAxis 				:= GVL_Gr00Interface.iAxisDummy,
-	lrActPosition => stgGr01HMI.stPLCTOHMI.lrAxisSawBowActPos,
-	lrActVelocity => stgGr01HMI.stPLCTOHMI.lrAxisSawBowActVelo,
-	lrActForce => stgGr01HMI.stPLCTOHMI.lrAxisSawBowActForce,
+	lrActPosition				=> stgGr01HMI.stPLCTOHMI.lrAxisSawBowActPos,
+	lrActVelocity				=> stgGr01HMI.stPLCTOHMI.lrAxisSawBowActVelo,
+	lrActForce					=> stgGr01HMI.stPLCTOHMI.lrAxisSawBowActForce
 );
 
 (* Enable Axis angle *)
 stgGr01HMI.stHMITOPLC.lrAxisAngleNoRefVelo := 10;
 
-fbAxisAngle(
-	bEnable := TRUE,
-	lrScalingNum := lrgGr01AxisAnglePath,
-	udnScalingDenom	 := udngGr01AxisAngleInc,
-	etMachineMode := etgGr00MachineMode,
-	etMachineState := etgGr00MachineState,
-	bNoEStop := bgGr00NoEmergencyStop,
-	bPowerSupplyOn := bgGr00PowerSupplyOk,
-	bSafetyOK := bgGr01LightCurtainOK
-			        AND bgGr00AllDoorsClosedLocked,
-	bMachineStandstill := bgGr00MachineStandstill,
-	bCtrlInterrupt := FALSE,
-	bMoveRelease := TRUE,
-	bMoveInterrupt := FALSE,
-	bHWSignalLimitMax := NOT binGr01AxisAngleLimitMax,
-	bHWSignalLimitMin := NOT binGr01AxisAngleLimitMin,
-	lrSoftLimitMax := stgGr01HMI.stHMITOPLC.lrAxisAngleSoftLimitMax,
-	lrSoftLimitMin := stgGr01HMI.stHMITOPLC.lrAxisAngleSoftLimitMin,
-	bTipPlus := stgGr01HMI.stHMITOPLC.bBtnAxisAnglePlus,
-	bTipMinus := stgGr01HMI.stHMITOPLC.bBtnAxisAngleMinus,
-	bPlusRelease := TRUE,
-	bMinusRelease:= TRUE,	(*stgGr00HMI.stHMITOPLC.bSafetyInterlockOff*)
-	lrManualVelocity := stgGr01HMI.stHMITOPLC.lrAxisAngleManualVelo,
-	lrVelocityNoRef := stgGr01HMI.stHMITOPLC.lrAxisAngleNoRefVelo,
-	bVelocityLimitEn := FALSE,
-	lrAcceleration := 100.0,
-	lrDeceleration := 100.0,
-	lrJerk := 100.0,
-	bEngineTorqueLimitEn := FALSE,
-	lrEngineTorque := 200.0,
-	bWithAbsoluteEncoder := TRUE,
-	udnIncEnc := udninGr01IncAxisAngle,
-	lrOriginShift := stgGr01HMI.stHMITOPLC.lrAxisAngleOriginShiftPos,
-	lrTaskCycle := lrgActCycleTime,
-	lrOverride := fbUtility.rActOverride,
-	bConfirmAlarm := bgGr00ConfirmAlarm,
-	tControllerOff := tgGr01ControllerOff,
-	tAdsTimeOut := DEFAULT_ADS_TIMEOUT,
-	bHomeCompleted := bgGr01HomeCompleted,
-	Drive := GVL_Gr01Interface.igGr01DriveSawAngle,
-	Axis := GVL_Gr01Interface.igGr01AxisSawAngle,
-	
-	MasterAxis 				:= GVL_Gr00Interface.iAxisDummy,
-	lrActPosition => stgGr01HMI.stPLCTOHMI.lrAxisAngleActPos,
-	lrActVelocity => stgGr01HMI.stPLCTOHMI.lrAxisAngleActVelo,
-);
 
+
+fbAxisAngle(
+	bEnable						:= TRUE,
+
+	etMachineMode				:= etgGr00MachineMode,
+	etMachineState				:= etgGr00MachineState,
+	bMachineStandstill			:= bgGr00MachineStandstill,
+	bNoEStop					:= bgGr00NoEmergencyStop,
+	bPowerSupplyOn				:= bgGr00PowerSupplyOk,
+	bSafetyOK					:= bgGr01LightCurtainOK
+								   AND bgGr00AllDoorsClosedLocked,
+	bCtrlInterrupt				:= FALSE,
+	bMoveRelease				:= TRUE,
+	bMoveInterrupt				:= FALSE,
+	bPlusRelease				:= TRUE,
+	bMinusRelease				:= TRUE,	(*stgGr00HMI.stHMITOPLC.bSafetyInterlockOff*)
+	bHWSignalLimitMax			:= NOT binGr01AxisAngleLimitMax,
+	bHWSignalLimitMin			:= NOT binGr01AxisAngleLimitMin,
+	lrSoftLimitMax				:= stgGr01HMI.stHMITOPLC.lrAxisAngleSoftLimitMax,
+	lrSoftLimitMin				:= stgGr01HMI.stHMITOPLC.lrAxisAngleSoftLimitMin,
+	bConfirmAlarm				:= bgGr00ConfirmAlarm,
+	bTipPlus					:= stgGr01HMI.stHMITOPLC.bBtnAxisAnglePlus,
+	bTipMinus					:= stgGr01HMI.stHMITOPLC.bBtnAxisAngleMinus,
+	lrManualVelocity			:= stgGr01HMI.stHMITOPLC.lrAxisAngleManualVelo,
+	lrVelocityNoRef				:= stgGr01HMI.stHMITOPLC.lrAxisAngleNoRefVelo,
+	bVelocityLimitEn			:= FALSE,
+	lrAcceleration				:= 100.0,
+	lrDeceleration				:= 100.0,
+	lrJerk						:= 100.0,
+	lrOverride					:= fbUtility.rActOverride,
+	bEngineTorqueLimitEn		:= FALSE,
+	lrEngineTorque				:= 200.0,
+	tControllerOff				:= tgGr01ControllerOff,
+	lrScalingNum				:= lrgGr01AxisAnglePath,
+	udnScalingDenom				:= udngGr01AxisAngleInc,
+	bWithAbsoluteEncoder		:= TRUE,
+	udnIncEnc					:= udninGr01IncAxisAngle,
+	lrOriginShift				:= stgGr01HMI.stHMITOPLC.lrAxisAngleOriginShiftPos,
+	lrTaskCycle					:= lrgActCycleTime,
+	tAdsTimeOut					:= DEFAULT_ADS_TIMEOUT,
+	bHomeCompleted				:= bgGr01HomeCompleted,
+	Drive						:= GVL_Gr01Interface.igGr01DriveSawAngle,
+	Axis						:= GVL_Gr01Interface.igGr01AxisSawAngle,
+	MasterAxis					:= GVL_Gr00Interface.iAxisDummy,
+	
+	lrActPosition				=> stgGr01HMI.stPLCTOHMI.lrAxisAngleActPos,
+	lrActVelocity				=> stgGr01HMI.stPLCTOHMI.lrAxisAngleActVelo
+);
 
 
 
@@ -311,57 +309,53 @@ bgGr01SafetyActive := fbAxisSawBow.bSafetyLock
       <Implementation>
         <ST><![CDATA[
 fbSawband(
-	bEnable 			:= TRUE,
-	lrOverride			:= 100.0,
-	etMachineMode 		:= etgGr00MachineMode,
-	etMachineState 		:= etgGr00MachineState,
-	bNoEStop 			:= bgGr00NoEmergencyStop,
-	bPowerSupplyOn 		:=  bgGr00PowerSupplyOk,//fbStoeberPS6A34.bOn, // Keine Eingänge vorhanden
-	bSafetyOK 			:= bgGr01LightCurtainOK
-			        		AND bgGr00AllDoorsClosedLocked,
-	bSafetyDriveEnabled := TRUE,
-	bMachineStandstill 	:= bgGr00MachineStandstill,
-	bCtrlInterrupt 		:= FALSE,
-	bMoveRelease 		:= TRUE, 
-	bSignalReference 	:= FALSE,
-	bSignalHWLimitMax 	:= FALSE,	
-	bSignalHWLimitMin 	:= FALSE,   	
-	lrSoftLimitMax 		:= 0, 
-   	lrSoftLimitMin 		:= 0,
-    bTipPlus 			:= stgGr01HMI.stHMITOPLC.bBtnSawbandPlus,
-    bTipMinus 			:= False,
-	lrTipDistance 		:= 0,
-    bPlusRelease 		:= TRUE, 
-    bMinusRelease 		:= FALSE, 
-	etHomingMode 		:= 1,
-	bExtOverrideEn 		:= FALSE,
-	lrAutoVelocity		:= stgGr01HMI.stHMITOPLC.lrSawbandAutoSpeed  / 3.28084,
-	lrManualVelocity 	:= stgGr01HMI.stHMITOPLC.lrSawbandManualSpeed / 3.28084,
-	lrNoRefVelocity 	:= 30,
-	bVelocityLimitEn 	:= FALSE, 
-	lrAcceleration 		:= 5000,
-	lrDeceleration 		:= 5000,
-	lrJerk 				:= 30000,
-	bEngineTorqueLimitEn:= FALSE,
-	lrEngineTorque 		:= 400,
-	bWithAbsoluteEncoder:= FALSE, //GEÄNDERT
-	bPosLagMonitoringEn := FALSE,
-	dnRatioNumerator 	:= 1,
-	udnRatioDenominator := 1,
-	bVeloForceCtrlEn 	:= FALSE,
-	bConfirmAlarm 		:= bgGr00ConfirmAlarm,
-	bOccupied 			:= FALSE,
-	tControllerOff 		:= tgGr01ControllerOff, 
-	tAdsTimeOut 		:= DEFAULT_ADS_TIMEOUT,
-	bHomeCompleted 		:= bgGr01HomeCompleted,
-	Drive 				:= GVL_Gr01Interface.igGr01DriveSawBand,
-	Axis 				:= GVL_Gr01Interface.igGr01AxisSawBand,
-	MasterAxis 			:= GVL_Gr00Interface.iAxisDummy,
-	
-	lrActPosition 		=> ,
-	lrActVelocity 		=> GVL_Gr01HMI.stgGr01HMI.stPLCTOHMI.lrSawbandActSpeed
-	// bNotMoving			=> GVL_GR01.bSawbandIsNotMoving,
-	// bInVelocity 		=> GVL_GR01.SawbandInVelocity
+	bEnable						:= TRUE,
+	bOccupied					:= FALSE,
+	etMachineMode				:= etgGr00MachineMode,
+	etMachineState				:= etgGr00MachineState,
+	bMachineStandstill			:= bgGr00MachineStandstill,
+	bNoEStop					:= bgGr00NoEmergencyStop,
+	bPowerSupplyOn				:= bgGr00PowerSupplyOk,	//fbStoeberPS6A34.bOn, // Keine Eingänge vorhanden
+	bSafetyOK					:= bgGr01LightCurtainOK								   AND bgGr00AllDoorsClosedLocked,
+	bSafetyDriveEnabled			:= TRUE,
+	bCtrlInterrupt				:= FALSE,
+	bMoveRelease				:= TRUE,
+	bPlusRelease				:= TRUE,
+	bMinusRelease				:= FALSE,
+	bSignalReference			:= FALSE,
+	bSignalHWLimitMax			:= FALSE,
+	bSignalHWLimitMin			:= FALSE,
+	lrSoftLimitMax				:= 0,
+	lrSoftLimitMin				:= 0,
+	etHomingMode				:= MC_DefaultHoming,
+	bConfirmAlarm				:= bgGr00ConfirmAlarm,
+	bTipPlus					:= stgGr01HMI.stHMITOPLC.bBtnSawbandPlus,
+	bTipMinus					:= False,
+	lrTipDistance				:= 0,
+	lrManualVelocity			:= stgGr01HMI.stHMITOPLC.lrSawbandManualSpeed / 3.28084,
+	lrAutoVelocity				:= stgGr01HMI.stHMITOPLC.lrSawbandAutoSpeed / 3.28084,
+	lrNoRefVelocity				:= 30,
+	bVelocityLimitEn			:= FALSE,
+	lrAcceleration				:= 5000,
+	lrDeceleration				:= 5000,
+	lrJerk						:= 30000,
+	lrOverride					:= 100.0,
+	bExtOverrideEn				:= FALSE,
+	dnRatioNumerator			:= 1,
+	udnRatioDenominator			:= 1,
+	bEngineTorqueLimitEn		:= FALSE,
+	lrEngineTorque				:= 400,
+	bPosLagMonitoringEn			:= FALSE,
+	tControllerOff				:= tgGr01ControllerOff,
+	bWithAbsoluteEncoder		:= FALSE,
+	bVeloForceCtrlEn			:= FALSE,
+	tAdsTimeOut					:= DEFAULT_ADS_TIMEOUT,
+	bHomeCompleted				:= bgGr01HomeCompleted,
+	Drive						:= GVL_Gr01Interface.igGr01DriveSawBand,
+	Axis						:= GVL_Gr01Interface.igGr01AxisSawBand,
+	MasterAxis					:= GVL_Gr00Interface.iAxisDummy,
+
+	lrActVelocity				=> GVL_Gr01HMI.stgGr01HMI.stPLCTOHMI.lrSawbandActSpeed
 );
 
 (* Old FB)
@@ -454,8 +448,8 @@ bAllAxisCtrlEnabled := F_ChkAllAxisEnabled(
 (* Detect all axis stand still *)
 bAllAxisStandStill := F_ChkAllAxisStandStill(
 	bEnable := TRUE,
-	bAxis1StandStill := Gr01Control.fbAxisSawBow.bNotMoving, 		// igGr01AxisSawBow.stAxisStatus.bStandStill,
-	bAxis2StandStill := Gr01Control.fbAxisAngle.bNotMoving,		// igGr01AxisAngle.stAxisStatus.bStandStill,
+	bAxis1StandStill := Gr01Control.fbAxisSawBow.bStandStill, 		// igGr01AxisSawBow.stAxisStatus.bStandStill,
+	bAxis2StandStill := Gr01Control.fbAxisAngle.bStandStill,		// igGr01AxisAngle.stAxisStatus.bStandStill,
 	bAxis3StandStill := TRUE,
 	bAxis4StandStill := TRUE,
 	bAxis5StandStill := TRUE,
@@ -554,20 +548,58 @@ fbUtility(
       <LineId Id="0" Count="101" />
     </LineIds>
     <LineIds Name="Gr01Control.A_Axis">
-      <LineId Id="0" Count="48" />
-      <LineId Id="112" Count="0" />
-      <LineId Id="111" Count="0" />
-      <LineId Id="49" Count="48" />
-      <LineId Id="113" Count="1" />
-      <LineId Id="98" Count="10" />
+      <LineId Id="0" Count="3" />
+      <LineId Id="289" Count="28" />
+      <LineId Id="320" Count="12" />
+      <LineId Id="336" Count="0" />
+      <LineId Id="333" Count="2" />
+      <LineId Id="52" Count="3" />
+      <LineId Id="286" Count="1" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="210" Count="1" />
+      <LineId Id="213" Count="3" />
+      <LineId Id="218" Count="3" />
+      <LineId Id="223" Count="4" />
+      <LineId Id="229" Count="3" />
+      <LineId Id="241" Count="0" />
+      <LineId Id="243" Count="2" />
+      <LineId Id="249" Count="1" />
+      <LineId Id="253" Count="2" />
+      <LineId Id="257" Count="0" />
+      <LineId Id="265" Count="1" />
+      <LineId Id="268" Count="0" />
+      <LineId Id="270" Count="4" />
+      <LineId Id="276" Count="1" />
+      <LineId Id="279" Count="3" />
+      <LineId Id="288" Count="0" />
+      <LineId Id="284" Count="1" />
+      <LineId Id="209" Count="0" />
+      <LineId Id="102" Count="6" />
     </LineIds>
     <LineIds Name="Gr01Control.A_Safety">
       <LineId Id="0" Count="18" />
     </LineIds>
     <LineIds Name="Gr01Control.A_Sawband">
-      <LineId Id="272" Count="2" />
-      <LineId Id="327" Count="0" />
-      <LineId Id="276" Count="49" />
+      <LineId Id="272" Count="0" />
+      <LineId Id="489" Count="2" />
+      <LineId Id="493" Count="2" />
+      <LineId Id="497" Count="2" />
+      <LineId Id="501" Count="4" />
+      <LineId Id="507" Count="4" />
+      <LineId Id="517" Count="0" />
+      <LineId Id="526" Count="0" />
+      <LineId Id="528" Count="3" />
+      <LineId Id="537" Count="2" />
+      <LineId Id="542" Count="2" />
+      <LineId Id="546" Count="1" />
+      <LineId Id="550" Count="1" />
+      <LineId Id="554" Count="3" />
+      <LineId Id="559" Count="0" />
+      <LineId Id="562" Count="0" />
+      <LineId Id="589" Count="0" />
+      <LineId Id="591" Count="3" />
+      <LineId Id="597" Count="1" />
+      <LineId Id="325" Count="0" />
       <LineId Id="215" Count="1" />
       <LineId Id="106" Count="50" />
       <LineId Id="52" Count="0" />

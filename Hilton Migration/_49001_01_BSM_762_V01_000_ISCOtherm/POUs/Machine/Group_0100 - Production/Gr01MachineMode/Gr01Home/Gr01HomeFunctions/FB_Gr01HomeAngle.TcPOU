@@ -25,7 +25,7 @@ VAR_INPUT
 	lrHomeVelo					:LREAL;
 	lrHomePosition				:LREAL;
 
-	pfbAxis						:POINTER TO FB_Gr01AxisAngle;
+	pfbAxis						:POINTER TO FB_Gr01Angle;
 END_VAR
 VAR_OUTPUT
 	(* Output variables / Ausgang Variablen *)
@@ -108,11 +108,11 @@ CASE etHomeAxis OF
 		pfbAxis^.bExeStop := TRUE;
 		pfbAxis^.lrAutoVelocity := 0.0;
 
-		IF pfbAxis^.fbMoveAuto.fbStop.bBusy
+		IF pfbAxis^.fbMoveAuto.fbMCStop.Busy
 		THEN
 			etHomeAxis := ET_Gr01HomeAxis_eWFMoveStop;              (* Next step *)
 
-		ELSIF pfbAxis^.fbMoveAuto.fbStop.bError
+		ELSIF pfbAxis^.fbMoveAuto.fbMCStop.Error
 		THEN
 			pfbAxis^.bExeStop := FALSE;
 
@@ -128,7 +128,7 @@ CASE etHomeAxis OF
 
 			etHomeAxis := ET_Gr01HomeAxis_eAxisReset;              (* Next step *)
 
-		ELSIF pfbAxis^.fbMoveAuto.fbStop.bError
+		ELSIF pfbAxis^.fbMoveAuto.fbMCStop.Error
 		THEN
 			pfbAxis^.bExeStop := FALSE;
 
@@ -140,11 +140,11 @@ CASE etHomeAxis OF
 		pfbAxis^.bExeReset := TRUE;
 		pfbAxis^.lrAutoVelocity := 0.0;
 
-		IF pfbAxis^.fbController.fbReset.bBusy
+		IF pfbAxis^.fbController.fbMCReset.Busy
 		THEN
 			etHomeAxis := ET_Gr01HomeAxis_eWfAxisReset;              (* Next step *)
 
-		ELSIF pfbAxis^.fbController.fbReset.bError
+		ELSIF pfbAxis^.fbController.fbMCReset.Error
 		THEN
 			pfbAxis^.bExeReset := FALSE;
 
@@ -160,7 +160,7 @@ CASE etHomeAxis OF
 
 			etHomeAxis := ET_Gr01HomeAxis_eAxisRef;         		(* Next step *)
 
-		ELSIF pfbAxis^.fbController.fbReset.bError
+		ELSIF pfbAxis^.fbController.fbMCReset.Error
 		THEN
 			pfbAxis^.bExeReset := FALSE;
 
@@ -174,11 +174,11 @@ CASE etHomeAxis OF
 		THEN
 			pfbAxis^.bExeHome := TRUE;
 
-			IF pfbAxis^.fbMoveAuto.fbHome.bBusy
+			IF pfbAxis^.fbMoveAuto.fbMCHome.Busy
 			THEN
 				etHomeAxis := ET_Gr01HomeAxis_eWfAxisRef;              (* Next step *)
 
-			ELSIF pfbAxis^.fbMoveAuto.fbHome.bError
+			ELSIF pfbAxis^.fbMoveAuto.fbMCHome.Error
 			THEN
 				pfbAxis^.bExeHome := FALSE;
 
@@ -214,7 +214,7 @@ CASE etHomeAxis OF
 
 				etHomeAxis := ET_Gr01HomeAxis_eAxisMoveHomePos;              (* Next step *)
 			END_IF
-		ELSIF pfbAxis^.fbMoveAuto.fbHome.bError
+		ELSIF pfbAxis^.fbMoveAuto.fbMCHome.Error
 		THEN
 			tonWatchdog(IN := FALSE);
 			pfbAxis^.bExeHome := FALSE;
@@ -236,11 +236,11 @@ CASE etHomeAxis OF
 		pfbAxis^.lrAutoVelocity := lrHomeVelo;
 		pfbAxis^.lrTargetPosition := lrHomePosition;
 
-		IF pfbAxis^.fbMoveAuto.fbMoveAbs.bBusy
+		IF pfbAxis^.fbMoveAuto.fbMCMoveAbs.Busy
 		THEN
 			etHomeAxis := ET_Gr01HomeAxis_eAxisInHomePos;              (* Next step *)
 
-		ELSIF pfbAxis^.fbMoveAuto.fbMoveAbs.bError
+		ELSIF pfbAxis^.fbMoveAuto.fbMCMoveAbs.Error
 		THEN
 			pfbAxis^.bExeMoveAbs := FALSE;
 
@@ -256,7 +256,7 @@ CASE etHomeAxis OF
 
 			etHomeAxis := ET_Gr01HomeAxis_eDone;              (* Next step *)
 
-		ELSIF pfbAxis^.fbMoveAuto.fbMoveAbs.bError
+		ELSIF pfbAxis^.fbMoveAuto.fbMCMoveAbs.Error
 		THEN
 			pfbAxis^.bExeMoveAbs := FALSE;
 
@@ -291,7 +291,8 @@ CASE etHomeAxis OF
 END_CASE;]]></ST>
     </Implementation>
     <LineIds Name="FB_Gr01HomeAngle">
-      <LineId Id="53" Count="233" />
+      <LineId Id="572" Count="232" />
+      <LineId Id="286" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>

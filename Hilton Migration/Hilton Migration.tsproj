@@ -1509,68 +1509,86 @@ External Setpoint Generation:
 			</SubItem>
 		</DataType>
 		<DataType>
-			<Name GUID="{28E20313-8B6F-232A-8E44-85BAB644FF8B}" AutoDeleteType="true">ST_STOEBERTOPLC</Name>
-			<Comment><![CDATA[ Communikation structure from nc to plc ]]></Comment>
-			<BitSize>160</BitSize>
+			<Name GUID="{DE36CC0D-2D35-9AB5-2D11-219E4A37C356}" AutoDeleteType="true">ST_STOEBERSI6SC6CIA402TOPLC</Name>
+			<Comment><![CDATA[ Communikation structure from drive to plc ]]></Comment>
+			<BitSize>256</BitSize>
 			<SubItem>
-				<Name>dnI88Speed</Name>
-				<Type GUID="{18071995-0000-0000-0000-000000000009}">DINT</Type>
-				<BitSize>32</BitSize>
+				<Name>wA516Statusword</Name>
+				<Type GUID="{18071995-0000-0000-0000-000000000004}">WORD</Type>
+				<BitSize>16</BitSize>
 				<BitOffs>0</BitOffs>
 			</SubItem>
 			<SubItem>
-				<Name>dnI203CurrentPosition</Name>
+				<Name>snA542ModesOfOperationDisplay</Name>
+				<Type GUID="{18071995-0000-0000-0000-000000000003}">SINT</Type>
+				<BitSize>8</BitSize>
+				<BitOffs>16</BitOffs>
+			</SubItem>
+			<SubItem>
+				<Name>snDummy1</Name>
+				<Type GUID="{18071995-0000-0000-0000-000000000003}">SINT</Type>
+				<BitSize>8</BitSize>
+				<BitOffs>24</BitOffs>
+			</SubItem>
+			<SubItem>
+				<Name>dnA545PositionActualValue</Name>
 				<Type GUID="{18071995-0000-0000-0000-000000000009}">DINT</Type>
 				<BitSize>32</BitSize>
 				<BitOffs>32</BitOffs>
 			</SubItem>
 			<SubItem>
-				<Name>nE90MMotor</Name>
-				<Type GUID="{18071995-0000-0000-0000-000000000006}">INT</Type>
-				<BitSize>16</BitSize>
+				<Name>dnA553VelocityActualValue</Name>
+				<Type GUID="{18071995-0000-0000-0000-000000000009}">DINT</Type>
+				<BitSize>32</BitSize>
 				<BitOffs>64</BitOffs>
 			</SubItem>
 			<SubItem>
-				<Name>nE100MMotor</Name>
+				<Name>nA564TorqueActualValue</Name>
 				<Type GUID="{18071995-0000-0000-0000-000000000006}">INT</Type>
-				<BitSize>16</BitSize>
-				<BitOffs>80</BitOffs>
-			</SubItem>
-			<SubItem>
-				<Name>unI200PosiStatusWord</Name>
-				<Type GUID="{18071995-0000-0000-0000-000000000005}">UINT</Type>
 				<BitSize>16</BitSize>
 				<BitOffs>96</BitOffs>
 			</SubItem>
 			<SubItem>
-				<Name>nD200SpeedReferenceValueStatusWord</Name>
-				<Type GUID="{18071995-0000-0000-0000-000000000005}">UINT</Type>
+				<Name>nDummy1</Name>
+				<Type GUID="{18071995-0000-0000-0000-000000000006}">INT</Type>
 				<BitSize>16</BitSize>
 				<BitOffs>112</BitOffs>
 			</SubItem>
 			<SubItem>
-				<Name>byE200DeviceStatusByte</Name>
-				<Type GUID="{18071995-0000-0000-0000-000000000001}">BYTE</Type>
-				<BitSize>8</BitSize>
+				<Name>dnA632FollowingErrorActualeValue</Name>
+				<Type GUID="{18071995-0000-0000-0000-000000000009}">DINT</Type>
+				<BitSize>32</BitSize>
 				<BitOffs>128</BitOffs>
 			</SubItem>
 			<SubItem>
-				<Name>byI201MotionStatusByte</Name>
-				<Type GUID="{18071995-0000-0000-0000-000000000001}">BYTE</Type>
-				<BitSize>8</BitSize>
-				<BitOffs>136</BitOffs>
+				<Name>dnA620AdditionalPositionActualValue</Name>
+				<Type GUID="{18071995-0000-0000-0000-000000000009}">DINT</Type>
+				<BitSize>32</BitSize>
+				<BitOffs>160</BitOffs>
 			</SubItem>
 			<SubItem>
-				<Name>byI90ErrorCode</Name>
-				<Type GUID="{18071995-0000-0000-0000-000000000001}">BYTE</Type>
+				<Name>snI89PLCOpenState</Name>
+				<Type GUID="{18071995-0000-0000-0000-000000000003}">SINT</Type>
 				<BitSize>8</BitSize>
-				<BitOffs>144</BitOffs>
+				<BitOffs>192</BitOffs>
 			</SubItem>
 			<SubItem>
-				<Name>byDummy1</Name>
-				<Type GUID="{18071995-0000-0000-0000-000000000001}">BYTE</Type>
+				<Name>snI90PLCOpenErrStopCause</Name>
+				<Type GUID="{18071995-0000-0000-0000-000000000003}">SINT</Type>
 				<BitSize>8</BitSize>
-				<BitOffs>152</BitOffs>
+				<BitOffs>200</BitOffs>
+			</SubItem>
+			<SubItem>
+				<Name>wA67UserStatusword</Name>
+				<Type GUID="{18071995-0000-0000-0000-000000000004}">WORD</Type>
+				<BitSize>16</BitSize>
+				<BitOffs>208</BitOffs>
+			</SubItem>
+			<SubItem>
+				<Name>dwA636DigitalInputs</Name>
+				<Type GUID="{18071995-0000-0000-0000-000000000007}">DWORD</Type>
+				<BitSize>32</BitSize>
+				<BitOffs>224</BitOffs>
 			</SubItem>
 		</DataType>
 		<DataType>
@@ -1648,80 +1666,104 @@ External Setpoint Generation:
 			</ArrayInfo>
 		</DataType>
 		<DataType>
-			<Name GUID="{CB029206-BF66-60A5-95E3-E86B26A7C4A8}" AutoDeleteType="true">ST_PLCTOSTOEBER</Name>
-			<Comment><![CDATA[ Communikation structure from plc to nc ]]></Comment>
-			<BitSize>192</BitSize>
+			<Name GUID="{3165748B-E24D-BB43-237A-C00E9C44451D}" AutoDeleteType="true">ST_PLCTOSTOEBERSI6SC6CIA402</Name>
+			<Comment><![CDATA[ Communikation structure from plc to drive ]]></Comment>
+			<BitSize>416</BitSize>
 			<SubItem>
-				<Name>dnI34ReferencePosition</Name>
-				<Type GUID="{18071995-0000-0000-0000-000000000009}">DINT</Type>
-				<BitSize>32</BitSize>
+				<Name>wA515Controlword</Name>
+				<Type GUID="{18071995-0000-0000-0000-000000000004}">WORD</Type>
+				<BitSize>16</BitSize>
 				<BitOffs>0</BitOffs>
 			</SubItem>
 			<SubItem>
-				<Name>dnI213TargetPosition</Name>
+				<Name>snA541ModesOfOperation</Name>
+				<Type GUID="{18071995-0000-0000-0000-000000000003}">SINT</Type>
+				<BitSize>8</BitSize>
+				<BitOffs>16</BitOffs>
+			</SubItem>
+			<SubItem>
+				<Name>snDummy1</Name>
+				<Type GUID="{18071995-0000-0000-0000-000000000003}">SINT</Type>
+				<BitSize>8</BitSize>
+				<BitOffs>24</BitOffs>
+			</SubItem>
+			<SubItem>
+				<Name>dnA567TargetPosition</Name>
 				<Type GUID="{18071995-0000-0000-0000-000000000009}">DINT</Type>
 				<BitSize>32</BitSize>
 				<BitOffs>32</BitOffs>
 			</SubItem>
 			<SubItem>
-				<Name>nI230Override</Name>
-				<Type GUID="{18071995-0000-0000-0000-000000000006}">INT</Type>
-				<BitSize>16</BitSize>
+				<Name>dnA638TargetVelocity</Name>
+				<Type GUID="{18071995-0000-0000-0000-000000000009}">DINT</Type>
+				<BitSize>32</BitSize>
 				<BitOffs>64</BitOffs>
 			</SubItem>
 			<SubItem>
-				<Name>nI215VeloFaktor</Name>
-				<Type GUID="{18071995-0000-0000-0000-000000000006}">INT</Type>
-				<BitSize>16</BitSize>
-				<BitOffs>80</BitOffs>
-			</SubItem>
-			<SubItem>
-				<Name>nD230NReferenceValueRelative</Name>
+				<Name>nA558TargetTorque</Name>
 				<Type GUID="{18071995-0000-0000-0000-000000000006}">INT</Type>
 				<BitSize>16</BitSize>
 				<BitOffs>96</BitOffs>
 			</SubItem>
 			<SubItem>
-				<Name>nC230TorqueLimit</Name>
-				<Type GUID="{18071995-0000-0000-0000-000000000006}">INT</Type>
+				<Name>unA559MaxTorque</Name>
+				<Type GUID="{18071995-0000-0000-0000-000000000005}">UINT</Type>
 				<BitSize>16</BitSize>
 				<BitOffs>112</BitOffs>
 			</SubItem>
 			<SubItem>
-				<Name>wI210PosiControlWord</Name>
-				<Type GUID="{18071995-0000-0000-0000-000000000004}">WORD</Type>
-				<BitSize>16</BitSize>
+				<Name>udnA604MaxAcceleration</Name>
+				<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
+				<BitSize>32</BitSize>
 				<BitOffs>128</BitOffs>
 			</SubItem>
 			<SubItem>
-				<Name>wDummy1</Name>
-				<Type GUID="{18071995-0000-0000-0000-000000000004}">WORD</Type>
-				<BitSize>16</BitSize>
-				<BitOffs>144</BitOffs>
-			</SubItem>
-			<SubItem>
-				<Name>usnI216AccFaktor</Name>
-				<Type GUID="{18071995-0000-0000-0000-000000000002}">USINT</Type>
-				<BitSize>8</BitSize>
+				<Name>udnA605MaxDeceleration</Name>
+				<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
+				<BitSize>32</BitSize>
 				<BitOffs>160</BitOffs>
 			</SubItem>
 			<SubItem>
-				<Name>usnI217DccFaktor</Name>
-				<Type GUID="{18071995-0000-0000-0000-000000000002}">USINT</Type>
-				<BitSize>8</BitSize>
-				<BitOffs>168</BitOffs>
+				<Name>udnA574Velocity</Name>
+				<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
+				<BitSize>32</BitSize>
+				<BitOffs>192</BitOffs>
 			</SubItem>
 			<SubItem>
-				<Name>byA180DeviceControlByte</Name>
-				<Type GUID="{18071995-0000-0000-0000-000000000001}">BYTE</Type>
-				<BitSize>8</BitSize>
-				<BitOffs>176</BitOffs>
+				<Name>udnA576Acceleration</Name>
+				<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
+				<BitSize>32</BitSize>
+				<BitOffs>224</BitOffs>
 			</SubItem>
 			<SubItem>
-				<Name>byI211MotionCommandByte</Name>
-				<Type GUID="{18071995-0000-0000-0000-000000000001}">BYTE</Type>
-				<BitSize>8</BitSize>
-				<BitOffs>184</BitOffs>
+				<Name>udnA577Deceleration</Name>
+				<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
+				<BitSize>32</BitSize>
+				<BitOffs>256</BitOffs>
+			</SubItem>
+			<SubItem>
+				<Name>dnA569HomeOffset</Name>
+				<Type GUID="{18071995-0000-0000-0000-000000000009}">DINT</Type>
+				<BitSize>32</BitSize>
+				<BitOffs>288</BitOffs>
+			</SubItem>
+			<SubItem>
+				<Name>dnA570SoftwarePosLimitMin</Name>
+				<Type GUID="{18071995-0000-0000-0000-000000000009}">DINT</Type>
+				<BitSize>32</BitSize>
+				<BitOffs>320</BitOffs>
+			</SubItem>
+			<SubItem>
+				<Name>dnA570SoftwarePosLimitMax</Name>
+				<Type GUID="{18071995-0000-0000-0000-000000000009}">DINT</Type>
+				<BitSize>32</BitSize>
+				<BitOffs>352</BitOffs>
+			</SubItem>
+			<SubItem>
+				<Name>dwA637DigitalOutputs</Name>
+				<Type GUID="{18071995-0000-0000-0000-000000000007}">DWORD</Type>
+				<BitSize>32</BitSize>
+				<BitOffs>384</BitOffs>
 			</SubItem>
 		</DataType>
 	</DataTypes>
@@ -2190,7 +2232,7 @@ External Setpoint Generation:
 		</Motion>
 		<Plc>
 			<Project GUID="{4AE76A25-A5E9-47BF-9F28-0249A5E26F26}" Name="_49001_01_BSM_762_V01_000_ISCOtherm" PrjFilePath="_49001_01_BSM_762_V01_000_ISCOtherm\_49001_01_BSM_762_V01_000_ISCOtherm.plcproj" TmcFilePath="_49001_01_BSM_762_V01_000_ISCOtherm\_49001_01_BSM_762_V01_000_ISCOtherm.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcHash="{09822410-F4F9-A8C8-12E3-DBD9F5C83D55}">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="_49001_01_BSM_762_V01_000_ISCOtherm\_49001_01_BSM_762_V01_000_ISCOtherm.tmc" TmcHash="{D7625C61-3290-8925-499C-9D5ECFD769CE}">
 					<Name>_49001_01_BSM_762_V01_000_ISCOtherm Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">
@@ -2221,28 +2263,48 @@ External Setpoint Generation:
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
+							<Name>.iAxisDummy.NcToPlc</Name>
+							<Type GUID="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" Namespace="MC">NCTOPLC_AXIS_REF</Type>
+						</Var>
+						<Var>
+							<Name>.igGr01AxisSawBow.NcToPlc</Name>
+							<Type GUID="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" Namespace="MC">NCTOPLC_AXIS_REF</Type>
+						</Var>
+						<Var>
+							<Name>.igGr01AxisSawAngle.NcToPlc</Name>
+							<Type GUID="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" Namespace="MC">NCTOPLC_AXIS_REF</Type>
+						</Var>
+						<Var>
+							<Name>.igGr01AxisSawBand.NcToPlc</Name>
+							<Type GUID="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" Namespace="MC">NCTOPLC_AXIS_REF</Type>
+						</Var>
+						<Var>
 							<Name>.igGr01DriveSawBow.stTerminalState</Name>
 							<Type GUID="{DC00E626-2E46-29E1-E546-57BE786CCF70}">ST_TerminalState</Type>
 						</Var>
 						<Var>
 							<Name>.igGr01DriveSawBow.stStoeberToPlc</Name>
-							<Type GUID="{28E20313-8B6F-232A-8E44-85BAB644FF8B}">ST_STOEBERTOPLC</Type>
+							<Type GUID="{DE36CC0D-2D35-9AB5-2D11-219E4A37C356}">ST_STOEBERSI6SC6CIA402TOPLC</Type>
 						</Var>
 						<Var>
-							<Name>.igGr01DriveAngle.stTerminalState</Name>
+							<Name>.igGr01DriveSawAngle.stTerminalState</Name>
 							<Type GUID="{DC00E626-2E46-29E1-E546-57BE786CCF70}">ST_TerminalState</Type>
 						</Var>
 						<Var>
-							<Name>.igGr01DriveAngle.stStoeberToPlc</Name>
-							<Type GUID="{28E20313-8B6F-232A-8E44-85BAB644FF8B}">ST_STOEBERTOPLC</Type>
+							<Name>.igGr01DriveSawAngle.stStoeberToPlc</Name>
+							<Type GUID="{DE36CC0D-2D35-9AB5-2D11-219E4A37C356}">ST_STOEBERSI6SC6CIA402TOPLC</Type>
 						</Var>
 						<Var>
-							<Name>.igGr01DriveSawband.stTerminalState</Name>
+							<Name>.igGr01DriveSawBand.stTerminalState</Name>
 							<Type GUID="{DC00E626-2E46-29E1-E546-57BE786CCF70}">ST_TerminalState</Type>
 						</Var>
 						<Var>
-							<Name>.igGr01DriveSawband.stStoeberToPlc</Name>
-							<Type GUID="{28E20313-8B6F-232A-8E44-85BAB644FF8B}">ST_STOEBERTOPLC</Type>
+							<Name>.igGr01DriveSawBand.stStoeberToPlc</Name>
+							<Type GUID="{DE36CC0D-2D35-9AB5-2D11-219E4A37C356}">ST_STOEBERSI6SC6CIA402TOPLC</Type>
+						</Var>
+						<Var>
+							<Name>.igGr05AxisClamp1.NcToPlc</Name>
+							<Type GUID="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" Namespace="MC">NCTOPLC_AXIS_REF</Type>
 						</Var>
 						<Var>
 							<Name>.igGr05DriveClamp1.stTerminalState</Name>
@@ -2250,7 +2312,7 @@ External Setpoint Generation:
 						</Var>
 						<Var>
 							<Name>.igGr05DriveClamp1.stStoeberToPlc</Name>
-							<Type GUID="{28E20313-8B6F-232A-8E44-85BAB644FF8B}">ST_STOEBERTOPLC</Type>
+							<Type GUID="{DE36CC0D-2D35-9AB5-2D11-219E4A37C356}">ST_STOEBERSI6SC6CIA402TOPLC</Type>
 						</Var>
 						<Var>
 							<Name>.stinGr00FieldbusStatus</Name>
@@ -2476,20 +2538,40 @@ External Setpoint Generation:
 					<Vars VarGrpType="2" AreaNo="1">
 						<Name>PLC_TASK Outputs</Name>
 						<Var>
+							<Name>.iAxisDummy.PlcToNc</Name>
+							<Type GUID="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" Namespace="MC">PLCTONC_AXIS_REF</Type>
+						</Var>
+						<Var>
+							<Name>.igGr01AxisSawBow.PlcToNc</Name>
+							<Type GUID="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" Namespace="MC">PLCTONC_AXIS_REF</Type>
+						</Var>
+						<Var>
+							<Name>.igGr01AxisSawAngle.PlcToNc</Name>
+							<Type GUID="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" Namespace="MC">PLCTONC_AXIS_REF</Type>
+						</Var>
+						<Var>
+							<Name>.igGr01AxisSawBand.PlcToNc</Name>
+							<Type GUID="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" Namespace="MC">PLCTONC_AXIS_REF</Type>
+						</Var>
+						<Var>
 							<Name>.igGr01DriveSawBow.stPlcToStoeber</Name>
-							<Type GUID="{CB029206-BF66-60A5-95E3-E86B26A7C4A8}">ST_PLCTOSTOEBER</Type>
+							<Type GUID="{3165748B-E24D-BB43-237A-C00E9C44451D}">ST_PLCTOSTOEBERSI6SC6CIA402</Type>
 						</Var>
 						<Var>
-							<Name>.igGr01DriveAngle.stPlcToStoeber</Name>
-							<Type GUID="{CB029206-BF66-60A5-95E3-E86B26A7C4A8}">ST_PLCTOSTOEBER</Type>
+							<Name>.igGr01DriveSawAngle.stPlcToStoeber</Name>
+							<Type GUID="{3165748B-E24D-BB43-237A-C00E9C44451D}">ST_PLCTOSTOEBERSI6SC6CIA402</Type>
 						</Var>
 						<Var>
-							<Name>.igGr01DriveSawband.stPlcToStoeber</Name>
-							<Type GUID="{CB029206-BF66-60A5-95E3-E86B26A7C4A8}">ST_PLCTOSTOEBER</Type>
+							<Name>.igGr01DriveSawBand.stPlcToStoeber</Name>
+							<Type GUID="{3165748B-E24D-BB43-237A-C00E9C44451D}">ST_PLCTOSTOEBERSI6SC6CIA402</Type>
+						</Var>
+						<Var>
+							<Name>.igGr05AxisClamp1.PlcToNc</Name>
+							<Type GUID="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" Namespace="MC">PLCTONC_AXIS_REF</Type>
 						</Var>
 						<Var>
 							<Name>.igGr05DriveClamp1.stPlcToStoeber</Name>
-							<Type GUID="{CB029206-BF66-60A5-95E3-E86B26A7C4A8}">ST_PLCTOSTOEBER</Type>
+							<Type GUID="{3165748B-E24D-BB43-237A-C00E9C44451D}">ST_PLCTOSTOEBERSI6SC6CIA402</Type>
 						</Var>
 						<Var>
 							<Name>.boutGr00AirPressureOn</Name>
