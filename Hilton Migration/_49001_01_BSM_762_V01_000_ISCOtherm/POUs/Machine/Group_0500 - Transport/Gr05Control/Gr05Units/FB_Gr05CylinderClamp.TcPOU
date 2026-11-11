@@ -7,8 +7,8 @@
 The function block used to lock/unlock welding head.
 
 Constructor: 		Patryk Panylo
-Company:		E. Riexinger GmbH
-Date:			28.04.2015
+Company:			E. Riexinger GmbH
+Date:				28.04.2015
 Version:			1.00
 
 Date:			Revision:		Who:				Comment
@@ -21,7 +21,7 @@ VAR_INPUT
 	etMachineState				:ET_MachineState;			(* Machine state *)
 	bAirPressureOK				:BOOL;						(* Air pressure OK *)
 	bSafetyOk					:BOOL;						(* Safety Ok *)
-	bOpened					:BOOL;						(* Opened *)
+	bOpened						:BOOL;						(* Opened *)
 	bClosed						:BOOL;						(* Closed *)
 	bOpenRelease				:BOOL;						(* Release open *)
 	bCloseRelease				:BOOL;						(* Release close *)
@@ -36,7 +36,7 @@ VAR_INPUT
 	bControlStateOn				:BOOL;						(* Control with input state *)
 	bValveOff					:BOOL;						(* Valve off *)
 	bConfirmAlarm				:BOOL;						(* Confirm alarm *)
-	tTimeOut						:TIME := t#6s;					(* TimeOut *)
+	tTimeOut					:TIME := T#6S;				(* TimeOut *)
 END_VAR
 VAR_OUTPUT
 	(* Output variables / Ausgang Variablen *)

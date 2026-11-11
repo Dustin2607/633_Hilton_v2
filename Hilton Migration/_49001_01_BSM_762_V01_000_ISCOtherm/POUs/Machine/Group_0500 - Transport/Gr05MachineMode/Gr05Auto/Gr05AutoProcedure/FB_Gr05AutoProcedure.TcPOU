@@ -35307,7 +35307,7 @@ Gr05Control.arfbCylinderClamp[2].bAutoClose := FALSE;					(* Auto close *)]]></S
       <Implementation>
         <ST><![CDATA[
 Gr05Control.arfbCylinderClamp[1].bAutoOpen := FALSE;										(* Auto open *)
-Gr05Control.arfbCylinderClamp[1].bAutoClose := NOT binGr05PipeBeginEdge;		(*ESKG 12032026*)			(* Auto close *)
+Gr05Control.arfbCylinderClamp[1].bAutoClose := NOT binGr05PipeBeginEdge;					(*ESKG 12032026*)			(* Auto close *)
 
 
 ]]></ST>

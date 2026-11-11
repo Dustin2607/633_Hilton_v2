@@ -3,11 +3,11 @@
   <POU Name="F_GetCylinderPos" Id="{897a5985-8000-42de-8399-0bc6a0fc78f7}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION F_GetCylinderPos : LREAL
 VAR_INPUT
-	wInPos			:WORD;					(* Current position *)
-	lrPosOffset		:LREAL;					(* Position offset *)
+	wInPos				:WORD;					(* Current position *)
+	lrPosOffset			:LREAL;					(* Position offset *)
 	lrOriginShiftPos	:LREAL;					(* Origin shift position *)
-	etDirection		:ET_MC_Direction;			(* Direction: -1 Negative, +1 Positive *)
-	usnCodingType	:USINT;
+	etDirection			:ET_MC_Direction;		(* Direction: -1 Negative, +1 Positive *)
+	usnCodingType		:USINT;
 END_VAR
 VAR
 END_VAR]]></Declaration>

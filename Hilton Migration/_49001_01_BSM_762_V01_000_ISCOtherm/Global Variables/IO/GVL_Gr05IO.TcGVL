@@ -3,51 +3,50 @@
   <GVL Name="GVL_Gr05IO" Id="{adc762c1-8163-4f5b-a6c6-fe82249bf7ec}">
     <Declaration><![CDATA[{attribute 'Tc2GvlVarNames'}
 VAR_GLOBAL
-	(* Inputs / Eingänge *)
-	binGr05LightCurtainOK 						AT %I*:BOOL;												(* DIx.x Light curtain ok / Freigabe Lichtschranke i.o *)
+(* Inputs / Eingänge *)
+	binGr05LightCurtainOK					AT %I*:BOOL;													(*) 	Light curtain ok / Freigabe Lichtschranke i.o *)
 
-	binGr05PushBtnStart 						AT %I*:BOOL; 											(* DIx.x Push button "Start" / Taste "Start" *)
-	binGr05PushBtnStop 						AT %I*:BOOL; 											(* DIx.x Push button "Stop" / Taste "Stop" *)
+	binGr05PushBtnStart						AT %I*:BOOL;													(*) 	Push button "Start" / Taste "Start" *)
+	binGr05PushBtnStop						AT %I*:BOOL;													(*) 	Push button "Stop" / Taste "Stop" *)
 
-	binGr05AxisClamp1LimitMax 				AT %I*:BOOL; 											(* DI100.3 Maximum limit of clamp 1 axis / Endschalter Klemmung - Achse maximal *)
-	binGr05AxisClamp1LimitMin 				AT %I*:BOOL; 											(* DI100.2 Minimum limit of clamp 1  axis / Endschalter Klemmung - Achse minimal *)
+	binGr05AxisClamp1LimitMax				AT %I*:BOOL;													(* DI 108.0) 	Max Limit of clamp 1 feed; also ref point set with lrOriginShiftPos from HMI *)
+	binGr05AxisClamp1LimitMin				AT %I*:BOOL;													(* DI 108.1) 	Min Limit of clamp 1 feed *)
 
-	binGr05SlideTop							AT %I*:BOOL;												(* DI102.4 Valve opened slide / Ventil Rutsche geöffnet *)
-	binGr05SlideBottom						AT %I*:BOOL;												(* DI102.5 Valve closed slide / Ventil Rutsche geschlossen *)
+	binGr05SlideTop							AT %I*:BOOL;													(*) 	Valve opened slide / Ventil Rutsche geöffnet *)
+	binGr05SlideBottom						AT %I*:BOOL;													(*) 	Valve closed slide / Ventil Rutsche geschlossen *)
 
-	binGr05RemovalBandNOK					AT %I*:BOOL;												(* DI12.0 Removal band error / Abtransportband Fehler *)
-	binGr05RemovalBandInPlus				AT %I*:BOOL;												(* DIx.x Removal band in plus limit / Abtransportband Plusendlage *)
-	binGr05PushBtnRemovalBandStart 			AT %I*:BOOL; 											(* DI12.1 Push button removal band "Start" / Taste Abtransportband "Start" *)
-	binGr05RemovalBandInMinus				AT %I*:BOOL;												(* DIx.x Removal band in minus limit / Abtransportband Minusendlage *)
+	binGr05RemovalBandNOK					AT %I*:BOOL;													(*) 	Removal band error / Abtransportband Fehler *)
+	binGr05RemovalBandInPlus				AT %I*:BOOL;													(*) 	Removal band in plus limit / Abtransportband Plusendlage *)
+	binGr05PushBtnRemovalBandStart			AT %I*:BOOL;													(*) 	Push button removal band "Start" / Taste Abtransportband "Start" *)
+	binGr05RemovalBandInMinus				AT %I*:BOOL;													(*) 	Removal band in minus limit / Abtransportband Minusendlage *)
 
-	arbinGr05ClampOpened					AT %I*: ARRAY[1..ungGr05ClampMaxNo] OF BOOL;			(* DI102.2..102.4 Valve opened clamp 1, 2 / Ventil Klemmung 1, 2 geöffnet *)
-	arbinGr05ClampClosed					AT %I*: ARRAY[1..ungGr05ClampMaxNo] OF BOOL;			(* DI102.3..102.5 Valve closed clamp 1, 2  / Ventil Klemmung 1, 2  geschlossen *)
+	arbinGr05ClampOpened					AT %I*: ARRAY[1..ungGr05ClampMaxNo] OF BOOL;					(*) 	Valve opened clamp 1, 2 / Ventil Klemmung 1, 2 geöffnet *)
+	arbinGr05ClampClosed					AT %I*: ARRAY[1..ungGr05ClampMaxNo] OF BOOL;					(*) 	Valve closed clamp 1, 2  / Ventil Klemmung 1, 2  geschlossen *)
 
-	arbinGr05CylinderPosOpened				AT %I*: ARRAY[1..ungGr05CylinderPosMaxNo] OF BOOL;		(* DI104.0 .. 104.4 Valves position cylinder opened / Ventienl Position Zylinder geöffnet *)
-	arbinGr05CylinderPosClosed				AT %I*: ARRAY[1..ungGr05CylinderPosMaxNo] OF BOOL;		(* DI104.1 .. 104.5 Valves position cylinder closed / Ventienl Position Zylinder geschlossen *)
+	arbinGr05CylinderPosOpened				AT %I*: ARRAY[1..ungGr05CylinderPosMaxNo] OF BOOL;				(* DI 103.0; 104.0; 105.0) 	Valve Pos Home | 100mm^=[1] | 200mm^=[2] | 300mm^=[3] *)
+	arbinGr05CylinderPosClosed				AT %I*: ARRAY[1..ungGr05CylinderPosMaxNo] OF BOOL;				(* DI 103.1; 104.1; 105.1) 	Valves Pos Work | 100mm^=[1] | 200mm^=[2] | 300mm^=[3] *)
 
-	binGr05PipeEndEdge						AT %I*:BOOL;												(* DI102.6 Pipe end edge  / Rohrendekante *)
-	binGr05PipeBeginEdge					AT %I*:BOOL;												(* DI102.7 Pipe begin edge  / Rohranfangkante *)
+	binGr05PipeEndEdge						AT %I*:BOOL;													(* DI 106.1) 	Pipe end edge  / Rohrendekante *)
+	binGr05PipeBeginEdge					AT %I*:BOOL;													(* DI 107.1) 	Pipe begin edge  / Rohranfangkante *)
 
 	(* Outputs / Ausgänge *)
-	boutGr05ConfLightCurtain 					AT %Q*:BOOL; 											(* DQx.x Confirm light Curtain / Quitt Lichtschrank *)
+	boutGr05ConfLightCurtain				AT %Q*:BOOL;													(*) 	Confirm light Curtain / Quitt Lichtschrank *)
 
-	boutGr05BulbBtnStart 						AT %Q*:BOOL; 											(* DQx.x Signal button bulb "start" / Signallampe "Start" *)
-	boutGr05BulbBtnStop 						AT %Q*:BOOL; 											(* DQx.x Signal button bulb "stop" / Signallampe "Stop" *)
+	boutGr05BulbBtnStart					AT %Q*:BOOL;													(*) 	Signal button bulb "start" / Signallampe "Start" *)
+	boutGr05BulbBtnStop						AT %Q*:BOOL;													(*) 	Signal button bulb "stop" / Signallampe "Stop" *)
 
-	boutGr05SlideUp							AT %Q*:BOOL;											(* DQx.x Valve open slide / Ventil Rutsche öffnen *)
-	boutGr05SlideDown						AT %Q*:BOOL;											(* DQx.x Valve close slide / Ventil Rutsche schlissen *)
+	boutGr05SlideUp							AT %Q*:BOOL;													(*) 	Valve open slide / Ventil Rutsche öffnen *)
+	boutGr05SlideDown						AT %Q*:BOOL;													(*) 	Valve close slide / Ventil Rutsche schlissen *)
 
-	boutGr05RemovalBandToPlus				AT %Q*:BOOL;											(* DQ10.0 Move removal band in plus direction / Abtransportband in Plusrichtung *)
-	boutGr05RemovalBandToMinus				AT %Q*:BOOL;											(* DQx.x Move removal band in minus direction / Abtransportband in Minusrichtung *)
+	boutGr05RemovalBandToPlus				AT %Q*:BOOL;													(*) 	Move removal band in plus direction / Abtransportband in Plusrichtung *)
+	boutGr05RemovalBandToMinus				AT %Q*:BOOL;													(*) 	Move removal band in minus direction / Abtransportband in Minusrichtung *)
 
-	(*boutGr05PipeBeginEdge					AT %Q*:BOOL;											( * DQ102.7 Pipe begin edge  / Rohranfangkante *)
 
-	arboutGr05ClampOpen						AT %Q*: ARRAY[1..ungGr05ClampMaxNo] OF BOOL;			(* DQ102.2, 12.4 Valve open clamp 1, 2 / Ventil Klemmung 1,2 öffnen *)
-	arboutGr05ClampClose					AT %Q*: ARRAY[1..ungGr05ClampMaxNo] OF BOOL;			(* DQ102.3, 12.5 Valve close clamp 1, 2 / Ventil Klemmung 1,2 schlissen *)
+	arboutGr05ClampOpen						AT %Q*: ARRAY[1..ungGr05ClampMaxNo] OF BOOL;					(* DQ 102.0; 102.2) Valve Clamping MOVE to HomePos | Clamp_1^=[1] | Clamp_2^=[2] *)
+	arboutGr05ClampClose					AT %Q*: ARRAY[1..ungGr05ClampMaxNo] OF BOOL;					(* DQ 102.1; 102.2)	Valve Clamping MOVE to WorkPos | Clamp_1^=[1] | Clamp_2^=[2] *)
 
-	arboutGr05CylinderPosOpen				AT %Q*: ARRAY[1..ungGr05CylinderPosMaxNo] OF BOOL;		(* DQ104.0 .. 104.4 Valves position cylinder open / Ventienl Position Zylinder öffnen *)
-	arboutGr05CylinderPosClose				AT %Q*: ARRAY[1..ungGr05CylinderPosMaxNo] OF BOOL;		(* DQ104.1 .. 104.5 Valves position cylinder close / Ventienl Position Zylinder schlissen *)
+	arboutGr05CylinderPosOpen				AT %Q*: ARRAY[1..ungGr05CylinderPosMaxNo] OF BOOL;				(* DQ 103.0; 103.2; 104.0) 	Valve MOVE to Pos Home | 100mm^=[1] | 200mm^=[2] | 300mm^=[3] *)
+	arboutGr05CylinderPosClose				AT %Q*: ARRAY[1..ungGr05CylinderPosMaxNo] OF BOOL;				(* DQ 103.1; 103.3; 104.1) 	Valve MOVE to Pos Work | 100mm^=[1] | 200mm^=[2] | 300mm^=[3] *)
 
 END_VAR
 ]]></Declaration>

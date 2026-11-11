@@ -4,7 +4,7 @@
     <Declaration><![CDATA[FUNCTION_BLOCK FB_Gr05AxisClamp
 (*
 
-The function block used to control axis welding.
+The function block used to control axis Clamp.
 
 Constructor: 		Patryk Panylo
 Company:		E. Riexinger GmbH

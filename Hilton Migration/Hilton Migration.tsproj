@@ -1767,7 +1767,10 @@ External Setpoint Generation:
 			</SubItem>
 		</DataType>
 	</DataTypes>
-	<Project ProjectGUID="{8546310E-61A9-44FB-A4FE-FF0603998963}" Target64Bit="true" ShowHideConfigurations="#x346">
+	<ImageDatas>
+		<ImageData Id="1000">424dd6020000000000003600000028000000100000000e0000000100180000000000a0020000c40e0000c40e00000000000000000000ff00ffc0c0c0c0c0c0c0c0c0c0c0c0808080808080808080808080808080808080ff00ffff00ffff00ffff00ffff00ffff00ffc0c0c0c0c0c0c0c0c0c0c0c0808080c0c0c0000000c0c0c0000000808080ff00ffff00ffff00ffff00ffff00ffff00ffc0c0c000bfff00bfffc0c0c0808080c0c0c000ffffc0c0c000ffff808080ff00ffff00ffff00ffff00ffff00ffff00ffc0c0c000bfff00bfffc0c0c0808080c0c0c0c0c0c0c0c0c0c0c0c0808080ff00ffff00ffff00ffff00ffff00ffff00ffc0c0c000bfff00bfffc0c0c0808080c0c0c0000000c0c0c0000000808080ff00ffff00ffff00ffff00ffff00ffff00ffc0c0c0c0c0c0c0c0c0c0c0c0808080c0c0c0ff0000c0c0c0ff0000808080ff00ffff00ffff00ffff00ffff00ffff00ffc0c0c0c0c0c0c0c0c0c0c0c0808080c0c0c0c0c0c0c0c0c0c0c0c0808080ff00ffff00ffff00ffff00ffff00ffff00ffc0c0c0c0c0c0c0c0c0c0c0c0808080c0c0c0000000c0c0c0000000808080ff00ffff00ffff00ffff00ffff00ffff00ffc0c0c000bfff00bfffc0c0c0808080c0c0c00000ffc0c0c00000ff808080ff00ffff00ffff00ffff00ffff00ffff00ffc0c0c000bfff00bfffc0c0c0808080c0c0c0c0c0c0c0c0c0c0c0c0808080ff00ffff00ffff00ffff00ffff00ffff00ffc0c0c000bfff00bfffc0c0c0808080c0c0c0000000c0c0c0000000808080ff00ffff00ffff00ffff00ffff00ffff00ffc0c0c0c0c0c0c0c0c0c0c0c0808080c0c0c0c0c0c0c0c0c0c0c0c0808080ff00ffff00ffff00ffff00ffff00ffff00ffc0c0c0c0c0c0c0c0c0c0c0c0808080c0c0c0008000c0c0c0008000808080ff00ffff00ffff00ffff00ffff00ffff00ffc0c0c0c0c0c0c0c0c0c0c0c0808080c0c0c0c0c0c0c0c0c0c0c0c0808080ff00ffff00ffff00ffff00ffff00ff</ImageData>
+	</ImageDatas>
+	<Project ProjectGUID="{8546310E-61A9-44FB-A4FE-FF0603998963}" TargetNetId="192.168.1.9.1.1" Target64Bit="true" ShowHideConfigurations="#x346">
 		<System>
 			<Tasks>
 				<Task Id="3" Priority="1" CycleTime="100000" AmsPort="350" AdtTasks="true">
@@ -2228,11 +2231,165 @@ External Setpoint Generation:
 						</Var>
 					</Vars>
 				</Axis>
+				<Axis Id="3" CreateSymbols="true" AxisType="1" GroupId="4">
+					<Name>Clamp1</Name>
+					<AxisPara>
+						<OtherSettings AllowMotionCmdToSlave="true"/>
+					</AxisPara>
+					<Encoder Name="Enc" EncType="1">
+						<Vars VarGrpType="1">
+							<Name>Eingänge</Name>
+							<Var>
+								<Name>In</Name>
+								<Type GUID="{901C2423-655B-45CE-B7E3-21F174F0F99F}" Namespace="MC">NCENCODERSTRUCT_IN2B</Type>
+								<SubVar TypeFormatIndex="2">
+									<Name>nDataIn1</Name>
+								</SubVar>
+								<SubVar TypeFormatIndex="2">
+									<Name>nDataIn2</Name>
+								</SubVar>
+								<SubVar TypeFormatIndex="2">
+									<Name>nDataIn3</Name>
+								</SubVar>
+								<SubVar TypeFormatIndex="2">
+									<Name>nDataIn4</Name>
+								</SubVar>
+								<SubVar TypeFormatIndex="2">
+									<Name>nDataIn5</Name>
+								</SubVar>
+								<SubVar TypeFormatIndex="2">
+									<Name>nDataIn6</Name>
+								</SubVar>
+								<SubVar TypeFormatIndex="2">
+									<Name>nDataIn7</Name>
+									<Comment><![CDATA[Drive Velocity Actual Value
+]]></Comment>
+								</SubVar>
+							</Var>
+						</Vars>
+						<Vars VarGrpType="2">
+							<Name>Ausgänge</Name>
+							<Var>
+								<Name>Out</Name>
+								<Type GUID="{9CC50AB2-5D79-4869-A3C2-1FA7761BAFEA}" Namespace="MC">NCENCODERSTRUCT_OUT2</Type>
+								<SubVar TypeFormatIndex="2">
+									<Name>nDataOut1</Name>
+								</SubVar>
+								<SubVar TypeFormatIndex="2">
+									<Name>nDataOut2</Name>
+								</SubVar>
+								<SubVar TypeFormatIndex="2">
+									<Name>nDataOut3</Name>
+								</SubVar>
+								<SubVar TypeFormatIndex="2">
+									<Name>nDataOut4</Name>
+								</SubVar>
+								<SubVar TypeFormatIndex="2">
+									<Name>nDataOut5</Name>
+								</SubVar>
+								<SubVar TypeFormatIndex="2">
+									<Name>nDataOut6</Name>
+								</SubVar>
+							</Var>
+						</Vars>
+					</Encoder>
+					<Drive Name="Drive" DrvType="5">
+						<DrvPara>
+							<Analog TorqueSetpointScale="10" ScaleFactorActTorque="0.1"/>
+							<TimeComp TaskDelayCycles="1"/>
+						</DrvPara>
+						<Vars VarGrpType="1">
+							<Name>Eingänge</Name>
+							<Var>
+								<Name>In</Name>
+								<Type GUID="{F95C7C69-0C87-46C4-9559-1285CCA5B23A}" Namespace="MC">NCDRIVESTRUCT_IN2</Type>
+								<SubVar TypeFormatIndex="2">
+									<Name>nDataIn1</Name>
+								</SubVar>
+								<SubVar TypeFormatIndex="2">
+									<Name>nDataIn2</Name>
+								</SubVar>
+								<SubVar TypeFormatIndex="2">
+									<Name>nDataIn3</Name>
+								</SubVar>
+								<SubVar TypeFormatIndex="2">
+									<Name>nDataIn4</Name>
+								</SubVar>
+								<SubVar TypeFormatIndex="2">
+									<Name>nDataIn5</Name>
+								</SubVar>
+								<SubVar TypeFormatIndex="2">
+									<Name>nDataIn6</Name>
+								</SubVar>
+							</Var>
+						</Vars>
+						<Vars VarGrpType="2">
+							<Name>Ausgänge</Name>
+							<Var>
+								<Name>Out</Name>
+								<Type GUID="{644DC4BD-3D15-4DCB-94C7-24F3A5D579AA}" Namespace="MC">NCDRIVESTRUCT_OUT2</Type>
+								<SubVar TypeFormatIndex="2">
+									<Name>nDataOut1</Name>
+								</SubVar>
+								<SubVar TypeFormatIndex="2">
+									<Name>nDataOut2</Name>
+								</SubVar>
+								<SubVar>
+									<Name>nCtrl2</Name>
+									<Comment><![CDATA[Digital Outputs Setpoint Generator:
+0x41 (0100 0001) = Minus (0x42 for inverse motor polarity)
+0x42 (0100 0010) = Plus (0x41 for inverse motor polarity)
+0x80 (1000 0000) = Stop
+]]></Comment>
+								</SubVar>
+								<SubVar>
+									<Name>nCtrl3</Name>
+									<Comment><![CDATA[Digital Outputs (Setpoint Generator + Position Controller):
+0x41 (0100 0001) = Minus (0x42 for inverse motor polarity)
+0x42 (0100 0010) = Plus (0x41 for inverse motor polarity)
+0x80 (1000 0000) = Stop
+]]></Comment>
+								</SubVar>
+								<SubVar TypeFormatIndex="2">
+									<Name>nDataOut3</Name>
+								</SubVar>
+								<SubVar TypeFormatIndex="2">
+									<Name>nDataOut4</Name>
+								</SubVar>
+								<SubVar TypeFormatIndex="2">
+									<Name>nDataOut5</Name>
+								</SubVar>
+								<SubVar TypeFormatIndex="2">
+									<Name>nDataOut6</Name>
+								</SubVar>
+							</Var>
+						</Vars>
+					</Drive>
+					<Controller Name="Ctrl" CtrType="1">
+						<CtrPara PriorControlFactor="1">
+							<Observer BandWidth="20"/>
+						</CtrPara>
+					</Controller>
+					<Vars VarGrpType="1" InsertType="1">
+						<Name>Eingänge</Name>
+						<Var>
+							<Name>FromPlc</Name>
+							<Type GUID="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" Namespace="MC">PLCTONC_AXIS_REF</Type>
+						</Var>
+					</Vars>
+					<Vars VarGrpType="2" InsertType="1">
+						<Name>Ausgänge</Name>
+						<Var>
+							<Name>ToPlc</Name>
+							<Type GUID="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" Namespace="MC">NCTOPLC_AXIS_REF</Type>
+						</Var>
+					</Vars>
+				</Axis>
 			</NC>
 		</Motion>
 		<Plc>
 			<Project GUID="{4AE76A25-A5E9-47BF-9F28-0249A5E26F26}" Name="_49001_01_BSM_762_V01_000_ISCOtherm" PrjFilePath="_49001_01_BSM_762_V01_000_ISCOtherm\_49001_01_BSM_762_V01_000_ISCOtherm.plcproj" TmcFilePath="_49001_01_BSM_762_V01_000_ISCOtherm\_49001_01_BSM_762_V01_000_ISCOtherm.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="_49001_01_BSM_762_V01_000_ISCOtherm\_49001_01_BSM_762_V01_000_ISCOtherm.tmc" TmcHash="{D7625C61-3290-8925-499C-9D5ECFD769CE}">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="_49001_01_BSM_762_V01_000_ISCOtherm\_49001_01_BSM_762_V01_000_ISCOtherm.tmc" TmcHash="{42EDCCF2-99BF-B856-0B65-5DFE4B7A0120}">
 					<Name>_49001_01_BSM_762_V01_000_ISCOtherm Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">
@@ -2361,77 +2518,82 @@ External Setpoint Generation:
 						</Var>
 						<Var>
 							<Name>.binGr01LightCurtainOK</Name>
-							<Comment><![CDATA[ DIx.x Light curtain ok / Freigabe Lichtschranke i.o ]]></Comment>
+							<Comment><![CDATA[)		DIx.x Light curtain ok / Freigabe Lichtschranke i.o ]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>.binGr01PushBtnStart</Name>
-							<Comment><![CDATA[ DIx.x Push button "Start" / Taste "Start" ]]></Comment>
+							<Comment><![CDATA[)		DIx.x Push button "Start" / Taste "Start" ]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>.binGr01PushBtnStop</Name>
-							<Comment><![CDATA[ DIx.x Push button "Stop" / Taste "Stop" ]]></Comment>
+							<Comment><![CDATA[)		DIx.x Push button "Stop" / Taste "Stop" ]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>.binGr01AxisSawBowLimitMax</Name>
-							<Comment><![CDATA[ DI100.4 Maximum limit of saw bow axis / Endschalter Bügel- Achse maximal ]]></Comment>
+							<Comment><![CDATA[) 	DI100.4 Maximum limit of saw bow axis / Endschalter Bügel- Achse maximal ]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>.binGr01AxisSawBowLimitMin</Name>
-							<Comment><![CDATA[ DI100.5 Minimum limit of saw bow axis Z / Endschalter Bügel- Achse minimal ]]></Comment>
+							<Comment><![CDATA[) 	DI100.5 Minimum limit of saw bow axis Z / Endschalter Bügel- Achse minimal ]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>.binGr01AxisAngleLimitMax</Name>
-							<Comment><![CDATA[ DI100.6 Maximum limit of angle axis / Endschalter Winkel - Achse maximal ]]></Comment>
+							<Comment><![CDATA[) 	DI100.6 Maximum limit of angle axis / Endschalter Winkel - Achse maximal ]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>.binGr01AxisAngleLimitMin</Name>
-							<Comment><![CDATA[ DI100.7 Minimum limit of angle axis / Endschalter Winkel - Achse minimal ]]></Comment>
+							<Comment><![CDATA[) 	DI100.7 Minimum limit of angle axis / Endschalter Winkel - Achse minimal ]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>.binGr01SawbandRelease</Name>
-							<Comment><![CDATA[ DI0.3 Saw band release / Sägeband-Freigabe ]]></Comment>
+							<Comment><![CDATA[ DI102.0)		Saw band release / Sägeband-Freigabe ]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>.binGr01SawbandLocked</Name>
+							<Comment><![CDATA[ DI102.1)		Currently only an option ]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>.binGr01SawbandMotorNOK</Name>
-							<Comment><![CDATA[ DIx.x Saw band motor protection switch is no ok / Sägeband-Motorschutzschalter NiO ]]></Comment>
+							<Comment><![CDATA[) 	DIx.x Saw band motor protection switch is no ok / Sägeband-Motorschutzschalter NiO ]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>.binGr01SawbandNoBroken</Name>
-							<Comment><![CDATA[ DI2.6 Saw band brake / Sägebandbruch ]]></Comment>
+							<Comment><![CDATA[) 	DI2.6 Saw band brake / Sägebandbruch ]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>.binGr01VacuumCleanerMotorNOK</Name>
-							<Comment><![CDATA[ DIx.x Vacuum cleaner motor protection switch is no ok / Absaugung-Motorschutzschalter NiO ]]></Comment>
+							<Comment><![CDATA[) 	DIx.x Vacuum cleaner motor protection switch is no ok / Absaugung-Motorschutzschalter NiO ]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>.binGr01PipeNoIdentify</Name>
-							<Comment><![CDATA[ DI100.1 Pipe identify  / Rohrerkenung ]]></Comment>
+							<Comment><![CDATA[) 	DI100.1 Pipe identify  / Rohrerkenung ]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>.ninGr01SawingOverride</Name>
-							<Comment><![CDATA[ Sawing override ]]></Comment>
+							<Comment><![CDATA[) 	Sawing override ]]></Comment>
 							<Type>INT</Type>
 						</Var>
 						<Var>
 							<Name>.udninGr01CounterSawbandSpeed</Name>
-							<Comment><![CDATA[ 1A5 Counter Saw band speed counter / Sägeband-Geschwindigkeits-Zähler ]]></Comment>
+							<Comment><![CDATA[) 	1A5 Counter Saw band speed counter / Sägeband-Geschwindigkeits-Zähler ]]></Comment>
 							<Type>UDINT</Type>
 						</Var>
 						<Var>
 							<Name>.udninGr01IncAxisAngle</Name>
-							<Comment><![CDATA[ 1A6 SSI01 Axis angle increment ]]></Comment>
+							<Comment><![CDATA[) 	1A6 SSI01 Axis angle increment ]]></Comment>
 							<Type>UDINT</Type>
 						</Var>
 						<Var>
@@ -2640,37 +2802,37 @@ External Setpoint Generation:
 						</Var>
 						<Var>
 							<Name>.boutGr01ConfLightCurtain</Name>
-							<Comment><![CDATA[ DQx.x Confirm light Curtain / Quitt Lichtschrank ]]></Comment>
+							<Comment><![CDATA[) 	DQx.x Confirm light Curtain / Quitt Lichtschrank ]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>.boutGr01BulbBtnStart</Name>
-							<Comment><![CDATA[ DQx.x Signal button bulb "start" / Signallampe "Start" ]]></Comment>
+							<Comment><![CDATA[) 	DQx.x Signal button bulb "start" / Signallampe "Start" ]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>.boutGr01BulbBtnStop</Name>
-							<Comment><![CDATA[ DQx.x Signal button bulb "stop" / Signallampe "Stop" ]]></Comment>
+							<Comment><![CDATA[) 	DQx.x Signal button bulb "stop" / Signallampe "Stop" ]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>.boutGr01SawbandAirOn</Name>
-							<Comment><![CDATA[ DQ100.1 Saw band air on / Sägeband Druckluft ein ]]></Comment>
+							<Comment><![CDATA[) 	DQ100.1 Saw band air on / Sägeband Druckluft ein ]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>.boutGr01LaserOn</Name>
-							<Comment><![CDATA[ DQ100.2 Laser on / off / Laser ein / aus ]]></Comment>
+							<Comment><![CDATA[) 	Laser on / off / Laser ein / aus ]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>.boutGr01VacuumCleanerOn</Name>
-							<Comment><![CDATA[ DQx.x Vacuum cleaner on / off / Absaugung ein / aus ]]></Comment>
+							<Comment><![CDATA[) 	Vacuum cleaner on / off / Absaugung ein / aus ]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>.boutGr01SawBowAngleZerro</Name>
-							<Comment><![CDATA[ DQ100.7 Saw bow angle zerro, confirmed safety is needed ]]></Comment>
+							<Comment><![CDATA[) 	Saw bow angle zerro, confirmed safety is needed ]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
@@ -2761,5 +2923,117 @@ External Setpoint Generation:
 				</Instance>
 			</Project>
 		</Plc>
+		<Io>
+			<Device Id="1" DevType="111" DevFlags="#x0003" AmsPort="28673" AmsNetId="192.168.1.9.2.1" RemoteName="Gerät 1 (EtherCAT)" InfoImageId="3">
+				<Name>Gerät 1 (EtherCAT)</Name>
+				<AddressInfo>
+					<Pnp>
+						<DeviceDesc></DeviceDesc>
+						<DeviceName></DeviceName>
+						<DeviceData>000000000000</DeviceData>
+					</Pnp>
+				</AddressInfo>
+				<Image Id="2" AddrType="9" ImageType="3">
+					<Name>Prozessabbild</Name>
+				</Image>
+				<Box Id="1" BoxType="9099">
+					<Name>Klemmkasten K3 (EK1100)</Name>
+					<ImageId>1000</ImageId>
+					<EtherCAT SlaveType="1" PdiType="#x0d00" CycleMBoxPollingTime="0" VendorId="#x00000002" ProductCode="#x044c2c52" RevisionNo="#x00120000" PortPhys="305" MaxSlotCount="256" MaxSlotGroupCount="1" SlotPdoIncrement="1" SlotIndexIncrement="16" Type="EK1100 EtherCAT-Koppler (2A E-Bus)" Desc="EK1100" PortABoxInfo="#x00ffffff"/>
+					<Box Id="3" BoxType="9099">
+						<Name>+K3 -A2 (EL1002)</Name>
+						<ImageId>7</ImageId>
+						<EtherCAT SlaveType="1" PdiType="#x0104" CycleMBoxPollingTime="0" VendorId="#x00000002" ProductCode="#x03ea3052" RevisionNo="#x00120000" RepeatSupport="true" PortPhys="51" MaxSlotCount="256" MaxSlotGroupCount="1" SlotPdoIncrement="1" SlotIndexIncrement="16" Type="EL1002 2K. Dig. Eingang 24V, 3ms" Desc="EL1002" PortABoxInfo="#x01000001">
+							<SyncMan>001001000000010004000000000000000100001000010000</SyncMan>
+							<Fmmu>0000000000000000001000010100000002000000000000000000000000000000</Fmmu>
+							<Pdo Name="Channel 1" Index="#x1a00" Flags="#x0011" SyncMan="0">
+								<Entry Name="Input" Index="#x6000" Sub="#x01">
+									<Type>BIT</Type>
+								</Entry>
+							</Pdo>
+							<Pdo Name="Channel 2" Index="#x1a01" Flags="#x0011" SyncMan="0">
+								<Entry Name="Input" Index="#x6010" Sub="#x01">
+									<Type>BIT</Type>
+								</Entry>
+							</Pdo>
+						</EtherCAT>
+					</Box>
+					<Box Id="4" BoxType="9099">
+						<Name>+K3 -A3 (EL1002)</Name>
+						<ImageId>7</ImageId>
+						<EtherCAT SlaveType="1" PdiType="#x0104" CycleMBoxPollingTime="0" VendorId="#x00000002" ProductCode="#x03ea3052" RevisionNo="#x00120000" RepeatSupport="true" PortPhys="51" MaxSlotCount="256" MaxSlotGroupCount="1" SlotPdoIncrement="1" SlotIndexIncrement="16" Type="EL1002 2K. Dig. Eingang 24V, 3ms" Desc="EL1002" PortABoxInfo="#x01000003">
+							<SyncMan>001001000000010004000000000000000100001000010000</SyncMan>
+							<Fmmu>0000000000000000001000010100000002000000000000000000000000000000</Fmmu>
+							<Pdo Name="Channel 1" Index="#x1a00" Flags="#x0011" SyncMan="0">
+								<Entry Name="Input" Index="#x6000" Sub="#x01">
+									<Type>BIT</Type>
+								</Entry>
+							</Pdo>
+							<Pdo Name="Channel 2" Index="#x1a01" Flags="#x0011" SyncMan="0">
+								<Entry Name="Input" Index="#x6010" Sub="#x01">
+									<Type>BIT</Type>
+								</Entry>
+							</Pdo>
+						</EtherCAT>
+					</Box>
+					<Box Id="5" BoxType="9099">
+						<Name>+K3 -A4 (EL1002)</Name>
+						<ImageId>7</ImageId>
+						<EtherCAT SlaveType="1" PdiType="#x0104" CycleMBoxPollingTime="0" VendorId="#x00000002" ProductCode="#x03ea3052" RevisionNo="#x00120000" RepeatSupport="true" PortPhys="51" MaxSlotCount="256" MaxSlotGroupCount="1" SlotPdoIncrement="1" SlotIndexIncrement="16" Type="EL1002 2K. Dig. Eingang 24V, 3ms" Desc="EL1002" PortABoxInfo="#x01000004">
+							<SyncMan>001001000000010004000000000000000100001000010000</SyncMan>
+							<Fmmu>0000000000000000001000010100000002000000000000000000000000000000</Fmmu>
+							<Pdo Name="Channel 1" Index="#x1a00" Flags="#x0011" SyncMan="0">
+								<Entry Name="Input" Index="#x6000" Sub="#x01">
+									<Type>BIT</Type>
+								</Entry>
+							</Pdo>
+							<Pdo Name="Channel 2" Index="#x1a01" Flags="#x0011" SyncMan="0">
+								<Entry Name="Input" Index="#x6010" Sub="#x01">
+									<Type>BIT</Type>
+								</Entry>
+							</Pdo>
+						</EtherCAT>
+					</Box>
+				</Box>
+				<Box Id="2" BoxType="9099">
+					<Name>Panel P (EK1100)</Name>
+					<ImageId>1000</ImageId>
+					<EtherCAT SlaveType="1" PdiType="#x0d00" CycleMBoxPollingTime="0" VendorId="#x00000002" ProductCode="#x044c2c52" RevisionNo="#x00120000" PortPhys="305" MaxSlotCount="256" MaxSlotGroupCount="1" SlotPdoIncrement="1" SlotIndexIncrement="16" Type="EK1100 EtherCAT-Koppler (2A E-Bus)" Desc="EK1100" PortABoxInfo="#x02000001"/>
+				</Box>
+				<EtherCAT/>
+			</Device>
+		</Io>
 	</Project>
+	<Mappings>
+		<MappingInfo Identifier="{00000000-2001-0850-0020-500820000403}" Id="#x02030020"/>
+		<MappingInfo Identifier="{08502001-0010-0500-0020-500810000403}" Id="#x02030010" Watchdog="04000000140000000400000004000000"/>
+		<OwnerA Name="TIPC^_49001_01_BSM_762_V01_000_ISCOtherm^_49001_01_BSM_762_V01_000_ISCOtherm Instance">
+			<OwnerB Name="TIID^Device 1 (EtherCAT)^Klemmkasten K3 (EK1100)^+K3 -A2 (EL1002)">
+				<Link VarA="PLC_TASK Inputs^.binGr00AirPressureOK" VarB="Channel 1^Input"/>
+			</OwnerB>
+			<OwnerB Name="TIID^Device 1 (EtherCAT)^Klemmkasten K3 (EK1100)^+K3 -A3 (EL1002)">
+				<Link VarA="PLC_TASK Inputs^.arbinGr05ClampClosed[2]" VarB="Channel 2^Input"/>
+				<Link VarA="PLC_TASK Inputs^.arbinGr05ClampOpened[2]" VarB="Channel 1^Input"/>
+			</OwnerB>
+			<OwnerB Name="TIID^Device 1 (EtherCAT)^Klemmkasten K3 (EK1100)^+K3 -A4 (EL1002)">
+				<Link VarA="PLC_TASK Inputs^.binGr01SawbandRelease" VarB="Channel 1^Input"/>
+			</OwnerB>
+			<OwnerB Name="TINC^NC-Task 1 SAF^Axes^Clamp1">
+				<Link VarA="PLC_TASK Inputs^.igGr05AxisClamp1.NcToPlc" VarB="Outputs^ToPlc"/>
+				<Link VarA="PLC_TASK Outputs^.igGr05AxisClamp1.PlcToNc" VarB="Inputs^FromPlc"/>
+			</OwnerB>
+			<OwnerB Name="TINC^NC-Task 1 SAF^Axes^SawAngle">
+				<Link VarA="PLC_TASK Inputs^.igGr01AxisSawAngle.NcToPlc" VarB="Outputs^ToPlc"/>
+				<Link VarA="PLC_TASK Outputs^.igGr01AxisSawAngle.PlcToNc" VarB="Inputs^FromPlc"/>
+			</OwnerB>
+			<OwnerB Name="TINC^NC-Task 1 SAF^Axes^SawBand">
+				<Link VarA="PLC_TASK Inputs^.igGr01AxisSawBand.NcToPlc" VarB="Outputs^ToPlc"/>
+				<Link VarA="PLC_TASK Outputs^.igGr01AxisSawBand.PlcToNc" VarB="Inputs^FromPlc"/>
+			</OwnerB>
+			<OwnerB Name="TINC^NC-Task 1 SAF^Axes^SawBow">
+				<Link VarA="PLC_TASK Inputs^.igGr01AxisSawBow.NcToPlc" VarB="Outputs^ToPlc"/>
+				<Link VarA="PLC_TASK Outputs^.igGr01AxisSawBow.PlcToNc" VarB="Inputs^FromPlc"/>
+			</OwnerB>
+		</OwnerA>
+	</Mappings>
 </TcSmProject>
