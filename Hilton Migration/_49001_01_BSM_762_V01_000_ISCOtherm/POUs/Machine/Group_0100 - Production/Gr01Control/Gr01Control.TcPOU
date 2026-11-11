@@ -21,6 +21,8 @@ VAR
 	bAllAxisStandStill				:BOOL;						(* All axis stand still *)
 	bAllAxisNotMoving			:BOOL;						(* All axis not moving *)
 	bAllAxisReferenced			:BOOL;						(* All axis referenced *)
+	
+	BandDistance_m					:LREAL;
 
 	(* References *)
 
@@ -28,10 +30,13 @@ VAR
 
 	(* Instances *)
 	fbAlarm						:FB_Gr01Alarm;
-	fbSafety						:FB_Gr01Safety;
+	fbSafety					:FB_Gr01Safety;
 	fbSignals					:FB_Gr01Signals;
-	fbUtility						:FB_Gr01Utility;
-	rtBtnStart						:R_TRIG;
+	fbUtility					:FB_Gr01Utility;
+	rtBtnStart					:R_TRIG;
+	
+	SawbandVelo					:FB_PosVeloEnc;
+	fbLowPassFilter				:FB_LowPassFilter;
 
 END_VAR
 VAR CONSTANT
@@ -332,8 +337,8 @@ fbSawband(
 	bTipPlus					:= stgGr01HMI.stHMITOPLC.bBtnSawbandPlus,
 	bTipMinus					:= False,
 	lrTipDistance				:= 0,
-	lrManualVelocity			:= stgGr01HMI.stHMITOPLC.lrSawbandManualSpeed / 3.28084,
-	lrAutoVelocity				:= stgGr01HMI.stHMITOPLC.lrSawbandAutoSpeed / 3.28084,
+	lrManualVelocity			:= stgGr01HMI.stHMITOPLC.rSawbandManualSpeed / 3.28084,
+	lrAutoVelocity				:= stgGr01HMI.stHMITOPLC.rSawbandAutoSpeed / 3.28084,
 	lrNoRefVelocity				:= 30,
 	bVelocityLimitEn			:= FALSE,
 	lrAcceleration				:= 5000,
@@ -355,8 +360,38 @@ fbSawband(
 	Axis						:= GVL_Gr01Interface.igGr01AxisSawBand,
 	MasterAxis					:= GVL_Gr00Interface.iAxisDummy,
 
-	lrActVelocity				=> GVL_Gr01HMI.stgGr01HMI.stPLCTOHMI.lrSawbandActSpeed
+	lrActVelocity				=> GVL_Gr01HMI.stgGr01HMI.stPLCTOHMI.lrSawbandActSpeed,
+	bSawbandAirOn 				=> boutGr01SawbandAirOn
 );
+
+
+////////////// Sawband Velo Scaling
+
+SawbandVelo(
+	bEnable:= TRUE , 
+	dwEncCurrentValue:= GVL_GR01IO.udninGr01CounterSawbandSpeed, 
+	udnScalingDenom:= 18 , 
+	lrScalingNum:= rRaddurchmesser_mm*PI, //  diameter 510mm, circumference 1602.21 mm 
+	tCycleTime:= T#10MS , 
+	lrCurrentPos=> , 
+	lrCurrentVelo=> );
+	
+BandDistance_m := SawbandVelo.lrCurrentPos / 1000;
+GVL_Gr01Init.lrgGr01SawingSpeed := SawbandVelo.lrCurrentVelo * 60;
+
+	fbLowPassFilter(
+	bEnable:= TRUE , 
+	lrIn:= GVL_Gr01Init.lrgGr01SawingSpeed, 
+	lrKp:= 1, 
+	tT1:= T#600MS , 
+	tCycletime:= T#10MS, 
+	lrOut=> lrgGr01SawingSpeed);
+//////////////
+	GVL_Gr01HMI.ST_Gr01HMIRef.stPLCTOHMI.lrSawbandActSpeed := GVL_Gr01Init.lrgGr01SawingSpeed;
+
+
+
+
 
 (* Old FB)
 (* Enable sawband *)
@@ -598,8 +633,11 @@ fbUtility(
       <LineId Id="562" Count="0" />
       <LineId Id="589" Count="0" />
       <LineId Id="591" Count="3" />
-      <LineId Id="597" Count="1" />
+      <LineId Id="597" Count="2" />
       <LineId Id="325" Count="0" />
+      <LineId Id="601" Count="1" />
+      <LineId Id="608" Count="21" />
+      <LineId Id="603" Count="4" />
       <LineId Id="215" Count="1" />
       <LineId Id="106" Count="50" />
       <LineId Id="52" Count="0" />

@@ -10,23 +10,23 @@ VAR_GLOBAL
 	binGr01PushBtnStop 						AT %I*:BOOL; 													(*)		Push button "Stop" / Taste "Stop" *)
 
 	binGr01AxisSawBowLimitMax 				AT %I*:BOOL; 													(* DI 110.0) 	Maximum limit of saw bow axis / Endschalter Bügel- Achse maximal *)
-	binGr01AxisSawBowLimitMin 				AT %I*:BOOL; 													(* DI 110.1) 	Minimum limit of saw bow axis Z / Endschalter Bügel- Achse minimal *)
+	binGr01AxisSawBowLimitMin 				AT %I*:BOOL; 													(* DI 110.1) 	Minimum limit of saw bow axis / Endschalter Bügel- Achse minimal *)
 	binGr01AxisAngleLimitMax 				AT %I*:BOOL; 													(* DI 109.1) 	Maximum limit of angle axis / Endschalter Winkel - Achse maximal *)
 	binGr01AxisAngleLimitMin 				AT %I*:BOOL; 													(* DI 109.0) 	Minimum limit of angle axis / Endschalter Winkel - Achse minimal *)
 
-	binGr01SawbandRelease					AT %I*:BOOL;													(* DI102.0)		Saw band release / Sägeband-Freigabe *)
-	binGr01SawbandLocked					AT %I*:BOOL;													(* DI102.1)		Currently not active *)
+	binGr01SawbandRelease					AT %I*:BOOL;													(* DI 102.0)		Saw band release / Sägeband-Freigabe *)
+	binGr01SawbandLocked					AT %I*:BOOL;													(* DI 102.1)		Currently not active *)
 	binGr01SawbandMotorNOK					AT %I*:BOOL;													(*) 	DIx.x Saw band motor protection switch is no ok / Sägeband-Motorschutzschalter NiO *)
 	binGr01SawbandNoBroken					AT %I*:BOOL;													(*) 	DI2.6 Saw band brake / Sägebandbruch *)
 
 	binGr01VacuumCleanerMotorNOK			AT %I*:BOOL; 													(*) 	DIx.x Vacuum cleaner motor protection switch is no ok / Absaugung-Motorschutzschalter NiO *)
 
-	binGr01PipeNoIdentify					AT %I*:BOOL;													(* DI106.0) 	DI100.1 Pipe identify  / Rohrerkenung *)
+	binGr01PipeNoIdentify					AT %I*:BOOL;													(* DI 106.0) 	DI100.1 Pipe identify  / Rohrerkenung *)
 
-	udninGr01CounterSawbandSpeed			AT %I* :UDINT;													(*) 	Counter Saw band speed counter / Sägeband-Geschwindigkeits-Zähler *)
-	udninGr01IncAxisAngle					AT %I* :UDINT;													(*) 	SSI01 Axis angle increment *)
-
-	ninGr01SawingOverride					AT %I* :INT;													(*) 	Sawing override *)
+	udninGr01CounterSawbandSpeed			AT %I*:UDINT;													(*) 	Counter Saw band speed counter / Sägeband-Geschwindigkeits-Zähler *)
+	udninGr01IncAxisAngle					AT %I*:UDINT;													(*) 	SSI01 Axis angle increment *)
+	
+	ninGr01SawingOverride					AT %I*:INT;														(*) 	Sawing override *)
 
 	(* Outputs / Ausgänge *)
 	boutGr01ConfLightCurtain 				AT %Q*:BOOL; 													(*) 	Confirm light Curtain / Quitt Lichtschrank *)
@@ -34,11 +34,11 @@ VAR_GLOBAL
 	boutGr01BulbBtnStart 					AT %Q*:BOOL; 													(*) 	Signal button bulb "start" / Signallampe "Start" *)
 	boutGr01BulbBtnStop 					AT %Q*:BOOL; 													(*) 	Signal button bulb "stop" / Signallampe "Stop" *)
 
-	boutGr01SawbandAirOn					AT %Q*:BOOL;													(*) 	Saw band air on / Sägeband Druckluft ein *)
-	boutGr01LaserOn							AT %Q*:BOOL;													(*) 	Laser on / off / Laser ein / aus *)
+	boutGr01SawbandAirOn					AT %Q*:BOOL;													(* DQ 101.2) 	Saw band air on / Sägeband Druckluft ein *)
+	boutGr01LaserOn							AT %Q*:BOOL;													(* DQ 100.2) 	Laser on / off / Laser ein / aus *)
 	boutGr01VacuumCleanerOn					AT %Q*:BOOL;													(*) 	Vacuum cleaner on / off / Absaugung ein / aus *)
 
-	boutGr01SawBowAngleZerro				AT %Q*:BOOL;													(*) 	Saw bow angle zerro, confirmed safety is needed *)
+	boutGr01SawBowAngleZero	 				AT %Q*:BOOL;													(* DQ 100.1) 	Saw bow angle zerro, confirmed safety is needed *)
 
 END_VAR
 ]]></Declaration>

@@ -35637,7 +35637,7 @@ END_IF
     <Action Name="Gr05Auto_eSawbandStart_Entry" Id="{020eb7db-6d27-4c83-9b2b-f5583953e4b6}">
       <Implementation>
         <ST><![CDATA[Gr01Control.fbSawband.bExeMoveVelo:= TRUE;
-Gr01Control.fbSawband.lrAutoVelocity := stgGr01HMI.stHMITOPLC.lrSawbandAutoSpeed;
+Gr01Control.fbSawband.lrAutoVelocity := stgGr01HMI.stHMITOPLC.rSawbandAutoSpeed / 3.28084;
 
 ]]></ST>
       </Implementation>

@@ -1,0 +1,125 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_PosVeloEnc" Id="{a752ed45-276a-4654-afb4-891363369cec}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_PosVeloEnc
+(*
+
+Function block to calculate current position and velocity use incremental signal.
+
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			20.03.2014
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+
+VAR_INPUT
+	(* Variables *)
+	bEnable								:BOOL;						(* Enable FB *)
+	dwEncCurrentValue					:DWORD;					(* Encoder current value *)
+	udnScalingDenom						:UDINT := 18;	  				(* Denominator for the conversion factor at the conversion of bus data to technical units [INC] *)
+	lrScalingNum							:LREAL := 1602.21;  			(* Numerator for the conversion factor at the conversion of bus data to technical units [technical units] *)
+																	(* The technical units dependent on denominator and numerator.*)
+	tCycleTime							:TIME := t#10ms; 				(* Cycle time of the task *)
+END_VAR
+VAR_OUTPUT
+	(* Variables *)
+	lrCurrentPos 							:LREAL;						(* Calculated position [mm] *)
+	lrCurrentVelo							:LREAL;						(* Calculated velocity from current position [mm/µs] *)
+END_VAR
+VAR
+	(* Variables *)
+	bFirstTime							:BOOL;
+
+	dwEncOldValue						:DWORD;					(* Encoder old value *)
+	dnPosDistance						:DINT;						(* Positon distance from encoder values *)
+	dwCurrentPos							:DWORD;					(* Current position from encoder values *)
+	dwPosOffset							:DWORD;					(* Positon offset from encoder values *)
+
+	lrSectorTime							:LREAL;
+	lrScaleFactor 							:LREAL;
+	lrOldPos								:LREAL;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	lrCurrentPos := 0;						(* Calculated position *)
+	lrCurrentVelo := 0;						(* Calculated velocity from current position *)
+	bFirstTime := FALSE;
+	RETURN;
+END_IF
+
+IF NOT bFirstTime
+THEN
+	dwEncOldValue := 0;
+	lrOldPos := 0;
+
+	IF lrScalingNum = 0
+	THEN
+		lrScaleFactor := 0;												(* Inc / [technical units] *)
+	ELSE
+		lrScaleFactor := udnScalingDenom / lrScalingNum;					(* Inc / [technical units] *)
+	END_IF
+
+	lrSectorTime := TIME_TO_LREAL(tCycleTime);
+
+	bFirstTime := TRUE;
+END_IF
+
+IF tCycleTime =  t#0ms
+    OR lrScaleFactor = 0
+THEN
+	lrCurrentPos := 0;						(* Calculated position *)
+	lrCurrentVelo := 0;						(* Calculated velocity from current position *)
+
+	RETURN;
+END_IF
+
+(* Calculate position *)
+A_CalcPos();
+
+(* Calculate velocity *)
+A_CalcVelo();
+
+]]></ST>
+    </Implementation>
+    <Action Name="A_CalcPos" Id="{ffb746dc-8979-4cfe-abcc-da3ba85ed45d}">
+      <Implementation>
+        <ST><![CDATA[
+(* Calculate position *)
+dnPosDistance := DWORD_TO_DINT(dwEncCurrentValue - dwEncOldValue);			(* Position distance in inc *)
+
+dwCurrentPos := dwPosOffset + dwEncCurrentValue;									(* Current position in inc *)
+
+lrCurrentPos := DWORD_TO_DINT(dwCurrentPos) / lrScaleFactor;						(* Current position in [technical units] *)
+
+dwEncOldValue := dwEncCurrentValue;]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_CalcVelo" Id="{e4f45fbb-8f32-4c5b-a03d-894e84ec8b7a}">
+      <Implementation>
+        <ST><![CDATA[
+lrCurrentVelo := (lrCurrentPos - lrOldPos)
+			   / lrSectorTime;
+
+lrOldPos := lrCurrentPos;]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_PosVeloEnc">
+      <LineId Id="51" Count="39" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_PosVeloEnc.A_CalcPos">
+      <LineId Id="2" Count="7" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_PosVeloEnc.A_CalcVelo">
+      <LineId Id="2" Count="3" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

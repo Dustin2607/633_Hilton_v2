@@ -130,6 +130,7 @@
     <Folder Include="POUs\Machine\Group_0100 - Production\Gr01Control\Gr01Safety" />
     <Folder Include="POUs\Machine\Group_0100 - Production\Gr01Control\Gr01Signals" />
     <Folder Include="POUs\Machine\Group_0100 - Production\Gr01Control\Gr01Units" />
+    <Folder Include="POUs\Machine\Group_0100 - Production\Gr01Control\Gr01Units\FB_Gr01Sawband" />
     <Folder Include="POUs\Machine\Group_0100 - Production\Gr01Control\Gr01Utility" />
     <Folder Include="POUs\Machine\Group_0100 - Production\Gr01HMI" />
     <Folder Include="POUs\Machine\Group_0100 - Production\Gr01MachineMode" />
@@ -713,8 +714,16 @@
     <Compile Include="POUs\Machine\Group_0100 - Production\Gr01Control\Gr01Safety\FB_Gr01Safety.TcPOU" />
     <Compile Include="POUs\Machine\Group_0100 - Production\Gr01Control\Gr01Signals\FB_Gr01Signals.TcPOU" />
     <Compile Include="POUs\Machine\Group_0100 - Production\Gr01Control\Gr01Units\FB_Gr01Angle.TcPOU" />
+    <Compile Include="POUs\Machine\Group_0100 - Production\Gr01Control\Gr01Units\FB_Gr01Sawband\FB_Gr01Sawband.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Machine\Group_0100 - Production\Gr01Control\Gr01Units\FB_Gr01Sawband\FB_LowPassFilter.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Machine\Group_0100 - Production\Gr01Control\Gr01Units\FB_Gr01Sawband\FB_PosVeloEnc.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="POUs\Machine\Group_0100 - Production\Gr01Control\Gr01Units\FB_Gr01SawBow.TcPOU" />
-    <Compile Include="POUs\Machine\Group_0100 - Production\Gr01Control\Gr01Units\FB_Gr01Sawband.TcPOU" />
     <Compile Include="POUs\Machine\Group_0100 - Production\Gr01Control\Gr01Utility\FB_Gr01Utility.TcPOU" />
     <Compile Include="POUs\Machine\Group_0100 - Production\Gr01Coordinator.TcPOU" />
     <Compile Include="POUs\Machine\Group_0100 - Production\Gr01HMI\Gr01HMI.TcPOU" />
