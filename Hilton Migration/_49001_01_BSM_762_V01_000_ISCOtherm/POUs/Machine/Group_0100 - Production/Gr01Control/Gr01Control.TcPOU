@@ -129,10 +129,10 @@ fbAlarm.stAlarmIn.arbError[15].dnCode := dnErrorBaseIdentNo + 15;
 fbAlarm.stAlarmIn.arbError[16].bActive := FALSE;
 fbAlarm.stAlarmIn.arbError[16].dnCode := dnErrorBaseIdentNo + 16;
 
-fbAlarm.stAlarmIn.arbError[17].bActive := fbSawband.GVL_Gr0100.bgGr01SawbandVeloError_1;
+fbAlarm.stAlarmIn.arbError[17].bActive := GVL_Gr0100.bgGr01SawbandVeloError_1;
 fbAlarm.stAlarmIn.arbError[17].dnCode := dnErrorBaseIdentNo + 17;
 
-fbAlarm.stAlarmIn.arbError[18].bActive := fbSawband.GVL_Gr0100.bgGr01SawbandVeloError_2;
+fbAlarm.stAlarmIn.arbError[18].bActive := GVL_Gr0100.bgGr01SawbandVeloError_2;
 fbAlarm.stAlarmIn.arbError[18].dnCode := dnErrorBaseIdentNo + 18;
 
 fbAlarm.stAlarmIn.arbError[19].bActive := (* bgGr00MachineRunning
@@ -395,7 +395,7 @@ GVL_Gr01Init.lrgGr01SawingSpeed := SawbandVelo.lrCurrentVelo * 60;		(* [m/min] *
 
 );
 //////////////
-	GVL_Gr01HMI.ST_Gr01HMIRef.stPLCTOHMI.lrSawbandActSpeed := GVL_Gr01Init.lrgGr01SawingSpeed;
+GVL_Gr01HMI.stgGr01HMI.stHMITOPLC.rSawbandAutoSpeed := GVL_Gr01Init.lrgGr01SawingSpeed;
 	
 	
 ////////////// Sawband Velo Error -> never reaches target speed

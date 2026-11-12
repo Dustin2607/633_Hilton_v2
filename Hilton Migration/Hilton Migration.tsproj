@@ -1776,7 +1776,7 @@ External Setpoint Generation:
 			</ArrayInfo>
 		</DataType>
 		<DataType>
-			<Name GUID="{18071995-0000-0000-0000-002000000001}" IecBaseType="true" AutoDeleteType="true" HideSubItems="true">ARRAY [0..0] OF BIT</Name>
+			<Name GUID="{18071995-0000-0000-0000-002000000001}" IecBaseType="true" BitType="true" AutoDeleteType="true" HideSubItems="true">ARRAY [0..0] OF BIT</Name>
 			<BitSize>1</BitSize>
 			<BaseType GUID="{18071995-0000-0000-0000-000000000010}">BIT</BaseType>
 			<ArrayInfo>
@@ -1785,7 +1785,7 @@ External Setpoint Generation:
 			</ArrayInfo>
 		</DataType>
 		<DataType>
-			<Name GUID="{18071995-0000-0000-0000-002000000005}" IecBaseType="true" AutoDeleteType="true" HideSubItems="true">ARRAY [0..4] OF BIT</Name>
+			<Name GUID="{18071995-0000-0000-0000-002000000005}" IecBaseType="true" BitType="true" AutoDeleteType="true" HideSubItems="true">ARRAY [0..4] OF BIT</Name>
 			<BitSize>5</BitSize>
 			<BaseType GUID="{18071995-0000-0000-0000-000000000010}">BIT</BaseType>
 			<ArrayInfo>
@@ -1794,7 +1794,7 @@ External Setpoint Generation:
 			</ArrayInfo>
 		</DataType>
 		<DataType>
-			<Name GUID="{18071995-0000-0000-0000-002000000002}" IecBaseType="true" AutoDeleteType="true" HideSubItems="true">ARRAY [0..1] OF BIT</Name>
+			<Name GUID="{18071995-0000-0000-0000-002000000002}" IecBaseType="true" BitType="true" AutoDeleteType="true" HideSubItems="true">ARRAY [0..1] OF BIT</Name>
 			<BitSize>2</BitSize>
 			<BaseType GUID="{18071995-0000-0000-0000-000000000010}">BIT</BaseType>
 			<ArrayInfo>
@@ -1803,7 +1803,7 @@ External Setpoint Generation:
 			</ArrayInfo>
 		</DataType>
 		<DataType>
-			<Name GUID="{18071995-0000-0000-0000-002000000009}" IecBaseType="true" AutoDeleteType="true" HideSubItems="true">ARRAY [0..8] OF BIT</Name>
+			<Name GUID="{18071995-0000-0000-0000-002000000009}" IecBaseType="true" BitType="true" AutoDeleteType="true" HideSubItems="true">ARRAY [0..8] OF BIT</Name>
 			<BitSize>9</BitSize>
 			<BaseType GUID="{18071995-0000-0000-0000-000000000010}">BIT</BaseType>
 			<ArrayInfo>
@@ -1812,7 +1812,7 @@ External Setpoint Generation:
 			</ArrayInfo>
 		</DataType>
 		<DataType>
-			<Name GUID="{18071995-0000-0000-0000-00200000000C}" IecBaseType="true" AutoDeleteType="true" HideSubItems="true">ARRAY [0..11] OF BIT</Name>
+			<Name GUID="{18071995-0000-0000-0000-00200000000C}" IecBaseType="true" BitType="true" AutoDeleteType="true" HideSubItems="true">ARRAY [0..11] OF BIT</Name>
 			<BitSize>12</BitSize>
 			<BaseType GUID="{18071995-0000-0000-0000-000000000010}">BIT</BaseType>
 			<ArrayInfo>
@@ -2467,36 +2467,11 @@ External Setpoint Generation:
 		</Motion>
 		<Plc>
 			<Project GUID="{4AE76A25-A5E9-47BF-9F28-0249A5E26F26}" Name="_49001_01_BSM_762_V01_000_ISCOtherm" PrjFilePath="_49001_01_BSM_762_V01_000_ISCOtherm\_49001_01_BSM_762_V01_000_ISCOtherm.plcproj" TmcFilePath="_49001_01_BSM_762_V01_000_ISCOtherm\_49001_01_BSM_762_V01_000_ISCOtherm.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="_49001_01_BSM_762_V01_000_ISCOtherm\_49001_01_BSM_762_V01_000_ISCOtherm.tmc" TmcHash="{85F783F9-5593-61F4-3799-F9F81EF58CAF}">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="_49001_01_BSM_762_V01_000_ISCOtherm\_49001_01_BSM_762_V01_000_ISCOtherm.tmc" TmcHash="{36844FC7-06E8-86C4-CE6F-590E7EB6C181}">
 					<Name>_49001_01_BSM_762_V01_000_ISCOtherm Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">
 						<Name>PLC_TASK Inputs</Name>
-						<Var>
-							<Name>.binGr00NoEmergencyStop</Name>
-							<Comment><![CDATA[) 	No emergency stop / kein Notaus ]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>.binGr00AirPressureOK</Name>
-							<Comment><![CDATA[) 	Air pressure OK / Luftdruck i.O. ]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>.binGr00LightCurtainOK</Name>
-							<Comment><![CDATA[) 	Light curtain ok / Freigabe Lichtschranke i.o ]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>.binGr00TempOK</Name>
-							<Comment><![CDATA[) 	Temperature fuse OK / Temperatursicherung i.O. ]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>.binGr00AllDoorsClosed</Name>
-							<Comment><![CDATA[) 	All doors closed / Alle Türen geschlossen ]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
 						<Var>
 							<Name>.iAxisDummy.NcToPlc</Name>
 							<Type GUID="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" Namespace="MC">NCTOPLC_AXIS_REF</Type>
@@ -2555,6 +2530,16 @@ External Setpoint Generation:
 							<Type GUID="{324F164C-F802-E141-B220-1135F0DD8D4F}">ST_FieldbusStatus</Type>
 						</Var>
 						<Var>
+							<Name>.binGr00NoEmergencyStop</Name>
+							<Comment><![CDATA[) 	No emergency stop / kein Notaus ]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>.binGr00AirPressureOK</Name>
+							<Comment><![CDATA[) 	Air pressure OK / Luftdruck i.O. ]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
 							<Name>.arbinGr00DoorsClosed</Name>
 							<Comment><![CDATA[) 	Doors closed / Türe geschlossen ]]></Comment>
 							<Type GUID="{29CAAFD0-28B6-D9D0-3B0E-64B337839191}">ARRAY [1..5] OF BOOL</Type>
@@ -2563,6 +2548,21 @@ External Setpoint Generation:
 							<Name>.arbinGr00PowerSupplyOn</Name>
 							<Comment><![CDATA[) 	Power supply on / 24V DC vorhanden. ]]></Comment>
 							<Type GUID="{29CAAFD0-28B6-D9D0-3B0E-64B337839191}">ARRAY [1..5] OF BOOL</Type>
+						</Var>
+						<Var>
+							<Name>.binGr00LightCurtainOK</Name>
+							<Comment><![CDATA[) 	Light curtain ok / Freigabe Lichtschranke i.o ]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>.binGr00TempOK</Name>
+							<Comment><![CDATA[) 	Temperature fuse OK / Temperatursicherung i.O. ]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>.binGr00AllDoorsClosed</Name>
+							<Comment><![CDATA[) 	All doors closed / Alle Türen geschlossen ]]></Comment>
+							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>.binGr00AllDoorsLocked</Name>
@@ -2690,6 +2690,11 @@ External Setpoint Generation:
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
+							<Name>.ninGr01SawingOverride</Name>
+							<Comment><![CDATA[) 	Sawing override ]]></Comment>
+							<Type>INT</Type>
+						</Var>
+						<Var>
 							<Name>.udninGr01CounterSawbandSpeed</Name>
 							<Comment><![CDATA[) 	Counter Saw band speed counter / Sägeband-Geschwindigkeits-Zähler ]]></Comment>
 							<Type>UDINT</Type>
@@ -2698,11 +2703,6 @@ External Setpoint Generation:
 							<Name>.udninGr01IncAxisAngle</Name>
 							<Comment><![CDATA[) 	SSI01 Axis angle increment ]]></Comment>
 							<Type>UDINT</Type>
-						</Var>
-						<Var>
-							<Name>.ninGr01SawingOverride</Name>
-							<Comment><![CDATA[) 	Sawing override ]]></Comment>
-							<Type>INT</Type>
 						</Var>
 						<Var>
 							<Name>.binGr02LightCurtainOK</Name>
@@ -3190,7 +3190,7 @@ External Setpoint Generation:
 								<ModuleIdent>17827710</ModuleIdent>
 								<Module Id="#x03090007" Type="FSOE" Class="1918">
 									<Name>Module 1 (FSOE)</Name>
-									<ImageId>430</ImageId>
+									<ImageId>406</ImageId>
 									<ModuleData>020000007e07100100002c000000000000000000000000000000000000000000</ModuleData>
 									<PdoIndex>6656</PdoIndex>
 									<PdoIndex>5632</PdoIndex>
@@ -3202,7 +3202,7 @@ External Setpoint Generation:
 								<ModuleIdent>691</ModuleIdent>
 								<Module Id="#x03090008" Type="FSLOGIC" Class="FSLOGIC">
 									<Name>Module 2 (FSLOGIC)</Name>
-									<ImageId>430</ImageId>
+									<ImageId>406</ImageId>
 									<ModuleData>02000000b3020000000004000000000000000000000000000000000000000000</ModuleData>
 									<PdoIndex>7167</PdoIndex>
 									<PdoIndex>6143</PdoIndex>
@@ -4126,7 +4126,7 @@ External Setpoint Generation:
 								<ModuleIdent>2911</ModuleIdent>
 								<Module Id="#x03090001" Type="FSOE" Class="2911">
 									<Name>Module 1 (FSOE)</Name>
-									<ImageId>430</ImageId>
+									<ImageId>406</ImageId>
 									<ModuleData>020000005f0b000000002c000000000000000000000000000000000000000000</ModuleData>
 									<PdoIndex>6656</PdoIndex>
 									<PdoIndex>5632</PdoIndex>
@@ -4138,7 +4138,7 @@ External Setpoint Generation:
 								<ModuleIdent>200</ModuleIdent>
 								<Module Id="#x03090002" Type="FSOUT" Class="FSOUT">
 									<Name>Module 2 (FSOUT)</Name>
-									<ImageId>430</ImageId>
+									<ImageId>406</ImageId>
 									<ModuleData>02000000c8000000000004000000000000000000000000000000000000000000</ModuleData>
 									<PdoIndex>6142</PdoIndex>
 								</Module>
@@ -4148,7 +4148,7 @@ External Setpoint Generation:
 								<ModuleIdent>1950</ModuleIdent>
 								<Module Id="#x03090003" Type="DEVICEIO" Class="DEVICEIO">
 									<Name>Module 3 (DEVICEIO)</Name>
-									<ImageId>430</ImageId>
+									<ImageId>406</ImageId>
 									<ModuleData>020000009e070000000004000000000000000000000000000000000000000000</ModuleData>
 									<PdoIndex>7166</PdoIndex>
 								</Module>
@@ -4158,7 +4158,7 @@ External Setpoint Generation:
 								<ModuleIdent>691</ModuleIdent>
 								<Module Id="#x03090004" Type="FSLOGIC" Class="FSLOGIC">
 									<Name>Module 4 (FSLOGIC)</Name>
-									<ImageId>430</ImageId>
+									<ImageId>406</ImageId>
 									<ModuleData>02000000b3020000000004000000000000000000000000000000000000000000</ModuleData>
 									<PdoIndex>7167</PdoIndex>
 									<PdoIndex>6143</PdoIndex>
@@ -4425,7 +4425,7 @@ External Setpoint Generation:
 								<ModuleIdent>17827710</ModuleIdent>
 								<Module Id="#x03090005" Type="FSOE" Class="1918">
 									<Name>Module 1 (FSOE)</Name>
-									<ImageId>430</ImageId>
+									<ImageId>406</ImageId>
 									<ModuleData>020000007e07100100002c000000000000000000000000000000000000000000</ModuleData>
 									<PdoIndex>6656</PdoIndex>
 									<PdoIndex>5632</PdoIndex>
@@ -4437,7 +4437,7 @@ External Setpoint Generation:
 								<ModuleIdent>691</ModuleIdent>
 								<Module Id="#x03090006" Type="FSLOGIC" Class="FSLOGIC">
 									<Name>Module 2 (FSLOGIC)</Name>
-									<ImageId>430</ImageId>
+									<ImageId>406</ImageId>
 									<ModuleData>02000000b3020000000004000000000000000000000000000000000000000000</ModuleData>
 									<PdoIndex>7167</PdoIndex>
 									<PdoIndex>6143</PdoIndex>
