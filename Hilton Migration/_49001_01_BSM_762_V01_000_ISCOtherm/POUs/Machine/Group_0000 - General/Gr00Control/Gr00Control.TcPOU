@@ -108,16 +108,25 @@ fbAlarm.stAlarmIn.arbError[12].bActive := fbProgram.fbRead.bError
 								      AND  fbProgram.fbRead.udnErrorNo = 31;
 fbAlarm.stAlarmIn.arbError[12].dnCode := dnErrorBaseIdentNo + 12;
 
+fbAlarm.stAlarmIn.arbError[13].bActive := NOT GVL_Gr00IO.binGr00Luetze_F1;
+fbAlarm.stAlarmIn.arbError[13].dnCode := dnErrorBaseIdentNo + 13;
+
+fbAlarm.stAlarmIn.arbError[14].bActive := NOT GVL_Gr00IO.binGr00Luetze_F2;
+fbAlarm.stAlarmIn.arbError[14].dnCode := dnErrorBaseIdentNo + 14;
+
+fbAlarm.stAlarmIn.arbError[15].bActive := NOT GVL_Gr00IO.binGr00Luetze_F3;
+fbAlarm.stAlarmIn.arbError[15].dnCode := dnErrorBaseIdentNo + 15;
+
 fbAlarm.stAlarmIn.arbWarning[0].bActive := fbSafety.fbTemperatur.bWarning;
 fbAlarm.stAlarmIn.arbWarning[0].dnCode := dnWarningBaseIdentNo + 0;
 
-fbAlarm.stAlarmIn.arbWarning[1].bActive := NOT GVL_Gr00IO.binGr00Luetze_F1;
+fbAlarm.stAlarmIn.arbWarning[1].bActive := FALSE;
 fbAlarm.stAlarmIn.arbWarning[1].dnCode := dnWarningBaseIdentNo + 1;
 
-fbAlarm.stAlarmIn.arbWarning[2].bActive := NOT GVL_Gr00IO.binGr00Luetze_F2;
+fbAlarm.stAlarmIn.arbWarning[2].bActive := FALSE;
 fbAlarm.stAlarmIn.arbWarning[2].dnCode := dnWarningBaseIdentNo + 2;
 
-fbAlarm.stAlarmIn.arbWarning[3].bActive := NOT GVL_Gr00IO.binGr00Luetze_F3;
+fbAlarm.stAlarmIn.arbWarning[3].bActive :=FALSE;
 fbAlarm.stAlarmIn.arbWarning[3].dnCode := dnWarningBaseIdentNo + 3;
 
 fbAlarm.stAlarmIn.arbWarning[4].bActive := NOT GVL_Gr00IO.binGr00PS6A24Warning_1;
@@ -373,7 +382,16 @@ fbUtility(
       <LineId Id="44" Count="13" />
     </LineIds>
     <LineIds Name="Gr00Control.A_Alarm">
-      <LineId Id="0" Count="46" />
+      <LineId Id="0" Count="41" />
+      <LineId Id="136" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="125" Count="1" />
+      <LineId Id="124" Count="0" />
+      <LineId Id="129" Count="1" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="133" Count="1" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="44" Count="2" />
       <LineId Id="81" Count="1" />
       <LineId Id="80" Count="0" />
       <LineId Id="84" Count="1" />
