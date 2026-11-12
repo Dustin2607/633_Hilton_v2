@@ -9,9 +9,8 @@ VAR_GLOBAL
 
 	lrgGr01DistSawbandPipe				:LREAL := 80.00;				(* Distance between sawband an pipe present sensor *)
 	
-	{warning "muss angepasst werden"}
-	rRaddurchmesser_mm					:REAL	:= 0.0;	// Erfragen !!!			(* Raddurchmesser für Sägebandgeschwindigkeit *) 
-	
+	rRaddurchmesser_mm					:REAL := 510.0;					(* Raddurchmesser für Sägebandgeschwindigkeit *) 
+	uiImpulsDiscAmount					:UINT := 18;					(* 18 impulses on disc *)
 END_VAR
 ]]></Declaration>
   </GVL>

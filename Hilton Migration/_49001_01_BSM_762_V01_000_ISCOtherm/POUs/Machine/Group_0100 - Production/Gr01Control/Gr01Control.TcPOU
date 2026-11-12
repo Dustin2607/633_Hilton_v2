@@ -17,12 +17,13 @@ VAR
 	(* Enummerations *)
 
 	(* Variables *)
-	bAllAxisCtrlEnabled			:BOOL;						(* All axis have controller enabled *)
+	bAllAxisCtrlEnabled				:BOOL;						(* All axis have controller enabled *)
 	bAllAxisStandStill				:BOOL;						(* All axis stand still *)
-	bAllAxisNotMoving			:BOOL;						(* All axis not moving *)
-	bAllAxisReferenced			:BOOL;						(* All axis referenced *)
+	bAllAxisNotMoving				:BOOL;						(* All axis not moving *)
+	bAllAxisReferenced				:BOOL;						(* All axis referenced *)
 	
 	BandDistance_m					:LREAL;
+	rMachineSawbandSpeed_mmin		:LREAL;
 
 	(* References *)
 
@@ -37,11 +38,14 @@ VAR
 	
 	SawbandVelo					:FB_PosVeloEnc;
 	fbLowPassFilter				:FB_LowPassFilter;
+	tonSawBandVeloErr			:TON;
+	tonSawBandInVelo			:TON;
+	TimerVelo					:TON;
 
 END_VAR
 VAR CONSTANT
-	nFatalErrorMaxIdx				:INT := 0;						(* Maximal index of  using alarms *)
-	nErrorMaxIdx					:INT := 19;					(* Maximal index of  using alarms *)
+	nFatalErrorMaxIdx			:INT := 0;						(* Maximal index of  using alarms *)
+	nErrorMaxIdx				:INT := 19;					(* Maximal index of  using alarms *)
 	nWarningMaxIdx				:INT := 0;						(* Maximal index of  using alarms *)
 	nMessageMaxIdx				:INT := 1;						(* Maximal index of  using alarms *)
 	nHintMaxIdx					:INT := 0;						(* Maximal index of  using alarms *)
@@ -122,13 +126,13 @@ fbAlarm.stAlarmIn.arbError[14].dnCode := dnErrorBaseIdentNo + 14;
 fbAlarm.stAlarmIn.arbError[15].bActive := fbSawband.fbController.bError OR fbSawband.fbMoveManual.bError OR fbSawband.fbMoveAuto.bError;
 fbAlarm.stAlarmIn.arbError[15].dnCode := dnErrorBaseIdentNo + 15;
 
-fbAlarm.stAlarmIn.arbError[16].bActive := fbSawband.bErrorSawbandNOK;
+fbAlarm.stAlarmIn.arbError[16].bActive := FALSE;
 fbAlarm.stAlarmIn.arbError[16].dnCode := dnErrorBaseIdentNo + 16;
 
-fbAlarm.stAlarmIn.arbError[17].bActive := fbSawband.bErrorSawbandBroken;
+fbAlarm.stAlarmIn.arbError[17].bActive := fbSawband.GVL_Gr0100.bgGr01SawbandVeloError_1;
 fbAlarm.stAlarmIn.arbError[17].dnCode := dnErrorBaseIdentNo + 17;
 
-fbAlarm.stAlarmIn.arbError[18].bActive := fbSawband.bErrorSpeedNoConstant;
+fbAlarm.stAlarmIn.arbError[18].bActive := fbSawband.GVL_Gr0100.bgGr01SawbandVeloError_2;
 fbAlarm.stAlarmIn.arbError[18].dnCode := dnErrorBaseIdentNo + 18;
 
 fbAlarm.stAlarmIn.arbError[19].bActive := (* bgGr00MachineRunning
@@ -364,32 +368,58 @@ fbSawband(
 	bSawbandAirOn 				=> boutGr01SawbandAirOn
 );
 
+rMachineSawbandSpeed_mmin := stgGr01HMI.stHMITOPLC.rSawbandAutoSpeed / 3.28084;
 
 ////////////// Sawband Velo Scaling
 
 SawbandVelo(
-	bEnable:= TRUE , 
-	dwEncCurrentValue:= GVL_GR01IO.udninGr01CounterSawbandSpeed, 
-	udnScalingDenom:= 18 , 
-	lrScalingNum:= rRaddurchmesser_mm*PI, //  diameter 510mm, circumference 1602.21 mm 
-	tCycleTime:= T#10MS , 
-	lrCurrentPos=> , 
-	lrCurrentVelo=> );
+	bEnable				:= TRUE , 
+	dwEncCurrentValue	:= GVL_GR01IO.udninGr01CounterSawbandSpeed, 
+	udnScalingDenom		:= uiImpulsDiscAmount , 	
+	lrScalingNum		:= rRaddurchmesser_mm*PI, 	
+	tCycleTime			:= GVL_Gr00Init.tPLC_TaskCycleTime_ms, 					
+	lrCurrentPos		=> , 
+	lrCurrentVelo		=> ,			(* [mm/ms] same as [m/s]*)
+);
 	
 BandDistance_m := SawbandVelo.lrCurrentPos / 1000;
-GVL_Gr01Init.lrgGr01SawingSpeed := SawbandVelo.lrCurrentVelo * 60;
+GVL_Gr01Init.lrgGr01SawingSpeed := SawbandVelo.lrCurrentVelo * 60;		(* [m/min] *)
 
 	fbLowPassFilter(
-	bEnable:= TRUE , 
-	lrIn:= GVL_Gr01Init.lrgGr01SawingSpeed, 
-	lrKp:= 1, 
-	tT1:= T#600MS , 
-	tCycletime:= T#10MS, 
-	lrOut=> lrgGr01SawingSpeed);
+	bEnable			:= TRUE , 
+	lrIn			:= GVL_Gr01Init.lrgGr01SawingSpeed, 
+	lrKp			:= 1, 
+	tT1				:= T#600MS , 
+	tCycletime		:= GVL_Gr00Init.tPLC_TaskCycleTime_ms, 
+	lrOut			=> GVL_Gr01Init.lrgGr01SawingSpeed
+
+);
 //////////////
 	GVL_Gr01HMI.ST_Gr01HMIRef.stPLCTOHMI.lrSawbandActSpeed := GVL_Gr01Init.lrgGr01SawingSpeed;
+	
+	
+////////////// Sawband Velo Error -> never reaches target speed
+tonSawBandInVelo(
+					IN:= NOT GVL_GR0100.bgGr01SawbandVeloError_1 AND (ABS(GVL_Gr01Interface.igGr01AxisSawBand.NcToPlc.ActVelo) - ABS(GVL_Gr01Interface.igGr01AxisSawBand.NcToPlc.SetVelo)< 100),
+					PT := T#3S);
+					
+GVL_GR0100.bgGr01SawbandInSpeed := GVL_Gr01Init.lrgGr01SawingSpeed > (rMachineSawbandSpeed_mmin * 0.8 * fbSawband.lrOverride/100)
+							AND (tonSawBandInVelo.Q OR GVL_Gr01HMI.stgGr01HMI.stHMITOPLC.bBtnSawbandPlus);
+							
+TimerVelo(
+	IN:= NOT GVL_GR0100.bgGr01SawbandInSpeed AND NOT GVL_GR0100.bgGr01SawbandVeloError_1 AND GVL_Gr0000.bgGr00NoEmergencyStop, 
+	PT:=T#10S
+		); 
+		
+GVL_GR0100.bgGr01SawbandVeloError_1 := TimerVelo.Q; 
 
 
+//Sawband velocity error -> lost target speed
+tonSawBandVeloErr(
+					IN:=ABS(GVL_Gr01Interface.igGr01AxisSawBand.NcToPlc.ActVelo) < ABS(GVL_Gr01Interface.igGr01AxisSawBand.NcToPlc.SetVelo *0.8),
+					PT := T#500MS);
+
+GVL_GR0100.bgGr01SawbandVeloError_2 := tonSawBandInVelo.Q;
 
 
 
@@ -635,9 +665,21 @@ fbUtility(
       <LineId Id="591" Count="3" />
       <LineId Id="597" Count="2" />
       <LineId Id="325" Count="0" />
-      <LineId Id="601" Count="1" />
-      <LineId Id="608" Count="21" />
-      <LineId Id="603" Count="4" />
+      <LineId Id="601" Count="0" />
+      <LineId Id="653" Count="0" />
+      <LineId Id="602" Count="0" />
+      <LineId Id="608" Count="9" />
+      <LineId Id="630" Count="0" />
+      <LineId Id="618" Count="10" />
+      <LineId Id="633" Count="0" />
+      <LineId Id="631" Count="0" />
+      <LineId Id="629" Count="0" />
+      <LineId Id="603" Count="0" />
+      <LineId Id="655" Count="1" />
+      <LineId Id="634" Count="13" />
+      <LineId Id="654" Count="0" />
+      <LineId Id="648" Count="4" />
+      <LineId Id="604" Count="3" />
       <LineId Id="215" Count="1" />
       <LineId Id="106" Count="50" />
       <LineId Id="52" Count="0" />

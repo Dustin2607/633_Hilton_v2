@@ -4,7 +4,7 @@
     <Declaration><![CDATA[{attribute 'Tc2GvlVarNames'}
 VAR_GLOBAL
 	sgAmsNetId					:STRING := '';						(* AmsNetID of the controller, '' = local netid *)
-	lrgActCycleTime				:LREAL;							(* Actual cycle time *)
+	lrgActCycleTime				:LREAL;								(* Actual cycle time *)
 	// stgSystemTaskInfoArr       		AT%MB32832 :ARRAY[1..4] OF SYSTEMTASKINFOTYPE;
 	
 	_PlcAppSystemInfo			:PlcAppSystemInfo;

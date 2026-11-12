@@ -340,12 +340,18 @@ tonSawbandReadyDelay(
 	PT := tSawbandReadyDelay
 );
 
-
-
 bReady := NOT bErrorCtrlEnabled
-		  AND NOT bErrorSawbandNOK
+		  AND GVL_Gr0100.bgGr01SawbandVeloError_1
+		  AND GVL_Gr0100.bgGr01SawbandVeloError_2
+		  AND tonSawbandReadyDelay.Q;
+		  
+(* From Tc2 )
+bReady := NOT bErrorCtrlEnabled
+		  AND NOT bErrorSawbandNOK 		// Fuse
 		  AND NOT bErrorSawbandBroken
-		  AND tonSawbandReadyDelay.Q;]]></ST>
+		  AND tonSawbandReadyDelay.Q;
+		  
+*)]]></ST>
       </Implementation>
     </Action>
     <Action Name="A_AxisCooling" Id="{6caaa11b-f2b3-42d9-8f4f-76015d5bd03a}">
@@ -535,9 +541,8 @@ THEN
 	tofSawbandAirOffDelay.IN := FALSE;
 	tofSawbandAirOffDelay.PT := t#0ms;
 
-ELSIF bErrorSawbandNOK
-     OR bErrorSawbandBroken
-     OR bErrorSpeedNoConstant
+ELSIF GVL_Gr0100.bgGr01SawbandVeloError_1
+     OR GVL_Gr0100.bgGr01SawbandVeloError_2
 THEN
 	tofSawbandAirOffDelay.IN := FALSE;
 
@@ -630,9 +635,12 @@ bVacuumCleanerOn := tofVacuumCleanerOffDelay.Q;]]></ST>
       <LineId Id="82" Count="0" />
       <LineId Id="81" Count="0" />
       <LineId Id="73" Count="3" />
-      <LineId Id="93" Count="1" />
-      <LineId Id="77" Count="3" />
-      <LineId Id="72" Count="0" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="123" Count="2" />
+      <LineId Id="122" Count="0" />
+      <LineId Id="129" Count="4" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="126" Count="1" />
     </LineIds>
     <LineIds Name="FB_Gr01Sawband.A_AxisCooling">
       <LineId Id="0" Count="18" />
@@ -674,7 +682,8 @@ bVacuumCleanerOn := tofVacuumCleanerOffDelay.Q;]]></ST>
       <LineId Id="0" Count="7" />
     </LineIds>
     <LineIds Name="FB_Gr01Sawband.A_SawbandAir">
-      <LineId Id="0" Count="32" />
+      <LineId Id="0" Count="9" />
+      <LineId Id="11" Count="21" />
     </LineIds>
     <LineIds Name="FB_Gr01Sawband.A_SawbandVacuumCleaner">
       <LineId Id="0" Count="26" />

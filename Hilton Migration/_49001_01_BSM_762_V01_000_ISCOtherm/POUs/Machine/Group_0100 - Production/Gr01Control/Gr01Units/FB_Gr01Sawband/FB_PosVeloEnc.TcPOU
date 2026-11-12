@@ -19,29 +19,29 @@ dd.mm.yyyy		x.xx			Initials			comment
 VAR_INPUT
 	(* Variables *)
 	bEnable								:BOOL;						(* Enable FB *)
-	dwEncCurrentValue					:DWORD;					(* Encoder current value *)
-	udnScalingDenom						:UDINT := 18;	  				(* Denominator for the conversion factor at the conversion of bus data to technical units [INC] *)
-	lrScalingNum							:LREAL := 1602.21;  			(* Numerator for the conversion factor at the conversion of bus data to technical units [technical units] *)
+	dwEncCurrentValue					:DWORD;						(* Encoder current value *)
+	udnScalingDenom						:UDINT := 18;	  			(* Denominator for the conversion factor at the conversion of bus data to technical units [INC] *)
+	lrScalingNum						:LREAL := 1602.21;  		(* Numerator for the conversion factor at the conversion of bus data to technical units [technical units] *)
 																	(* The technical units dependent on denominator and numerator.*)
-	tCycleTime							:TIME := t#10ms; 				(* Cycle time of the task *)
+	tCycleTime							:TIME := T#10MS; 			(* Cycle time of the task *)
 END_VAR
 VAR_OUTPUT
 	(* Variables *)
-	lrCurrentPos 							:LREAL;						(* Calculated position [mm] *)
-	lrCurrentVelo							:LREAL;						(* Calculated velocity from current position [mm/µs] *)
+	lrCurrentPos 						:LREAL;						(* Calculated position [mm] *)
+	lrCurrentVelo						:LREAL;						(* Calculated velocity from current position [mm/µs] *)
 END_VAR
 VAR
 	(* Variables *)
 	bFirstTime							:BOOL;
 
-	dwEncOldValue						:DWORD;					(* Encoder old value *)
+	dwEncOldValue						:DWORD;						(* Encoder old value *)
 	dnPosDistance						:DINT;						(* Positon distance from encoder values *)
-	dwCurrentPos							:DWORD;					(* Current position from encoder values *)
-	dwPosOffset							:DWORD;					(* Positon offset from encoder values *)
+	dwCurrentPos						:DWORD;						(* Current position from encoder values *)
+	dwPosOffset							:DWORD;						(* Positon offset from encoder values *)
 
-	lrSectorTime							:LREAL;
-	lrScaleFactor 							:LREAL;
-	lrOldPos								:LREAL;
+	lrSectorTime						:LREAL;
+	lrScaleFactor 						:LREAL;
+	lrOldPos							:LREAL;
 
 END_VAR]]></Declaration>
     <Implementation>
