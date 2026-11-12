@@ -17,7 +17,7 @@ VAR_GLOBAL
 
 	binGr05RemovalBandNOK					AT %I*:BOOL;													(*) 	Removal band error / Abtransportband Fehler *)
 	binGr05RemovalBandInPlus				AT %I*:BOOL;													(*) 	Removal band in plus limit / Abtransportband Plusendlage *)
-	binGr05PushBtnRemovalBandStart			AT %I*:BOOL;													(*) 	Push button removal band "Start" / Taste Abtransportband "Start" *)
+	binGr05PushBtnRemovalBandStart			AT %I*:BOOL;													(* DI 10.7)  	Push button removal band "Start" / Taste Abtransportband "Start" *)
 	binGr05RemovalBandInMinus				AT %I*:BOOL;													(*) 	Removal band in minus limit / Abtransportband Minusendlage *)
 
 	arbinGr05ClampOpened					AT %I*: ARRAY[1..ungGr05ClampMaxNo] OF BOOL;					(*) 	Valve opened clamp 1, 2 / Ventil Klemmung 1, 2 geöffnet *)
@@ -38,7 +38,7 @@ VAR_GLOBAL
 	boutGr05SlideUp							AT %Q*:BOOL;													(*) 	Valve open slide / Ventil Rutsche öffnen *)
 	boutGr05SlideDown						AT %Q*:BOOL;													(*) 	Valve close slide / Ventil Rutsche schlissen *)
 
-	boutGr05RemovalBandToPlus				AT %Q*:BOOL;													(*) 	Move removal band in plus direction / Abtransportband in Plusrichtung *)
+	boutGr05RemovalBandToPlus				AT %Q*:BOOL;													(* DQ 10.7) 	Move removal band in plus direction / Abtransportband in Plusrichtung *)
 	boutGr05RemovalBandToMinus				AT %Q*:BOOL;													(*) 	Move removal band in minus direction / Abtransportband in Minusrichtung *)
 
 

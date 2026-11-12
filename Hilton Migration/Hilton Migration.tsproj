@@ -2467,7 +2467,7 @@ External Setpoint Generation:
 		</Motion>
 		<Plc>
 			<Project GUID="{4AE76A25-A5E9-47BF-9F28-0249A5E26F26}" Name="_49001_01_BSM_762_V01_000_ISCOtherm" PrjFilePath="_49001_01_BSM_762_V01_000_ISCOtherm\_49001_01_BSM_762_V01_000_ISCOtherm.plcproj" TmcFilePath="_49001_01_BSM_762_V01_000_ISCOtherm\_49001_01_BSM_762_V01_000_ISCOtherm.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="_49001_01_BSM_762_V01_000_ISCOtherm\_49001_01_BSM_762_V01_000_ISCOtherm.tmc" TmcHash="{36844FC7-06E8-86C4-CE6F-590E7EB6C181}">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="_49001_01_BSM_762_V01_000_ISCOtherm\_49001_01_BSM_762_V01_000_ISCOtherm.tmc" TmcHash="{E4FAC0CE-D5E2-439F-0B3E-C4E8D82946D0}">
 					<Name>_49001_01_BSM_762_V01_000_ISCOtherm Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">
@@ -2691,7 +2691,7 @@ External Setpoint Generation:
 						</Var>
 						<Var>
 							<Name>.ninGr01SawingOverride</Name>
-							<Comment><![CDATA[) 	Sawing override ]]></Comment>
+							<Comment><![CDATA[ DI EL3255 Channel_1) 	Sawing override ]]></Comment>
 							<Type>INT</Type>
 						</Var>
 						<Var>
@@ -2766,7 +2766,7 @@ External Setpoint Generation:
 						</Var>
 						<Var>
 							<Name>.binGr05PushBtnRemovalBandStart</Name>
-							<Comment><![CDATA[) 	Push button removal band "Start" / Taste Abtransportband "Start" ]]></Comment>
+							<Comment><![CDATA[ DI 10.7)  	Push button removal band "Start" / Taste Abtransportband "Start" ]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
@@ -2985,7 +2985,7 @@ External Setpoint Generation:
 						</Var>
 						<Var>
 							<Name>.boutGr05RemovalBandToPlus</Name>
-							<Comment><![CDATA[) 	Move removal band in plus direction / Abtransportband in Plusrichtung ]]></Comment>
+							<Comment><![CDATA[ DQ 10.7) 	Move removal band in plus direction / Abtransportband in Plusrichtung ]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
@@ -3313,7 +3313,7 @@ External Setpoint Generation:
 							<SyncMan>001080002600010001000000800080008000001026010000</SyncMan>
 							<SyncMan>801080002200010002000000800080008000801022010000</SyncMan>
 							<SyncMan>001100000400000003000000000000000000001104000000</SyncMan>
-							<SyncMan>801114002000010004000000000000001400801120010000</SyncMan>
+							<SyncMan>801104002000010004000000000000001400801120010000</SyncMan>
 							<Fmmu>0000000000000000801100010100000002000000000000000000000000000000</Fmmu>
 							<Fmmu>00000000000000000d0800010100000003000000000000000000000000000000</Fmmu>
 							<BootStrapData>0010f400f410f400</BootStrapData>
@@ -3362,7 +3362,7 @@ External Setpoint Generation:
 									<Type>INT</Type>
 								</Entry>
 							</Pdo>
-							<Pdo Name="AI Standard Channel 2" Index="#x1a02" Flags="#x0010" SyncMan="3">
+							<Pdo Name="AI Standard Channel 2" Index="#x1a02" Flags="#x0010">
 								<ExcludePdo>#x1a03</ExcludePdo>
 								<Entry Name="Status__Underrange" Index="#x6010" Sub="#x01">
 									<Type>BIT</Type>
@@ -3404,7 +3404,7 @@ External Setpoint Generation:
 									<Type>INT</Type>
 								</Entry>
 							</Pdo>
-							<Pdo Name="AI Standard Channel 3" Index="#x1a04" Flags="#x0010" SyncMan="3">
+							<Pdo Name="AI Standard Channel 3" Index="#x1a04" Flags="#x0010">
 								<ExcludePdo>#x1a05</ExcludePdo>
 								<Entry Name="Status__Underrange" Index="#x6020" Sub="#x01">
 									<Type>BIT</Type>
@@ -3446,7 +3446,7 @@ External Setpoint Generation:
 									<Type>INT</Type>
 								</Entry>
 							</Pdo>
-							<Pdo Name="AI Standard Channel 4" Index="#x1a06" Flags="#x0010" SyncMan="3">
+							<Pdo Name="AI Standard Channel 4" Index="#x1a06" Flags="#x0010">
 								<ExcludePdo>#x1a07</ExcludePdo>
 								<Entry Name="Status__Underrange" Index="#x6030" Sub="#x01">
 									<Type>BIT</Type>
@@ -3488,7 +3488,7 @@ External Setpoint Generation:
 									<Type>INT</Type>
 								</Entry>
 							</Pdo>
-							<Pdo Name="AI Standard Channel 5" Index="#x1a08" Flags="#x0010" SyncMan="3">
+							<Pdo Name="AI Standard Channel 5" Index="#x1a08" Flags="#x0010">
 								<ExcludePdo>#x1a09</ExcludePdo>
 								<Entry Name="Status__Underrange" Index="#x6040" Sub="#x01">
 									<Type>BIT</Type>
@@ -4563,6 +4563,10 @@ External Setpoint Generation:
 				<Link VarA="PLC_TASK Inputs^.binGr01AxisAngleLimitMax" VarB="Channel 2^Input"/>
 				<Link VarA="PLC_TASK Inputs^.binGr01AxisAngleLimitMin" VarB="Channel 1^Input"/>
 			</OwnerB>
+			<OwnerB Name="TIID^Device 1 (EtherCAT)^Klemmkasten K3 (EK1100)^+K3 -A12 (EL1002)">
+				<Link VarA="PLC_TASK Inputs^.binGr01AxisSawBowLimitMax" VarB="Channel 1^Input"/>
+				<Link VarA="PLC_TASK Inputs^.binGr01AxisSawBowLimitMin" VarB="Channel 2^Input"/>
+			</OwnerB>
 			<OwnerB Name="TIID^Device 1 (EtherCAT)^Klemmkasten K3 (EK1100)^+K3 -A13 (EL1512)">
 				<Link VarA="PLC_TASK Inputs^.udninGr01CounterSawbandSpeed" VarB="CNT Inputs Channel 1^Counter value"/>
 			</OwnerB>
@@ -4593,11 +4597,9 @@ External Setpoint Generation:
 				<Link VarA="PLC_TASK Outputs^.arboutGr05CylinderPosOpen[3]" VarB="Channel 1^Output"/>
 			</OwnerB>
 			<OwnerB Name="TIID^Device 1 (EtherCAT)^Klemmkasten K3 (EK1100)^+K3 -A3 (EL1002)">
-				<Link VarA="PLC_TASK Inputs^.arbinGr05ClampClosed[2]" VarB="Channel 2^Input"/>
 				<Link VarA="PLC_TASK Inputs^.arbinGr05ClampOpened[2]" VarB="Channel 1^Input"/>
 			</OwnerB>
 			<OwnerB Name="TIID^Device 1 (EtherCAT)^Klemmkasten K3 (EK1100)^+K3 -A4 (EL1002)">
-				<Link VarA="PLC_TASK Inputs^.binGr01SawbandLocked" VarB="Channel 2^Input"/>
 				<Link VarA="PLC_TASK Inputs^.binGr01SawbandRelease" VarB="Channel 1^Input"/>
 			</OwnerB>
 			<OwnerB Name="TIID^Device 1 (EtherCAT)^Klemmkasten K3 (EK1100)^+K3 -A5 (EL1002)">
@@ -4630,6 +4632,9 @@ External Setpoint Generation:
 				<Link VarA="PLC_TASK Outputs^.boutGr00BulbBtnStart" VarB="Channel 6^Output"/>
 				<Link VarA="PLC_TASK Outputs^.boutGr00BulbBtnStop" VarB="Channel 7^Output"/>
 			</OwnerB>
+			<OwnerB Name="TIID^Device 1 (EtherCAT)^Panel P (EK1100)^+P -A5 (EL3255)">
+				<Link VarA="PLC_TASK Inputs^.ninGr01SawingOverride" VarB="AI Standard Channel 1^Value"/>
+			</OwnerB>
 			<OwnerB Name="TIID^Device 1 (EtherCAT)^Schaltschrank S (EK1100)^+S -A3 (EL1008)">
 				<Link VarA="PLC_TASK Inputs^.binGr00Luetze_F1" VarB="Channel 1^Input"/>
 				<Link VarA="PLC_TASK Inputs^.binGr00Luetze_F2" VarB="Channel 3^Input"/>
@@ -4637,9 +4642,11 @@ External Setpoint Generation:
 				<Link VarA="PLC_TASK Inputs^.binGr00PS6A24Ready" VarB="Channel 2^Input"/>
 				<Link VarA="PLC_TASK Inputs^.binGr00PS6A24Warning_1" VarB="Channel 4^Input"/>
 				<Link VarA="PLC_TASK Inputs^.binGr00PS6A24Warning_2" VarB="Channel 6^Input"/>
+				<Link VarA="PLC_TASK Inputs^.binGr05PushBtnRemovalBandStart" VarB="Channel 8^Input"/>
 			</OwnerB>
 			<OwnerB Name="TIID^Device 1 (EtherCAT)^Schaltschrank S (EK1100)^+S -A5 (EL2008)">
 				<Link VarA="PLC_TASK Outputs^.boutGr00AllDoorsLock" VarB="Channel 3^Output"/>
+				<Link VarA="PLC_TASK Outputs^.boutGr05RemovalBandToPlus" VarB="Channel 8^Output"/>
 			</OwnerB>
 			<OwnerB Name="TINC^NC-Task 1 SAF^Axes^Clamp1">
 				<Link VarA="PLC_TASK Inputs^.igGr05AxisClamp1.NcToPlc" VarB="Outputs^ToPlc"/>
