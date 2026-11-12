@@ -3,22 +3,26 @@
   <GVL Name="GVL_Gr0100" Id="{7f9c00a3-3bc3-45ba-804b-5078e20ef188}">
     <Declaration><![CDATA[{attribute 'Tc2GvlVarNames'}
 VAR_GLOBAL
-	arbgGr01StartProcess				:ARRAY[1..3] OF BOOL;		(* Start process *)
-	bgGr01LightCurtainOK				:BOOL;						(* Light curtain ok / Freigabe Lichtschranke i.o *)
+	arbgGr01StartProcess			:ARRAY[1..3] OF BOOL;		(* Start process *)
+	bgGr01LightCurtainOK			:BOOL;						(* Light curtain ok / Freigabe Lichtschranke i.o *)
 	bgGr01HomeNotInCrashGr02		:BOOL;						(* Home not in crash for Gr02 output *)
 	bgGr01HomeNotInCrashGr05		:BOOL;						(* Home not in crash for Gr05 output *)
-	bgGr01NotInCrashArea				:BOOL;						(* Axis not in crash are with *)
+	bgGr01NotInCrashArea			:BOOL;						(* Axis not in crash are with *)
 	bgGr01SafetyCompleted			:BOOL;						(* Safety completed *)
 	bgGr01ManualCompleted			:BOOL;						(* Manual completed *)
-	bgGr01HomeCompleted			:BOOL;						(* Home completed / Grundsrellung ausgeführt *)
+	bgGr01HomeCompleted				:BOOL;						(* Home completed / Grundsrellung ausgeführt *)
 	bgGr01AutoCompleted				:BOOL;						(* Automatic completed / Automatik beendet *)
 	bgGr01MoveInterrupted			:BOOL;						(* Move interrupted / Bewegung unterbrochen *)
-	bgGr01WritePersistent				:BOOL;						(* Write persisten data *)
+	bgGr01WritePersistent			:BOOL;						(* Write persisten data *)
 	bgGr01SafetyActive				:BOOL;						(* Safety active *)
 	bgGr01SawingAck 				:BOOL;						(* Ack from Gr01 to Gr05 *)
 	bgGr01AngleAck					:BOOL;						(* Ack from Gr01 to Gr05 *)
 	bgGr01TransportReq				:BOOL;						(* Req from Gr01 to Gr05 *)
 	bgGr01PipePresent				:BOOL;						(* Pipe present *)
+	
+	bgGr01SawbandVeloError_1		:BOOL;						(* Sawband stand still *)
+	bgGr01SawbandVeloError_2		:BOOL;						(* Sawband Velocity is to low *)
+	bgGr01SawbandInSpeed			:BOOL;						(* Sawband is in speed *)
 END_VAR
 ]]></Declaration>
   </GVL>

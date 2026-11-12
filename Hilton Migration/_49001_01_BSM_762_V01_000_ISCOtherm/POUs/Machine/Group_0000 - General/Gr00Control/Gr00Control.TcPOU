@@ -111,6 +111,24 @@ fbAlarm.stAlarmIn.arbError[12].dnCode := dnErrorBaseIdentNo + 12;
 fbAlarm.stAlarmIn.arbWarning[0].bActive := fbSafety.fbTemperatur.bWarning;
 fbAlarm.stAlarmIn.arbWarning[0].dnCode := dnWarningBaseIdentNo + 0;
 
+fbAlarm.stAlarmIn.arbWarning[1].bActive := NOT GVL_Gr00IO.binGr00Luetze_F1;
+fbAlarm.stAlarmIn.arbWarning[1].dnCode := dnWarningBaseIdentNo + 1;
+
+fbAlarm.stAlarmIn.arbWarning[2].bActive := NOT GVL_Gr00IO.binGr00Luetze_F2;
+fbAlarm.stAlarmIn.arbWarning[2].dnCode := dnWarningBaseIdentNo + 2;
+
+fbAlarm.stAlarmIn.arbWarning[3].bActive := NOT GVL_Gr00IO.binGr00Luetze_F3;
+fbAlarm.stAlarmIn.arbWarning[3].dnCode := dnWarningBaseIdentNo + 3;
+
+fbAlarm.stAlarmIn.arbWarning[4].bActive := NOT GVL_Gr00IO.binGr00PS6A24Warning_1;
+fbAlarm.stAlarmIn.arbWarning[4].dnCode := dnWarningBaseIdentNo + 4;
+
+fbAlarm.stAlarmIn.arbWarning[5].bActive := NOT GVL_Gr00IO.binGr00PS6A24Warning_2;
+fbAlarm.stAlarmIn.arbWarning[5].dnCode := dnWarningBaseIdentNo + 5;
+
+fbAlarm.stAlarmIn.arbWarning[6].bActive := NOT GVL_Gr00IO.binGr00PS6A24Ready;
+fbAlarm.stAlarmIn.arbWarning[6].dnCode := dnWarningBaseIdentNo + 6;
+
 fbAlarm.stAlarmIn.arbMessage[0].bActive := fbSafety.fbAirPressure.udnMessageNo = 1;
 fbAlarm.stAlarmIn.arbMessage[0].dnCode := dnMessageBaseIdentNo + 0;
 
@@ -355,7 +373,20 @@ fbUtility(
       <LineId Id="44" Count="13" />
     </LineIds>
     <LineIds Name="Gr00Control.A_Alarm">
-      <LineId Id="0" Count="78" />
+      <LineId Id="0" Count="46" />
+      <LineId Id="81" Count="1" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="84" Count="1" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="87" Count="1" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="90" Count="1" />
+      <LineId Id="89" Count="0" />
+      <LineId Id="93" Count="1" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="96" Count="1" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="47" Count="31" />
     </LineIds>
     <LineIds Name="Gr00Control.A_HMI">
       <LineId Id="0" Count="9" />

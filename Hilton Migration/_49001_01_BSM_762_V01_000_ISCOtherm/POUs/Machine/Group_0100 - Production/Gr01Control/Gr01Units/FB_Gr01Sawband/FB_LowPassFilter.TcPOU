@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_LowPassFilter" Id="{866b5978-a186-4ddf-83a3-f7a12a19e7ef}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_LowPassFilter
+(*
+
+Function block low-pass filter (PT1)  for damping of fast alternating input-values.
+K(s) = k/1+sT1  -> h(t) = k(1 - e^(-t/T1))
+
+The Discrete-Time Integrator using Euler method: 
+y(n+1) = 1/T1 * dt * (kp * xn - yn) + yn => kp * xn * dt / T1+ yn * (1 - dt / T1)
+
+y(n+1) = kp * xn * Tcycle / T1+ yn * (1 - Tcycle / T1)
+T1 = 0 =>  y(n+1) = kp * xn
+
+Sample Time
+Constructor: 		Patryk Panylo
+Company:		E. Riexinger GmbH
+Date:			20.03.2014
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Variables *)
+	bEnable								:BOOL;						(* Enable FB *)
+	lrIn									:LREAL;						(* Input value to the block *)
+	lrKp									:LREAL := 1;					(* Proportional gain of integrator *)
+	tT1									:TIME := t#10s;				(* Time constant  of integrator *)
+	tCycletime							:TIME := t#10ms;				(* Cycle time *)
+END_VAR
+VAR_OUTPUT
+	(* Variables *)
+	lrOut									:LREAL;						(* Output value the block state *)
+END_VAR
+VAR
+	(* Variables *)
+	bFirstTime							:BOOL;
+	lrTimeRatio							:LREAL;
+
+	lrOutN_1								:LREAL;						(* Output value the block state *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bEnable
+THEN
+	lrOut := 0.0;
+	bFirstTime := FALSE;
+	RETURN;
+END_IF
+
+
+IF NOT bFirstTime
+     OR tT1= t#0ms
+     OR tT1 < (tCycletime + tCycletime)
+THEN
+	lrOut := lrKp * lrIn;
+
+	bFirstTime := TRUE;
+ELSE
+	lrTimeRatio := TIME_TO_LREAL(tCycletime) / TIME_TO_LREAL(tT1);
+
+	lrOut := (lrKp * lrIn * lrTimeRatio) + (lrOutN_1 * (1 -  lrTimeRatio));
+END_IF
+
+lrOutN_1 := lrOut;
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_LowPassFilter">
+      <LineId Id="49" Count="21" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

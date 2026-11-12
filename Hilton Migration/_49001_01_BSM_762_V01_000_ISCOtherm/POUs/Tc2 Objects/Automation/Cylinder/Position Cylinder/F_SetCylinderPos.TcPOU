@@ -4,10 +4,10 @@
     <Declaration><![CDATA[FUNCTION F_SetCylinderPos : WORD
 VAR_INPUT
 	lrRefPos			:LREAL;					(* Referenc position [mm] *)
-	lrPosOffset		:LREAL;					(* Position offset *)
+	lrPosOffset			:LREAL;					(* Position offset *)
 	lrOriginShiftPos	:LREAL;					(* Origin shift position *)
-	etDirection		:ET_MC_Direction;			(* Direction: -1 Negative, +1 Positive *)
-	usnCodingType	:USINT;
+	etDirection			:ET_MC_Direction;		(* Direction: -1 Negative, +1 Positive *)
+	usnCodingType		:USINT;
 END_VAR
 VAR
 

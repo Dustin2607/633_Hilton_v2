@@ -1,0 +1,1083 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{20CFB6F5-DE9F-49B9-93C9-AA0E95E49A7A}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>App</RootNamespace>
+    <AssemblyName>App</AssemblyName>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <TargetFrameworkProfile />
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>riex2.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="TcAppEventLog">
+      <HintPath>..\..\lib\Framework2.0\TcAppEventLog.dll</HintPath>
+    </Reference>
+    <Reference Include="TwinCAT.Ads">
+      <HintPath>..\..\lib\Framework2.0\TwinCAT.Ads.dll</HintPath>
+    </Reference>
+    <Reference Include="TwinCAT.App">
+      <HintPath>..\..\lib\Framework2.0\TwinCAT.App.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Components\CPLCVarType.cs" />
+    <Compile Include="Components\CVisuComboBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Components\CVisuComboBoxVar.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Objects\Checkbox\MyCheckBox .cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Objects\ProgramEditor\UCProgramEditor.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\ProgramEditor\UCProgramEditor.designer.cs">
+      <DependentUpon>UCProgramEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\Security\CUserAutoLogout.cs" />
+    <Compile Include="Objects\Security\CUserManager.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Components\CVisuButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Components\CVisuGroupBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Components\CVisuListView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Components\CVisuPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Components\CVisuPressableButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Components\CVisuTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Components\CVisuTextBoxVar.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Objects\Security\UserLoginDelegate.cs" />
+    <Compile Include="Objects\Security\OnCurrentUserChanged.cs" />
+    <Compile Include="Objects\Security\WinControl.cs" />
+    <Compile Include="Objects\AxisPosition\UCAxisPosition.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\AxisPosition\UCAxisPosition.designer.cs">
+      <DependentUpon>UCAxisPosition.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCButtonMultiOn.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCButtonMultiOn.designer.cs">
+      <DependentUpon>UCButtonMultiOn.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCButtonOnOff2.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCButtonOnOff2.designer.cs">
+      <DependentUpon>UCButtonOnOff2.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCButtonValue.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCButtonValue.Designer.cs">
+      <DependentUpon>UCButtonValue.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCCurrentValue1.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCCurrentValue1.designer.cs">
+      <DependentUpon>UCCurrentValue1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCCurrentValue5.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCCurrentValue5.designer.cs">
+      <DependentUpon>UCCurrentValue5.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCCurrentValue4.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCCurrentValue4.designer.cs">
+      <DependentUpon>UCCurrentValue4.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCCurrentValue3.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCCurrentValue3.designer.cs">
+      <DependentUpon>UCCurrentValue3.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCCurrentValue2.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCCurrentValue2.designer.cs">
+      <DependentUpon>UCCurrentValue2.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCAxisVer.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCAxisVer.designer.cs">
+      <DependentUpon>UCAxisVer.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\RecipeEditor\CRcpAllDataLists.cs" />
+    <Compile Include="Objects\RecipeEditor\CRcpCol.cs" />
+    <Compile Include="Objects\RecipeEditor\CRcpData.cs" />
+    <Compile Include="Objects\RecipeEditor\CRcpDataList.cs" />
+    <Compile Include="Objects\RecipeEditor\UCRecipeEditor.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\RecipeEditor\UCRecipeEditor.designer.cs">
+      <DependentUpon>UCRecipeEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCAxisHor.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCAxisHor.designer.cs">
+      <DependentUpon>UCAxisHor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCButtonOn.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCButtonOn.designer.cs">
+      <DependentUpon>UCButtonOn.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCButtonOnOff.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCButtonOnOff.designer.cs">
+      <DependentUpon>UCButtonOnOff.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCCtrlHorizontal.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCCtrlHorizontal.designer.cs">
+      <DependentUpon>UCCtrlHorizontal.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCCtrlVertical.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCCtrlVertical.designer.cs">
+      <DependentUpon>UCCtrlVertical.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCCurrentParameter.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCCurrentParameter.Designer.cs">
+      <DependentUpon>UCCurrentParameter.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCCurrentValue.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCCurrentValue.designer.cs">
+      <DependentUpon>UCCurrentValue.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCCylinderHor.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCCylinderHor.designer.cs">
+      <DependentUpon>UCCylinderHor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCCylinderVer.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCCylinderVer.designer.cs">
+      <DependentUpon>UCCylinderVer.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCMillingParameters.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCMillingParameters.Designer.cs">
+      <DependentUpon>UCMillingParameters.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCOverride.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCOverride.designer.cs">
+      <DependentUpon>UCOverride.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCParameterGet.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCParameterGet.Designer.cs">
+      <DependentUpon>UCParameterGet.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCParameter.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCParameter.Designer.cs">
+      <DependentUpon>UCParameter.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCHeatingTemp.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCHeatingTemp.Designer.cs">
+      <DependentUpon>UCHeatingTemp.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCMachineStatics.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCMachineStatics.Designer.cs">
+      <DependentUpon>UCMachineStatics.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCAxisSync.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCAxisSync.Designer.cs">
+      <DependentUpon>UCAxisSync.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCProcessPara2.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCProcessPara2.designer.cs">
+      <DependentUpon>UCProcessPara2.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCProcessPara.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCProcessPara.designer.cs">
+      <DependentUpon>UCProcessPara.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCProcessPara2_2.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCProcessPara2_2.designer.cs">
+      <DependentUpon>UCProcessPara2_2.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCProcessPara2_1.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCProcessPara2_1.designer.cs">
+      <DependentUpon>UCProcessPara2_1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCWeldingPara2_2.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCWeldingPara2_2.designer.cs">
+      <DependentUpon>UCWeldingPara2_2.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCWeldingPara2_1.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCWeldingPara2_1.designer.cs">
+      <DependentUpon>UCWeldingPara2_1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCWeldingStatus3.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCWeldingStatus3.designer.cs">
+      <DependentUpon>UCWeldingStatus3.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCWeldingStatus.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCWeldingStatus.designer.cs">
+      <DependentUpon>UCWeldingStatus.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCWeldingStatus2.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCWeldingStatus2.Designer.cs">
+      <DependentUpon>UCWeldingStatus2.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UserControlBase.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UserControlBase.designer.cs">
+      <DependentUpon>UserControlBase.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\Security\CUser.cs" />
+    <Compile Include="Objects\Security\CUserLevel.cs" />
+    <Compile Include="Objects\Security\CUserListData.cs" />
+    <Compile Include="Objects\Security\FLoginDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Objects\Security\FUserManagementDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Objects\Security\FUserPropertiesDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Pages\2_Statistic\FStatistic.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Pages\2_Statistic\FStatistic.Designer.cs">
+      <DependentUpon>FStatistic.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Automatic\UCAutomatic2.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Automatic\UCAutomatic2.Designer.cs">
+      <DependentUpon>UCAutomatic2.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\3_Operation\FOperation.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Pages\3_Operation\FOperation.Designer.cs">
+      <DependentUpon>FOperation.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\Left side\UCManual6.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\Left side\UCManual6.Designer.cs">
+      <DependentUpon>UCManual6.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\Left side\UCManual4.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\Left side\UCManual4.Designer.cs">
+      <DependentUpon>UCManual4.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\Right side\UCManual18.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\Right side\UCManual18.Designer.cs">
+      <DependentUpon>UCManual18.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\Right side\UCManual17.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\Right side\UCManual17.Designer.cs">
+      <DependentUpon>UCManual17.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\Right side\UCManual16.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\Right side\UCManual16.Designer.cs">
+      <DependentUpon>UCManual16.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\Right side\UCManual15.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\Right side\UCManual15.Designer.cs">
+      <DependentUpon>UCManual15.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\Right side\UCManual14.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\Right side\UCManual14.Designer.cs">
+      <DependentUpon>UCManual14.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\Right side\UCManual11.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\Right side\UCManual11.Designer.cs">
+      <DependentUpon>UCManual11.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\Right side\UCManual12.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\Right side\UCManual12.Designer.cs">
+      <DependentUpon>UCManual12.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\Right side\UCManual13.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\Right side\UCManual13.Designer.cs">
+      <DependentUpon>UCManual13.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\UCManual.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\UCManual.Designer.cs">
+      <DependentUpon>UCManual.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\Left side\UCManual8.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\Left side\UCManual8.Designer.cs">
+      <DependentUpon>UCManual8.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\Left side\UCManual7.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\Left side\UCManual7.Designer.cs">
+      <DependentUpon>UCManual7.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\Left side\UCManual5.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\Left side\UCManual5.Designer.cs">
+      <DependentUpon>UCManual5.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\Left side\UCManual3.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\Left side\UCManual3.Designer.cs">
+      <DependentUpon>UCManual3.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\5_Recipe\FRecipe4.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Pages\5_Recipe\FRecipe4.Designer.cs">
+      <DependentUpon>FRecipe4.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\5_Recipe\FRecipe2.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Pages\5_Recipe\FRecipe2.Designer.cs">
+      <DependentUpon>FRecipe2.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\5_Recipe\FRecipe1.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Pages\5_Recipe\FRecipe1.Designer.cs">
+      <DependentUpon>FRecipe1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\5_Recipe\FRecipe.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Pages\5_Recipe\FRecipe.Designer.cs">
+      <DependentUpon>FRecipe.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters1\UCParameters1_1.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters1\UCManual1.Designer.cs">
+      <DependentUpon>UCParameters1_1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters5\UCParameters56.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters5\UCParameters56.Designer.cs">
+      <DependentUpon>UCParameters56.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters5\UCParameters55.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters5\UCParameters55.Designer.cs">
+      <DependentUpon>UCParameters55.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters5\UCParameters58.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters5\UCParameters58.Designer.cs">
+      <DependentUpon>UCParameters58.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters5\UCParameters57.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters5\UCParameters57.Designer.cs">
+      <DependentUpon>UCParameters57.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters5\UCParameters54.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters5\UCParameters54.Designer.cs">
+      <DependentUpon>UCParameters54.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters5\UCParameters53.Designer.cs">
+      <DependentUpon>UCParameters53.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters5\UCParameters53.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters5\UCParameters52.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters5\UCParameters52.Designer.cs">
+      <DependentUpon>UCParameters52.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters5\UCParameters51.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters5\UCParameters51.Designer.cs">
+      <DependentUpon>UCParameters51.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters6\UCParameters61.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters6\UCParameters61.designer.cs">
+      <DependentUpon>UCParameters61.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters6\UCParameters62.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters6\UCParameters62.Designer.cs">
+      <DependentUpon>UCParameters62.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters7\FParameters7.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters7\FParameters7.Designer.cs">
+      <DependentUpon>FParameters7.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters7\UCParameters72.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters7\UCParameters72.Designer.cs">
+      <DependentUpon>UCParameters72.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters7\UCParameters71.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters7\UCParameters71.Designer.cs">
+      <DependentUpon>UCParameters71.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters6\FParameters6.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters6\FParameters6.Designer.cs">
+      <DependentUpon>FParameters6.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\8_Setup\FSetup.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Pages\8_Setup\FSetup.designer.cs">
+      <DependentUpon>FSetup.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\8_Setup\FSetup1.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Pages\8_Setup\FSetup1.Designer.cs">
+      <DependentUpon>FSetup1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Components\CLanguageManager.cs" />
+    <Compile Include="Utility\CUtility.cs" />
+    <Compile Include="Objects\UCHeader.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCHeader.Designer.cs">
+      <DependentUpon>UCHeader.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\UCMachinePara1.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Objects\UCMachinePara1.Designer.cs">
+      <DependentUpon>UCMachinePara1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\7_Diagnosis\FDiagnosis.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Pages\7_Diagnosis\FDiagnosis.Designer.cs">
+      <DependentUpon>FDiagnosis.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FKeyboard.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FKeyboard.designer.cs">
+      <DependentUpon>FKeyboard.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FNumPad.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FNumPad.designer.cs">
+      <DependentUpon>FNumPad.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Automatic\UCAutomatic1.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Automatic\UCAutomatic1.Designer.cs">
+      <DependentUpon>UCAutomatic1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Home\UCHome1.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Home\UCHome1.Designer.cs">
+      <DependentUpon>UCHome1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\Left side\UCManual1.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\Left side\UCManual1.Designer.cs">
+      <DependentUpon>UCManual1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\Left side\UCManual2.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\Left side\UCManual2.Designer.cs">
+      <DependentUpon>UCManual2.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\7_Diagnosis\FDiagnosis1.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Pages\7_Diagnosis\FDiagnosis1.Designer.cs">
+      <DependentUpon>FDiagnosis1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters1\FParameters1.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters1\FParameters1.Designer.cs">
+      <DependentUpon>FParameters1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters5\FParameters5.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters5\FParameters5.Designer.cs">
+      <DependentUpon>FParameters5.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\1_Info\FInfo.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Pages\1_Info\FInfo.Designer.cs">
+      <DependentUpon>FInfo.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Utility\CDisposeHelper.cs" />
+    <Compile Include="Utility\CProcessChecker.cs" />
+    <Compile Include="Pages\3_Operation\Automatic\FAutomatic.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Automatic\FAutomatic.Designer.cs">
+      <DependentUpon>FAutomatic.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Home\FHome.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Home\FHome.Designer.cs">
+      <DependentUpon>FHome.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FMain.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FMain.Designer.cs">
+      <DependentUpon>FMain.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FMainApp.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FMainApp.Designer.cs">
+      <DependentUpon>FMainApp.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CMainApp.cs" />
+    <Compile Include="Pages\3_Operation\Manual\FManual.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Pages\3_Operation\Manual\FManual.Designer.cs">
+      <DependentUpon>FManual.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Pages\6_Parameters\FParameters.Designer.cs">
+      <DependentUpon>FParameters.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utility\CShowForm.cs" />
+    <EmbeddedResource Include="Objects\ProgramEditor\UCProgramEditor.resx">
+      <DependentUpon>UCProgramEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\Security\FLoginDialog.resx">
+      <DependentUpon>FLoginDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\Security\FUserPropertiesDialog.resx">
+      <DependentUpon>FUserPropertiesDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\AxisPosition\UCAxisPosition.resx">
+      <DependentUpon>UCAxisPosition.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCButtonMultiOn.resx">
+      <DependentUpon>UCButtonMultiOn.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCButtonOnOff2.resx">
+      <DependentUpon>UCButtonOnOff2.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCButtonValue.resx">
+      <DependentUpon>UCButtonValue.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCCurrentValue1.resx">
+      <DependentUpon>UCCurrentValue1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCCurrentValue5.resx">
+      <DependentUpon>UCCurrentValue5.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCCurrentValue4.resx">
+      <DependentUpon>UCCurrentValue4.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCCurrentValue3.resx">
+      <DependentUpon>UCCurrentValue3.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCCurrentValue2.resx">
+      <DependentUpon>UCCurrentValue2.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCAxisVer.resx">
+      <DependentUpon>UCAxisVer.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\RecipeEditor\UCRecipeEditor.resx">
+      <DependentUpon>UCRecipeEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCAxisHor.resx">
+      <DependentUpon>UCAxisHor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCButtonOn.resx">
+      <DependentUpon>UCButtonOn.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCButtonOnOff.resx">
+      <DependentUpon>UCButtonOnOff.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCCtrlHorizontal.resx">
+      <DependentUpon>UCCtrlHorizontal.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCCtrlVertical.resx">
+      <DependentUpon>UCCtrlVertical.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCCurrentParameter.resx">
+      <DependentUpon>UCCurrentParameter.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCCurrentValue.resx">
+      <DependentUpon>UCCurrentValue.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCCylinderHor.resx">
+      <DependentUpon>UCCylinderHor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCCylinderVer.resx">
+      <DependentUpon>UCCylinderVer.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCMillingParameters.resx">
+      <DependentUpon>UCMillingParameters.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCOverride.resx">
+      <DependentUpon>UCOverride.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCParameterGet.resx">
+      <DependentUpon>UCParameterGet.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCParameter.resx">
+      <DependentUpon>UCParameter.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCHeatingTemp.resx">
+      <DependentUpon>UCHeatingTemp.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCMachineStatics.resx">
+      <DependentUpon>UCMachineStatics.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCAxisSync.resx">
+      <DependentUpon>UCAxisSync.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCHeader.resx">
+      <DependentUpon>UCHeader.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCMachinePara1.resx">
+      <DependentUpon>UCMachinePara1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCProcessPara2.resx">
+      <DependentUpon>UCProcessPara2.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCProcessPara.resx">
+      <DependentUpon>UCProcessPara.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCProcessPara2_2.resx">
+      <DependentUpon>UCProcessPara2_2.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCProcessPara2_1.resx">
+      <DependentUpon>UCProcessPara2_1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCWeldingPara2_2.resx">
+      <DependentUpon>UCWeldingPara2_2.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCWeldingPara2_1.resx">
+      <DependentUpon>UCWeldingPara2_1.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCWeldingStatus3.resx">
+      <DependentUpon>UCWeldingStatus3.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCWeldingStatus.resx">
+      <DependentUpon>UCWeldingStatus.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UCWeldingStatus2.resx">
+      <DependentUpon>UCWeldingStatus2.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Objects\UserControlBase.resx">
+      <DependentUpon>UserControlBase.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\2_Statistic\FStatistic.resx">
+      <DependentUpon>FStatistic.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\3_Operation\Automatic\UCAutomatic2.resx">
+      <DependentUpon>UCAutomatic2.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\3_Operation\FOperation.resx">
+      <DependentUpon>FOperation.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\3_Operation\Manual\Left side\UCManual6.resx">
+      <DependentUpon>UCManual6.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\3_Operation\Manual\Left side\UCManual4.resx">
+      <DependentUpon>UCManual4.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\3_Operation\Manual\Right side\UCManual18.resx">
+      <DependentUpon>UCManual18.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\3_Operation\Manual\Right side\UCManual17.resx">
+      <DependentUpon>UCManual17.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\3_Operation\Manual\Right side\UCManual16.resx">
+      <DependentUpon>UCManual16.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\3_Operation\Manual\Right side\UCManual15.resx">
+      <DependentUpon>UCManual15.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\3_Operation\Manual\Right side\UCManual14.resx">
+      <DependentUpon>UCManual14.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\3_Operation\Manual\Right side\UCManual11.resx">
+      <DependentUpon>UCManual11.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\3_Operation\Manual\Right side\UCManual12.resx">
+      <DependentUpon>UCManual12.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\3_Operation\Manual\Right side\UCManual13.resx">
+      <DependentUpon>UCManual13.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\3_Operation\Manual\UCManual.resx">
+      <DependentUpon>UCManual.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\3_Operation\Manual\Left side\UCManual8.resx">
+      <DependentUpon>UCManual8.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\3_Operation\Manual\Left side\UCManual7.resx">
+      <DependentUpon>UCManual7.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\3_Operation\Manual\Left side\UCManual5.resx">
+      <DependentUpon>UCManual5.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\3_Operation\Manual\Left side\UCManual3.resx">
+      <DependentUpon>UCManual3.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\5_Recipe\FRecipe4.resx">
+      <DependentUpon>FRecipe4.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\5_Recipe\FRecipe2.resx">
+      <DependentUpon>FRecipe2.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\5_Recipe\FRecipe1.resx">
+      <DependentUpon>FRecipe1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\5_Recipe\FRecipe.resx">
+      <DependentUpon>FRecipe.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\6_Parameters\FParameters1\UCParameters1_1.resx">
+      <DependentUpon>UCParameters1_1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\6_Parameters\FParameters5\UCParameters53.resx">
+      <DependentUpon>UCParameters53.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\6_Parameters\FParameters5\UCParameters54.resx">
+      <DependentUpon>UCParameters54.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\6_Parameters\FParameters5\UCParameters56.resx">
+      <DependentUpon>UCParameters56.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\6_Parameters\FParameters5\UCParameters55.resx">
+      <DependentUpon>UCParameters55.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\6_Parameters\FParameters5\UCParameters51.resx">
+      <DependentUpon>UCParameters51.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\6_Parameters\FParameters5\UCParameters52.resx">
+      <DependentUpon>UCParameters52.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\6_Parameters\FParameters5\UCParameters57.resx">
+      <DependentUpon>UCParameters57.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\6_Parameters\FParameters5\UCParameters58.resx">
+      <DependentUpon>UCParameters58.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\6_Parameters\FParameters6\UCParameters61.resx">
+      <DependentUpon>UCParameters61.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\6_Parameters\FParameters6\UCParameters62.resx">
+      <DependentUpon>UCParameters62.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\6_Parameters\FParameters7\FParameters7.resx">
+      <DependentUpon>FParameters7.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\6_Parameters\FParameters7\UCParameters72.resx">
+      <DependentUpon>UCParameters72.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\6_Parameters\FParameters7\UCParameters71.resx">
+      <DependentUpon>UCParameters71.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\3_Operation\Automatic\FAutomatic.resx">
+      <DependentUpon>FAutomatic.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\3_Operation\Home\FHome.resx">
+      <DependentUpon>FHome.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FMain.resx">
+      <DependentUpon>FMain.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FMainApp.resx">
+      <DependentUpon>FMainApp.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\3_Operation\Manual\FManual.resx">
+      <DependentUpon>FManual.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\7_Diagnosis\FDiagnosis.resx">
+      <DependentUpon>FDiagnosis.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\6_Parameters\FParameters6\FParameters6.resx">
+      <DependentUpon>FParameters6.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\8_Setup\FSetup.resx">
+      <DependentUpon>FSetup.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\8_Setup\FSetup1.resx">
+      <DependentUpon>FSetup1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FKeyboard.resx">
+      <DependentUpon>FKeyboard.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FNumPad.resx">
+      <DependentUpon>FNumPad.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\6_Parameters\FParameters.resx">
+      <DependentUpon>FParameters.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\3_Operation\Automatic\ucAutomatic1.resx">
+      <DependentUpon>UCAutomatic1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\3_Operation\Home\UCHome1.resx">
+      <DependentUpon>UCHome1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\3_Operation\Manual\Left side\UCManual1.resx">
+      <DependentUpon>UCManual1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\3_Operation\Manual\Left side\UCManual2.resx">
+      <DependentUpon>UCManual2.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\7_Diagnosis\FDiagnosis1.resx">
+      <DependentUpon>FDiagnosis1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\6_Parameters\FParameters1\FParameters1.resx">
+      <DependentUpon>FParameters1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\6_Parameters\FParameters5\FParameters5.resx">
+      <DependentUpon>FParameters5.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Pages\1_Info\FInfo.resx">
+      <DependentUpon>FInfo.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.5">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.5 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Welding_ramp_600x430x8.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Turntable_1024x572x8.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Pipe.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Pages\4_Reserve\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Logo_242x157x8.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Roboter.png" />
+    <None Include="Resources\Info_1024x572x8.bmp" />
+    <None Include="Resources\MainMashine_1024x572x8.png" />
+    <None Include="Resources\MainMashine2_1024x572x8.png" />
+    <None Include="Resources\Sawbow_1024x572x8.png" />
+    <None Include="Resources\Transport_1024x572x8.png" />
+    <None Include="Resources\Riexinger_Logo_sw.png" />
+    <Content Include="riex2.ico" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

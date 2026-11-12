@@ -7,9 +7,9 @@ VAR_INPUT
 	bEnable						:BOOL;						(* Enable Gr05Control *)
 
 	(* Instances *)
-	fbAxisClamp1					:FB_Gr05AxisClamp;
+	fbAxisClamp1				:FB_Gr05AxisClamp;
 
-	arfbCylinderClamp				:ARRAY[1..ungGr05ClampMaxNo] OF FB_Gr05CylinderClamp;
+	arfbCylinderClamp			:ARRAY[1..ungGr05ClampMaxNo] OF FB_Gr05CylinderClamp;
 	fbCylinderPos				:FB_Gr05CylinderPos;
 
 	fbSlide						:FB_Gr05Slide;
@@ -21,12 +21,12 @@ VAR
 
 	(* Variables *)
 	unClampIdx					:UINT;						(* Clamp index *)
-	unCylinderPosIdx				:UINT;						(* Position cylinder index *)
+	unCylinderPosIdx			:UINT;						(* Position cylinder index *)
 
-	arlrAxisClampLastPos			:ARRAY[1..ungGr05ClampMaxNo] OF LREAL;
+	arlrAxisClampLastPos		:ARRAY[1..ungGr05ClampMaxNo] OF LREAL;
 
 	bAllAxisCtrlEnabled			:BOOL;						(* All axis have controller enabled *)
-	bAllAxisStandStill				:BOOL;						(* All axis stand still *)
+	bAllAxisStandStill			:BOOL;						(* All axis stand still *)
 	bAllAxisNotMoving			:BOOL;						(* All axis not moving *)
 	bAllAxisReferenced			:BOOL;						(* All axis referenced *)
 
@@ -36,16 +36,16 @@ VAR
 
 	(* Instances *)
 	fbAlarm						:FB_Gr05Alarm;
-	fbSafety						:FB_Gr05Safety;
+	fbSafety					:FB_Gr05Safety;
 	fbSignals					:FB_Gr05Signals;
-	fbUtility						:FB_Gr05Utility;
-	rtBtnStart						:R_TRIG;
+	fbUtility					:FB_Gr05Utility;
+	rtBtnStart					:R_TRIG;
 	tonSlideMoveToWork			:TON;
 	tpTransportBand				:TP;
 END_VAR
 VAR CONSTANT
-	nFatalErrorMaxIdx				:INT := 0;						(* Maximal index of  using alarms *)
-	nErrorMaxIdx					:INT := 23;					(* Maximal index of  using alarms *)
+	nFatalErrorMaxIdx			:INT := 0;						(* Maximal index of  using alarms *)
+	nErrorMaxIdx				:INT := 23;					(* Maximal index of  using alarms *)
 	nWarningMaxIdx				:INT := 0;						(* Maximal index of  using alarms *)
 	nMessageMaxIdx				:INT := 3;						(* Maximal index of  using alarms *)
 	nHintMaxIdx					:INT := 0;						(* Maximal index of  using alarms *)

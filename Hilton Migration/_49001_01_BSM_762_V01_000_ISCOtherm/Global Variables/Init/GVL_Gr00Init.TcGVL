@@ -3,7 +3,7 @@
   <GVL Name="GVL_Gr00Init" Id="{db7b2612-5963-46a8-9be5-b4c0dded8796}">
     <Declaration><![CDATA[{attribute 'Tc2GvlVarNames'}
 VAR_GLOBAL
-END_VAR
-]]></Declaration>
+		tPLC_TaskCycleTime_ms			:TIME 	:=	LREAL_TO_TIME(GVL.lrgActCycleTime * 1000) ;		(* PLC Task Cycle Time in [ms] *)
+END_VAR]]></Declaration>
   </GVL>
 </TcPlcObject>

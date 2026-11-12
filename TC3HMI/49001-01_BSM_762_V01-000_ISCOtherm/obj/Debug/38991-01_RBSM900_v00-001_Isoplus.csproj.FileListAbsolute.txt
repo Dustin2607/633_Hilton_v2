@@ -1,0 +1,13 @@
+D:\Projects\Current\38991_RBSM_Isoplus\VS\HMI\38991-01_RBSM900_v00-001_Isoplus\38991-01_RBSM900_v00-001_Isoplus\bin\Debug\38991-01_RBSM900_v00-001_Isoplus.exe.config
+D:\Projects\Current\38991_RBSM_Isoplus\VS\HMI\38991-01_RBSM900_v00-001_Isoplus\38991-01_RBSM900_v00-001_Isoplus\obj\Debug\_38991_01_RBSM900_v00_001_Isoplus.Properties.Resources.resources
+D:\Projects\Current\38991_RBSM_Isoplus\VS\HMI\38991-01_RBSM900_v00-001_Isoplus\38991-01_RBSM900_v00-001_Isoplus\obj\Debug\38991-01_RBSM900_v00-001_Isoplus.csproj.GenerateResource.Cache
+D:\Projects\Current\38991_RBSM_Isoplus\VS\HMI\38991-01_RBSM900_v00-001_Isoplus\38991-01_RBSM900_v00-001_Isoplus\bin\Debug\38991-01_RBSM900_v00-001_Isoplus.exe
+D:\Projects\Current\38991_RBSM_Isoplus\VS\HMI\38991-01_RBSM900_v00-001_Isoplus\38991-01_RBSM900_v00-001_Isoplus\bin\Debug\38991-01_RBSM900_v00-001_Isoplus.pdb
+D:\Projects\Current\38991_RBSM_Isoplus\VS\HMI\38991-01_RBSM900_v00-001_Isoplus\38991-01_RBSM900_v00-001_Isoplus\obj\Debug\38991-01_RBSM900_v00-001_Isoplus.exe
+D:\Projects\Current\38991_RBSM_Isoplus\VS\HMI\38991-01_RBSM900_v00-001_Isoplus\38991-01_RBSM900_v00-001_Isoplus\obj\Debug\38991-01_RBSM900_v00-001_Isoplus.pdb
+D:\Projects\Current\38991_RBSM_Isoplus\VS\HMI\38991-01_RBSM900_v00-001_Isoplus\38991-01_RBSM900_v00-001_Isoplus\obj\Debug\38991-01_RBSM900_v00-001_Isoplus.csprojResolveAssemblyReference.cache
+D:\Projects\Current\38991_RBSM_Isoplus\VS\HMI\38991-01_RBSM900_v00-001_Isoplus\38991-01_RBSM900_v00-001_Isoplus\bin\Debug\TwinCAT.Ads.dll
+D:\Projects\Current\38991_RBSM_Isoplus\VS\HMI\38991-01_RBSM900_v00-001_Isoplus\38991-01_RBSM900_v00-001_Isoplus\bin\Debug\TwinCAT.App.dll
+D:\Projects\Current\38991_RBSM_Isoplus\VS\HMI\38991-01_RBSM900_v00-001_Isoplus\38991-01_RBSM900_v00-001_Isoplus\obj\Debug\_38991_01_RBSM900_v00_001_Isoplus.FMain.resources
+D:\Projects\Current\38991_RBSM_Isoplus\VS\HMI\38991-01_RBSM900_v00-001_Isoplus\38991-01_RBSM900_v00-001_Isoplus\obj\Debug\_38991_01_RBSM900_v00_001_Isoplus.FMainApp.resources
+D:\Projects\Current\38991_RBSM_Isoplus\VS\HMI\38991-01_RBSM900_v00-001_Isoplus\38991-01_RBSM900_v00-001_Isoplus\bin\Debug\App.exe.config

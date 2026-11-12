@@ -4,11 +4,13 @@
     <Declaration><![CDATA[{attribute 'Tc2GvlVarNames'}
 VAR_GLOBAL
 	lrgGr01SawingSpeed					:LREAL := 30.78;				(* Sawing speed where 100% = 20 [mm/s] *)
-	lrgGr01SawingEndPosition				:LREAL := -1.0;				(* Sawing end postion [mm] *)
+	lrgGr01SawingEndPosition			:LREAL := -1.0;					(* Sawing end postion [mm] *)
 	lrgGr01SawingEndDelay				:TIME := t#0.5s;				(* Wait after sawing done *)
 
 	lrgGr01DistSawbandPipe				:LREAL := 80.00;				(* Distance between sawband an pipe present sensor *)
-
+	
+	rRaddurchmesser_mm					:REAL := 510.0;					(* Raddurchmesser für Sägebandgeschwindigkeit *) 
+	uiImpulsDiscAmount					:UINT := 18;					(* 18 impulses on disc *)
 END_VAR
 ]]></Declaration>
   </GVL>

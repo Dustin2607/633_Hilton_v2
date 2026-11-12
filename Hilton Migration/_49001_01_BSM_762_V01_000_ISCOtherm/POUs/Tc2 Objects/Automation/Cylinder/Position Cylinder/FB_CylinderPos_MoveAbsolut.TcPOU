@@ -7,8 +7,8 @@
 The function block used to starts positioning to an absolute target position. 
 
 Constructor: 		Patryk Panylo
-Company:		E. Riexinger GmbH
-Date:			22.09.2015
+Company:			E. Riexinger GmbH
+Date:				22.09.2015
 Version:			1.00
 
 Date:			Revision:		Who:				Comment
@@ -19,20 +19,20 @@ VAR_INPUT
 	bEnable						:BOOL;			(* Function block enable *)
 	bNoEStop					:BOOL;			(* No ermergency Stop / Keine Notaus *)
 	bLightCurtainOK				:BOOL;			(* Light curtain ok / Freigabe Lichtschranke i.o *)
-	bAirPressure					:BOOL;			(* Signal air pressure *)
+	bAirPressure				:BOOL;			(* Signal air pressure *)
 	arbInBase					:ARRAY[1..ungGr05CylinderPosMaxNo] OF BOOL;
 	arbInWork					:ARRAY[1..ungGr05CylinderPosMaxNo] OF BOOL;
 	arbInError					:ARRAY[1..ungGr05CylinderPosMaxNo] OF BOOL;
 	bExecute					:BOOL;			(* Execut the function block *)
-	lrPosition						:LREAL;			(* Absolute target position *)
+	lrPosition					:LREAL;			(* Absolute target position *)
 	lrPosOffset					:LREAL;					(* Position offset *)
-	lrOriginShiftPos				:LREAL;					(* Origin shift position *)
+	lrOriginShiftPos			:LREAL;					(* Origin shift position *)
 	etDirection					:ET_MC_Direction;			(* Direction: -1 Negative, +1 Positive *)
 	usnCodingType				:USINT;
 END_VAR
 VAR_OUTPUT
 	(* Output variables / Ausgang Variablen *)
-	lrActPosition					:LREAL;			(* Absolute actual position *)
+	lrActPosition				:LREAL;			(* Absolute actual position *)
 	arbToBase					:ARRAY[1..ungGr05CylinderPosMaxNo] OF BOOL;
 	arbToWork					:ARRAY[1..ungGr05CylinderPosMaxNo] OF BOOL;
 	bDone						:BOOL;			(* Program done *)
@@ -53,7 +53,7 @@ VAR
 	wSetCylinderPos				:WORD;			(* Set position of cylinder  *)
 	wGetCylinderPos				:WORD;			(* Get position of cylinder  *)
 
-	wCylinderPos					:WORD;
+	wCylinderPos				:WORD;
 
 	nWatchdog					:INT;
 
@@ -63,7 +63,7 @@ VAR
 	(* Interfaces *)
 
 	(* Instances *)
-	rtExecute						:R_TRIG;
+	rtExecute					:R_TRIG;
 
 END_VAR]]></Declaration>
     <Implementation>

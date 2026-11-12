@@ -1,0 +1,692 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Gr01Sawband" Id="{493ac71a-1eed-4741-bb2e-977ae0234fab}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Gr01Sawband
+(*
+
+The function block used to control axis welding.
+
+Constructor: 		Patryk Panylo
+Company:			E. Riexinger GmbH
+Date:				28.04.2015
+Version:			1.00
+
+Date:			Revision:		Who:				Comment
+dd.mm.yyyy		x.xx			Initials			comment
+
+*)
+VAR_INPUT
+	(* Input variables / Eingang Variablen *)
+
+	(* --- Axis / Achse --- *)
+	bEnable						:BOOL;						(* Axis present *)
+	bOccupied					:BOOL;						(* Axis occupied *)
+
+	(* --- Machine state / Maschinenzustand --- *)
+	etMachineMode				:ET_MachineMode;			(* Machine mode *)
+	etMachineState				:ET_MachineState;			(* Machine state *)
+	bMachineStandstill			:BOOL;						(* Machine standstill *)
+
+	(* --- Safety & releases / Sicherheit & Freigaben --- *)
+	bNoEStop					:BOOL;						(* No ermergency Stop / Keine Notaus *)
+	bPowerSupplyOn				:BOOL;						(* Power supply on / Leitung eingeschaltet *)
+	bSafetyOK					:BOOL;						(* Safety ok / Sicherheit i.o *)
+	bSafetyDriveEnabled			:BOOL;						(* Safety drive enable *)
+	bCtrlInterrupt				:BOOL;						(* Control interrupt *)
+	bMoveRelease				:BOOL;						(* Move release *)
+	bPlusRelease				:BOOL;						(* Plus move release *)
+	bMinusRelease				:BOOL;						(* Minus move release *)
+
+	(* --- Limits & signals / Endlagen & Signale --- *)
+	bSignalReference			:BOOL;						(* Reference signal *)
+	bSignalHWLimitMax			:BOOL;						(* Position Hard limit switch maximum *)
+	bSignalHWLimitMin			:BOOL;						(* Position Hard limit switch minimum *)
+	lrSoftLimitMax				:LREAL;						(* Position limit switch maximum *)
+	lrSoftLimitMin				:LREAL;						(* Position limit switch minimum *)
+
+	(* --- Commands / Befehle --- *)
+	bExeReset					:BOOL;						(* Execute auto reset *)
+	bExeCtrlEnable				:BOOL;						(* Controller enable *)
+	bExeSetPos					:BOOL;						(* Execute set position *)
+	bExeHome					:BOOL;						(* Execute home *)
+	etHomingMode				:MC_HomingMode;				(* HomingMode determines in which way the calibration is carried out. *)
+	bExeMoveAbs					:BOOL;						(* Execute move absolut *)
+	bExeMoveRel					:BOOL;						(* Execute move relative *)
+	bExeMoveAdd					:BOOL;						(* Execute move additive *)
+	bExeMoveSuper				:BOOL;						(* Execute move superimposed *)
+	bExeMoveVelo				:BOOL;						(* Execute move velo *)
+	bExeGearIn					:BOOL;						(* Execute gear in *)
+	bExeGearOut					:BOOL;						(* Execute gear out *)
+	bExeStop					:BOOL;						(* Execute move stop *)
+	bConfirmAlarm				:BOOL;						(* Confirm alarm *)
+
+	(* --- Manual mode / Handbetrieb --- *)
+	bTipPlus					:BOOL;						(* Manual tip in plus direction *)
+	bTipMinus					:BOOL;						(* Manual tip in minus direction *)
+	lrTipDistance				:LREAL;						(* Relative distance for movements *)
+	lrManualVelocity			:LREAL;						(* Value of velocity in manual motion [mm/s] *)
+	bHandSawbandAirOn			:BOOL;						(* Sawband air on *)
+	bHandVacuumCleanerOn		:BOOL;						(* Vacuum cleaner on *)
+
+	(* --- Motion parameters / Bewegungsparameter --- *)
+	lrTargetPosition			:LREAL;						(* Absolute target position *)
+	lrTargetPositionOffset		:LREAL;						(* Absolute target position offset *)
+	lrAutoVelocity				:LREAL;						(* Value of velocity in auto motion [mm/s] *)
+	lrNoRefVelocity				:LREAL;						(* Velocity if has no reference [mm/s] *)
+	bVelocityLimitEn			:BOOL;						(* Enable velocity limit *)
+	lrVelocityMin				:LREAL;						(* Velocity minimum [%] *)
+	lrVelocityMax				:LREAL;						(* Velocity maximum [%] *)
+	lrAcceleration				:LREAL;						(* Value of the acceleration (always positive) *)
+	lrDeceleration				:LREAL;						(* Value of deceleration (always positive) *)
+	lrJerk						:LREAL;						(* Value of jerk (always positive) *)
+
+	(* --- Override --- *)
+	lrOverride					:LREAL;						(* Override *)
+	bExtOverrideEn				:BOOL;						(* External override enable *)
+	lrExtOverride				:LREAL;						(* External override *)
+
+	(* --- Gearing / Getriebe --- *)
+	dnRatioNumerator			:DINT;						(* Gear ratio numerator. Alternatively, the gear ratio can be specified in the numerator as a floating comma value, if the denominator is 1. *)
+	udnRatioDenominator			:UDINT;						(* Gear ratio denominator *)
+
+	(* --- Drive / Antrieb --- *)
+	snModesOfOperation			:SINT;						(* Modes of drive operation *)
+	bEngineTorqueLimitEn		:BOOL;						(* Enable engine torque limit *)
+	lrEngineTorque				:LREAL;						(* Engine torque [%] *)
+	bPosLagMonitoringEn			:BOOL;						(* Enable position lag monitoring *)
+	tControllerOff				:TIME := T#60S;				(* Time to switch controller off *)
+
+	(* --- Encoder / Geber --- *)
+	bWithAbsoluteEncoder		:BOOL;						(* Encoder is an absolute one / Absolutwertgeber *)
+	lrOriginShiftPos			:LREAL;						(* Origin shift position *)
+
+	(* --- Force control / Kraftregelung --- *)
+	bVeloForceCtrlEn			:BOOL;						(* Enable velocity  force controller *)
+	lrVeloForceCtrlKp			:LREAL;						(* Velocity - force controller proportional band Kp *)
+	lrVeloForceCtrlTi			:LREAL;						(* Velocity - force controller integral Ti *)
+	lrVeloForceCtrlMin			:LREAL;						(* Velocity - force controller minimum  *)
+	lrVeloForceCtrlMax			:LREAL;						(* Velocity - force controller maxmimum  *)
+	lrTargetForce				:LREAL;						(* Absolute target force [N] *)
+	lrForceCurrent				:LREAL;						(* Current force [mA] *)
+	rForceOffset				:REAL;						(* Force offset [N] *)
+	lrMaintenanceOverflowForce	:LREAL;						(* Maintenance overflow force [N] *)
+	lrManualOverflowForce		:LREAL;						(* Maximal force in manual mode [N] *)
+	lrAutoOverflowForce			:LREAL;						(* Maximal force in automatic mode [N] *)
+	lrForceMinmA				:LREAL;						(* Force min [mA] 16#0000 = 4 [mA] *)
+	lrForceMaxmA				:LREAL;						(* Force max [mA] 16#7FFF = 20 [mA] *)
+	lrForceMinN					:LREAL;						(* Force min [N] *)
+	lrForceMaxN					:LREAL;						(* Force max [N] *)
+
+	(* --- Temperature & cooling / Temperatur & Kühlung --- *)
+	lrActTemp					:LREAL;						(* Current temperatur *)
+	lrTempLimitMax				:LREAL;						(* Temperatur limit maximum*)
+	lrTempLimitMin				:LREAL;						(* Temperatur limit minimum*)
+	bCoolingActive				:BOOL;						(* Cooling on *)
+
+	(* --- Sawband air & vacuum cleaner / Sägebandluft & Absaugung --- *)
+	bVacuumCleanerMotorNOK		:BOOL;						(* Vacuum cleaner motor protection switch is no ok *)
+	tSawbandAirOffDelay			:TIME := T#10S;				(* Sawband air off delay *)
+	tVacuumCleanerOffDelay		:TIME := t#10s;				(* Vacuum cleaner off delay *)
+	tSawbandReadyDelay			:TIME := T#5S;				(* Sawband ready delay *)
+	tSpeedNoConstant			:TIME := T#3S;				(* Sawband speed no constant *)
+
+	(* --- System --- *)
+	tAdsTimeOut					:TIME := T#2S;				(* Timout for ads commands *)
+END_VAR
+VAR_OUTPUT
+	(* Output variables / Ausgang Variablen *)
+
+	(* --- Status --- *)
+	bReady						:BOOL;						(* Sawband ready *)
+	bCtrlEnabled				:BOOL;						(* Controller enabled *)
+	bNotMoving					:BOOL;						(* Axis not moving *)
+	bStandStill					:BOOL;						(* Added by Dustin for 633_Hilton) Axis stands stil*)
+	bInVelocity					:BOOL;						(* Sawband in Velocity*)
+	bReferenced					:BOOL;						(* Axis referenced *)
+	bCoupled					:BOOL;						(* Axis coupled *)
+
+	(* --- Actual values / Istwerte --- *)
+	lrActPosition				:LREAL;						(* Actual position [mm] *)
+	lrActAbsPosition			:LREAL;						(* Actual absolut position [mm] *)
+	lrActVelocity				:LREAL;						(* Actual velocity [mm/s] *)
+	lrActForce					:LREAL;						(* Actual force [N] *)
+	lrVeloMax					:LREAL;						(* Velocity limit maximum *)
+	lrAccMax					:LREAL;						(* Acceleration limit maximum *)
+	lrDecMax					:LREAL;						(* Deceleration limit maximum *)
+	lrJerkMax					:LREAL;						(* Jerk limit maximum *)
+
+	(* --- Limits / Endlagen --- *)
+	bHardLimitMaxExceeded		:BOOL;						(* Position limit switch maximum is exceeded *)
+	bHardLimitMinExceeded		:BOOL;						(* Position limit switch minimum is exceeded *)
+	bSoftLimitMaxExceeded		:BOOL;						(* Position limit switch maximum is exceeded *)
+	bSoftLimitMinExceeded		:BOOL;						(* Position limit switch minimum is exceeded *)
+
+	(* --- Peripherals / Peripherie --- *)
+	bCoolingOn					:BOOL;						(* Cooling *)
+	bSawbandAirOn				:BOOL;						(* Sawband air on*)
+	bVacuumCleanerOn			:BOOL;						(* Vacuum cleaner on *)
+
+	(* --- Safety / Sicherheit --- *)
+	bSafetyDriveEnable			:BOOL;						(* Safety drive enable *)
+
+	(* --- Errors / Fehler --- *)
+	bErrorTerminal				:BOOL;						(* Error Axis terminal *)
+	bErrorDrive					:BOOL;						(* Error drive *)
+	bErrorCtrlEnabled			:BOOL;						(* Error Axis controller enabled *)
+	bErrorForceOverflow			:BOOL;						(* Error force overflow *)
+	bErrPosLimitOverflow		:BOOL;						(* Error position limit overflow *)
+	bErrorSawbandNOK			:BOOL;						(* Error sawband no ok *)
+	bErrorSawbandBroken			:BOOL;						(* Error sawband broken *)
+	bErrorSpeedNoConstant		:BOOL;						(* Error sawband speed nok *)
+	bErrorVacuumCleanerNOK		:BOOL;						(* Vacuum cleaner nok *)
+END_VAR
+VAR_IN_OUT
+	(* Input Output variables / Ausgang Variablen *)
+	bHomeCompleted				:BOOL;						(* Home completed *)
+	Drive						:ST_STOEBERSI6SC6CIA402_REF; (* The ST_STOEBERSI6SC6CIA402_REF data type  is an interface between the PLC and the DRIVE and contains axis information *)
+	Axis						:AXIS_REF;					(* The AXIS_REF data type  is an interface between the PLC and the NC and contains axis information *)
+	MasterAxis					:AXIS_REF;					(* The AXIS_REF data type  is an interface between the PLC and the NC and contains axis information *)
+END_VAR
+VAR
+	(* Enummerations *)
+
+	(* Variables *)
+	sAdsAddr					:STRING(23);				(* AmsNetId of the EtherCAT master device.*)
+	unSlaveAddr					:UINT;						(* Address of the slave device.*)
+
+	nTorqueLimitMax				:INT := 100;				(* The torque limit (absolute value). Value range in %: -200 ... 200 ... 200 *)
+
+	lrVeloLimitMax				:LREAL;
+	lrVeloLimitMin				:LREAL;
+
+	sTerminalStatus				:STRING;
+	(* References *)
+
+	(* Interfaces *)
+
+	(* Instances *)
+	fbTerminalDiagnosis			:FB_TerminalDiagnosis;
+	rtMachineStandstill			:R_TRIG;
+	tonAxisEnabled				:TON;
+
+	
+	tofSawbandAirOffDelay		:TOF;						(* Timer to delay *)
+	tofVacuumCleanerOffDelay	:TOF;						(* Timer to delay *)
+	tonSawbandReadyDelay  		:TON;						(* Timer to delay *)
+	tonSpeedNoConstant			:TON;						(* Timer to delay *)
+
+	fbController				:FB_STOEBER_AxisController;
+	fbMoveManual				:FB_STOEBER_AxisMoveManual;
+	fbMoveAuto					:FB_STOEBER_AxisMoveAuto;
+	(*fbDriveLink				:FB_STOEBER_DriveLink;*)
+	fbForce						:FB_ScalingOffset;
+	fbForceCtrl					:FB_ForceController;
+	fbCoolingOff				:FB_SignalHandlingDelay;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT bEnable								(* Signal FB enable *)
+THEN
+
+	RETURN;
+END_IF
+
+A_AxisLink();
+A_AxisGetStatus();
+A_AxisController();
+A_AxisForceCtrl();
+A_AxisMoveManual();
+A_AxisMoveAuto();
+A_AxisCooling();
+A_AxisTerminalDiag();
+A_SawbandAir();
+A_SawbandVacuumCleaner();
+A_AxisAlarm();
+
+
+
+]]></ST>
+    </Implementation>
+    <Action Name="A_AxisAlarm" Id="{430bc2b4-1431-4fad-a8e1-1336dee0435e}">
+      <Implementation>
+        <ST><![CDATA[
+(* Axis errors *)
+tonAxisEnabled(
+	IN := fbController.bEnable
+		AND fbController.bRegulatorOn
+		AND NOT fbController.bStatusDelay,
+	PT := fbController.tStatusDelay + t#2s
+);
+
+bErrorCtrlEnabled := tonAxisEnabled.Q;
+
+bErrorForceOverflow := ((etMachineMode = ET_MachineMode_eAutomatic OR etMachineMode = ET_MachineMode_eHome) AND NOT bNotMoving AND lrActForce > lrAutoOverflowForce)
+			  			 OR (etMachineMode = ET_MachineMode_eManual AND (bTipMinus OR bTipPlus) AND lrActForce > lrManualOverflowForce)
+						  OR (etMachineMode = ET_MachineMode_eMaintenance AND NOT bNotMoving AND lrActForce > lrMaintenanceOverflowForce);
+
+bErrPosLimitOverflow := FALSE;					 ]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_AxisController" Id="{97b4e618-0b30-4a27-a76e-7e322681127d}">
+      <Implementation>
+        <ST><![CDATA[
+(* Axis controller *)
+fbController(
+    bEnable := TRUE,
+	etMachineMode := etMachineMode,
+	etMachineState := etMachineState,
+	bNoEStop := bNoEStop,
+	bRegulatorOn := bNoEStop
+				      AND bPowerSupplyOn
+				      AND bSafetyOk
+				      AND SEL(bNotMoving, NOT bCtrlInterrupt, TRUE)
+				      AND NOT fbMoveManual.bControllerOff
+				      AND NOT fbMoveAuto.bControllerOff,
+	bReset := bConfirmAlarm,
+	bTerminalOK := fbTerminalDiagnosis.bTerminalOK,
+	bExeReset := bExeReset,
+	bExeSetPos := bExeSetPos,
+	lrSetPosition := lrTargetPosition,
+	bExeGearIn := bExeGearIn,
+	bExeGearOut := bExeGearOut,
+	dnRatioNumerator := dnRatioNumerator,
+	udnRatioDenominator := udnRatioDenominator,
+	lrOverride := SEL(bExtOverrideEn,
+					SEL(
+						bVeloForceCtrlEn,
+						lrOverride,
+						fbForceCtrl.lrCVVelo),
+					lrOverride*lrExtOverride/100.0),
+	bWithAbsoluteEncoder := bWithAbsoluteEncoder,
+	bPosLagMonitoringEn := bPosLagMonitoringEn,
+	lrPositionBias := lrOriginShiftPos,
+	lrSoftLimitMax := lrSoftLimitMax,
+	lrSoftLimitMin := lrSoftLimitMin,
+	bSignalHWLimitMax:= bSignalHWLimitMax,
+	bSignalHWLimitMin := bSignalHWLimitMin,
+	lrAcceleration := lrAcceleration,
+	lrDeceleration := lrDeceleration,
+	lrJerk := lrJerk,
+	pDrive := ADR(Drive),
+	Axis := Axis,
+	MasterAxis := MasterAxis,
+	bStatusDelay => bCtrlEnabled,
+	lrActPos => lrActPosition,
+	lrActAbsPos => lrActAbsPosition,
+	lrActVelo => lrActVelocity,
+	bNotMoving => bNotMoving,
+	bStandStill => bStandStill,
+	bReferenced => bReferenced,
+	bCoupled => bCoupled,
+	lrVeloLimitMax => lrVeloMax,
+	lrAccLimitMax => lrAccMax,
+	lrDecLimitMax => lrDecMax,
+	lrJerkLimitMax => lrJerkMax,
+	bHardLimitMaxExceeded => bHardLimitMaxExceeded,
+	bHardLimitMinExceeded => bHardLimitMinExceeded,
+	bSoftLimitMaxExceeded => bSoftLimitMaxExceeded,
+	bSoftLimitMinExceeded => bSoftLimitMinExceeded
+);
+
+bSafetyDriveEnable := fbMoveManual.bSafetyCtrlEnable 
+				 	  OR fbMoveAuto.bSafetyCtrlEnable;
+					  
+					  
+			
+
+		  
+tonSawbandReadyDelay(
+	IN := NOT bNotMoving AND Axis.Status.ConstantVelocity,
+	PT := tSawbandReadyDelay
+);
+
+bReady := NOT bErrorCtrlEnabled
+		  AND GVL_Gr0100.bgGr01SawbandVeloError_1
+		  AND GVL_Gr0100.bgGr01SawbandVeloError_2
+		  AND tonSawbandReadyDelay.Q;
+		  
+(* From Tc2 )
+bReady := NOT bErrorCtrlEnabled
+		  AND NOT bErrorSawbandNOK 		// Fuse
+		  AND NOT bErrorSawbandBroken
+		  AND tonSawbandReadyDelay.Q;
+		  
+*)]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_AxisCooling" Id="{6caaa11b-f2b3-42d9-8f4f-76015d5bd03a}">
+      <Implementation>
+        <ST><![CDATA[
+(* Cooling control *)
+fbCoolingOff(
+	bEnable := TRUE,
+	bIn := NOT bCoolingActive
+		  AND lrActTemp < lrTempLimitMin
+		  AND bCoolingOn,
+	tDelay := t#30s
+);
+
+IF bCoolingActive
+     OR lrActTemp > lrTempLimitMax
+THEN
+	bCoolingOn := TRUE;
+
+ELSIF fbCoolingOff.bOut
+THEN
+	bCoolingOn := FALSE;
+END_IF]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_AxisForceCtrl" Id="{a0341b8e-5c4e-4913-9814-eb6b9b16ada0}">
+      <Implementation>
+        <ST><![CDATA[
+fbForce(
+	bEnable := TRUE,
+	lrInput := lrForceCurrent,
+	lrXLowLimit := lrForceMinmA, (* 16#0000 = 4 [mA] *)
+	lrXUpperLimit := lrForceMaxmA, (* 16#7FFF = 20 [mA] *)
+	lrYLowLimit := lrForceMinN,  (*[N]*)
+	lrYUpperLimit := lrForceMaxN,  (*[N]*)
+	usiPrecision := 2,
+	lrOffset := rForceOffset,
+	lrOutputPV => lrActForce
+);
+
+fbForceCtrl(
+	bEnable := bNoEStop
+			    AND bPowerSupplyOn
+			    AND bSafetyOK
+			    AND bCtrlEnabled,
+	bControllerOn := bVeloForceCtrlEn,
+	lrVeloKp := lrVeloForceCtrlKp,
+	lrVeloTi := lrVeloForceCtrlTi,
+	lrPVForce := lrActForce, (* [N] *)
+	lrSPForce := lrTargetForce, (* [N] *)
+	lrMaxForce := lrForceMaxN, (* [N] *)
+	lrVeloMax := lrVeloForceCtrlMax,
+	lrVeloMin := lrVeloForceCtrlMin,
+	lrTaskCycle := GVL.lrgActCycleTime,
+);
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_AxisGetStatus" Id="{10848596-e9c2-4177-92cf-2fc41668955a}">
+      <Implementation>
+        <ST><![CDATA[
+(* Get axis status *)
+Axis.ReadStatus();]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_AxisLink" Id="{2a4d3b5f-8e90-4945-898c-77ba066ad481}">
+      <Implementation>
+        <ST><![CDATA[
+(* Get terminal status *)
+sAdsAddr := F_CreateAmsNetId(Drive.stTerminalState.stAdsAddr.netId);
+unSlaveAddr := Drive.stTerminalState.stAdsAddr.port;
+Axis.DriveAddress.NetID := F_CreateAmsNetId(Drive.stTerminalState.stAdsAddr.netId);
+Axis.DriveAddress.SlaveAddress := Drive.stTerminalState.stAdsAddr.port;
+
+(* Set drive parameter *)
+Drive.stPlcToStoeber.snA541ModesOfOperation := snModesOfOperation;
+
+(*Drive.PlcToStoeber.nA558TargetTorque := SEL(bEngineTorqueLimitEn,
+				    nTorqueLimitMax,
+				    LREAL_TO_INT(lrEngineTorque / 1.0))*)]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_AxisMoveAuto" Id="{f6cb3e42-fa31-4f62-b040-8036a625a8e7}">
+      <Implementation>
+        <ST><![CDATA[
+(* Move axis auto *)
+rtMachineStandstill(CLK := bMachineStandstill );
+
+lrVeloLimitMin := SEL(bVelocityLimitEn, -1 * lrVeloMax, lrVelocityMin);
+lrVeloLimitMax := SEL(bVelocityLimitEn, lrVeloMax, lrVelocityMax);
+
+fbMoveAuto(
+	bEnable := bNoEStop
+			   AND bPowerSupplyOn
+			   AND bSafetyOK,
+	bOccupied := bOccupied,
+	bSafetyCtrlEnabled := bSafetyDriveEnabled,
+	bCtrlEnabled := bCtrlEnabled
+				      AND bMoveRelease,
+	etMachineMode := etMachineMode,
+	etMachineState := etMachineState,
+	bReset := bConfirmAlarm,
+	bCtrlEnable := bExeCtrlEnable,
+	bExeHome := bExeHome,
+	bExeMoveAbs := bExeMoveAbs,
+	bExeMoveRel := bExeMoveRel,
+	bExeMoveAdd := bExeMoveAdd,
+	bExeMoveSuper := bExeMoveSuper,
+	bExeMoveVelo := bExeMoveVelo,
+	bExeStop := bExeStop
+			    OR rtMachineStandstill.Q,
+	etHomingMode := etHomingMode,
+	lrPosition := lrTargetPosition + lrTargetPositionOffset,
+	lrVelocity := LIMIT(lrVeloLimitMin, lrAutoVelocity, lrVeloLimitMax),
+	lrAcceleration := lrAcceleration,
+	lrDeceleration := lrDeceleration,
+	lrJerk := lrJerk,
+	bSignalReference := bSignalReference,
+	lrOriginShiftPos := lrOriginShiftPos,
+	tControllerOff := tControllerOff,
+	pDrive := ADR(Drive),
+	bHomeCompleted := bHomeCompleted,
+	Axis := Axis,
+	MasterAxis := MasterAxis,
+	bInVelocity => bInVelocity 
+ );]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_AxisMoveManual" Id="{2a18576c-d261-4b9b-a8c8-4ec8ee557043}">
+      <Implementation>
+        <ST><![CDATA[
+(* Move axis manual *)
+fbMoveManual(
+	bEnable := bNoEStop
+               AND bPowerSupplyOn
+               AND bSafetyOK,
+	bOccupied := bOccupied,
+	bSafetyCtrlEnabled := bSafetyDriveEnabled,
+	bCtrlEnabled := bCtrlEnabled
+				    AND bMoveRelease,
+	etMachineMode := etMachineMode,
+	etMachineState := etMachineState,
+	bReset := bConfirmAlarm,
+	bMovePlus := bTipPlus,
+	bMoveMinus := bTipMinus,
+	lrTipDistance := lrTipDistance,
+	bLimitMax := bHardLimitMaxExceeded
+			     OR bSoftLimitMaxExceeded,
+	bLimitMin := bHardLimitMinExceeded
+			     OR bSoftLimitMinExceeded,
+	bPlusRelease := bPlusRelease,
+	bMinusRelease := bMinusRelease 
+					 AND NOT bErrorForceOverflow,
+	lrVelocity := SEL(NOT bReferenced, lrManualVelocity, lrNoRefVelocity),
+	lrAcceleration := lrAcceleration,
+	lrDeceleration := lrDeceleration,
+	lrJerk := lrJerk,
+	tControllerOff := tControllerOff,
+	pDrive := ADR(Drive),
+	bHomeCompleted := bHomeCompleted,
+	Axis := Axis,
+	MasterAxis := MasterAxis
+);
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_AxisTerminalDiag" Id="{c6dd99a5-d60c-40de-9ec3-b4f53184fbe8}">
+      <Implementation>
+        <ST><![CDATA[
+(*Axis terminal diagnosis *)
+fbTerminalDiagnosis(
+	stTerminalState := Drive.stTerminalState,
+	sTerminalStatus => sTerminalStatus
+);
+
+bErrorTerminal := NOT fbTerminalDiagnosis.bTerminalOK;]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_SawbandAir" Id="{e82b0ec0-0c4a-44f2-b485-59983c6b6d2a}">
+      <Implementation>
+        <ST><![CDATA[
+(* Sawband air *)
+IF NOT bNoEStop
+     OR bErrorCtrlEnabled
+THEN
+	tofSawbandAirOffDelay.IN := FALSE;
+	tofSawbandAirOffDelay.PT := t#0ms;
+
+ELSIF GVL_Gr0100.bgGr01SawbandVeloError_1
+     OR GVL_Gr0100.bgGr01SawbandVeloError_2
+THEN
+	tofSawbandAirOffDelay.IN := FALSE;
+
+ELSE
+	IF bHandSawbandAirOn
+	    OR NOT bNotMoving
+	THEN
+		tofSawbandAirOffDelay.IN := TRUE;
+		tofSawbandAirOffDelay.PT := tSawbandAirOffDelay;
+	ELSE
+		tofSawbandAirOffDelay.IN := FALSE;
+	END_IF
+
+END_IF;
+
+(* Sawband air stop after delay *)
+tofSawbandAirOffDelay();
+
+bSawbandAirOn := tofSawbandAirOffDelay.Q;
+
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="A_SawbandVacuumCleaner" Id="{50e3bd32-b442-4fd4-bcac-21271f194d36}">
+      <Implementation>
+        <ST><![CDATA[
+(* Vacuum cleaner *)
+IF NOT bNoEStop
+     OR bVacuumCleanerMotorNOK
+     OR (NOT bHandVacuumCleanerOn
+	    AND etMachineMode = ET_MachineMode_eManual
+	    AND bVacuumCleanerOn)
+THEN
+	tofVacuumCleanerOffDelay.IN := FALSE;
+	tofVacuumCleanerOffDelay.PT := t#0ms;
+
+ELSE
+	IF bHandVacuumCleanerOn
+	    OR NOT bNotMoving
+	THEN
+		tofVacuumCleanerOffDelay.IN := TRUE;
+		tofVacuumCleanerOffDelay.PT :=  tVacuumCleanerOffDelay;
+	ELSE
+		tofVacuumCleanerOffDelay.IN := FALSE;
+	END_IF
+
+END_IF;
+
+(* Vacuum cleaner stop after delay *)
+tofVacuumCleanerOffDelay(	);
+
+bVacuumCleanerOn := tofVacuumCleanerOffDelay.Q;]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_Gr01Sawband">
+      <LineId Id="492" Count="5" />
+      <LineId Id="526" Count="0" />
+      <LineId Id="538" Count="0" />
+      <LineId Id="527" Count="1" />
+      <LineId Id="539" Count="0" />
+      <LineId Id="529" Count="1" />
+      <LineId Id="540" Count="0" />
+      <LineId Id="531" Count="6" />
+      <LineId Id="182" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Gr01Sawband.A_AxisAlarm">
+      <LineId Id="0" Count="9" />
+      <LineId Id="16" Count="4" />
+      <LineId Id="11" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Gr01Sawband.A_AxisController">
+      <LineId Id="0" Count="5" />
+      <LineId Id="56" Count="5" />
+      <LineId Id="11" Count="18" />
+      <LineId Id="32" Count="1" />
+      <LineId Id="68" Count="1" />
+      <LineId Id="34" Count="2" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="37" Count="3" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="42" Count="1" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="44" Count="10" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="120" Count="1" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="73" Count="3" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="123" Count="2" />
+      <LineId Id="122" Count="0" />
+      <LineId Id="129" Count="4" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="126" Count="1" />
+    </LineIds>
+    <LineIds Name="FB_Gr01Sawband.A_AxisCooling">
+      <LineId Id="0" Count="18" />
+    </LineIds>
+    <LineIds Name="FB_Gr01Sawband.A_AxisForceCtrl">
+      <LineId Id="0" Count="28" />
+    </LineIds>
+    <LineIds Name="FB_Gr01Sawband.A_AxisGetStatus">
+      <LineId Id="0" Count="2" />
+    </LineIds>
+    <LineIds Name="FB_Gr01Sawband.A_AxisLink">
+      <LineId Id="21" Count="11" />
+      <LineId Id="10" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Gr01Sawband.A_AxisMoveAuto">
+      <LineId Id="0" Count="11" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="12" Count="4" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="17" Count="13" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="34" Count="2" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="37" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Gr01Sawband.A_AxisMoveManual">
+      <LineId Id="0" Count="6" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="7" Count="12" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="20" Count="5" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="26" Count="5" />
+    </LineIds>
+    <LineIds Name="FB_Gr01Sawband.A_AxisTerminalDiag">
+      <LineId Id="0" Count="7" />
+    </LineIds>
+    <LineIds Name="FB_Gr01Sawband.A_SawbandAir">
+      <LineId Id="0" Count="9" />
+      <LineId Id="11" Count="21" />
+    </LineIds>
+    <LineIds Name="FB_Gr01Sawband.A_SawbandVacuumCleaner">
+      <LineId Id="0" Count="26" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

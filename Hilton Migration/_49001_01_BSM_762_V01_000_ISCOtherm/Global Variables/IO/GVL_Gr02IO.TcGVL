@@ -3,17 +3,17 @@
   <GVL Name="GVL_Gr02IO" Id="{f045defe-70af-469a-a92d-ee44c7ef8f87}">
     <Declaration><![CDATA[{attribute 'Tc2GvlVarNames'}
 VAR_GLOBAL
-	(* Inputs / Eingänge *)
-	binGr02LightCurtainOK 						AT %I*:BOOL;														(* DIx.x Light curtain ok / Freigabe Lichtschranke i.o *)
+(* Inputs / Eingänge *)
+	binGr02LightCurtainOK					AT %I*:BOOL;													(*) 	Light curtain ok / Freigabe Lichtschranke i.o *)
 
-	binGr02PushBtnStart 						AT %I*:BOOL; 													(* DIx.x Push button "Start" / Taste "Start" *)
-	binGr02PushBtnStop 						AT %I*:BOOL; 													(* DIx.x Push button "Stop" / Taste "Stop" *)
+	binGr02PushBtnStart						AT %I*:BOOL;													(*) 	Push button "Start" / Taste "Start" *)
+	binGr02PushBtnStop						AT %I*:BOOL;													(*) 	Push button "Stop" / Taste "Stop" *)
 
 	(* Outputs / Ausgänge *)
-	boutGr02ConfLightCurtain 					AT %Q*:BOOL; 													(* DQx.x Confirm light Curtain / Quitt Lichtschrank *)
+	boutGr02ConfLightCurtain				AT %Q*:BOOL;													(*) 	Confirm light Curtain / Quitt Lichtschrank *)
 
-	boutGr02BulbBtnStart 						AT %Q*:BOOL; 													(* DQx.x Signal button bulb "start" / Signallampe "Start" *)
-	boutGr02BulbBtnStop 						AT %Q*:BOOL; 													(* DQx.x Signal button bulb "stop" / Signallampe "Stop" *)
+	boutGr02BulbBtnStart					AT %Q*:BOOL;													(*) 	Signal button bulb "start" / Signallampe "Start" *)
+	boutGr02BulbBtnStop						AT %Q*:BOOL;													(*) 	Signal button bulb "stop" / Signallampe "Stop" *)
 
 END_VAR
 ]]></Declaration>
